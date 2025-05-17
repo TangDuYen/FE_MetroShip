@@ -1,12 +1,27 @@
-# React + Vite
+# MetroShip
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based application that integrates parcel shipping and real-time tracking services directly into the national metro system. This solution will allow passengers and third-party users to send and receive packages conveniently via metro, with full visibility into their shipment's journey from origin to destination. The application will serve as a centralized platform for:
+- Booking shipping services.
+- Tracking parcels in real-time.
+- Managing routes and stations.
+- Coordinating metro logistics operations. 
 
-Currently, two official plugins are available:
+To get started with this project, follow these steps:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
 
-## Expanding the ESLint configuration
+- [NodeJS]([https://dotnet.microsoft.com/download](https://nodejs.org/en/download))
+- [Visual Studio Code]([https://docs.microsoft.com/en-us/ef/core/](https://code.visualstudio.com/))
+- [Git](https://git-scm.com/)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/TangDuYen/FE_MetroShip.git
+    ```
+
+2. Install dependencies:
+    ```bash
+   npm i
+    ```
