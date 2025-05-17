@@ -10,8 +10,8 @@ To get started with this project, follow these steps:
 
 ### Prerequisites
 
-- [NodeJS]([https://dotnet.microsoft.com/download](https://nodejs.org/en/download))
-- [Visual Studio Code]([https://docs.microsoft.com/en-us/ef/core/](https://code.visualstudio.com/))
+- [NodeJS](https://nodejs.org/en/download)
+- [Visual Studio Code](https://code.visualstudio.com/)
 - [Git](https://git-scm.com/)
 
 ### Installation
