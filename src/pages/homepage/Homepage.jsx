@@ -1,10 +1,9 @@
-import "./Homepage.scss"
+import './Homepage.scss'
 
 function Homepage() {
   return (
-    <div className="body">
-      
-    </div>
+    <>
+    </>
   )
 }
 
