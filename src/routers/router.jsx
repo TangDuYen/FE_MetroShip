@@ -1,6 +1,14 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
+import Footer from "../components/footer/Footer";
+import Header from "../components/header/Header";
+import Homepage from "../pages/homepage/Homepage";
+import Login from "../pages/login/Login";
 import Policy from './../pages/policy/Policy';
+import Register from "../pages/register/Register";
+import ScrollToTop from "../components/ScrollToTop";
+import { selectUser } from "../redux/features/counterSlice";
+import { useSelector } from "react-redux";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -82,27 +90,27 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-      {
-        path: "/about-us",
-        element: (
-          <ProtectedRouteCustomer>
-            {" "}
-            <AboutUs />
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: "/user-profile/",
-        element: <Sidebar />,
-        children: [
-          {
-            path: "profile",
-            element: (
-              <ProtectedRouteCustomer>
-                <Profile />
-              </ProtectedRouteCustomer>
-            ),
-          },
+    //   {
+    //     path: "/about-us",
+    //     element: (
+    //       <ProtectedRouteCustomer>
+    //         {" "}
+    //         <AboutUs />
+    //       </ProtectedRouteCustomer>
+    //     ),
+    //   },
+    //   {
+    //     path: "/user-profile/",
+    //     element: <Sidebar />,
+    //     children: [
+    //       {
+    //         path: "profile",
+    //         element: (
+    //           <ProtectedRouteCustomer>
+    //             <Profile />
+    //           </ProtectedRouteCustomer>
+    //         ),
+    //       },
         //   {
         //     path: "track-booking",
         //     element: (
@@ -119,8 +127,8 @@ export const router = createBrowserRouter([
         //       </ProtectedRouteCustomer>
         //     ),
         //   },
-        ],
-      },
+    //     ],
+    //   },
     //   {
     //     path: "/thank-you",
     //     element: (
@@ -162,23 +170,23 @@ export const router = createBrowserRouter([
   {
     path: "/sign-up",
     element: <Register />,
-  },
-  {
-    path: "/pin-code",
-    element: <Pincode />,
-  },
-  {
-    path: "/recovery-password",
-    element: <ResetPassword />,
-  },
-  {
-    path: "/verify-mail",
-    element: <VerifyMail />,
-  },
-  {
-    path: "*",
-    element: <Page404 />,
-  },
+  }
+//   {
+//     path: "/pin-code",
+//     element: <Pincode />,
+//   },
+//   {
+//     path: "/recovery-password",
+//     element: <ResetPassword />,
+//   },
+//   {
+//     path: "/verify-mail",
+//     element: <VerifyMail />,
+//   },
+//   {
+//     path: "*",
+//     element: <Page404 />,
+//   },
 
   //dashboard
 //   {
