@@ -1,7 +1,7 @@
 import './Login.scss'
 
-import { LoginPicture } from '../../assets/login.jpg';
-import { Logo } from "../../assets/logo.png";
+import  LoginPicture  from '../../assets/login.jpg';
+import  Logo  from "../../assets/logo.png";
 import api from '../../config/axios';
 import { jwtDecode } from 'jwt-decode';
 import { token } from './../../components/GetToken';
@@ -10,10 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 function Login() {
-  // const [email, setEmail] = useState("");
-  // const [password, setPassword] = useState("");
-  // const nav = useNavigate();
-  // const dispatch = useDispatch();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const nav = useNavigate();
+  const dispatch = useDispatch();
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -67,13 +67,13 @@ function Login() {
             alt="Logo"
             style={{
               width: "18vw",
-              height: "9vh",
+              height: "40vh",
               marginBottom: "1em",
               cursor: "pointer",
             }}
           />
         </div>
-        <form onSubmit={handleSubmit} className="login-form">
+        <form  className="login-form">
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

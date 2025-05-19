@@ -2,8 +2,6 @@
 
 .login-container {
     display: flex;
-    height: 100vh;
-
 
     .introduction-image {
         flex: 1;
@@ -94,7 +92,7 @@
                 width: 100%;
                 padding: 12px;
                 background-color: $primary-color;
-                color: black;
+                color: whitez;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
@@ -132,7 +130,7 @@
         }
 
         .signup-link {
-            color: $secondary-color;
+            color: $primary-color;
             text-decoration: none;
             font-family: $font-secondary;
 
