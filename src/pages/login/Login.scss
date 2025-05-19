@@ -1,0 +1,142 @@
+@import '../../styles/variables.scss';
+
+.login-container {
+    display: flex;
+
+    .introduction-image {
+        flex: 1;
+        display: flex;
+
+        img {
+            width: 100%;
+            object-fit: cover;
+            &:hover {
+                cursor: pointer;
+            }
+        }
+
+    }
+
+    .login-form-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        background-color: #ffffff;
+
+
+        h2 {
+            font-size: 40px;
+            margin-bottom: 4px;
+            font-family: $font-primary;
+        }
+
+        p {
+            font-size: 16px;
+            color: #777;
+            font-family: $font-secondary;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 400px;
+            font-family: $font-secondary;
+
+            .form-group {
+                margin-bottom: 10px;
+
+                input {
+                    width: 100%;
+                    padding: 12px;
+                    margin-top: 5px;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    font-family: $font-secondary;
+                }
+
+            }
+
+            .form-options {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                font-family: $font-secondary;
+
+                .recovery-link {
+                    color: #001F3F;
+                    text-decoration: none;
+                    font-size: 12px;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+
+                .remember-me {
+                    display: flex;
+                    font-size: 12px;
+
+                    input[type="checkbox"] {
+                        transform: scale(0.8);
+                    }
+
+                    label {
+                        margin-left: 5px;
+                    }
+                }
+            }
+
+            .login-btn {
+                width: 100%;
+                padding: 12px;
+                background-color: $primary-color;
+                color: whitez;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                font-family: 'Gantari', sans-serif;
+            }
+        }
+
+    }
+
+    .login-options {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        line-height: 3em;
+
+        .google-login-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: white;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Gantari', sans-serif;
+            display: flex;
+            gap: 0.6em;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        .signup-link {
+            color: $primary-color;
+            text-decoration: none;
+            font-family: $font-secondary;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
