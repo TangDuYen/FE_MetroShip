@@ -10,8 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
+    "@reduxjs/toolkit": "^2.8.2",
+    "antd": "^5.25.2",
+    "axios": "^1.9.0",
+    "fortawesome": "^0.0.1-security",
+    "jwt-decode": "^4.0.0",
+    "prop-types": "^15.8.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.0",
+    "redux-persist": "^6.0.0",
     "sass": "^1.89.0"
   },
   "devDependencies": {
