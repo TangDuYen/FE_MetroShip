@@ -1,6 +1,6 @@
 import './Login.scss'
 
-import  LoginPicture  from '../../assets/login.jpg';
+import  LoginPicture  from '../../assets/login.jpeg';
 import  Logo  from "../../assets/logo.png";
 import api from '../../config/axios';
 import { jwtDecode } from 'jwt-decode';
