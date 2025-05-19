@@ -1,8 +1,9 @@
 import './Login.scss'
 
 import  LoginPicture  from '../../assets/login.jpg';
-import  Logo  from "../../assets/logo.png";
+import  Logo  from "../../assets/logo2.png";
 import api from '../../config/axios';
+import {GoogleOutlined} from '@ant-design/icons';
 import { jwtDecode } from 'jwt-decode';
 import { token } from './../../components/GetToken';
 import { useDispatch } from 'react-redux';
@@ -54,7 +55,6 @@ function Login() {
           src={LoginPicture}
           alt="Login"
           onClick={() => nav("/")}
-          style={{ cursor: "pointer" }}
         />
       </div>
       <div className="login-form-container">
@@ -67,7 +67,7 @@ function Login() {
             alt="Logo"
             style={{
               width: "18vw",
-              height: "40vh",
+              height: "20vh",
               marginBottom: "1em",
               cursor: "pointer",
             }}
@@ -104,13 +104,17 @@ function Login() {
               Recovery Password
             </a>
           </div>
-          <button type="submit" className="login-btn" style={{marginTop:'3em'}}>
+          <div className="login-options">
+            <div className="google-login-btn">
+              <GoogleOutlined style= {{color: "#0066CC"}} />
+            </div>
+          </div>
+          <button type="submit" className="login-btn" style={{marginTop:'1em'}}>
             Login
           </button>
           {/* {error && <p className="error-message">{error}</p>} */}
         </form>
-        <div className="login-options">
-         
+        <div className="login-option">
           <p>
             Don’t have an account yet?{" "}
             <a href="/sign-up" className="signup-link">
