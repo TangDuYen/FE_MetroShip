@@ -4,9 +4,13 @@ import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
+import Page404 from "../pages/page404/Page404";
+import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
 import Register from "../pages/register/Register";
+import ResetPassword from "../pages/resetPassword/ResetPassword";
 import ScrollToTop from "../components/ScrollToTop";
+import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
 
@@ -170,23 +174,23 @@ export const router = createBrowserRouter([
   {
     path: "/sign-up",
     element: <Register />,
-  }
-//   {
-//     path: "/pin-code",
-//     element: <Pincode />,
-//   },
-//   {
-//     path: "/recovery-password",
-//     element: <ResetPassword />,
-//   },
-//   {
-//     path: "/verify-mail",
-//     element: <VerifyMail />,
-//   },
-//   {
-//     path: "*",
-//     element: <Page404 />,
-//   },
+  },
+  {
+    path: "/pin-code",
+    element: <Pincode />,
+  },
+  {
+    path: "/recovery-password",
+    element: <ResetPassword />,
+  },
+  {
+    path: "/verify-mail",
+    element: <VerifyMail />,
+  },
+  {
+    path: "*",
+    element: <Page404 />,
+  },
 
   //dashboard
 //   {
