@@ -2,28 +2,28 @@ import './Register.scss'
 
 import * as Yup from "yup";
 
-import { ErrorMessage, Field, Formik } from 'formik';
-import { Form, useNavigate } from 'react-router-dom';
+import { Checkbox, message } from 'antd';
+import { ErrorMessage, Field, Form, Formik } from 'formik';
 
-import { Checkbox } from 'antd';
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login1.png';
+import api from '../../config/axios';
+import {useNavigate} from 'react-router-dom';
 import { useState } from 'react';
 
 function Register() {
   const [error, setError] = useState(null);
-  const nav = useNavigate;
+  const nav = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
 
   //VALIDATION
   const validationSchema = Yup.object({
+    userName: Yup.string().required("Username is required"),
     fullName: Yup.string().required("Full Name is required"),
     phoneNumber: Yup.string()
       .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits")
       .required("Phone number is required"),
-    email: Yup.string()
-      .email("Invalid email format")
-      .matches(/@gmail\.com$/, "Email must be a @gmail.com account"),
+    email: Yup.string().required("Email is required"),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
       .required("Password is required"),
@@ -40,28 +40,31 @@ function Register() {
       return;
     }
 
-    // const payload = {
-    //   fullName: values.fullName,
-    //   phoneNumber: values.phoneNumber,
-    //   email: values.email,
-    //   password: values.password,
-    //   confirmPassword: values.confirmPassword,
-    // };
+    const payload = {
+      userName: values.userName,
+      fullName: values.fullName,
+      phoneNumber: values.phoneNumber,
+      email: values.email,
+      password: values.password,
+      confirmPassword: values.confirmPassword,
+    };
 
-    // try {
-    //   const response = await api.post("/User/Register/register", values);
-    //   const data = response.data;
-    //   if (data.error === 0) {
-    //     message.success(data.message);
-    //     sessionStorage.setItem("registrationData", JSON.stringify(payload));
-    //     console.log("registrationData");
-    //     nav("/pin-code");
-    //   } else {
-    //     message.error(data.message);
-    //   }
-    // } catch (error) {
-    //   setError(error.message);
-    // }
+    try {
+      const response = await api.post("/auth/register", values);
+      const responseData = response.data;
+      console.log(responseData);
+      
+      if (responseData.statusCode === 200) {
+        message.success(responseData.data);
+        sessionStorage.setItem("registrationData", JSON.stringify(payload));
+        console.log("registrationData");
+        nav("/pin-code");
+      } else {
+        message.error(responseData.data);
+      }
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   return (
@@ -85,6 +88,7 @@ function Register() {
           </div>
           <Formik
             initialValues={{
+              userName:"",
               fullName: "",
               phoneNumber: "",
               email: "",
@@ -96,6 +100,15 @@ function Register() {
           >
             {() => (
               <Form className="register-form">
+                <div className="form-group">
+                  <label htmlFor="userName">Username</label>
+                  <Field name="userName" type="text" />
+                  <ErrorMessage
+                    name="userName"
+                    component="div"
+                    className="error-message"
+                  />
+                </div>
                 <div className="form-group">
                   <label htmlFor="fullName">Full Name</label>
                   <Field name="fullName" type="text" />

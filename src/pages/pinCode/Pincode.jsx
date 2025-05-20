@@ -1,9 +1,9 @@
 import './Pincode.scss'
 
+import { Input, message } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
 import api from '../../config/axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,11 +14,11 @@ function Pincode() {
     const nav = useNavigate();
     const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
 
-    // useEffect(() => {
-    //     if (!registrationData) {
-    //         nav("/sign-up");
-    //     }
-    // }, [registrationData, nav]);
+    useEffect(() => {
+        if (!registrationData) {
+            nav("/sign-up");
+        }
+    }, [registrationData, nav]);
 
     const onChange = (e) => {
         const value = e.target.value;
@@ -28,16 +28,19 @@ function Pincode() {
     const verifyPin = async () => {
         try {
             const data = {
-                token: pin,
+                otp: pin,
+                userName: registrationData.userName
             }
-            const response = await api.post('User/Verify/verify', data);
+            const response = await api.post('/auth/email/verification', data);
             const responseData = response.data;
-            if (responseData.error === 0) {
-                message.success(responseData.message, 3);
+            console.log(responseData);
+            
+            if (responseData.statusCode === 200) {
+                message.success(responseData.data);
                 console.log(responseData);
                 nav('/login'); 
             } else {
-                message.error(response.message);
+                message.error(responseData.message);
             }
         } catch (error) {
             console.error(error);

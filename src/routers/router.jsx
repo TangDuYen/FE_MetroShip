@@ -11,6 +11,7 @@ import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import ScrollToTop from "../components/ScrollToTop";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
+import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
 
@@ -26,8 +27,8 @@ const ProtectedRouteAuth = ({ children }) => {
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
   if (
-    user?.Role === "Admin" ||
-    user?.Role === "Staff" 
+    user?.role?.includes("Admin") ||
+    user?.role?.includes("Staff")
   ) {
     message.error("You do not have permission to access this page.");
     return <Navigate to="/dashboard" replace />;
@@ -41,7 +42,7 @@ const ProtectedDashboard = ({ children }) => {
 
   const validRoles = ["Admin", "Staff"];
 
-  if (!validRoles.includes(user?.Role)) {
+  if (!user?.role?.some(r => validRoles.includes(r))) {
     return <Navigate to="*" replace />;
   }
 
@@ -50,7 +51,7 @@ const ProtectedDashboard = ({ children }) => {
 
 const ProtectedRouteAdmin = ({ children }) => {
   const user = useSelector(selectUser);
-  if (user?.Role !== "Admin") {
+  if (!user?.role?.includes("Admin")) {
     message.error("You do not have permission to access this page.");
     return <Navigate to="/dashboard/admin" replace />;
   }
@@ -59,7 +60,7 @@ const ProtectedRouteAdmin = ({ children }) => {
 
 const ProtectedRouteStaff = ({ children }) => {
   const user = useSelector(selectUser);
-  if (user?.Role !== "Staff") {
+  if (!user?.role?.includes("Staff")) {
     message.error("You do not have permission to access this page.");
     return <Navigate to="/dashboard/staff/bookings" replace />;
   }
