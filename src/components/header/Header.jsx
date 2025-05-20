@@ -16,7 +16,7 @@ function Header() {
     setIsProfileDropdownOpen((prev) => !prev);
   };
   return (
-    <header>
+    <header className="header">
       <div className="header-container">
         <div className="header-logo-img">
           <Link to={PATH_NAME.HOME}>
@@ -69,8 +69,8 @@ function Header() {
           </nav>
         </div>
 
-        {/* <div className="header-right">
-          <form method="get" className="header-form-search" role="search">
+        <div className="header-right">
+          {/* <form method="get" className="header-form-search" role="search">
             <input
               type="text"
               name="query"
@@ -85,7 +85,7 @@ function Header() {
             >
               <GoSearch />
             </button>
-          </form>
+          </form> */}
           <div
             className="header-block-account"
             ref={profileDropdownRef}
@@ -94,7 +94,7 @@ function Header() {
             <GoPerson className="header-icons" />
             {isProfileDropdownOpen && (
               <div className="navbar-dropdowns">
-                {isLoggedIn ? (
+                {/* {isLoggedIn ? ( */}
                   <>
                     <div className="navbar-profile-wrapper">
                       <Link
@@ -105,17 +105,17 @@ function Header() {
                         Hồ sơ
                       </Link>
                     </div>
-                    <div className="navbar-profile-wrapper">
+                    {/* <div className="navbar-profile-wrapper">
                       <div
                         className="navbar-profile-item"
                         //onClick={handleLogout}
                       >
                         Đăng xuất
                       </div>
-                    </div>
-                  </>
+                    </div> */}
+                  {/* </>
                 ) : (
-                  <>
+                  <> */}
                     <div className="navbar-profile-wrapper">
                       <Link
                         to={PATH_NAME.LOGIN}
@@ -135,11 +135,11 @@ function Header() {
                       </Link>
                     </div>
                   </>
-                
+                {/* )} */}
               </div>
             )}
           </div>
-        </div> */}
+        </div>
       </div>
     </header>
   );
