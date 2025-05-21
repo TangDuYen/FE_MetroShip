@@ -4,6 +4,7 @@ import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
+import Order from "../pages/order/Order";
 import Page404 from "../pages/page404/Page404";
 import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
@@ -187,6 +188,10 @@ export const router = createBrowserRouter([
   {
     path: "/verify-mail",
     element: <VerifyMail />,
+  },
+  {
+    path: "/booking-order",
+    element: <Order />,
   },
   {
     path: "*",
