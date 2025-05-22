@@ -11,7 +11,7 @@
 }
 
 .home-section-1 {
-  padding: 0 200px 0 425px;
+  //   padding: 0 200px 0 330px;
   background-color: #fff;
 }
 
@@ -20,6 +20,8 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  max-width: 1250px;
+  margin: auto;
 }
 
 .home-content {
@@ -88,6 +90,8 @@
   background-color: #eaf3f8;
   padding: 50px 80px;
   text-align: center;
+  max-width: 1250px;
+  margin: 0 auto;
 }
 
 .home-section-2 h2 {
@@ -118,7 +122,8 @@
 
 .form-group input {
   padding: 10px 15px;
-  width: 550px;
+  width: 100%;
+  min-width: 950px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
@@ -145,4 +150,258 @@
 .btn-track:hover {
   background-color: #08508b;
   transform: translateY(-2px);
+}
+
+.home-section-3 {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  padding: 60px 20px;
+  background-color: #fff;
+  flex-wrap: wrap;
+}
+
+.home-feature-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  height: 350px;
+  transition: transform 0.3s ease;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.home-feature-img {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+}
+
+.home-feature-card h3 {
+  font-size: 20px;
+  color: $text-color;
+  margin-bottom: 12px;
+}
+
+.home-feature-card p {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.home-section-4,
+.home-section-5 {
+  padding: 60px 20px;
+}
+
+.home-metro-container {
+  max-width: 1250px;
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 40px;
+}
+
+.home-metro-image img {
+  max-width: 500px;
+  width: 100%;
+  object-fit: contain;
+}
+
+.home-metro-content {
+  flex: 1;
+  min-width: 300px;
+}
+
+.home-subheading {
+  font-size: 20px;
+  color: #555;
+}
+
+.home-heading {
+  font-size: 28px;
+  color: $text-color;
+  display: inline-block;
+  position: relative;
+  margin-top: 8px;
+}
+
+.home-heading::after {
+  content: "";
+  position: absolute;
+  width: 18%;
+  height: 4px;
+  background-color: $primary-color;
+  bottom: -6px;
+  left: 0;
+  border-radius: 2px;
+}
+
+.home-description {
+  margin-top: 16px;
+  color: #666;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.home-features {
+  display: flex;
+  gap: 80px;
+  margin-top: 24px;
+}
+
+.home-features ul {
+  list-style: none;
+  padding: 0;
+}
+
+.home-features li {
+  margin-bottom: 12px;
+  color: #333;
+  font-weight: 550;
+  font-size: 14px;
+}
+
+.home-check-icon::before {
+  content: "✔";
+  color: $secondary-text-color;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.home-feedback-container {
+  max-width: 1250px;
+  margin: auto;
+}
+
+.home-feedback-container h2 {
+  margin-bottom: 20px;
+  color: $text-color;
+  font-size: 28px;
+  text-align: center;
+}
+
+.home-fb-avtar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-carousel {
+  height: 200px;
+  color: $text-color;
+  padding: 0 100px;
+  background-color: #eaf3f8;
+  border-radius: 5px;
+}
+
+.home-feedback {
+  padding: 20px;
+  color: $text-color;
+  font-size: 16px;
+}
+
+.home-feedback strong {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.home-section-6 {
+  max-width: 1250px;
+  margin: auto;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.home-faq-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: $text-color;
+  margin-bottom: 40px;
+}
+
+.home-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+  text-align: left;
+}
+
+.home-faq-item {
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.home-faq-question {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 0.5rem;
+}
+
+.home-faq-answer {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.home-section-7 {
+  padding: 48px 32px;
+}
+
+.home-download-content {
+  max-width: 1250px;
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 40px;
+}
+
+.home-download-image img {
+  max-width: 500px;
+  width: 100%;
+  height: auto;
+}
+
+.home-download-text {
+  max-width: 700px;
+}
+
+.home-download-text h4 {
+  font-size: 18px;
+  color: #555;
+}
+
+.home-download-text h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin:8px 0;
+}
+
+.home-download-text p {
+  color: #555;
+  font-size: 16px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.app-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.app-buttons img {
+  height: 75px;
+  transition: transform 0.2s ease;
+}
+
+.app-buttons img:hover {
+  transform: scale(1.05);
 }

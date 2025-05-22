@@ -98,7 +98,7 @@ function Header() {
                   <>
                     <div className="navbar-profile-wrapper">
                       <Link
-                        to={PATH_NAME.ACCOUNT}
+                        to={PATH_NAME.PROFILE}
                         className="navbar-profile-item"
                         onClick={(e) => e.stopPropagation()}
                       >
