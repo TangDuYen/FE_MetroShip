@@ -1,0 +1,94 @@
+@use "../../styles/variables" as *;
+
+.footer {
+  display: flex;
+  background: $background-color;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-direction: column;
+  color: $text-color;
+  padding-top: 35px;
+}
+
+.footer_wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1290px;
+}
+
+.footer-top {
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+}
+
+.footer-bottom {
+  padding: 20px 0;
+}
+
+.footer-logo {
+  height: 140px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.footer-logo-img {
+  min-width: 140px;
+  outline: none;
+}
+
+.footer_container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer_item {
+  display: flex;
+  gap: 10px;
+}
+
+.footer_link_container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer_link_container a {
+  color: $text-color;
+  font-size: 14px;
+}
+
+.footer_link_container a:hover {
+  color: $primary-color;
+  transition: color 0.15s linear, background-color 0.15s linear;
+}
+
+.footer_social {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.footer_social a {
+  font-size: 18px;
+}
+
+@media (max-width: 576px) {
+  .footer_wrapper {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding-left: 20px;
+  }
+
+  .footer {
+    height: 100%;
+    padding: 20px 0;
+  }
+}
