@@ -4,5 +4,9 @@ export const PATH_NAME = {
     TRACKING: "#",
     SUPPORT: "#",
     SERVICE: "#",
+    PROFILE: "/profile",
+    HISTORY_ORDERS: "/history-orders",
+    HISTORY_PAYMENT: "/history-payment",
+
     
 }

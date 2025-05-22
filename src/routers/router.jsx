@@ -9,6 +9,8 @@ import Register from "../pages/register/Register";
 import ScrollToTop from "../components/ScrollToTop";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
+import { PATH_NAME } from "../constants/pathname";
+import Profile from "../pages/profile/Profile";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -87,6 +89,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <Policy />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.PROFILE,
+        element: (
+          <ProtectedRouteCustomer>
+            <Profile />
           </ProtectedRouteCustomer>
         ),
       },

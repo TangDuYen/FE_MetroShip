@@ -17,7 +17,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 100px;
   max-width: 1290px;
   margin: 0 auto;
 }
@@ -78,20 +77,20 @@
   color: $text-color;
 }
 
-.header-btn{
-    padding: 10px 15px;
-    width: 100px;
-    background-color: transparent;
-    border: 0;
-    border: 1px solid $text-color;
-    border-radius: 20px;
+.header-btn {
+  padding: 10px 15px;
+  width: 100px;
+  background-color: transparent;
+  border: 0;
+  border: 1px solid $text-color;
+  border-radius: 20px;
 }
 
-.header-btn:hover{
-    font-weight: bold;
-    color: $primary-color;
-    border: 0;
-    background-color: #0066cc2c;
+.header-btn:hover {
+  font-weight: bold;
+  color: $primary-color;
+  border: 0;
+  background-color: $button-hover;
 }
 
 .header-right {
@@ -99,54 +98,6 @@
   display: flex;
   align-items: center;
 }
-
-// .header-form-search {
-//   min-width: 200px;
-//   margin-left: 10px;
-//   position: relative;
-// }
-
-// .header-search-auto {
-//   height: 36px;
-//   position: relative;
-//   box-shadow: none;
-//   border-radius: 18px;
-//   border: 1px #fff solid;
-//   background-color: rgba(255, 255, 255, 0.5);
-//   color: #fff;
-//   padding-left: 35px;
-//   font-size: 15px;
-//   display: block;
-//   width: 100%;
-//   line-height: 1.5rem;
-//   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-//   outline: none;
-// }
-
-// .header-search-auto::placeholder {
-//   color: #fff;
-// }
-
-// .header-btn-search {
-//   top: 0;
-//   left: 0;
-//   height: 36px;
-//   width: 36px;
-//   z-index: 9;
-//   font-size: 15px;
-//   padding: 10px;
-//   position: absolute;
-//   display: inline-block;
-//   text-align: center;
-//   border-radius: 0.25rem;
-//   border: 0;
-//   background-color: transparent;
-//   color: $text-color;
-// }
-
-// .header-btn-search:focus:not(:focus-visible) {
-//   outline: none;
-// }
 
 .header-block-account {
   margin-left: 0.5rem;
@@ -158,8 +109,8 @@
   border-radius: 50%;
 }
 
-.header-block-account:hover{
-    background-color: #ccc;
+.header-block-account:hover {
+  background-color: #ccc;
 }
 
 .header-icons {
@@ -168,40 +119,13 @@
   color: $text-color;
 }
 
-.header-block-cart {
-  border-left: 1px solid #fff;
-  padding-left: 0.5rem;
-  margin-left: 0.5rem;
-  position: relative;
-  cursor: pointer;
-}
-
-.header-cart {
-  color: #fff;
-  position: relative;
-}
-
-.header-count-item {
-  position: absolute;
-  left: 15px;
-  top: 12px;
-  background: #fff;
-  width: 15px;
-  height: 15px;
-  color: #000;
-  text-align: center;
-  line-height: 17px;
-  border-radius: 50%;
-  font-size: 10px;
-}
-
 .navbar-dropdowns {
   position: absolute;
   top: 130%;
   left: 160%;
   transform: translateX(-85%);
   background: #fff;
-//   border: 1px solid #ccc;
+  //   border: 1px solid #ccc;
   box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
   width: 150px;
   z-index: 1000;
@@ -221,30 +145,10 @@
 }
 
 .navbar-profile-wrapper:hover {
-  background: #0066cc2c;
+  background: $button-hover;
   font-weight: 550;
 }
 
 .navbar-profile-item {
   color: $primary-color;
-}
-
-@media (max-width: 576px) {
-  .header-container {
-    padding: 0;
-    justify-content: center;
-    padding-right: 20px;
-  }
-
-  .header-items {
-    display: none;
-  }
-
-  .header-form-search {
-    min-width: 120px;
-  }
-
-  .header-search-auto::placeholder {
-    font-size: 14px;
-  }
 }
