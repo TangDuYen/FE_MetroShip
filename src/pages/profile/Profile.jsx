@@ -1,33 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import "./Profile.scss";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 
 function Profile() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [userData, setUserData] = useState({
-    fullName: "",
-    email: "",
-    address: "",
-    imageUrl: "",
-  });
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-
-      // Hiển thị ảnh ngay lập tức
-      const imageUrl = URL.createObjectURL(file);
-      setUserData((prev) => ({ ...prev, imageUrl }));
-    }
-  };
-
-  const handleImageClick = () => {
-    if (isEditing) {
-      document.getElementById("fileInput").click(); // Kích hoạt input file ẩn
-    }
-  };
   return (
     <div className="profile">
       <section className="profile-wrapper">

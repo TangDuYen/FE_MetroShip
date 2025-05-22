@@ -11,6 +11,7 @@ import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
 import { PATH_NAME } from "../constants/pathname";
 import Profile from "../pages/profile/Profile";
+import HistoryOrders from "../pages/history_orders/HistoryOrders";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -97,6 +98,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <Profile />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.HISTORY_ORDERS,
+        element: (
+          <ProtectedRouteCustomer>
+            <HistoryOrders />
           </ProtectedRouteCustomer>
         ),
       },
