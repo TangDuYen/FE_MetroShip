@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { PATH_NAME } from "../constants/pathname";
 import Profile from "../pages/profile/Profile";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
+import HistoryPayment from "../pages/history_payment/HistoryPayment";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -106,6 +107,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <HistoryOrders />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.HISTORY_PAYMENT,
+        element: (
+          <ProtectedRouteCustomer>
+            <HistoryPayment />
           </ProtectedRouteCustomer>
         ),
       },

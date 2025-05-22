@@ -1,0 +1,76 @@
+@use "../../styles/variables.scss" as *;
+
+.history-payment {
+  margin-top: 7.4%;
+  width: 100%;
+  font-family: $font-primary;
+}
+
+.history-payment-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.history-payment-wrapper {
+  padding: 20px 300px 20px 150px;
+}
+
+.history-payment-left {
+  flex: 0.3;
+}
+
+.history-payment-right {
+  flex: 0.7;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  padding-bottom: 20px;
+}
+
+.history-payment-container {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.history-payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-payment-header h3 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.history-payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.history-payment-table th,
+.history-payment-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.history-payment-table th {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.status-completed {
+  background-color: #d4edda; 
+  color: $secondary-text-color;  
+  font-weight: bold;          
+  padding: 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
