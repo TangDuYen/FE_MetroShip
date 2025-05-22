@@ -1,52 +1,54 @@
 import './Login.scss'
 
+import {GoogleOutlined} from '@ant-design/icons';
 import  LoginPicture  from '../../assets/login.jpg';
 import  Logo  from "../../assets/logo2.png";
 import api from '../../config/axios';
-import {GoogleOutlined} from '@ant-design/icons';
 import { jwtDecode } from 'jwt-decode';
+import { login } from '../../redux/features/counterSlice';
+import { message } from 'antd';
 import { token } from './../../components/GetToken';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const nav = useNavigate();
   const dispatch = useDispatch();
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  //   const payload = {
-  //     email,
-  //     password,
-  //   };
-  //   try {
-  //     const response = await api.post("/User/Login/login", payload);
-  //     const token = response.data;
-  //     localStorage.setItem("token", token);
-  //     const user = jwtDecode(token);
-  //     dispatch(login(user));
-  //     if (user.Role === "Customer") {
-  //       nav("/");
-  //     }
-  //     if (user.Role === "Admin") {
-  //       nav("/dashboard/admin");
-  //     }
-  //     if (user.Role === "Staff") {
-  //       nav("/dashboard/staff");
-  //     }
-  //     message.success('Login successfully')
-  //   } catch (error) {
-  //     let errorMessage = "An error occurred. Please try again.";
-  //     if (error.response && error.response.data) {
-  //       errorMessage = error.response.data;
-  //     }
-  //     message.error(errorMessage);
-  //   }
-  // };
+    const payload = {
+      username,
+      password,
+    };
+    try {
+      const response = await api.post("/auth/authentication", payload);
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+      const user = jwtDecode(token);
+      dispatch(login(user));
+      if (user.role.includes("Customer")) {
+        nav("/");
+      }
+      if (user.role.includes("Admin")) {
+        nav("/dashboard/admin");
+      }
+      if (user.role.includes("Staff")) {
+        nav("/dashboard/staff");
+      }
+      message.success('Login successfully')
+    } catch (error) {
+      let errorMessage = "An error occurred. Please try again.";
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data;
+      }
+      message.error(errorMessage);
+    }
+  };
 
   return (
     <div className="login-container">
@@ -73,15 +75,15 @@ function Login() {
             }}
           />
         </div>
-        <form  className="login-form">
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="username">User name</label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@gmail.com"
+              type="username"
+              id="username"
+              value={username}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="username"
               required
             />
           </div>
