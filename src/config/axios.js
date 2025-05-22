@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseUrl = "/api";
+const baseUrl = "https://localhost:7085/api/";
 const config = {
   baseURL: baseUrl,
   timeout: 3000000,
@@ -10,7 +10,7 @@ const api = axios.create(config);
 
 const handleBefore = (config) => {
   //CONFIG API NO TOKEN
-  const noAuthEndpoints = ["/User/Register/register", "/User/Verify/verify"];
+  const noAuthEndpoints = ["/auth/register"];
   const requiresAuth = !noAuthEndpoints.some((endpoint) => 
     config.url.includes(endpoint)
   );
