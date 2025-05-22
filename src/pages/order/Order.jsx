@@ -3,6 +3,7 @@ import './Order.scss'
 import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
 
 import ConfirmPage from './ConfirmPage';
+import MetroPicture from '../../assets/metro.jpg';
 import MetroSelector from './MetroSelector';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
@@ -52,7 +53,7 @@ function Order() {
   const steps = [
     {
       title: "Confirm Info",
-      description: "Confirm personal information",
+      description: "Confirm sender & recipient information",
       component: (
         <PersonalInfo
           personalInfo={personalInfo}
@@ -156,11 +157,11 @@ function Order() {
     <>
       <div className="order">
         {contextHolder}
-        {/* <img
-          src="https://knockouts.com/bellevue-ne/wp-content/uploads/sites/68/2020/03/knockouts-franchise-locations-header-2020.jpg"
+        <img
+          src={MetroPicture}
           alt="maverick barber"
           className="order__img"
-        /> */}
+        />
         <div className="order__text">Send a parcel.</div>
         <div>
           <Row className="order__container">
@@ -202,15 +203,15 @@ function Order() {
                     theme={{
                       components: {
                         Button: {
-                          defaultColor: "black",
-                          defaultBg: "none",
-                          defaultBorderColor: "#FAA300",
-                          defaultHoverBorderColor: "black",
-                          defaultHoverColor: "white",
-                          defaultHoverBg: "black",
-                          defaultActiveBg: "#FAA300",
-                          defaultActiveBorderColor: "#FAA300",
-                          defaultActiveColor: "black",
+                          defaultColor: "white",
+                          defaultBg: "#4CAF50",
+                          defaultBorderColor: "#4CAF50",
+                          defaultHoverBorderColor: "#FFC107",
+                          defaultHoverColor: "black",
+                          defaultHoverBg: "#FFC107",
+                          defaultActiveBg: "#4CAF50",
+                          defaultActiveBorderColor: "#4CAF50",
+                          defaultActiveColor: "white",
                         },
                       },
                     }}
@@ -219,7 +220,6 @@ function Order() {
                       onClick={handlePrevious}
                       style={{
                         marginRight: 8,
-                        fontFamily: "Gantari",
                         fontWeight: "500",
                       }}
                     >
@@ -232,22 +232,22 @@ function Order() {
                   theme={{
                     components: {
                       Button: {
-                        defaultColor: "black",
-                        defaultBg: "#FAA300",
-                        defaultBorderColor: "#FAA300",
-                        defaultHoverBorderColor: "black",
-                        defaultHoverColor: "white",
-                        defaultHoverBg: "black",
-                        defaultActiveBg: "#FAA300",
-                        defaultActiveBorderColor: "#FAA300",
-                        defaultActiveColor: "black",
+                        defaultColor: "white",
+                        defaultBg: "#0066CC",
+                        defaultBorderColor: "#0066CC",
+                        defaultHoverBorderColor: "#FFC107",
+                        defaultHoverColor: "black",
+                        defaultHoverBg: "#FFC107",
+                        defaultActiveBg: "#0066CC",
+                        defaultActiveBorderColor: "#0066CC",
+                        defaultActiveColor: "white",
                       },
                     },
                   }}
                 >
                   <Button
                     onClick={handleNext}
-                    style={{ fontFamily: "Gantari", fontWeight: "500" }}
+                    style={{ fontWeight: "500" }}
                   >
                     {currentStep === steps.length - 1 ? "Submit" : "Next"}
                   </Button>
