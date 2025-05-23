@@ -1,5 +1,6 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
+import AboutUs from "../pages/aboutUs/AboutUs";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
@@ -74,7 +75,7 @@ const ProtectedRouteStaff = ({ children }) => {
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: PATH_NAME.HOME,
     element: (
       <div>
         <ScrollToTop />
@@ -85,7 +86,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "/",
+        path: PATH_NAME.HOME,
         element: (
           <ProtectedRouteCustomer>
             <Homepage />
@@ -124,15 +125,22 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-    //   {
-    //     path: "/about-us",
-    //     element: (
-    //       <ProtectedRouteCustomer>
-    //         {" "}
-    //         <AboutUs />
-    //       </ProtectedRouteCustomer>
-    //     ),
-    //   },
+      {
+        path: PATH_NAME.ABOUT_US,
+        element: (
+          <ProtectedRouteCustomer>
+            <AboutUs />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.BOOKING_ORDER,
+        element: (
+          <ProtectedRouteCustomer>
+            <Order />
+          </ProtectedRouteCustomer>
+        ),
+      },
     //   {
     //     path: "/user-profile/",
     //     element: <Sidebar />,
@@ -198,31 +206,31 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/login",
+    path: PATH_NAME.LOGIN,
     element: <Login />,
   },
   {
-    path: "/sign-up",
+    path: PATH_NAME.REGISTER,
     element: <Register />,
   },
   {
-    path: "/pin-code",
+    path: PATH_NAME.PIN_CODE,
     element: <Pincode />,
   },
   {
-    path: "/recovery-password",
+    path: PATH_NAME.RECOVERY_PASSWORD,
     element: <ResetPassword />,
   },
   {
-    path: "/verify-mail",
+    path: PATH_NAME.VERIFY_MAIL,
     element: <VerifyMail />,
   },
+  // {
+  //   path: PATH_NAME.BOOKING_ORDER,
+  //   element: <Order />,
+  // },
   {
-    path: "/booking-order",
-    element: <Order />,
-  },
-  {
-    path: "*",
+    path: PATH_NAME.PAGE404,
     element: <Page404 />,
   },
 

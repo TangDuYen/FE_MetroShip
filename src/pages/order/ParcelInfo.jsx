@@ -1,6 +1,7 @@
 import { Checkbox, Form, Input, InputNumber, Select } from 'antd';
 
 import React from 'react';
+import Title from 'antd/es/skeleton/Title';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -11,72 +12,77 @@ function ParcelInfo({ parcelInfo, setParcelInfo }) {
   };
 
   return (
-    <Form layout="vertical" style={{ padding: '1rem' }}>
-      <Form.Item label="Parcel Category">
-        <Select
-          placeholder="Select a category"
-          value={parcelInfo.parcelCategory}
-          onChange={(value) => handleChange('parcelCategory', value)}
-        >
-          <Option value="documents">Documents</Option>
-          <Option value="electronics">Electronics</Option>
-          <Option value="clothing">Clothing</Option>
-          <Option value="food">Food</Option>
-        </Select>
-      </Form.Item>
+    <>
+      <Title level={4}>Điền thông tin kiện hàng</Title>
+      <Form layout="vertical" style={{ padding: '1rem' }}>
+        <Title level={4}>Chọn trạm Metro</Title>
+        <Form.Item label="Loại hàng hóa">
+          <Select
+            placeholder="Chọn loại hàng"
+            value={parcelInfo.parcelCategory}
+            onChange={(value) => handleChange('parcelCategory', value)}
+          >
+            <Option value="documents">Tài liệu</Option>
+            <Option value="electronics">Hàng điện tử</Option>
+            <Option value="clothing">Quần áo</Option>
+            <Option value="food">Đồ ăn</Option>
+          </Select>
+        </Form.Item>
 
-      <Form.Item label="Weight (kg)">
-        <InputNumber
-          min={0}
-          style={{ width: '100%' }}
-          value={parcelInfo.weightKg}
-          onChange={(value) => handleChange('weightKg', value)}
-        />
-      </Form.Item>
-
-      <Form.Item label="Dimensions (cm)">
-        <Input.Group compact>
+        <Form.Item label="Trọng lượng (kg)">
           <InputNumber
             min={0}
-            placeholder="Length"
-            style={{ width: '33%' }}
-            value={parcelInfo.lengthCm}
-            onChange={(value) => handleChange('lengthCm', value)}
+            style={{ width: '100%' }}
+            value={parcelInfo.weightKg}
+            onChange={(value) => handleChange('weightKg', value)}
           />
-          <InputNumber
-            min={0}
-            placeholder="Height"
-            style={{ width: '33%' }}
-            value={parcelInfo.heightCm}
-            onChange={(value) => handleChange('heightCm', value)}
-          />
-          <InputNumber
-            min={0}
-            placeholder="Width"
-            style={{ width: '33%' }}
-            value={parcelInfo.widthCm}
-            onChange={(value) => handleChange('widthCm', value)}
-          />
-        </Input.Group>
-      </Form.Item>
+        </Form.Item>
 
-      <Form.Item label="Description">
-        <TextArea
-          rows={4}
-          value={parcelInfo.description}
-          onChange={(e) => handleChange('description', e.target.value)}
-        />
-      </Form.Item>
+        <Form.Item label="Kích thước (cm)">
+          <Input.Group compact>
+            <InputNumber
+              min={0}
+              placeholder="Dài"
+              style={{ width: '33%' }}
+              value={parcelInfo.lengthCm}
+              onChange={(value) => handleChange('lengthCm', value)}
+            />
+            <InputNumber
+              min={0}
+              placeholder="Rộng"
+              style={{ width: '33%' }}
+              value={parcelInfo.widthCm}
+              onChange={(value) => handleChange('widthCm', value)}
+            />
+            <InputNumber
+              min={0}
+              placeholder="Cao"
+              style={{ width: '33%' }}
+              value={parcelInfo.heightCm}
+              onChange={(value) => handleChange('heightCm', value)}
+            />
+            
+          </Input.Group>
+        </Form.Item>
 
-      <Form.Item>
-        <Checkbox
-          checked={parcelInfo.isBulk}
-          onChange={(e) => handleChange('isBulk', e.target.checked)}
-        >
-          This is a bulk item
-        </Checkbox>
-      </Form.Item>
-    </Form>
+        <Form.Item label="Mô tả">
+          <TextArea
+            rows={4}
+            value={parcelInfo.description}
+            onChange={(e) => handleChange('description', e.target.value)}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <Checkbox
+            checked={parcelInfo.isBulk}
+            onChange={(e) => handleChange('isBulk', e.target.checked)}
+          >
+            Gửi nhiều hàng
+          </Checkbox>
+        </Form.Item>
+      </Form></>
+
   );
 }
 

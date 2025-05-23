@@ -7,6 +7,11 @@ export const PATH_NAME = {
     PROFILE: "/profile",
     HISTORY_ORDERS: "/history-orders",
     HISTORY_PAYMENT: "/history-payment",
-
-    
+    LOGIN: "/login",
+    REGISTER: "/sign-up",
+    PIN_CODE: "/pin-code",
+    RECOVERY_PASSWORD: "/recovery-password",
+    VERIFY_MAIL: "/verify-mail",
+    BOOKING_ORDER: "/booking-order",
+    PAGE404: "*",
 }
