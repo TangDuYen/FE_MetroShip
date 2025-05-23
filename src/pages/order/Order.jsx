@@ -32,6 +32,7 @@ function Order() {
     weightKg: "",
     lengthCm: "",
     heightCm: "",
+    widthCm: "",
     description: "",
     isBulk: false,
   })

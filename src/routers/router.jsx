@@ -2,12 +2,16 @@ import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
+import HistoryOrders from "../pages/history_orders/HistoryOrders";
+import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
 import Order from "../pages/order/Order";
+import { PATH_NAME } from "../constants/pathname";
 import Page404 from "../pages/page404/Page404";
 import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
+import Profile from "../pages/profile/Profile";
 import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import ScrollToTop from "../components/ScrollToTop";
@@ -15,10 +19,6 @@ import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
-import { PATH_NAME } from "../constants/pathname";
-import Profile from "../pages/profile/Profile";
-import HistoryOrders from "../pages/history_orders/HistoryOrders";
-import HistoryPayment from "../pages/history_payment/HistoryPayment";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
