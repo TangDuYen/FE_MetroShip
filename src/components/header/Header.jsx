@@ -1,11 +1,13 @@
-import { PATH_NAME } from "../../constants/pathname";
 import "./Header.scss";
-import logo from "../../assets/logo.png";
-import { useRef, useState } from "react";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { GoPerson } from "react-icons/go";
+import { useRef, useState } from "react";
+
 import { BsCart3 } from "react-icons/bs";
+import { GoPerson } from "react-icons/go";
 import { GoSearch } from "react-icons/go";
+import { PATH_NAME } from "../../constants/pathname";
+import logo from "../../assets/logo.png";
 
 function Header() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -28,42 +30,39 @@ function Header() {
           <nav className="header-nav">
             <ul className="header-items">
               <li
-                className={`header-nav-item ${
-                  location.pathname === PATH_NAME.HOME ? "active" : ""
-                }`}
+                className={`header-nav-item ${location.pathname === PATH_NAME.HOME ? "active" : ""
+                  }`}
               >
                 <Link to={PATH_NAME.HOME}>Trang chủ</Link>
               </li>
               <li
-                className={`header-nav-item ${
-                  location.pathname === PATH_NAME.ABOUT_US ? "active" : ""
-                }`}
+                className={`header-nav-item ${location.pathname === PATH_NAME.ABOUT_US ? "active" : ""
+                  }`}
               >
                 <Link to={PATH_NAME.ABOUT_US}>Về chúng tôi</Link>
               </li>
               <li
-                className={`header-nav-item ${
-                  location.pathname === PATH_NAME.SERVICE ? "active" : ""
-                }`}
+                className={`header-nav-item ${location.pathname === PATH_NAME.SERVICE ? "active" : ""
+                  }`}
               >
                 <Link to={PATH_NAME.SERVICE}>Dịch vụ</Link>
               </li>
               <li
-                className={`header-nav-item ${
-                  location.pathname === PATH_NAME.TRACKING ? "active" : ""
-                }`}
+                className={`header-nav-item ${location.pathname === PATH_NAME.TRACKING ? "active" : ""
+                  }`}
               >
                 <Link to={PATH_NAME.TRACKING}>Theo dõi</Link>
               </li>
               <li
-                className={`header-nav-item ${
-                  location.pathname === PATH_NAME.SUPPORT ? "active" : ""
-                }`}
+                className={`header-nav-item ${location.pathname === PATH_NAME.SUPPORT ? "active" : ""
+                  }`}
               >
                 <Link to={PATH_NAME.SUPPORT}>Hỗ trợ</Link>
               </li>
               <li>
-                <button className="header-btn">Tạo đơn</button>
+                <Link to={PATH_NAME.BOOKING_ORDER}>
+                  <button className="header-btn">Tạo đơn</button>
+                </Link>
               </li>
             </ul>
           </nav>
@@ -95,17 +94,17 @@ function Header() {
             {isProfileDropdownOpen && (
               <div className="navbar-dropdowns">
                 {/* {isLoggedIn ? ( */}
-                  <>
-                    <div className="navbar-profile-wrapper">
-                      <Link
-                        to={PATH_NAME.PROFILE}
-                        className="navbar-profile-item"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Hồ sơ
-                      </Link>
-                    </div>
-                    {/* <div className="navbar-profile-wrapper">
+                <>
+                  <div className="navbar-profile-wrapper">
+                    <Link
+                      to={PATH_NAME.PROFILE}
+                      className="navbar-profile-item"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Hồ sơ
+                    </Link>
+                  </div>
+                  {/* <div className="navbar-profile-wrapper">
                       <div
                         className="navbar-profile-item"
                         //onClick={handleLogout}
@@ -116,25 +115,25 @@ function Header() {
                   {/* </>
                 ) : (
                   <> */}
-                    <div className="navbar-profile-wrapper">
-                      <Link
-                        to={PATH_NAME.LOGIN}
-                        className="navbar-profile-item"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Đăng nhập
-                      </Link>
-                    </div>
-                    <div className="navbar-profile-wrapper">
-                      <Link
-                        to={PATH_NAME.REGISTER}
-                        className="navbar-profile-item"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Đăng ký
-                      </Link>
-                    </div>
-                  </>
+                  <div className="navbar-profile-wrapper">
+                    <Link
+                      to={PATH_NAME.LOGIN}
+                      className="navbar-profile-item"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Đăng nhập
+                    </Link>
+                  </div>
+                  <div className="navbar-profile-wrapper">
+                    <Link
+                      to={PATH_NAME.REGISTER}
+                      className="navbar-profile-item"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Đăng ký
+                    </Link>
+                  </div>
+                </>
                 {/* )} */}
               </div>
             )}

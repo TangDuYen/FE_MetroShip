@@ -7,18 +7,18 @@ const { Title } = Typography;
 function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pickedTime }) {
   return (
     <div style={{ padding: '1rem' }}>
-      <Title level={3}>Confirm Your Order</Title>
+      <Title level={3}>Xác nhận thông tin đơn hàng của bạn</Title>
 
-      <Divider orientation="left">Personal Information</Divider>
+      <Divider orientation="left">Thông tin người gửi và người nhận</Divider>
       <Row gutter={24}>
         <Col span={12}>
-          <Descriptions title="Sender" bordered size="small" column={1}>
+          <Descriptions title="Người gửi" bordered size="small" column={1}>
             <Descriptions.Item label="Name">{personalInfo.senderName}</Descriptions.Item>
             <Descriptions.Item label="Phone">{personalInfo.senderPhone}</Descriptions.Item>
           </Descriptions>
         </Col>
         <Col span={12}>
-          <Descriptions title="Recipient" bordered size="small" column={1}>
+          <Descriptions title="Người nhận" bordered size="small" column={1}>
             <Descriptions.Item label="Name">{personalInfo.recipientName}</Descriptions.Item>
             <Descriptions.Item label="Phone">{personalInfo.recipientPhone}</Descriptions.Item>
             <Descriptions.Item label="Email">{personalInfo.recipientEmail}</Descriptions.Item>
@@ -26,31 +26,31 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
         </Col>
       </Row>
 
-      <Divider orientation="left">Order Information</Divider>
+      <Divider orientation="left">Thông tin đơn hàng</Divider>
       <Row gutter={24}>
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Category">{parcelInfo.parcelCategory}</Descriptions.Item>
-            <Descriptions.Item label="Weight">{parcelInfo.weightKg} kg</Descriptions.Item>
-            <Descriptions.Item label="Dimensions">
+            <Descriptions.Item label="Loại hàng hóa">{parcelInfo.parcelCategory}</Descriptions.Item>
+            <Descriptions.Item label="Trọng lượng">{parcelInfo.weightKg} kg</Descriptions.Item>
+            <Descriptions.Item label="Kích thước">
               {parcelInfo.lengthCm} x {parcelInfo.widthCm} x {parcelInfo.heightCm} cm
             </Descriptions.Item>
-            <Descriptions.Item label="Bulk Item">{parcelInfo.isBulk ? "Yes" : "No"}</Descriptions.Item>
-            <Descriptions.Item label="Description">{parcelInfo.description}</Descriptions.Item>
+            <Descriptions.Item label="Nhiều hàng 1 đơn">{parcelInfo.isBulk ? "Có" : "Không"}</Descriptions.Item>
+            <Descriptions.Item label="Mô tả">{parcelInfo.description}</Descriptions.Item>
           </Descriptions>
         </Col>
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Departure Station">
+            <Descriptions.Item label="Trạm gửi">
               {metroSelector.departureStationId || 'Not selected'}
             </Descriptions.Item>
-            <Descriptions.Item label="Destination Station">
+            <Descriptions.Item label="Trạm nhận">
               {metroSelector.destinationStationId || 'Not selected'}
             </Descriptions.Item>
           </Descriptions>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Date">{pickedDate || "Not selected"}</Descriptions.Item>
-            <Descriptions.Item label="Time">{pickedTime || "Not selected"}</Descriptions.Item>
+            <Descriptions.Item label="Ngày">{pickedDate || "Not selected"}</Descriptions.Item>
+            <Descriptions.Item label="Thời gian">{pickedTime || "Not selected"}</Descriptions.Item>
           </Descriptions>
         </Col>
       </Row>

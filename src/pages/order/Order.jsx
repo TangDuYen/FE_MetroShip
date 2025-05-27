@@ -5,6 +5,7 @@ import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
 import ConfirmPage from './ConfirmPage';
 import MetroPicture from '../../assets/metro.jpg';
 import MetroSelector from './MetroSelector';
+import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import { selectUser } from '../../redux/features/counterSlice';
@@ -32,6 +33,7 @@ function Order() {
     weightKg: "",
     lengthCm: "",
     heightCm: "",
+    widthCm: "",
     description: "",
     isBulk: false,
   })
@@ -46,14 +48,15 @@ function Order() {
   const handleOk = () => {
     handleSubmit();
     setIsModalOpen(false);
+    nav(PATH_NAME.HISTORY_ORDERS);
   };
   const handleCancel = () => {
     setIsModalOpen(false);
   };
   const steps = [
     {
-      title: "Confirm Info",
-      description: "Confirm sender & recipient information",
+      title: "Xác nhận thông tin",
+      description: "Xác nhận thông tin người gửi và người nhận",
       component: (
         <PersonalInfo
           personalInfo={personalInfo}
@@ -63,34 +66,24 @@ function Order() {
       ),
     },
     {
-      title: "Choose Metro Station",
-      description: "Choose station to send & receive",
-      component: (
-        <MetroSelector
-          personalInfo={personalInfo}
-          setPersonalInfo={setPersonalInfo}
-          metroSelector={metroSelector}
-          setMetroSelector={setMetroSelector}
-          onNext={() => setCurrentStep(2)}
-        />
-      ),
-    },
-    {
-      title: "Parcel information",
-      description: "Enter parcel information & delivery time",
+      title: "Thông tin kiện hàng",
+      description: "Nhập thông tin đơn hàng",
       component: (
         <ParcelInfo
           personalInfo={personalInfo}
           parcelInfo={parcelInfo}
           setParcelInfo={setParcelInfo}
+          metroSelector={metroSelector}
+          setMetroSelector={setMetroSelector}
           setPickedDate={setPickedDate}
           setPickedTime={setPickedTime}
+          onNext={() => setCurrentStep(2)}
         />
       ),
     },
     {
-      title: "Confirm order",
-      description: "Confirm order order",
+      title: "Xác nhận đơn hàng",
+      description: "Xác nhận thông tin đơn hàng",
       component: (
         <ConfirmPage
           personalInfo={personalInfo}
@@ -158,11 +151,11 @@ function Order() {
       <div className="order">
         {contextHolder}
         <img
-          src={MetroPicture}
+          src="https://tphcm.cdnchinhphu.vn/334895287454388224/2023/8/23/metro-so-1-16618572668742131228344-16882866714571847829823-16927939569321374898356.jpg"
           alt="maverick barber"
           className="order__img"
         />
-        <div className="order__text">Send a parcel.</div>
+        <div className="order__text">Thông tin đơn hàng</div>
         <div>
           <Row className="order__container">
             <Col span={6} className="order_container__left">
@@ -223,7 +216,7 @@ function Order() {
                         fontWeight: "500",
                       }}
                     >
-                      Previous
+                      Trước
                     </Button>
                   </ConfigProvider>
                 )}
@@ -249,7 +242,7 @@ function Order() {
                     onClick={handleNext}
                     style={{ fontWeight: "500" }}
                   >
-                    {currentStep === steps.length - 1 ? "Submit" : "Next"}
+                    {currentStep === steps.length - 1 ? "Xác nhận" : "Sau"}
                   </Button>
                 </ConfigProvider>
               </div>
@@ -264,8 +257,7 @@ function Order() {
                 className="modal-confirm"
               >
                 <p>
-                  Are you sure you want to book this appointment? Please check all
-                  details before confirming this appointment!
+                  Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
                 </p>
               </Modal>
             </Col>
