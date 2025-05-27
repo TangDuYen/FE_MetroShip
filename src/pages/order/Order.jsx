@@ -11,6 +11,7 @@ import { selectUser } from '../../redux/features/counterSlice';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useState } from 'react';
+import { PATH_NAME } from '../../constants/pathname';
 
 function Order() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -47,6 +48,7 @@ function Order() {
   const handleOk = () => {
     handleSubmit();
     setIsModalOpen(false);
+    nav(PATH_NAME.HISTORY_ORDERS);
   };
   const handleCancel = () => {
     setIsModalOpen(false);

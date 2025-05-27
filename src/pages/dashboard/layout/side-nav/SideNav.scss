@@ -1,0 +1,116 @@
+@import "../../../../styles/variables.scss";
+
+.brand {
+  img {
+    height: 4.5em;
+    width: 4.5em;
+  }
+  &__link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &__logo {
+      height: 5em;
+      width: 5em;
+      margin-top: 2em;
+      margin-bottom: 1em;
+    }
+  }
+}
+
+.logout-container {
+  display: flex;
+  padding: 15px;
+  cursor: pointer;
+  color: #000000;
+  font-size: 1.3em;
+}
+
+.menu-side-nav-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.1rem;
+  margin-left: 1em;
+  height: 160%;
+  background-color: #f7f7f7;
+  justify-content: space-between;
+}
+
+.menu-sidenav {
+  flex-grow: 1;
+}
+
+.menu-sidenav {
+  width: 15vw;
+  background-color: white !important;
+  margin: 1em;
+  border-radius: 20px;
+  .ant-menu-item,
+  .ant-menu-submenu-title .ant-menu-submenu,
+  .ant-menu-sub {
+    font-family: "Gantari";
+    color: black;
+    background-color: white !important;
+
+    border-radius: 0;
+
+    .anticon {
+      font-size: 1.5em !important;
+    }
+  }
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    font-size: 1em;
+    color: black !important;
+    font-family: $font-secondary !important;
+    margin-top: 1em;
+  }
+  .ant-menu-item-selected {
+    color: white;
+    border-left: 3px solid rgb(0, 0, 0);
+    background-color: transparent;
+  }
+
+  .ant-menu-item-only-child {
+    background-color: rgba(222, 217, 217, 0.148) !important;
+    border-radius: 10px;
+    width: 12vw;
+    margin: 0 2em;
+    padding-left: 2em !important;
+    margin-bottom:0.5em;
+  }
+  .ant-menu-item-only-child:hover {
+    background-color: rgb(233, 233, 233) !important;
+  }
+}
+.menu-sidenav2 {
+  width: 15vw;
+  background-color: white !important;
+  margin: 1em;
+  border-radius: 20px;
+  .ant-menu-item,
+  .ant-menu-submenu,
+  .ant-menu-sub {
+    font-family: "Gantari";
+    color: black;
+    background-color: white !important;
+    border-radius: 0;
+    span {
+      font-size: 1.1em;
+    }
+    .anticon {
+      font-size: 1.5em !important;
+    }
+  }
+
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+  .ant-menu-item-selected {
+    color: rgb(0, 0, 0);
+
+    background-color: transparent;
+  }
+}
