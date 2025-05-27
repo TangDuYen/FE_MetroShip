@@ -38,15 +38,15 @@ function SideNav({}) {
         defaultOpenKeys={["sub1"]}
         mode="inline"
         theme="dark"
-        items={
-          user.Role == "Admin"
-            ? navDashboardConfig
-            : user.Role == "Staff"
-            ? navDashboardConfigStaff
-            : user.Role == "Customer"
-            ? navDashboardConfigCustomer
-            : null
-        }
+        // items={
+        //   user.Role == "Admin"
+        //     ? navDashboardConfig
+        //     : user.Role == "Staff"
+        //     ? navDashboardConfigStaff
+        //     : user.Role == "Customer"
+        //     ? navDashboardConfigCustomer
+        //     : null
+        // }
         
         className="menu-sidenav"
       />

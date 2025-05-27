@@ -1,0 +1,17 @@
+.admin-account {
+    display: flex;               /* This will align the items horizontally */
+    align-items: center;         /* Align avatar and text vertically centered */
+    gap: 10px;                   /* Adds space between avatar and role text */
+    
+    &_avatar {
+        background-color: #f0f0f0; /* You can adjust the avatar background color */
+    }
+
+    &_info {
+        &_role {
+            font-size: 16px;      /* Adjust the font size for the role */
+            color: #333;          /* Adjust color as needed */
+            margin: 0;            /* Remove default margins */
+        }
+    }
+}

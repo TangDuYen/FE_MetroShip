@@ -1,10 +1,11 @@
-import { Layout, Drawer } from "antd";
 import "./Main.scss";
-import NavDashboard from "../../../../components/nav-dashboard/NavDashboard";
-import HeaderDashboard from "../header-dasboard/Header"; // Changed Header to HeaderDashboard to avoid conflict
-import { useState } from "react";
+
+import { Drawer, Layout } from "antd";
 import { Outlet, useLocation } from "react-router-dom";
+
+import HeaderDashboard from "../header-dashboard/Header";
 import SideNav from "../side-nav/SideNav";
+import { useState } from "react";
 
 const { Content, Sider, Header } = Layout;
 

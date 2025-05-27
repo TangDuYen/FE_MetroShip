@@ -1,23 +1,24 @@
-import {
-  Row,
-  Col,
-  Button,
-  Avatar,
-  Typography,
-  Dropdown,
-  Space,
-  Menu,
-} from "antd";
-import { AlignLeftOutlined, LogoutOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import "./Header.scss";
-import { useMediaQuery } from "react-responsive";
-import AdminAccount from "../../../../components/admin-account/AdminAccount";
+
+import { AlignLeftOutlined, LogoutOutlined } from "@ant-design/icons";
+import {
+  Avatar,
+  Button,
+  Col,
+  Dropdown,
+  Menu,
+  Row,
+  Space,
+  Typography,
+} from "antd";
 import { logout, selectUser } from "../../../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { AiOutlineLogout } from "react-icons/ai";
 
-function Header({ name, subName, onPress }) {
+import { AiOutlineLogout } from "react-icons/ai";
+import { useMediaQuery } from "react-responsive";
+import { useNavigate } from "react-router-dom";
+
+function HeaderDashboard({ name, subName, onPress }) {
   const isDesktop = useMediaQuery({ minWidth: 991 });
   const isMobile = useMediaQuery({ maxWidth: 630 });
   const user = useSelector(selectUser);
@@ -61,7 +62,8 @@ function Header({ name, subName, onPress }) {
       >
     
         <p className="header-dashboard__title" style={{color:'white'}}>
-          Hi {user.Role}! Welcome to Dashboard
+          {/* Hi {user.Role}!  */}
+          Welcome to Dashboard
         </p>
         
   
@@ -70,4 +72,4 @@ function Header({ name, subName, onPress }) {
   );
 }
 
-export default Header;
+export default HeaderDashboard;

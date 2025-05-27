@@ -67,7 +67,7 @@ function Order() {
     },
     {
       title: "Thông tin kiện hàng",
-      description: "Nhập thông tin kiện hàng và chọn thời gian giao",
+      description: "Nhập thông tin đơn hàng",
       component: (
         <ParcelInfo
           personalInfo={personalInfo}

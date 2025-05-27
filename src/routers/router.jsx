@@ -7,6 +7,7 @@ import HistoryOrders from "../pages/history_orders/HistoryOrders";
 import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
+import Main from "../pages/dashboard/layout/main-dashboard/Main";
 import Order from "../pages/order/Order";
 import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
@@ -147,68 +148,68 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-    //   {
-    //     path: "/user-profile/",
-    //     element: <Sidebar />,
-    //     children: [
-    //       {
-    //         path: "profile",
-    //         element: (
-    //           <ProtectedRouteCustomer>
-    //             <Profile />
-    //           </ProtectedRouteCustomer>
-    //         ),
-    //       },
-        //   {
-        //     path: "track-booking",
-        //     element: (
-        //       <ProtectedRouteCustomer>
-        //         <BookingCustomer />
-        //       </ProtectedRouteCustomer>
-        //     ),
-        //   },
-        //   {
-        //     path: "history-bookings",
-        //     element: (
-        //       <ProtectedRouteCustomer>
-        //         <HistoryBooking />
-        //       </ProtectedRouteCustomer>
-        //     ),
-        //   },
-    //     ],
-    //   },
-    //   {
-    //     path: "/thank-you",
-    //     element: (
-    //       <ProtectedRouteCustomer>
-    //         <ThanksCard />
-    //       </ProtectedRouteCustomer>
-    //     ),
-    //   },
-    //   {
-    //     path: "/payment-cancelled",
-    //     element: (
-    //       <ProtectedRouteCustomer>
-    //         <CancelCard />
-    //       </ProtectedRouteCustomer>
-    //     ),
-    //   },
-    //   {
-    //     path: "/booking",
-    //     element: (
-    //       <ProtectedRouteCustomer>
-    //         <Booking />
-    //       </ProtectedRouteCustomer>
-    //     ),
-    //   },
-    //   {
-    //     path: "/feedback",
-    //     element: (
-    //       <ProtectedRouteCustomer>
-    //         <Feedback />
-    //       </ProtectedRouteCustomer>
-    //     ),
-    //   },
+      //   {
+      //     path: "/user-profile/",
+      //     element: <Sidebar />,
+      //     children: [
+      //       {
+      //         path: "profile",
+      //         element: (
+      //           <ProtectedRouteCustomer>
+      //             <Profile />
+      //           </ProtectedRouteCustomer>
+      //         ),
+      //       },
+      //   {
+      //     path: "track-booking",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <BookingCustomer />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
+      //   {
+      //     path: "history-bookings",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <HistoryBooking />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
+      //     ],
+      //   },
+      //   {
+      //     path: "/thank-you",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <ThanksCard />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
+      //   {
+      //     path: "/payment-cancelled",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <CancelCard />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
+      //   {
+      //     path: "/booking",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <Booking />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
+      //   {
+      //     path: "/feedback",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         <Feedback />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
     ],
   },
   {
@@ -239,67 +240,80 @@ export const router = createBrowserRouter([
     path: PATH_NAME.PAGE404,
     element: <Page404 />,
   },
+  {
+    path: "/dashboard",
+    element: (
+      <Main />
+    ), children: [
+      {
+        path: "/dashboard/staff",
+        element: (
+          <OrderStaff />
+        ),
+      }
+    ]
+  },
 
-  //dashboard
-    {
-      path: "/dashboard",
-      element: (
-        <ProtectedDashboard>
-          <Main />
-        </ProtectedDashboard>
-      ),
-      children: [
-        //staff
-        {
-          path: "/dashboard/staff",
-          element: (
-            <ProtectedRouteStaff>
-              <OrderStaff />
-            </ProtectedRouteStaff>
-          ),
-        },
+  // dashboard
+  // {
+  //   path: "/dashboard",
+  //   element: (
+  //     <ProtectedDashboard>
+  //       <Main />
+  //     </ProtectedDashboard>
+  //   ),
+  //   children: [
+  //     staff
+  //     {
+  //       path: "/dashboard/staff",
+  //       element: (
+  //         <ProtectedRouteStaff>
+  //           <OrderStaff />
+  //         </ProtectedRouteStaff>
+  //       ),
+  //     },
 
-        //admin
-        {
-          path: "/dashboard/admin/salon-manage",
-          element: (
-            <ProtectedRouteAdmin>
-              <SalonAdmin />
-            </ProtectedRouteAdmin>
-          ),
-        },
-        {
-          path: "/dashboard/admin",
-          element: (
-            <ProtectedRouteAdmin>
-              <AdminDashboard />
-            </ProtectedRouteAdmin>
-          ),
-        },
-        {
-          path: "/dashboard/admin/user-manage",
-          element: (
-            <ProtectedRouteAdmin>
-              <UserAdmin />
-            </ProtectedRouteAdmin>
-          ),
-        },
-        {
-          path: "/dashboard/admin/members-manage",
-          element: (
-            <ProtectedRouteAdmin>
-              <MemberAdmin />
-            </ProtectedRouteAdmin>
-          ),
-        },
-        {
-          path: "/dashboard/admin/services-manage",
-          element: (
-            <ProtectedRouteAdmin>
-              <AdminServices />
-            </ProtectedRouteAdmin>
-          ),
-        },
-      ],
-    },
+      //admin
+      // {
+      //   path: "/dashboard/admin/salon-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <SalonAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <AdminDashboard />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/user-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <UserAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/members-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <MemberAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/services-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <AdminServices />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+  //   ],
+  // },
 ]);

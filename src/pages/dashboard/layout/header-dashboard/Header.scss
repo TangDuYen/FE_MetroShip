@@ -1,9 +1,9 @@
-@import "../../../../styles/variables.scss";
+@use "../../../../styles/variables.scss" as *;
 
 .header-dashboard {
   height: 7vh;
   padding: 0 2em;
-  background-color: $secondary-color;
+  background-color: $primary-color;
   &__header-control {
     display: flex;
     justify-content: center;

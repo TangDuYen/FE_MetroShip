@@ -14,4 +14,6 @@ export const PATH_NAME = {
     VERIFY_MAIL: "/verify-mail",
     BOOKING_ORDER: "/booking-order",
     PAGE404: "*",
+    POLICY: "/policy",
+    DASHBOARD_STAFF: "/dashboard/staff",
 }
