@@ -26,7 +26,7 @@ import { useSelector } from "react-redux";
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user) {
-    message.error("You need to login first!!");
+    message.error("Bạn cần phải đăng nhập trước!!");
     return <Navigate to="/login" replace />;
   }
   return children;
@@ -35,7 +35,7 @@ const ProtectedRouteAuth = ({ children }) => {
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
   if (user?.role?.includes("Admin") || user?.role?.includes("Staff")) {
-    message.error("You do not have permission to access this page.");
+    message.error("Bạn không có quyền truy cập vào trang này.");
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -57,7 +57,7 @@ const ProtectedDashboard = ({ children }) => {
 const ProtectedRouteAdmin = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user?.role?.includes("Admin")) {
-    message.error("You do not have permission to access this page.");
+    message.error("Bạn không có quyền truy cập vào trang này.");
     return <Navigate to="/dashboard/admin" replace />;
   }
   return children;
@@ -66,7 +66,7 @@ const ProtectedRouteAdmin = ({ children }) => {
 const ProtectedRouteStaff = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user?.role?.includes("Staff")) {
-    message.error("You do not have permission to access this page.");
+    message.error("Bạn không có quyền truy cập vào trang này.");
     return <Navigate to="/dashboard/staff" replace />;
   }
   return children;
@@ -129,14 +129,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <HistoryPayment />
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.ABOUT_US,
-        element: (
-          <ProtectedRouteCustomer>
-            <AboutUs />
           </ProtectedRouteCustomer>
         ),
       },
@@ -232,27 +224,23 @@ export const router = createBrowserRouter([
     path: PATH_NAME.VERIFY_MAIL,
     element: <VerifyMail />,
   },
-  // {
-  //   path: PATH_NAME.BOOKING_ORDER,
-  //   element: <Order />,
-  // },
   {
     path: PATH_NAME.PAGE404,
     element: <Page404 />,
   },
-  {
-    path: "/dashboard",
-    element: (
-      <Main />
-    ), children: [
-      {
-        path: "/dashboard/staff",
-        element: (
-          <OrderStaff />
-        ),
-      }
-    ]
-  },
+  // {
+  //   path: "/dashboard",
+  //   element: (
+  //     <Main />
+  //   ), children: [
+  //     {
+  //       path: "/dashboard/staff",
+  //       element: (
+  //         <OrderStaff />
+  //       ),
+  //     }
+  //   ]
+  // },
 
   // dashboard
   // {
@@ -273,47 +261,47 @@ export const router = createBrowserRouter([
   //       ),
   //     },
 
-      //admin
-      // {
-      //   path: "/dashboard/admin/salon-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <SalonAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <AdminDashboard />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/user-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <UserAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/members-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <MemberAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/services-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <AdminServices />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
+  //admin
+  // {
+  //   path: "/dashboard/admin/salon-manage",
+  //   element: (
+  //     <ProtectedRouteAdmin>
+  //       <SalonAdmin />
+  //     </ProtectedRouteAdmin>
+  //   ),
+  // },
+  // {
+  //   path: "/dashboard/admin",
+  //   element: (
+  //     <ProtectedRouteAdmin>
+  //       <AdminDashboard />
+  //     </ProtectedRouteAdmin>
+  //   ),
+  // },
+  // {
+  //   path: "/dashboard/admin/user-manage",
+  //   element: (
+  //     <ProtectedRouteAdmin>
+  //       <UserAdmin />
+  //     </ProtectedRouteAdmin>
+  //   ),
+  // },
+  // {
+  //   path: "/dashboard/admin/members-manage",
+  //   element: (
+  //     <ProtectedRouteAdmin>
+  //       <MemberAdmin />
+  //     </ProtectedRouteAdmin>
+  //   ),
+  // },
+  // {
+  //   path: "/dashboard/admin/services-manage",
+  //   element: (
+  //     <ProtectedRouteAdmin>
+  //       <AdminServices />
+  //     </ProtectedRouteAdmin>
+  //   ),
+  // },
   //   ],
   // },
 ]);

@@ -2,20 +2,20 @@ import './Register.scss'
 
 import * as Yup from "yup";
 
-import { Checkbox, message } from 'antd';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { useEffect, useState } from 'react';
 
+import { Checkbox } from 'antd';
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login.jpg';
 import api from '../../config/axios';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 
 function Register() {
   const [error, setError] = useState(null);
   const nav = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
-const [messageApi, contextHolder] = message.useMessage();
   //VALIDATION
   const validationSchema = Yup.object({
     userName: Yup.string().required("Tên đăng nhập không được để trống"),
@@ -34,10 +34,8 @@ const [messageApi, contextHolder] = message.useMessage();
 
   const handleSubmit = async (values) => {
     if (!isChecked) {
-      messageApi.open({
-        type: 'error',
-        content:  "Bạn cần đồng ý với Điều khoản Dịch vụ và Chính sách Bảo mật trước khi đăng kí.",
-      });
+      toast.error("Bạn cần đồng ý với Điều khoản Dịch vụ và Chính sách Bảo Mật để tiếp tục!");
+
       return;
     }
 
@@ -56,21 +54,18 @@ const [messageApi, contextHolder] = message.useMessage();
       console.log(responseData);
 
       if (responseData.statusCode === 200) {
-        message.success(responseData.data);
+        toast.success("Đăng ký thành công!");
         sessionStorage.setItem("registrationData", JSON.stringify(payload));
         console.log("registrationData");
         nav("/pin-code");
       } else {
-        message.error(responseData.data);
-        console.log(message.error("Hello"));
-
+        toast.error(responseData.data);
       }
     } catch (error) {
-      console.error("Lỗi đăng ký:", error?.response?.data || error.message);
-      message.error("Đăng ký thất bại, vui lòng kiểm tra thông tin.");
+      console.error("Lỗi đăng ký:", error?.response?.data.message);
+      toast.error("Đăng ký thất bại. " +error?.response?.data.message);
     }
   };
-
   return (
     <>
       <div className="register-container">

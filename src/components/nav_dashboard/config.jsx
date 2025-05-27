@@ -1,11 +1,7 @@
 import {
-  CalendarOutlined,
   DashboardOutlined,
   OrderedListOutlined,
   ProductOutlined,
-  ShopOutlined,
-  ShoppingCartOutlined,
-  SolutionOutlined,
   TeamOutlined,
   UnorderedListOutlined,
   UserOutlined,
