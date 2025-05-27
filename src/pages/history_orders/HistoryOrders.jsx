@@ -10,7 +10,8 @@ function HistoryOrders() {
     weight: 100 + i * 10,
     price: 10000 + i * 500,
     size: `10x${i + 1}x5`,
-    status: "delivered",
+    status: i % 2 === 0 ? "delivered" : "pending",
+    deliveryDate: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
   }));
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,11 +20,23 @@ function HistoryOrders() {
   const itemsPerPage = 10;
   const pageWindowSize = 3;
 
-  const filteredGoods = allGoods.filter(
-    (item) =>
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filteredGoods = allGoods.filter((item) => {
+    const matchSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      item.code.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchStatus = filterStatus === "all" || item.status === filterStatus;
+
+    const matchDateRange =
+      (!startDate || item.deliveryDate >= startDate) &&
+      (!endDate || item.deliveryDate <= endDate);
+
+    return matchSearch && matchStatus && matchDateRange;
+  });
 
   const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
 
@@ -95,6 +108,38 @@ function HistoryOrders() {
                 </button>
               </div>
 
+              <div className="filter-bar">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="delivered">Đã nhận hàng</option>
+                  <option value="pending">Đang chờ giao</option>
+                </select>
+
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+                <span>đến</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+
               <table className="goods-table">
                 <thead>
                   <tr>
@@ -102,15 +147,16 @@ function HistoryOrders() {
                     <th>Mã hàng hóa</th>
                     <th>Tên hàng hóa</th>
                     <th>Trọng lượng (gram)</th>
-                    <th>Đơn giá</th>
+                    <th>Tổng phí ship</th>
                     <th>Kích thước (cm)</th>
+                    <th>Ngày giao hàng</th>
                     <th>Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayedGoods.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="no-data">
+                      <td colSpan="8" className="no-data">
                         Không có bản ghi nào
                       </td>
                     </tr>
@@ -123,13 +169,16 @@ function HistoryOrders() {
                         <td>{item.weight}</td>
                         <td>{item.price.toLocaleString()}</td>
                         <td>{item.size}</td>
+                        <td>{item.deliveryDate}</td>
                         <td>
                           {item.status === "delivered" ? (
                             <span className="status-delivered">
                               Đã nhận hàng
                             </span>
                           ) : (
-                            "Chưa rõ"
+                            <span className="status-pending">
+                              Đang chờ giao
+                            </span>
                           )}
                         </td>
                       </tr>
