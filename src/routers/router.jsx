@@ -1,6 +1,6 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
-import AboutUs from "../pages/aboutUs/AboutUs";
+import AboutUs from "../pages/about_us/AboutUs";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
@@ -8,10 +8,12 @@ import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
 import Order from "../pages/order/Order";
+import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
 import Page404 from "../pages/page404/Page404";
 import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
+import Profile from "../pages/profile/Profile";
 import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import ScrollToTop from "../components/ScrollToTop";
@@ -19,11 +21,6 @@ import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
-import { PATH_NAME } from "../constants/pathname";
-import Profile from "../pages/profile/Profile";
-import HistoryOrders from "../pages/history_orders/HistoryOrders";
-import HistoryPayment from "../pages/history_payment/HistoryPayment";
-import AboutUs from "../pages/about_us/AboutUs";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -69,7 +66,7 @@ const ProtectedRouteStaff = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user?.role?.includes("Staff")) {
     message.error("You do not have permission to access this page.");
-    return <Navigate to="/dashboard/staff/bookings" replace />;
+    return <Navigate to="/dashboard/staff" replace />;
   }
   return children;
 };
@@ -103,7 +100,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/policy",
+        path: PATH_NAME.POLICY,
         element: (
           <ProtectedRouteCustomer>
             <Policy />
@@ -244,134 +241,65 @@ export const router = createBrowserRouter([
   },
 
   //dashboard
-  //   {
-  //     path: "/dashboard",
-  //     element: (
-  //       <ProtectedDashboard>
-  //         <Main />
-  //       </ProtectedDashboard>
-  //     ),
-  //     children: [
-  //       //staff
-  //       {
-  //         path: "/dashboard/staff",
-  //         element: (
-  //           <ProtectedRouteStaff>
-  //             <BookingManager />
-  //           </ProtectedRouteStaff>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/manager/bookings",
-  //         element: (
-  //           <ProtectedRouteManager>
-  //             <BookingManager />
-  //           </ProtectedRouteManager>
-  //         ),
-  //       },
+    {
+      path: "/dashboard",
+      element: (
+        <ProtectedDashboard>
+          <Main />
+        </ProtectedDashboard>
+      ),
+      children: [
+        //staff
+        {
+          path: "/dashboard/staff",
+          element: (
+            <ProtectedRouteStaff>
+              <OrderStaff />
+            </ProtectedRouteStaff>
+          ),
+        },
 
-  //       {
-  //         path: "/dashboard/manager/service",
-  //         element: (
-  //           <ProtectedRouteManager>
-  //             <ViewService />
-  //           </ProtectedRouteManager>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/manager/add-combo",
-  //         element: (
-  //           <ProtectedRouteManager>
-  //             <AddCombo />
-  //           </ProtectedRouteManager>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/manager/view-combo",
-  //         element: (
-  //           <ProtectedRouteManager>
-  //             <ViewCombo />
-  //           </ProtectedRouteManager>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/manager/stylist-manage",
-  //         element: (
-  //           <ProtectedRouteManager>
-  //             <StylistManager />
-  //           </ProtectedRouteManager>
-  //         ),
-  //       },
-
-  //       //admin
-  //       {
-  //         path: "/dashboard/admin/salon-manage",
-  //         element: (
-  //           <ProtectedRouteAdmin>
-  //             <SalonAdmin />
-  //           </ProtectedRouteAdmin>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/admin",
-  //         element: (
-  //           <ProtectedRouteAdmin>
-  //             <AdminDashboard />
-  //           </ProtectedRouteAdmin>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/admin/user-manage",
-  //         element: (
-  //           <ProtectedRouteAdmin>
-  //             <UserAdmin />
-  //           </ProtectedRouteAdmin>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/admin/members-manage",
-  //         element: (
-  //           <ProtectedRouteAdmin>
-  //             <MemberAdmin />
-  //           </ProtectedRouteAdmin>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/admin/services-manage",
-  //         element: (
-  //           <ProtectedRouteAdmin>
-  //             <AdminServices />
-  //           </ProtectedRouteAdmin>
-  //         ),
-  //       },
-
-  //       //stylist
-  //       {
-  //         path: "/dashboard/stylist",
-  //         element: (
-  //           <ProtectedRouteStylist>
-  //             <BookingAssigned />
-  //           </ProtectedRouteStylist>
-  //         ),
-  //       },
-  //       {
-  //         path: "/dashboard/stylist/register-workshifts",
-  //         element: (
-  //           <ProtectedRouteStylist>
-  //             <RegisterWorkshifts />
-  //           </ProtectedRouteStylist>
-  //         ),
-  //       },
-
-  //       //staff
-  //       {
-  //         path: "/dashboard/staff",
-  //         element: (
-  //           <ProtectedRouteSalonStaff>
-  //             <BookingStaff />
-  //           </ProtectedRouteSalonStaff>
-  //         ),
-  //       },
-  //     ],
-  //   },
+        //admin
+        {
+          path: "/dashboard/admin/salon-manage",
+          element: (
+            <ProtectedRouteAdmin>
+              <SalonAdmin />
+            </ProtectedRouteAdmin>
+          ),
+        },
+        {
+          path: "/dashboard/admin",
+          element: (
+            <ProtectedRouteAdmin>
+              <AdminDashboard />
+            </ProtectedRouteAdmin>
+          ),
+        },
+        {
+          path: "/dashboard/admin/user-manage",
+          element: (
+            <ProtectedRouteAdmin>
+              <UserAdmin />
+            </ProtectedRouteAdmin>
+          ),
+        },
+        {
+          path: "/dashboard/admin/members-manage",
+          element: (
+            <ProtectedRouteAdmin>
+              <MemberAdmin />
+            </ProtectedRouteAdmin>
+          ),
+        },
+        {
+          path: "/dashboard/admin/services-manage",
+          element: (
+            <ProtectedRouteAdmin>
+              <AdminServices />
+            </ProtectedRouteAdmin>
+          ),
+        },
+      ],
+    },
 ]);

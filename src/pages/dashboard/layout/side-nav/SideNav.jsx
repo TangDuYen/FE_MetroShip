@@ -1,17 +1,13 @@
-import { Menu } from "antd";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./SideNav.scss";
+
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout, selectUser } from "../../../../redux/features/counterSlice";
-import { AiOutlineLogout } from "react-icons/ai";
-import navDashboardConfig, {
-  navDashboardConfigAdmin,
-  navDashboardConfigCustomer,
-  navDashboardConfigStaff,
-  navDashboardConfigStylist,
-  navpath,
-} from "../../../../components/nav-dashboard/config";
+import navDashboardConfig, { navDashboardConfigCustomer, navDashboardConfigStaff, navpath } from "../../../../components/nav_dashboard/config";
 import { useDispatch, useSelector } from "react-redux";
+
+import { AiOutlineLogout } from "react-icons/ai";
 import { LogoutOutlined } from "@ant-design/icons";
+import { Menu } from "antd";
 
 function SideNav({}) {
   const { pathname } = useLocation();
@@ -43,14 +39,10 @@ function SideNav({}) {
         mode="inline"
         theme="dark"
         items={
-          user.Role == "Salon Manager"
+          user.Role == "Admin"
             ? navDashboardConfig
-            : user.Role == "Admin"
-            ? navDashboardConfigAdmin
-            : user.Role == "Salon Staff"
+            : user.Role == "Staff"
             ? navDashboardConfigStaff
-            : user.Role == "Stylist"
-            ? navDashboardConfigStylist
             : user.Role == "Customer"
             ? navDashboardConfigCustomer
             : null

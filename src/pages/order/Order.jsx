@@ -5,13 +5,13 @@ import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
 import ConfirmPage from './ConfirmPage';
 import MetroPicture from '../../assets/metro.jpg';
 import MetroSelector from './MetroSelector';
+import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import { selectUser } from '../../redux/features/counterSlice';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useState } from 'react';
-import { PATH_NAME } from '../../constants/pathname';
 
 function Order() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -66,21 +66,6 @@ function Order() {
       ),
     },
     {
-      title: "Chọn trạm Metro",
-      description: "Chọn trạm gửi và nhận",
-      component: (
-        <MetroSelector
-          personalInfo={personalInfo}
-          setPersonalInfo={setPersonalInfo}
-          metroSelector={metroSelector}
-          setMetroSelector={setMetroSelector}
-          setPickedDate={setPickedDate}
-          setPickedTime={setPickedTime}
-          onNext={() => setCurrentStep(2)}
-        />
-      ),
-    },
-    {
       title: "Thông tin kiện hàng",
       description: "Nhập thông tin kiện hàng và chọn thời gian giao",
       component: (
@@ -88,6 +73,11 @@ function Order() {
           personalInfo={personalInfo}
           parcelInfo={parcelInfo}
           setParcelInfo={setParcelInfo}
+          metroSelector={metroSelector}
+          setMetroSelector={setMetroSelector}
+          setPickedDate={setPickedDate}
+          setPickedTime={setPickedTime}
+          onNext={() => setCurrentStep(2)}
         />
       ),
     },
