@@ -9,8 +9,8 @@ function HistoryPayment() {
     transactionCode: `GD00${i + 1}`,
     method: i % 2 === 0 ? "Ví điện tử" : "COD",
     amount: 50000 + i * 10000,
-    status: "completed",
-    date: `2024-05-${(i % 28) + 1}`,
+    status: i % 2 === 0 ? "completed" : "pending",
+    date: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
   }));
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,12 +18,23 @@ function HistoryPayment() {
   const [pageWindowStart, setPageWindowStart] = useState(1);
   const itemsPerPage = 10;
   const pageWindowSize = 3;
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const filteredPayments = allPayments.filter(
-    (item) =>
+  const filteredPayments = allPayments.filter((item) => {
+    const matchSearch =
       item.transactionCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.method.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      item.method.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchStatus = filterStatus === "all" || item.status === filterStatus;
+
+    const matchDateRange =
+      (!startDate || item.date >= startDate) &&
+      (!endDate || item.date <= endDate);
+
+    return matchSearch && matchStatus && matchDateRange;
+  });
 
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
 
@@ -95,6 +106,38 @@ function HistoryPayment() {
                 </button>
               </div>
 
+              <div className="filter-bar">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="completed">Đã thanh toán</option>
+                  <option value="pending">Chưa thanh toán</option>
+                </select>
+
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+                <span>đến</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+
               <table className="history-payment-table">
                 <thead>
                   <tr>
@@ -116,16 +159,20 @@ function HistoryPayment() {
                   ) : (
                     displayedPayments.map((item, index) => (
                       <tr key={item.id}>
-                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{item.transactionCode}</td>
                         <td>{item.method}</td>
                         <td>{item.amount.toLocaleString()}đ</td>
                         <td>{item.date}</td>
                         <td>
-                          {item.status === 'completed' ? (
-                            <span className="status-completed">Đã thanh toán</span>
+                          {item.status === "completed" ? (
+                            <span className="status-completed">
+                              Đã thanh toán
+                            </span>
                           ) : (
-                            <span className="status-pending">Chưa thanh toán</span>
+                            <span className="status-pending">
+                              Chưa thanh toán
+                            </span>
                           )}
                         </td>
                       </tr>

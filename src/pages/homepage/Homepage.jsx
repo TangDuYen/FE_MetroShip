@@ -140,11 +140,11 @@ function Homepage() {
               <img src={metroDeliveryImg} alt="Metro Delivery" />
             </div>
             <div className="home-metro-content">
-              <h3 className="home-subheading">Chúng tôi là</h3>
-              <h2 className="home-heading">
+              <h3>Chúng tôi là</h3>
+              <h2>
                 Dịch vụ bưu kiện tốt nhất từ trước đến nay.
               </h2>
-              <p className="home-description">
+              <p>
                 Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autem
                 tempore, commodi quos excepturi tempora aliquam eligendi, cumque
                 sunt quam magnam dolores quibusdam quae officiis omnis aperiam
@@ -212,7 +212,7 @@ function Homepage() {
         </section>
 
         <section className="home-section-6">
-          <h2 className="home-faq-title">Câu Hỏi Thường Gặp</h2>
+          <h2>Câu Hỏi Thường Gặp</h2>
           <div className="home-faq-grid">
             {faqs.map((faq, index) => (
               <div className="home-faq-item" key={index}>
