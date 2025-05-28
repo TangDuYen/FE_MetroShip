@@ -19,6 +19,8 @@ import Profile from "../pages/profile/Profile";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
 import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import AboutUs from "../pages/about_us/AboutUs";
+import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
+import PaymentFail from "../pages/payment_fail/PaymentFail";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -126,6 +128,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <HistoryPayment />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.PAYMENT_SUCCESS,
+        element: (
+          <ProtectedRouteCustomer>
+            <PaymentSuccess />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.PAYMENT_FAILED,
+        element: (
+          <ProtectedRouteCustomer>
+            <PaymentFail />
           </ProtectedRouteCustomer>
         ),
       },
