@@ -8,6 +8,7 @@ import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
 import Main from "../pages/dashboard/layout/main-dashboard/Main";
+import NoFooterLayout from "../components/no_footer_layout/NoFooterLayout";
 import Order from "../pages/order/Order";
 import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
@@ -19,6 +20,7 @@ import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import ScrollToTop from "../components/ScrollToTop";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
+import { element } from "prop-types";
 import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
@@ -132,14 +134,14 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-      {
-        path: PATH_NAME.BOOKING_ORDER,
-        element: (
-          <ProtectedRouteCustomer>
-            <Order />
-          </ProtectedRouteCustomer>
-        ),
-      },
+      // {
+      //   path: PATH_NAME.BOOKING_ORDER,
+      //   element: (
+      //     <ProtectedRouteCustomer>
+      //       <Order />
+      //     </ProtectedRouteCustomer>
+      //   ),
+      // },
       //   {
       //     path: "/user-profile/",
       //     element: <Sidebar />,
@@ -228,6 +230,19 @@ export const router = createBrowserRouter([
     path: PATH_NAME.PAGE404,
     element: <Page404 />,
   },
+  {
+    path: PATH_NAME.BOOKING_ORDER,
+    element: <NoFooterLayout />,
+    children: [
+      {
+        path: PATH_NAME.BOOKING_ORDER,
+        element:
+          <ProtectedRouteCustomer>
+            <Order />
+          </ProtectedRouteCustomer>
+      }
+    ],
+  },
   // {
   //   path: "/dashboard",
   //   element: (
@@ -242,66 +257,66 @@ export const router = createBrowserRouter([
   //   ]
   // },
 
-  // dashboard
-  // {
-  //   path: "/dashboard",
-  //   element: (
-  //     <ProtectedDashboard>
-  //       <Main />
-  //     </ProtectedDashboard>
-  //   ),
-  //   children: [
-  //     staff
-  //     {
-  //       path: "/dashboard/staff",
-  //       element: (
-  //         <ProtectedRouteStaff>
-  //           <OrderStaff />
-  //         </ProtectedRouteStaff>
-  //       ),
-  //     },
+  //dashboard
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedDashboard>
+        <Main />
+      </ProtectedDashboard>
+    ),
+    children: [
+      //staff
+      {
+        path: "/dashboard/staff",
+        element: (
+          <ProtectedRouteStaff>
+            <OrderStaff />
+          </ProtectedRouteStaff>
+        ),
+      },
 
-  //admin
-  // {
-  //   path: "/dashboard/admin/salon-manage",
-  //   element: (
-  //     <ProtectedRouteAdmin>
-  //       <SalonAdmin />
-  //     </ProtectedRouteAdmin>
-  //   ),
-  // },
-  // {
-  //   path: "/dashboard/admin",
-  //   element: (
-  //     <ProtectedRouteAdmin>
-  //       <AdminDashboard />
-  //     </ProtectedRouteAdmin>
-  //   ),
-  // },
-  // {
-  //   path: "/dashboard/admin/user-manage",
-  //   element: (
-  //     <ProtectedRouteAdmin>
-  //       <UserAdmin />
-  //     </ProtectedRouteAdmin>
-  //   ),
-  // },
-  // {
-  //   path: "/dashboard/admin/members-manage",
-  //   element: (
-  //     <ProtectedRouteAdmin>
-  //       <MemberAdmin />
-  //     </ProtectedRouteAdmin>
-  //   ),
-  // },
-  // {
-  //   path: "/dashboard/admin/services-manage",
-  //   element: (
-  //     <ProtectedRouteAdmin>
-  //       <AdminServices />
-  //     </ProtectedRouteAdmin>
-  //   ),
-  // },
-  //   ],
-  // },
+      //admin
+      // {
+      //   path: "/dashboard/admin/salon-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <SalonAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <AdminDashboard />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/user-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <UserAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/members-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <MemberAdmin />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+      // {
+      //   path: "/dashboard/admin/services-manage",
+      //   element: (
+      //     <ProtectedRouteAdmin>
+      //       <AdminServices />
+      //     </ProtectedRouteAdmin>
+      //   ),
+      // },
+    ],
+  },
 ]);

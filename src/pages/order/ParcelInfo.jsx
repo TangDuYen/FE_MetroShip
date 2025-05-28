@@ -5,6 +5,7 @@ import { Col, DatePicker, Row, Typography } from 'antd';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
 import Title from 'antd/es/skeleton/Title';
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -110,9 +111,6 @@ function ParcelInfo({ parcelInfo, setParcelInfo, metroSelector, setMetroSelector
         </Form.Item>
       </Form>
       <div className="metro-selector">
-        <Row gutter={16}>
-          {/* Left Column: Dropdowns */}
-          <Col span={12}>
             <Title level={4}>Chọn trạm Metro</Title>
             <div className="selector-group">
               <label>Trạm gửi:</label>
@@ -170,9 +168,8 @@ function ParcelInfo({ parcelInfo, setParcelInfo, metroSelector, setMetroSelector
               </Select>
               <p style={{ fontWeight: "bold", color: "red" }}>Lưu ý: Khách hàng cần phải mang hàng đến trạm gửi trước giờ gửi trễ nhất 30 phút trước khi tàu chạy</p>
             </div>
-          </Col>
 
-          {/* Right Column: Map */}
+          {/* Right Column: Map
           <Col span={12}>
             <Title level={4}>Bản đồ</Title>
             <MapContainer
@@ -190,8 +187,7 @@ function ParcelInfo({ parcelInfo, setParcelInfo, metroSelector, setMetroSelector
                 </Marker>
               ))}
             </MapContainer>
-          </Col>
-        </Row>
+          </Col> */}
       </div>
     </>
 
