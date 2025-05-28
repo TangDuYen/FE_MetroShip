@@ -1,13 +1,21 @@
 import './Order.scss'
 
 import { MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Input } from 'antd';
+import api from '../../config/axios';
 import { selectUser } from '../../redux/features/counterSlice';
-import { useSelector } from 'react-redux';
 import { useState } from 'react';
 
 function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
+  const user = useSelector(selectUser);
+  const userData = JSON.parse(localStorage.getItem("userData"));
+  console.log(userData);
+  
+  const dispatch = useDispatch();
+  console.log(user);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes("Phone")) {
@@ -23,10 +31,10 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
       <div className="personalInfo__input">
         <Input
           size="middle"
-          placeholder="Sender Name"
+          placeholder= "Sender Name"
           prefix={<UserOutlined />}
-          name="senderName"
-          value={personalInfo.senderName}
+          name="senderName" 
+          value={userData.fullName}
           onChange={handleChange}
           className="personalInfo__input__inside"
         />
@@ -35,7 +43,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           placeholder="Sender Phone Number"
           name="senderPhone"
           className="personalInfo__input__inside"
-          value={personalInfo.senderPhone}
+          value={userData.phoneNumber}
           prefix={<PhoneOutlined />}
           onChange={handleChange}
         />

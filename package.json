@@ -14,6 +14,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.25.3",
     "axios": "^1.9.0",
+    "dayjs": "^1.11.13",
     "formik": "^2.4.6",
     "fortawesome": "^0.0.1-security",
     "jwt-decode": "^4.0.0",

@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
 import "./AboutUs.scss";
+
 import {
+  FaMapMarkedAlt,
   FaShieldAlt,
   FaShippingFast,
-  FaMapMarkedAlt,
   FaTrophy,
 } from "react-icons/fa";
+import React, { useEffect } from "react";
 
 function AboutUs() {
   useEffect(() => {

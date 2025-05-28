@@ -7,6 +7,7 @@ import api from '../../config/axios';
 import { jwtDecode } from 'jwt-decode';
 import { login } from '../../redux/features/counterSlice';
 import { message } from 'antd';
+import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -26,6 +27,8 @@ function Login() {
     };
     try {
       const response = await api.post("/auth/authentication", payload);
+      const userData = response.data;
+      localStorage.setItem("userData", JSON.stringify(userData));
       const token = response.data.token;
       localStorage.setItem("token", token);
       const user = jwtDecode(token);
@@ -39,13 +42,13 @@ function Login() {
       if (user.role.includes("Staff")) {
         nav("/dashboard/staff");
       }
-      message.success('Login successfully')
+      toast.success('Đăng nhập thành công')
     } catch (error) {
-      let errorMessage = "An error occurred. Please try again.";
+      let errorMessage = "Có lỗi xảy ra. Hãy thử lại.";
       if (error.response && error.response.data) {
         errorMessage = error.response.data;
       }
-      message.error(errorMessage);
+      toast.error(errorMessage);
     }
   };
 

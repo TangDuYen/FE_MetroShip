@@ -1,10 +1,9 @@
 import './Order.scss'
 
 import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
 import ConfirmPage from './ConfirmPage';
-import MetroPicture from '../../assets/metro.jpg';
-import MetroSelector from './MetroSelector';
 import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
@@ -41,6 +40,13 @@ function Order() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const user = useSelector(selectUser);
   const nav = useNavigate();
+  const metroStations = [
+    { id: 1, name: 'Bến Thành', coordinates: [10.772, 106.698] },
+    { id: 2, name: 'Suối Tiên', coordinates: [10.870, 106.803] },
+    { id: 3, name: 'Thủ Đức', coordinates: [10.849, 106.753] },
+    { id: 4, name: 'An Phú', coordinates: [10.790, 106.740] },
+    // Add more stations as needed
+  ];
   // const userId = user.Id;
   const showModal = () => {
     setIsModalOpen(true);
@@ -55,8 +61,7 @@ function Order() {
   };
   const steps = [
     {
-      title: "Xác nhận thông tin",
-      description: "Xác nhận thông tin người gửi và người nhận",
+      title: "Xác nhận thông tin cá nhân",
       component: (
         <PersonalInfo
           personalInfo={personalInfo}
@@ -67,7 +72,6 @@ function Order() {
     },
     {
       title: "Thông tin kiện hàng",
-      description: "Nhập thông tin đơn hàng",
       component: (
         <ParcelInfo
           personalInfo={personalInfo}
@@ -82,8 +86,7 @@ function Order() {
       ),
     },
     {
-      title: "Xác nhận đơn hàng",
-      description: "Xác nhận thông tin đơn hàng",
+      title: "Xác nhận thông tin đơn hàng",
       component: (
         <ConfirmPage
           personalInfo={personalInfo}
@@ -150,118 +153,128 @@ function Order() {
     <>
       <div className="order">
         {contextHolder}
-        <img
-          src="https://tphcm.cdnchinhphu.vn/334895287454388224/2023/8/23/metro-so-1-16618572668742131228344-16882866714571847829823-16927939569321374898356.jpg"
-          alt="maverick barber"
-          className="order__img"
-        />
+        <div className="order__map-background">
+          <MapContainer
+            center={[10.776, 106.700]}
+            zoom={12}
+            style={{ height: '100vh', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {metroStations.map((station) => (
+              <Marker key={station.id} position={station.coordinates}>
+                <Popup>{station.name}</Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+        <div className="order__container--vertical">
         <div className="order__text">Thông tin đơn hàng</div>
-        <div>
-          <Row className="order__container">
-            <Col span={6} className="order_container__left">
-              <ConfigProvider
-                theme={{
-                  components: {
-                    Steps: {
-                      processIconColor: "black",
-                      processTitleColor: "black",
-                    },
-                  },
-                }}
-              >
-                <Steps
-                  progressDot
-                  current={currentStep}
-                  direction="vertical"
-                  items={steps.map((step) => ({
-                    title: step.title,
-                    description: step.description,
-                  }))}
-                  className="order_container__left__steps"
-                />
-              </ConfigProvider>
-            </Col>
-            <Col span={18} className="order_container__right">
-              {steps[currentStep].component}
-              <div
-                className="order__buttons"
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: "1em",
-                }}
-              >
-                {currentStep > 0 && (
-                  <ConfigProvider
-                    theme={{
-                      components: {
-                        Button: {
-                          defaultColor: "white",
-                          defaultBg: "#4CAF50",
-                          defaultBorderColor: "#4CAF50",
-                          defaultHoverBorderColor: "#FFC107",
-                          defaultHoverColor: "black",
-                          defaultHoverBg: "#FFC107",
-                          defaultActiveBg: "#4CAF50",
-                          defaultActiveBorderColor: "#4CAF50",
-                          defaultActiveColor: "white",
-                        },
-                      },
-                    }}
-                  >
-                    <Button
-                      onClick={handlePrevious}
-                      style={{
-                        marginRight: 8,
-                        fontWeight: "500",
-                      }}
-                    >
-                      Trước
-                    </Button>
-                  </ConfigProvider>
-                )}
-                {/* Cấu hình riêng cho nút Submit */}
+          <ConfigProvider
+            theme={{
+              components: {
+                Steps: {
+                  processIconColor: "black",
+                  processTitleColor: "black",
+                },
+              },
+            }}
+          >
+            <Steps
+              progressDot
+              current={currentStep}
+              direction="horizontal"
+              items={steps.map((step) => ({
+                title: step.title,
+                description: step.description,
+              }))}
+              className="order__steps-horizontal"
+            />
+          </ConfigProvider>
+
+          <div className="order__step-content">
+            {steps[currentStep].component}
+
+            <div
+              className="order__buttons"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "1em",
+              }}
+            >
+              {currentStep > 0 && (
                 <ConfigProvider
                   theme={{
                     components: {
                       Button: {
                         defaultColor: "white",
-                        defaultBg: "#0066CC",
-                        defaultBorderColor: "#0066CC",
+                        defaultBg: "#4CAF50",
+                        defaultBorderColor: "#4CAF50",
                         defaultHoverBorderColor: "#FFC107",
                         defaultHoverColor: "black",
                         defaultHoverBg: "#FFC107",
-                        defaultActiveBg: "#0066CC",
-                        defaultActiveBorderColor: "#0066CC",
+                        defaultActiveBg: "#4CAF50",
+                        defaultActiveBorderColor: "#4CAF50",
                         defaultActiveColor: "white",
                       },
                     },
                   }}
                 >
                   <Button
-                    onClick={handleNext}
-                    style={{ fontWeight: "500" }}
+                    onClick={handlePrevious}
+                    style={{
+                      marginRight: 8,
+                      fontWeight: "500",
+                    }}
                   >
-                    {currentStep === steps.length - 1 ? "Xác nhận" : "Sau"}
+                    Trước
                   </Button>
                 </ConfigProvider>
-              </div>
-              <Modal
-                title="Confirm order"
-                open={isModalOpen}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                okText="Confirm"
-                okButtonProps={{ className: "confirm-button" }}
-                cancelButtonProps={{ className: "cancel-button" }}
-                className="modal-confirm"
+              )}
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Button: {
+                      defaultColor: "white",
+                      defaultBg: "#0066CC",
+                      defaultBorderColor: "#0066CC",
+                      defaultHoverBorderColor: "#FFC107",
+                      defaultHoverColor: "black",
+                      defaultHoverBg: "#FFC107",
+                      defaultActiveBg: "#0066CC",
+                      defaultActiveBorderColor: "#0066CC",
+                      defaultActiveColor: "white",
+                    },
+                  },
+                }}
               >
-                <p>
-                  Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
-                </p>
-              </Modal>
-            </Col>
-          </Row>
+                <Button
+                  onClick={handleNext}
+                  style={{ fontWeight: "500" }}
+                >
+                  {currentStep === steps.length - 1 ? "Xác nhận" : "Sau"}
+                </Button>
+              </ConfigProvider>
+            </div>
+          </div>
+
+          <Modal
+            title="Confirm order"
+            open={isModalOpen}
+            onOk={handleOk}
+            onCancel={handleCancel}
+            okText="Confirm"
+            okButtonProps={{ className: "confirm-button" }}
+            cancelButtonProps={{ className: "cancel-button" }}
+            className="modal-confirm"
+          >
+            <p>
+              Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
+            </p>
+          </Modal>
         </div>
       </div>
     </>

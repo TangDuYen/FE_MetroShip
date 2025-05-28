@@ -6,35 +6,39 @@
   width: 100%;
   height: 100%;
 
-  &__img {
+  &__map-background {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    z-index: 0;
   }
 
   &__text {
-    position: absolute;
-    top: 18%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     color: $text-color;
-    font-size: 3.5em;
+    font-size: 2em;
     font-weight: bold;
-    text-shadow: 5px 5px 10px rgba(0, 0, 0, 0.7);
     text-align: center;
     font-family: $font-primary;
+    margin-bottom: 1em;
   }
 
-  &__container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    // height: 72vh;
-    transform: translate(-50%, -50%);
-    width: 90%;
+  &__container--vertical {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+    min-height: 100vh;
+    margin: 5rem 0 0 0; 
+    padding: 2.5rem;
     background-color: white;
-    padding: 2em;
-    border-radius: 20px;
+  }
+
+  &__steps-horizontal {
+    margin-bottom: 2rem;
   }
 }
 
@@ -89,19 +93,17 @@
     border-radius: 10px;
     border-color: rgb(193, 190, 190);
   }
+
   .ant-input {
     margin-left: 0.7em;
     padding: 2em 0;
   }
 
-  .ant-steps
-    .ant-steps-item-process
-    .ant-steps-item-icon
-    .ant-steps-icon
-    .ant-steps-icon-dot {
+  .ant-steps .ant-steps-item-process .ant-steps-item-icon .ant-steps-icon .ant-steps-icon-dot {
     background: #96885f !important;
     color: #96885f !important;
   }
+
   &__input {
     line-height: 3em;
   }
@@ -140,6 +142,7 @@
 
   &__input {
     font-family: $font-secondary;
+
     &__inside {
       font-family: $font-secondary;
     }
@@ -151,6 +154,7 @@
     height: 27vh;
     border-radius: 0px;
     margin-top: 1.2em;
+
     img {
       height: 27vh;
       object-fit: cover;
@@ -159,22 +163,26 @@
     &__title {
       font-size: 1.2em !important;
     }
+
     &__subtitle {
       font-size: 1em !important;
       color: $secondary-text-color;
     }
   }
 }
+
 .order-confirm {
   height: 390px;
   overflow-y: scroll;
 }
+
 .service-container {
   &__title {
     font-family: $font-secondary;
     font-size: 1.2em;
     margin-bottom: 1em;
   }
+
   .service-container__scroll {
     height: 370px;
     overflow-y: scroll;
@@ -185,13 +193,15 @@
 
     &__content {
       padding-bottom: 1.5em;
+
       &__title {
         font-size: 1.2em;
         font-weight: 600;
         padding-bottom: 0.5em;
       }
+
       &__subtitle {
-        display:flex;
+        display: flex;
         color: $secondary-text-color;
         font-size: 0.8em;
       }
@@ -201,9 +211,11 @@
       width: 100%;
       display: flex;
       justify-content: space-between;
+
       &__left {
         width: 69%;
       }
+
       &__right {
         width: 29%;
       }
@@ -214,6 +226,7 @@
 .date-container {
   display: flex;
   gap: 2em;
+
   p {
     font-family: $font-secondary;
     padding-top: 0.3em;
@@ -224,11 +237,13 @@
 .dateSelector {
   font-family: $font-secondary;
 
-    border-color: rgb(193, 190, 190) !important;
-      &__date {
+  border-color: rgb(193, 190, 190) !important;
+
+  &__date {
     font-family: $font-secondary;
     border-color: rgb(193, 190, 190);
   }
+
   &__date:focus {
     font-family: $font-secondary;
     border-color: rgb(193, 190, 190) !important;
