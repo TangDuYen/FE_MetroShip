@@ -24,6 +24,8 @@ import { element } from "prop-types";
 import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { useSelector } from "react-redux";
+import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
+import PaymentFail from "../pages/payment_fail/PaymentFail";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -134,6 +136,31 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
+      {
+        path: PATH_NAME.PAYMENT_SUCCESS,
+        element: (
+          <ProtectedRouteCustomer>
+            <PaymentSuccess />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.PAYMENT_FAILED,
+        element: (
+          <ProtectedRouteCustomer>
+            <PaymentFail />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      //   {
+      //     path: "/about-us",
+      //     element: (
+      //       <ProtectedRouteCustomer>
+      //         {" "}
+      //         <AboutUs />
+      //       </ProtectedRouteCustomer>
+      //     ),
+      //   },
       // {
       //   path: PATH_NAME.BOOKING_ORDER,
       //   element: (

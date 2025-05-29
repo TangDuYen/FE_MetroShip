@@ -7,6 +7,8 @@ export const PATH_NAME = {
     PROFILE: "/profile",
     HISTORY_ORDERS: "/history-orders",
     HISTORY_PAYMENT: "/history-payment",
+    PAYMENT_SUCCESS: "/payment-success",
+    PAYMENT_FAILED: "/payment-fail",
     LOGIN: "/login",
     REGISTER: "/sign-up",
     PIN_CODE: "/pin-code",
