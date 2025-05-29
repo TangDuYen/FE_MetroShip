@@ -2,41 +2,40 @@ import './Register.scss'
 
 import * as Yup from "yup";
 
-import { Checkbox, message } from 'antd';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { useEffect, useState } from 'react';
 
+import { Checkbox } from 'antd';
 import Logo from '../../assets/logo2.png'
-import RegisterPicture from '../../assets/login1.png';
+import RegisterPicture from '../../assets/login.jpg';
 import api from '../../config/axios';
-import {useNavigate} from 'react-router-dom';
-import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
   const [error, setError] = useState(null);
   const nav = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
-
   //VALIDATION
   const validationSchema = Yup.object({
-    userName: Yup.string().required("Username is required"),
-    fullName: Yup.string().required("Full Name is required"),
+    userName: Yup.string().required("Tên đăng nhập không được để trống"),
+    fullName: Yup.string().required("Họ tên không được để trống"),
     phoneNumber: Yup.string()
-      .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits")
-      .required("Phone number is required"),
-    email: Yup.string().required("Email is required"),
+      .matches(/^[0-9]{10,11}$/, "Số điện thoại không đúng chuẩn")
+      .required("Số điện thoại không được để trống"),
+    email: Yup.string().required("Email không được để trống"),
     password: Yup.string()
-      .min(6, "Password must be at least 6 characters")
-      .required("Password is required"),
+      .min(6, "Mật khẩu dài ít nhất 6 kí tự")
+      .required("Mật khẩu không được để trống"),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password"), null], "Passwords must match")
-      .required("Confirm password is required"),
+      .oneOf([Yup.ref("password"), null], "Mật khẩu chưa khớp")
+      .required("Xác minh mật khẩu không được để trống"),
   });
 
   const handleSubmit = async (values) => {
     if (!isChecked) {
-      message.error(
-        "You must agree to the Term of Service and Privacy Policy before registering"
-      ); 
+      toast.error("Bạn cần đồng ý với Điều khoản Dịch vụ và Chính sách Bảo Mật để tiếp tục!");
+
       return;
     }
 
@@ -53,20 +52,20 @@ function Register() {
       const response = await api.post("/auth/register", values);
       const responseData = response.data;
       console.log(responseData);
-      
+
       if (responseData.statusCode === 200) {
-        message.success(responseData.data);
+        toast.success("Đăng ký thành công!");
         sessionStorage.setItem("registrationData", JSON.stringify(payload));
         console.log("registrationData");
         nav("/pin-code");
       } else {
-        message.error(responseData.data);
+        toast.error(responseData.data);
       }
     } catch (error) {
-      setError(error.message);
+      console.error("Lỗi đăng ký:", error?.response?.data.message);
+      toast.error("Đăng ký thất bại. " +error?.response?.data.message);
     }
   };
-
   return (
     <>
       <div className="register-container">
@@ -88,7 +87,7 @@ function Register() {
           </div>
           <Formik
             initialValues={{
-              userName:"",
+              userName: "",
               fullName: "",
               phoneNumber: "",
               email: "",
@@ -101,7 +100,7 @@ function Register() {
             {() => (
               <Form className="register-form">
                 <div className="form-group">
-                  <label htmlFor="userName">Username</label>
+                  <label htmlFor="userName">Tên đăng nhập</label>
                   <Field name="userName" type="text" />
                   <ErrorMessage
                     name="userName"
@@ -110,7 +109,7 @@ function Register() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="fullName">Full Name</label>
+                  <label htmlFor="fullName">Họ tên</label>
                   <Field name="fullName" type="text" />
                   <ErrorMessage
                     name="fullName"
@@ -119,7 +118,7 @@ function Register() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="phoneNumber">Phone Number</label>
+                  <label htmlFor="phoneNumber">Số điện thoại</label>
                   <Field name="phoneNumber" type="text" />
                   <ErrorMessage
                     name="phoneNumber"
@@ -137,7 +136,7 @@ function Register() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="password">Mật khẩu</label>
                   <Field name="password" type="password" />
                   <ErrorMessage
                     name="password"
@@ -146,7 +145,7 @@ function Register() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
                   <Field name="confirmPassword" type="password" />
                   <ErrorMessage
                     name="confirmPassword"
@@ -159,9 +158,9 @@ function Register() {
                   checked={isChecked}
                   onChange={(e) => setIsChecked(e.target.checked)}
                 >
-                  I agree with the{" "}
-                  <span style={{ fontWeight: "bold" }}>Term of Service</span>{" "}
-                  and <span style={{ fontWeight: "bold" }}>Privacy Policy</span>
+                  Tôi đồng ý với{" "}
+                  <span style={{ fontWeight: "bold" }}>Điều khoản dịch vụ</span>{" "}
+                  và <span style={{ fontWeight: "bold" }}>Chính sách bảo mật</span>
                   .{" "}
                 </Checkbox>
                 <button
@@ -169,7 +168,7 @@ function Register() {
                   className="register-btn"
                   disabled={!isChecked}
                 >
-                  Register
+                  Đăng kí
                 </button>
                 {error && <p className="error-message">{error}</p>}
               </Form>
@@ -177,9 +176,9 @@ function Register() {
           </Formik>
           <div className="register-options">
             <p>
-              Have an account yet?{" "}
+              Đã có tài khoản?{" "}
               <a href="/login" className="login-link">
-                Back to login
+                Đăng nhập
               </a>
             </p>
           </div>

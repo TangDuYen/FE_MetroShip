@@ -9,4 +9,13 @@ export const PATH_NAME = {
     HISTORY_PAYMENT: "/history-payment",
     PAYMENT_SUCCESS: "/payment-success",
     PAYMENT_FAILED: "/payment-fail",
+    LOGIN: "/login",
+    REGISTER: "/sign-up",
+    PIN_CODE: "/pin-code",
+    RECOVERY_PASSWORD: "/recovery-password",
+    VERIFY_MAIL: "/verify-mail",
+    BOOKING_ORDER: "/booking-order",
+    PAGE404: "*",
+    POLICY: "/policy",
+    DASHBOARD_STAFF: "/dashboard/staff",
 }

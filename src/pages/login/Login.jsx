@@ -7,7 +7,7 @@ import api from '../../config/axios';
 import { jwtDecode } from 'jwt-decode';
 import { login } from '../../redux/features/counterSlice';
 import { message } from 'antd';
-import { token } from './../../components/GetToken';
+import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -27,6 +27,8 @@ function Login() {
     };
     try {
       const response = await api.post("/auth/authentication", payload);
+      const userData = response.data;
+      localStorage.setItem("userData", JSON.stringify(userData));
       const token = response.data.token;
       localStorage.setItem("token", token);
       const user = jwtDecode(token);
@@ -40,13 +42,13 @@ function Login() {
       if (user.role.includes("Staff")) {
         nav("/dashboard/staff");
       }
-      message.success('Login successfully')
+      toast.success('Đăng nhập thành công')
     } catch (error) {
-      let errorMessage = "An error occurred. Please try again.";
+      let errorMessage = "Có lỗi xảy ra. Hãy thử lại.";
       if (error.response && error.response.data) {
         errorMessage = error.response.data;
       }
-      message.error(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -77,33 +79,34 @@ function Login() {
         </div>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="username">User name</label>
+            <label htmlFor="username">Tên đăng nhập</label>
             <input
               type="username"
               id="username"
               value={username}
               onChange={(e) => setUserName(e.target.value)}
-              placeholder="username"
+              placeholder="Tên đăng nhập"
               required
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Mật khẩu</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mật khẩu"
               required
             />
           </div>
           <div className="form-options">
             <div className="remember-me">
               <input type="checkbox" id="rememberMe" />
-              <label htmlFor="rememberMe">Remember Me</label>
+              <label htmlFor="rememberMe">Nhớ đăng nhập</label>
             </div>
             <a href="/verify-mail" className="recovery-link">
-              Recovery Password
+              Quên mật khẩu?
             </a>
           </div>
           <div className="login-options">
@@ -112,15 +115,15 @@ function Login() {
             </div>
           </div>
           <button type="submit" className="login-btn" style={{marginTop:'1em'}}>
-            Login
+            Đăng nhập
           </button>
           {/* {error && <p className="error-message">{error}</p>} */}
         </form>
         <div className="login-option">
           <p>
-            Don’t have an account yet?{" "}
+            Chưa có tài khoản?{" "}
             <a href="/sign-up" className="signup-link">
-              Sign Up
+              Đăng kí
             </a>
           </p>
         </div>
