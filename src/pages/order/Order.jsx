@@ -254,7 +254,6 @@ function Order() {
                     [fromStation.latitude, fromStation.longitude],
                     [toStation.latitude, toStation.longitude],
                   ]}
-                  color={idx === 0 ? 'blue' : idx === 1 ? 'green' : 'orange'} // hoặc màu khác cho từng đoạn
                 />
               );
             })}
