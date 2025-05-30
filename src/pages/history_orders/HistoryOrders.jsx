@@ -1,7 +1,10 @@
-import React, { useState } from "react";
 import "./HistoryOrders.scss";
-import Sidebar from "../../components/sidebar_profile/Sidebar";
+
+import React, { useState } from "react";
+
 import { MdSearch } from "react-icons/md";
+import Sidebar from "../../components/sidebar_profile/Sidebar";
+
 function HistoryOrders() {
   const allGoods = Array.from({ length: 30 }).map((_, i) => ({
     id: i + 1,
