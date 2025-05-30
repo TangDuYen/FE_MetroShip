@@ -1,13 +1,15 @@
 import './Order.scss'
 
 import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 
 import ConfirmPage from './ConfirmPage';
 import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
+import api from '../../config/axios';
 import { selectUser } from '../../redux/features/counterSlice';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useState } from 'react';
@@ -40,21 +42,16 @@ function Order() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const user = useSelector(selectUser);
   const nav = useNavigate();
-  const metroStations = [
-    { id: 1, name: 'Bến Thành', coordinates: [10.772, 106.698] },
-    { id: 2, name: 'Suối Tiên', coordinates: [10.870, 106.803] },
-    { id: 3, name: 'Thủ Đức', coordinates: [10.849, 106.753] },
-    { id: 4, name: 'An Phú', coordinates: [10.790, 106.740] },
-    // Add more stations as needed
-  ];
-  // const userId = user.Id;
+  const [routeSolutions, setRouteSolutions] = useState([]); // chứa giải pháp từ API
+  const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // đang chọn giải pháp nào
+  const [priceVnd, setPriceVnd] = useState(null); // giá
+
   const showModal = () => {
     setIsModalOpen(true);
   };
   const handleOk = () => {
     handleSubmit();
     setIsModalOpen(false);
-    nav(PATH_NAME.HISTORY_ORDERS);
   };
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -75,12 +72,21 @@ function Order() {
       component: (
         <ParcelInfo
           personalInfo={personalInfo}
+          setPersonalInfo={setPersonalInfo}
           parcelInfo={parcelInfo}
           setParcelInfo={setParcelInfo}
           metroSelector={metroSelector}
           setMetroSelector={setMetroSelector}
+          pickedDate={pickedDate}
           setPickedDate={setPickedDate}
+          pickedTime={pickedTime}
           setPickedTime={setPickedTime}
+          routeSolutions={routeSolutions}
+          setRouteSolutions={setRouteSolutions}
+          selectedSolutionIndex={selectedSolutionIndex}
+          setSelectedSolutionIndex={setSelectedSolutionIndex}
+          priceVnd={priceVnd}
+          setPriceVnd={setPriceVnd}
           onNext={() => setCurrentStep(2)}
         />
       ),
@@ -94,6 +100,7 @@ function Order() {
           parcelInfo={parcelInfo}
           pickedDate={pickedDate}
           pickedTime={pickedTime}
+          priceVnd={priceVnd}
         />
       ),
     },
@@ -111,43 +118,108 @@ function Order() {
       setCurrentStep((prevStep) => prevStep - 1);
     }
   };
+  const buildPayload = () => {
+
+    const {
+      senderName,
+      senderPhone,
+      recipientName,
+      recipientPhone,
+      recipientEmail,
+    } = personalInfo;
+
+    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+
+
+    const {
+      parcelCategory,
+      weightKg,
+      lengthCm,
+      widthCm,
+      heightCm,
+      isBulk,
+    } = parcelInfo;
+
+    // Tính trọng lượng quy đổi
+    const volumetricWeight = (lengthCm * widthCm * heightCm) / 5000;
+    const chargeableWeight = Math.max(Number(weightKg), volumetricWeight);
+
+    // Lấy giải pháp tuyến đã chọn
+    const itinerary = routeSolutions[selectedSolutionIndex];
+
+    // Tính tổng phí vận chuyển
+    const shippingFee = itinerary?.bestPathGraphResponses?.[0]?.shippingFeeByItinerary || 0;
+
+
+    // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
+    const shipmentItineraries = itinerary?.routes.map(route => ({
+      routeId: route.routeId,
+      basePriceVndPerKm: route.basePriceVndPerKm || 0,
+      legOrder: route.legOrder,
+    })) || [];
+
+    return {
+      departureStationId: departureStationId || "",
+      destinationStationId: destinationStationId || "",
+      senderName: senderName || "",
+      senderPhone: senderPhone || "",
+      recipientId: "", // Nếu có recipientId, điền vào, hoặc để rỗng
+      recipientName: recipientName || "",
+      recipientPhone: recipientPhone || "",
+      recipientEmail: recipientEmail || "",
+      recipientNationalId: "079303031422", // Nếu có dữ liệu thì điền
+      scheduledDateTime: departureDateTime ? departureDateTime.toISOString() : null,
+      totalCostVnd: Number(priceVnd),
+      shippingFeeVnd: Number(priceVnd),
+      insuranceFeeVnd: 0, // Nếu có bảo hiểm tính phí thì sửa
+      shipmentItineraries: shipmentItineraries,
+      parcels: [
+        {
+          parcelCategoryId: parcelCategory || "",
+          weightKg: Number(weightKg) || 0,
+          lengthCm: Number(lengthCm) || 0,
+          widthCm: Number(widthCm) || 0,
+          heightCm: Number(heightCm) || 0,
+          chargeableWeight: chargeableWeight,
+          isBulk: isBulk || false,
+          priceVnd: Number(priceVnd) || 0,
+        },
+      ],
+    };
+  };
 
   const handleSubmit = async () => {
-    // const [hour, minute] = appointmentTime.split(":");
+    try {
+      const payload = buildPayload();
 
-    // try {
-    //   // Step 1: Create the booking and get bookingId and paymentId
-    //   const bookingResponse = await api.post(
-    //     `/Booking/AddBooking/AddBooking?CustomerId=${userId}&salonId=${personalInfo.salonId}&SalonMemberId=${selectedStylist.id}&cuttingDate=${appointmentDate}&hour=${hour}&minute=${minute}&ComboServiceId=${selectedService.id}&CustomerName=${personalInfo.fullName}&CustomerPhoneNumber=${personalInfo.phone}`
-    //   );
+      const bookingResponse = await api.post('/shipments', payload);
 
-    //   if (bookingResponse.data.error === 1) {
-    //     messageApi.error(bookingResponse.data.message);
-    //     return;
-    //   }
+      if (bookingResponse.data.statusCode === 400 ) {
+        toast.error(bookingResponse.data.message);
+        return;
+      }
 
-    //   const { id: bookingId, paymentId } = bookingResponse.data.data;
-    //   messageApi.success("Booking created successfully!");
-    //   console.log(paymentId);
-    //   localStorage.setItem("paymentId", paymentId);
-    //   console.log("Booking", bookingId);
-    //   console.log(bookingResponse.data.data);
-    //   const paymentResponse = await api.post(
-    //     `/Payments/create?bookingId=${bookingId}`
-    //   );
+      // const { id: shipmentId, paymentId } = bookingResponse.data.data;
+      toast.success("Đặt giao thành công!");
+      nav(PATH_NAME.HISTORY_ORDERS);
 
-    //   const paymentUrl = paymentResponse.data.data.checkoutUrl;
-    //   if (paymentUrl) {
-    //     window.location.href = paymentUrl;
-    //   } else {
-    //     messageApi.error("Cannot find payment URL");
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   const errorMessage = error.response?.data.message || "An error occurred";
-    //   messageApi.error(errorMessage);
-    // }
+      // localStorage.setItem("paymentId", paymentId);
+
+      // const paymentResponse = await api.post(`/shipments/vnpay/payment-url`);
+
+      // const paymentUrl = paymentResponse.data.data.checkoutUrl;
+      // if (paymentUrl) {
+      //   window.location.href = paymentUrl;
+      // } else {
+      //   toast.error("Cannot find payment URL");
+      // }
+    } catch (error) {
+      console.error(error);
+      const errorMessage = error.response?.data.message || "An error occurred";
+      toast.error(errorMessage);
+    }
   };
+
 
   return (
     <>
@@ -163,15 +235,46 @@ function Order() {
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {metroStations.map((station) => (
-              <Marker key={station.id} position={station.coordinates}>
-                <Popup>{station.name}</Popup>
+            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.routes.map((routeLeg, idx) => {
+              // Lấy toạ độ fromStation và toStation từ danh sách stations
+              const fromStation = routeSolutions[selectedSolutionIndex].stations.find(
+                (s) => s.stationId === routeLeg.fromStationId
+              );
+              const toStation = routeSolutions[selectedSolutionIndex].stations.find(
+                (s) => s.stationId === routeLeg.toStationId
+              );
+
+              if (!fromStation || !toStation) return null;
+
+              // Vẽ polyline cho đoạn tuyến này
+              return (
+                <Polyline
+                  key={routeLeg.routeId}
+                  positions={[
+                    [fromStation.latitude, fromStation.longitude],
+                    [toStation.latitude, toStation.longitude],
+                  ]}
+                  color={idx === 0 ? 'blue' : idx === 1 ? 'green' : 'orange'} // hoặc màu khác cho từng đoạn
+                />
+              );
+            })}
+
+            {/* Vẽ marker tất cả các trạm tuyến */}
+            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.stations.map((station) => (
+              <Marker
+                key={station.stationId}
+                position={[station.latitude, station.longitude]}
+              >
+                <Popup>
+                  {station.stationNameVi}
+                </Popup>
               </Marker>
             ))}
           </MapContainer>
+
         </div>
         <div className="order__container--vertical">
-        <div className="order__text">Thông tin đơn hàng</div>
+          <div className="order__text">Thông tin đơn hàng</div>
           <ConfigProvider
             theme={{
               components: {

@@ -114,6 +114,7 @@ function Header() {
                           className="navbar-profile-item"
                           onClick={() => {
                             localStorage.removeItem("token");
+                            localStorage.removeItem("userData");
                             dispatch(logout());
                             navigate("/");
                           }}

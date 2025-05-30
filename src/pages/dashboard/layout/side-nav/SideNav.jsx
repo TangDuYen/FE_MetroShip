@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AiOutlineLogout } from "react-icons/ai";
 import { LogoutOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { toast } from "react-toastify";
 
 function SideNav({}) {
   const { pathname } = useLocation();
@@ -23,9 +24,11 @@ function SideNav({}) {
   };
   const user = useSelector(selectUser);
   const handleLogout = async () => {
-    localStorage.removeItem('token')
-    await dispatch(logout())
-    navigate('/')
+    toast.success("Đăng xuất thành công");
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    await dispatch(logout());
+    navigate('/');
 }
 
 
@@ -38,15 +41,15 @@ function SideNav({}) {
         defaultOpenKeys={["sub1"]}
         mode="inline"
         theme="dark"
-        // items={
-        //   user.Role == "Admin"
-        //     ? navDashboardConfig
-        //     : user.Role == "Staff"
-        //     ? navDashboardConfigStaff
-        //     : user.Role == "Customer"
-        //     ? navDashboardConfigCustomer
-        //     : null
-        // }
+        items={
+          user?.role == "Admin"
+            ? navDashboardConfig
+            : user?.role == "Staff"
+            ? navDashboardConfigStaff
+            : user?.role == "Customer"
+            ? navDashboardConfigCustomer
+            : null
+        }
         
         className="menu-sidenav"
       />
@@ -59,7 +62,7 @@ function SideNav({}) {
           {
             key: "logout",
             icon: <LogoutOutlined />,
-            label: "Logout",
+            label: "Đăng xuất",
           },
         ]}
         className="menu-sidenav2"

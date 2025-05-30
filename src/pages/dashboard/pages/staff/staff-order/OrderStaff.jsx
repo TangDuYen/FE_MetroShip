@@ -1,6 +1,6 @@
 import './OrderStaff.scss'
 
-import { Button, Modal, Space, Table, Typography } from 'antd';
+import { Button, ConfigProvider, Modal, Space, Table, Typography } from 'antd';
 import React, { useState } from 'react';
 
 const { Text, Title } = Typography;
@@ -110,6 +110,71 @@ function OrderStaff() {
       key: 'totalCost',
       render: (_, record) => formatCurrency(record.shippingFee + record.insuranceFee),
     },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+    },
+    {
+      title: 'Xem chi tiết',
+      key: 'action',
+      render: (_, record) => (
+        <ConfigProvider
+          theme={
+            {
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#4CAF50",
+                  defaultBorderColor: "#4CAF50",
+                  defaultHoverBorderColor: "#FFC107",
+                  defaultHoverColor: "black",
+                  defaultHoverBg: "#FFC107",
+                  defaultActiveBg: "#4CAF50",
+                  defaultActiveBorderColor: "#4CAF50",
+                  defaultActiveColor: "white",
+                }
+              }
+            }
+          }>
+          <Button className='booking-table-staff_button'
+            onClick={() => onRowClick(record)}
+          >
+            Xem chi tiết
+          </Button>
+        </ConfigProvider>
+      ),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (_, record) => (
+        <ConfigProvider
+          theme={
+            {
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#0066CC",
+                  defaultBorderColor: "#0066CC",
+                  defaultHoverBorderColor: "#FFC107",
+                  defaultHoverColor: "black",
+                  defaultHoverBg: "#FFC107",
+                  defaultActiveBg: "#0066CC",
+                  defaultActiveBorderColor: "#0066CC",
+                  defaultActiveColor: "white",
+                }
+              }
+            }
+          }>
+          <Button className='booking-table-staff_button'
+            onClick={() => handleConfirmOrder()}
+          >
+            Xác nhận
+          </Button>
+        </ConfigProvider>
+      ),
+    },
   ];
 
   // Khi click vào 1 hàng
@@ -127,62 +192,59 @@ function OrderStaff() {
 
   return (
     <>
-    <div className="order-staff-container">
-<Table
-        columns={columns}
-        dataSource={ordersFakeData}
-        rowKey="id"
-        onRow={(record) => ({
-          onClick: () => onRowClick(record),
-        })}
-        pagination={{ pageSize: 5 }}
-        bordered
-        style={{ cursor: 'pointer' }}
-      />
+      <div className="order-staff-container">
+        <Table
+          columns={columns}
+          dataSource={ordersFakeData}
+          rowKey="id"
+          pagination={{ pageSize: 5 }}
+          bordered
+          style={{ cursor: 'pointer' }}
+        />
 
-      <Modal
-        title={`Chi tiết đơn hàng: ${selectedOrder?.id || ''}`}
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setModalOpen(false)}>
-            Đóng
-          </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            onClick={handleConfirmOrder}
-            disabled={!selectedOrder}
-          >
-            Xác nhận đơn hàng
-          </Button>,
-        ]}
-        width={700}
-      >
-        {selectedOrder && (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Title level={5}>Thông tin đơn hàng</Title>
-            <Text><b>STT:</b> {ordersFakeData.findIndex(o => o.id === selectedOrder.id) + 1}</Text>
-            <Text><b>Mã đơn hàng:</b> {selectedOrder.id}</Text>
-            <Text><b>Tên đơn hàng:</b> {selectedOrder.orderName}</Text>
-            <Text><b>Người gửi:</b> {selectedOrder.senderName}</Text>
-            <Text><b>Người nhận:</b> {selectedOrder.recipientName}</Text>
-            <Text><b>Loại hàng:</b> {selectedOrder.parcelCategory}</Text>
-            <Text><b>Kích thước (D x R x C):</b> {`${selectedOrder.lengthCm} x ${selectedOrder.widthCm} x ${selectedOrder.heightCm} cm`}</Text>
-            <Text><b>Trọng lượng:</b> {selectedOrder.weightKg} kg</Text>
-            <Text><b>Trạm gửi:</b> {selectedOrder.departureStation}</Text>
-            <Text><b>Trạm nhận:</b> {selectedOrder.destinationStation}</Text>
-            <Text><b>Ngày gửi:</b> {selectedOrder.departureDate}</Text>
-            <Text><b>Giờ gửi:</b> {selectedOrder.departureTime}</Text>
-            <Text><b>Thời điểm tạo yêu cầu:</b> {selectedOrder.createdAt}</Text>
-            <Text><b>Đơn giá:</b> {formatCurrency(selectedOrder.unitPrice)}</Text>
-            <Text><b>Phí bảo hiểm:</b> {formatCurrency(selectedOrder.insuranceFee)}</Text>
-            <Text><b>Phí gửi hàng:</b> {formatCurrency(selectedOrder.shippingFee)}</Text>
-            <Text><b>Tổng chi phí:</b> {formatCurrency(selectedOrder.shippingFee + selectedOrder.insuranceFee)}</Text>
-          </Space>
-        )}
-      </Modal>
-    </div>
+        <Modal
+          title={`Chi tiết đơn hàng: ${selectedOrder?.id || ''}`}
+          open={modalOpen}
+          onCancel={() => setModalOpen(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setModalOpen(false)}>
+              Đóng
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              onClick={handleConfirmOrder}
+              disabled={!selectedOrder}
+            >
+              Xác nhận đơn hàng
+            </Button>,
+          ]}
+          width={700}
+        >
+          {selectedOrder && (
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Title level={5}>Thông tin đơn hàng</Title>
+              <Text><b>STT:</b> {ordersFakeData.findIndex(o => o.id === selectedOrder.id) + 1}</Text>
+              <Text><b>Mã đơn hàng:</b> {selectedOrder.id}</Text>
+              <Text><b>Tên đơn hàng:</b> {selectedOrder.orderName}</Text>
+              <Text><b>Người gửi:</b> {selectedOrder.senderName}</Text>
+              <Text><b>Người nhận:</b> {selectedOrder.recipientName}</Text>
+              <Text><b>Loại hàng:</b> {selectedOrder.parcelCategory}</Text>
+              <Text><b>Kích thước (D x R x C):</b> {`${selectedOrder.lengthCm} x ${selectedOrder.widthCm} x ${selectedOrder.heightCm} cm`}</Text>
+              <Text><b>Trọng lượng:</b> {selectedOrder.weightKg} kg</Text>
+              <Text><b>Trạm gửi:</b> {selectedOrder.departureStation}</Text>
+              <Text><b>Trạm nhận:</b> {selectedOrder.destinationStation}</Text>
+              <Text><b>Ngày gửi:</b> {selectedOrder.departureDate}</Text>
+              <Text><b>Giờ gửi:</b> {selectedOrder.departureTime}</Text>
+              <Text><b>Thời điểm tạo yêu cầu:</b> {selectedOrder.createdAt}</Text>
+              <Text><b>Đơn giá:</b> {formatCurrency(selectedOrder.unitPrice)}</Text>
+              <Text><b>Phí bảo hiểm:</b> {formatCurrency(selectedOrder.insuranceFee)}</Text>
+              <Text><b>Phí gửi hàng:</b> {formatCurrency(selectedOrder.shippingFee)}</Text>
+              <Text><b>Tổng chi phí:</b> {formatCurrency(selectedOrder.shippingFee + selectedOrder.insuranceFee)}</Text>
+            </Space>
+          )}
+        </Modal>
+      </div>
     </>
   );
 }

@@ -11,25 +11,25 @@ export const navDashboardConfig = [
   {
     key: "1",
     icon: <DashboardOutlined />,
-    label: "Summary",
+    label: "Tổng quan",
   },
   {
     key: "2",
     icon: <TeamOutlined style={{ fontSize: "1.4em" }} />,
-    label: "Staff Management",
+    label: "Quản lý Staff",
   },
   {
     key: "4",
     icon: <ProductOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Metro Management",
+    label: "Quản lý Metro",
     children: [
       {
         key: "41",
-        label: "View all metro line",
+        label: "Danh sách tuyến Metro",
       },
       {
         key: "42",
-        label: "Create a metro line",
+        label: "Tạo tuyến Metro mới",
       },
      
     ],
@@ -37,12 +37,12 @@ export const navDashboardConfig = [
   {
     key: "3",
     icon: <OrderedListOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Orders",
+    label: "Đơn hàng",
   },
   {
     key: "5",
     icon: <UserOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Users",
+    label: "Người dùng",
   },
 ];
 export const navDashboardConfigCustomer = [
@@ -54,7 +54,7 @@ export const navDashboardConfigStaff = [
   {
     key: "7",
     icon: <UnorderedListOutlined />,
-    label: "Orders",
+    label: "Đơn hàng",
   },
 ];
 

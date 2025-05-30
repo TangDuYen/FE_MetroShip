@@ -13,6 +13,8 @@ import Order from "../pages/order/Order";
 import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
 import Page404 from "../pages/page404/Page404";
+import PaymentFail from "../pages/payment_fail/PaymentFail";
+import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
 import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
 import Profile from "../pages/profile/Profile";
@@ -23,9 +25,8 @@ import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
 import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
+import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
-import PaymentFail from "../pages/payment_fail/PaymentFail";
 
 const ProtectedRouteAuth = ({ children }) => {
   const user = useSelector(selectUser);
@@ -39,7 +40,7 @@ const ProtectedRouteAuth = ({ children }) => {
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
   if (user?.role?.includes("Admin") || user?.role?.includes("Staff")) {
-    message.error("Bạn không có quyền truy cập vào trang này.");
+    toast.error("Bạn không có quyền truy cập vào trang này.");
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -51,7 +52,7 @@ const ProtectedDashboard = ({ children }) => {
 
   const validRoles = ["Admin", "Staff"];
 
-  if (!user?.role?.some((r) => validRoles.includes(r))) {
+  if (!validRoles.includes(user?.role)) {
     return <Navigate to="*" replace />;
   }
 
