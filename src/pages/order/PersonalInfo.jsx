@@ -2,20 +2,27 @@ import './Order.scss'
 
 import { MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Input } from 'antd';
 import api from '../../config/axios';
 import { selectUser } from '../../redux/features/counterSlice';
-import { useState } from 'react';
 
 function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
-  const user = useSelector(selectUser);
+  //Sau thay bằng api get user by Id 
   const userData = JSON.parse(localStorage.getItem("userData"));
   console.log(userData);
-  
-  const dispatch = useDispatch();
-  console.log(user);
-  
+
+  useEffect(() => {
+    if (userData) {
+      setPersonalInfo((prev) => ({
+        ...prev,
+        senderName: userData.fullName || '',
+        senderPhone: userData.phoneNumber || ''
+      }));
+    }
+  }, [userData, setPersonalInfo]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes("Phone")) {
@@ -31,10 +38,10 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
       <div className="personalInfo__input">
         <Input
           size="middle"
-          placeholder= "Sender Name"
+          placeholder="Sender Name"
           prefix={<UserOutlined />}
-          name="senderName" 
-          value={userData.fullName}
+          name="senderName"
+          value={personalInfo.senderName}
           onChange={handleChange}
           className="personalInfo__input__inside"
         />
@@ -43,7 +50,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           placeholder="Sender Phone Number"
           name="senderPhone"
           className="personalInfo__input__inside"
-          value={userData.phoneNumber}
+          value={personalInfo.senderPhone}
           prefix={<PhoneOutlined />}
           onChange={handleChange}
         />

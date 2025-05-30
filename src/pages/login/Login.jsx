@@ -1,12 +1,11 @@
 import './Login.scss'
 
-import {GoogleOutlined} from '@ant-design/icons';
-import  LoginPicture  from '../../assets/login.jpg';
-import  Logo  from "../../assets/logo2.png";
+import { GoogleOutlined } from '@ant-design/icons';
+import LoginPicture from '../../assets/login.jpg';
+import Logo from "../../assets/logo2.png";
 import api from '../../config/axios';
 import { jwtDecode } from 'jwt-decode';
 import { login } from '../../redux/features/counterSlice';
-import { message } from 'antd';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +26,15 @@ function Login() {
     };
     try {
       const response = await api.post("/auth/authentication", payload);
-      const userData = response.data;
-      localStorage.setItem("userData", JSON.stringify(userData));
+
       const token = response.data.token;
       localStorage.setItem("token", token);
       const user = jwtDecode(token);
+      
+      //Dùng đỡ sau khi có api get user by id thì bỏ
+      const { token: _, refreshToken, refreshTokenExpiredTime, ...userData } = response.data;
+      localStorage.setItem("userData", JSON.stringify(userData));
+
       dispatch(login(user));
       if (user.role.includes("Customer")) {
         nav("/");
@@ -45,9 +48,6 @@ function Login() {
       toast.success('Đăng nhập thành công')
     } catch (error) {
       let errorMessage = "Có lỗi xảy ra. Hãy thử lại.";
-      if (error.response && error.response.data) {
-        errorMessage = error.response.data;
-      }
       toast.error(errorMessage);
     }
   };
@@ -111,10 +111,10 @@ function Login() {
           </div>
           <div className="login-options">
             <div className="google-login-btn">
-              <GoogleOutlined style= {{color: "#0066CC"}} />
+              <GoogleOutlined style={{ color: "#0066CC" }} />
             </div>
           </div>
-          <button type="submit" className="login-btn" style={{marginTop:'1em'}}>
+          <button type="submit" className="login-btn" style={{ marginTop: '1em' }}>
             Đăng nhập
           </button>
           {/* {error && <p className="error-message">{error}</p>} */}

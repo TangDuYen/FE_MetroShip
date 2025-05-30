@@ -4,7 +4,7 @@ import React from 'react';
 
 const { Title } = Typography;
 
-function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pickedTime }) {
+function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pickedTime, priceVnd }) {
   return (
     <div style={{ padding: '1rem' }}>
       <Title level={3}>Xác nhận thông tin đơn hàng của bạn</Title>
@@ -35,7 +35,6 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
             <Descriptions.Item label="Kích thước">
               {parcelInfo.lengthCm} x {parcelInfo.widthCm} x {parcelInfo.heightCm} cm
             </Descriptions.Item>
-            <Descriptions.Item label="Nhiều hàng 1 đơn">{parcelInfo.isBulk ? "Có" : "Không"}</Descriptions.Item>
             <Descriptions.Item label="Mô tả">{parcelInfo.description}</Descriptions.Item>
           </Descriptions>
         </Col>
@@ -51,6 +50,7 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="Ngày">{pickedDate || "Not selected"}</Descriptions.Item>
             <Descriptions.Item label="Thời gian">{pickedTime || "Not selected"}</Descriptions.Item>
+            <Descriptions.Item label="Giá tiền dự tính">{priceVnd || "Not selected"}</Descriptions.Item>
           </Descriptions>
         </Col>
       </Row>

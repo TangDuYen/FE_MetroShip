@@ -25,7 +25,7 @@ function Register() {
       .required("Số điện thoại không được để trống"),
     email: Yup.string().required("Email không được để trống"),
     password: Yup.string()
-      .min(6, "Mật khẩu dài ít nhất 6 kí tự")
+      .min(8, "Mật khẩu dài ít nhất 8 kí tự")
       .required("Mật khẩu không được để trống"),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Mật khẩu chưa khớp")
