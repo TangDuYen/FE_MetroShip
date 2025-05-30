@@ -22,6 +22,7 @@ function Order() {
     recipientName: "",
     recipientPhone: "",
     recipientEmail: "",
+    recipientNationalId: "",
   });
   const [metroSelector, setMetroSelector] = useState({
     departureStationId: null,
@@ -35,10 +36,10 @@ function Order() {
     lengthCm: "",
     heightCm: "",
     widthCm: "",
+    chargeableWeight: "",
     description: "",
     isBulk: false,
   })
-  const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const user = useSelector(selectUser);
   const nav = useNavigate();
@@ -101,6 +102,7 @@ function Order() {
           pickedDate={pickedDate}
           pickedTime={pickedTime}
           priceVnd={priceVnd}
+          routeSolutions={routeSolutions}
         />
       ),
     },
@@ -126,6 +128,7 @@ function Order() {
       recipientName,
       recipientPhone,
       recipientEmail,
+      recipientNationalId,
     } = personalInfo;
 
     const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
@@ -138,18 +141,12 @@ function Order() {
       widthCm,
       heightCm,
       isBulk,
+      chargeableWeight,
     } = parcelInfo;
 
-    // Tính trọng lượng quy đổi
-    const volumetricWeight = (lengthCm * widthCm * heightCm) / 5000;
-    const chargeableWeight = Math.max(Number(weightKg), volumetricWeight);
 
     // Lấy giải pháp tuyến đã chọn
     const itinerary = routeSolutions[selectedSolutionIndex];
-
-    // Tính tổng phí vận chuyển
-    const shippingFee = itinerary?.bestPathGraphResponses?.[0]?.shippingFeeByItinerary || 0;
-
 
     // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
     const shipmentItineraries = itinerary?.routes.map(route => ({
@@ -163,15 +160,14 @@ function Order() {
       destinationStationId: destinationStationId || "",
       senderName: senderName || "",
       senderPhone: senderPhone || "",
-      recipientId: "", // Nếu có recipientId, điền vào, hoặc để rỗng
+      recipientId: "",
       recipientName: recipientName || "",
       recipientPhone: recipientPhone || "",
       recipientEmail: recipientEmail || "",
-      recipientNationalId: "079303031422", // Nếu có dữ liệu thì điền
+      recipientNationalId: recipientNationalId,
       scheduledDateTime: departureDateTime ? departureDateTime.toISOString() : null,
-      totalCostVnd: Number(priceVnd),
-      shippingFeeVnd: Number(priceVnd),
-      insuranceFeeVnd: 0, // Nếu có bảo hiểm tính phí thì sửa
+      totalCostVnd: priceVnd,
+      shippingFeeVnd: priceVnd,
       shipmentItineraries: shipmentItineraries,
       parcels: [
         {
@@ -191,11 +187,16 @@ function Order() {
   const handleSubmit = async () => {
     try {
       const payload = buildPayload();
+      console.log(payload);
+      console.log(typeof (payload.totalCostVnd));
+
 
       const bookingResponse = await api.post('/shipments', payload);
 
-      if (bookingResponse.data.statusCode === 400 ) {
+      if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
+        console.log(payload);
+
         return;
       }
 
@@ -224,7 +225,6 @@ function Order() {
   return (
     <>
       <div className="order">
-        {contextHolder}
         <div className="order__map-background">
           <MapContainer
             center={[10.776, 106.700]}

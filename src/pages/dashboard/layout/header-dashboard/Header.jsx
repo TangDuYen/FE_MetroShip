@@ -62,8 +62,7 @@ function HeaderDashboard({ name, subName, onPress }) {
       >
     
         <p className="header-dashboard__title" style={{color:'white'}}>
-          {/* Hi {user.Role}!  */}
-          Welcome to Dashboard
+          Chào {user?.role} !
         </p>
         
   

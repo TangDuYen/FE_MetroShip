@@ -1,6 +1,6 @@
 import './Order.scss'
 
-import { MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
+import { MailOutlined, PhoneOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -11,8 +11,6 @@ import { selectUser } from '../../redux/features/counterSlice';
 function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
   //Sau thay bằng api get user by Id 
   const userData = JSON.parse(localStorage.getItem("userData"));
-  console.log(userData);
-
   useEffect(() => {
     if (userData) {
       setPersonalInfo((prev) => ({
@@ -21,7 +19,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
         senderPhone: userData.phoneNumber || ''
       }));
     }
-  }, [userData, setPersonalInfo]);
+  }, [setPersonalInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,7 +36,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
       <div className="personalInfo__input">
         <Input
           size="middle"
-          placeholder="Sender Name"
+          placeholder="Tên người gửi"
           prefix={<UserOutlined />}
           name="senderName"
           value={personalInfo.senderName}
@@ -47,7 +45,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
         />
         <Input
           size="middle"
-          placeholder="Sender Phone Number"
+          placeholder="Số điện thoại người gửi"
           name="senderPhone"
           className="personalInfo__input__inside"
           value={personalInfo.senderPhone}
@@ -58,7 +56,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
       <div className="personalInfo__input">
         <Input
           size="middle"
-          placeholder="Recipient Name"
+          placeholder="Tên người nhận"
           prefix={<UserOutlined />}
           name="recipientName"
           value={personalInfo.recipientName}
@@ -67,7 +65,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
         />
         <Input
           size="middle"
-          placeholder="Recipient Phone Number"
+          placeholder="Số điện thoại người nhận"
           name="recipientPhone"
           className="personalInfo__input__inside"
           value={personalInfo.recipientPhone}
@@ -76,11 +74,20 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
         />
         <Input
           size="middle"
-          placeholder="Recipient Email"
+          placeholder="Email người nhận"
           name="recipientEmail"
           className="personalInfo__input__inside"
           value={personalInfo.recipientEmail}
           prefix={<MailOutlined />}
+          onChange={handleChange}
+        />
+        <Input
+          size="middle"
+          placeholder="CCCD/CMT người nhận"
+          name="recipientNationalId"
+          className="personalInfo__input__inside"
+          value={personalInfo.recipientNationalId}
+          prefix={<SolutionOutlined />}
           onChange={handleChange}
         />
       </div>

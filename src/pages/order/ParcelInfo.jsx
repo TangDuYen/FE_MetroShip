@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 
-import { Button, DatePicker, Form, Input, InputNumber, Select } from 'antd';
+import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Select } from 'antd';
 import { useEffect, useState } from 'react';
 
 import Title from 'antd/es/skeleton/Title';
@@ -49,7 +49,6 @@ function ParcelInfo({
         console.log('Error fetching parcel categories');
       }
     };
-
     fetchStations();
     fetchCategories();
   }, []);
@@ -99,45 +98,38 @@ function ParcelInfo({
         lengthCm: Number(parcelInfo.lengthCm) || 0,
         widthCm: Number(parcelInfo.widthCm) || 0,
         heightCm: Number(parcelInfo.heightCm) || 0,
-        chargeableWeight: Number(parcelInfo.weightKg) || 0,
+        chargeableWeight: Number(parcelInfo.chargeableWeight) || 0,
         isBulk: parcelInfo.isBulk || false,
         priceVnd: 0,
       },
     ],
   });
 
-  const calculateChargeableWeight = () => {
-    const weight = Number(parcelInfo.weightKg) || 0;
-    const length = Number(parcelInfo.lengthCm) || 0;
-    const width = Number(parcelInfo.widthCm) || 0;
-    const height = Number(parcelInfo.heightCm) || 0;
-
-    const volumetricWeight = (length * width * height) / 5000;
-    return Math.max(weight, volumetricWeight);
-  };
-
   const fetchTotalPriceItinerary = async () => {
-    const payload = buildPriceItineraryPayload();
+  const payload = buildPriceItineraryPayload();
 
-    try {
-      const res = await api.post('/shipments/total-price-itinerary', payload);
-      const data = res.data?.data;
+  try {
+    const res = await api.post('/shipments/total-price-itinerary', payload);
+    const data = res.data?.data;
 
-      if (data) {
-        const chargeableWeight = calculateChargeableWeight();
+    if (data) {
+      // Lấy chargeableWeight từ API và cập nhật vào parcelInfo
+      const chargeableWeightFromApi = data.parcelRequests?.[0]?.chargeableWeight || 0;
+      setParcelInfo(prev => ({
+        ...prev,
+        chargeableWeight: chargeableWeightFromApi,
+      }));
 
-        // Lấy shippingFeeByItinerary từ bestPathGraphResponses[0]
-        const shippingFee = data.bestPathGraphResponses?.[0]?.shippingFeeByItinerary || 0;
-
-        // Tính giá tiền cuối cùng = trọng lượng quy đổi * phí vận chuyển
-        const totalPrice = chargeableWeight * shippingFee;
-
-        setPriceVnd(totalPrice);
-      }
-    } catch (error) {
-      console.error('Failed to fetch price itinerary:', error);
+      const shippingFee = Number(data.bestPathGraphResponses?.[0]?.shippingFeeByItinerary) || 0;
+      const totalPrice = chargeableWeightFromApi * shippingFee;
+      setPriceVnd(totalPrice);
+      setRouteSolutions(data.bestPathGraphResponses || []);
     }
-  };
+  } catch (error) {
+    console.error('Failed to fetch price itinerary:', error);
+  }
+};
+
 
   useEffect(() => {
     const ready =
@@ -149,9 +141,8 @@ function ParcelInfo({
       parcelInfo.widthCm &&
       parcelInfo.heightCm &&
       metroSelector.departureDateTime;
-
     if (ready) fetchTotalPriceItinerary();
-  }, [metroSelector, parcelInfo]);
+  }, [metroSelector]);
 
   return (
     <>
@@ -369,10 +360,14 @@ function ParcelInfo({
               );
             })}
           </div>
-
+          <div className="insurance-fee">
+            <Checkbox>
+              Phí bảo hiểm: 5% trên tổng giá trị đơn hàng
+            </Checkbox>
+          </div>
           <div className="calculatePrice">
             <p>
-              Giá tiền dự tính: {priceVnd ? priceVnd.toLocaleString() + ' VND' : 'Chưa có'}
+              Giá tiền dự tính: {priceVnd ? Number(priceVnd).toLocaleString() + ' VND' : 'Chưa có'}
             </p>
           </div>
         </div>
