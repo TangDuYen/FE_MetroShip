@@ -7,10 +7,27 @@ import { useEffect, useState } from 'react';
 import { Input } from 'antd';
 import api from '../../config/axios';
 import { selectUser } from '../../redux/features/counterSlice';
+import { toast } from 'react-toastify';
 
 function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
-  //Sau thay bằng api get user by Id 
-  const userData = JSON.parse(localStorage.getItem("userData"));
+  const [userData, setUserData] = useState([]);
+  const userId = localStorage.getItem("userId");
+
+  const getUserById = async () => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      const data = response.data.data;
+      setUserData(data);
+    } catch (error) {
+      console.log(response.data.message);
+      toast.error("Không thể tải thông tin người dùng")
+    }
+  }
+
+  useEffect(() => {
+    getUserById();
+  }, [])
+
   useEffect(() => {
     if (userData) {
       setPersonalInfo((prev) => ({
@@ -19,7 +36,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
         senderPhone: userData.phoneNumber || ''
       }));
     }
-  }, [setPersonalInfo]);
+  }, [userData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,7 +89,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           prefix={<PhoneOutlined />}
           onChange={handleChange}
         />
-        <Input
+        {/* <Input
           size="middle"
           placeholder="Email người nhận"
           name="recipientEmail"
@@ -89,7 +106,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           value={personalInfo.recipientNationalId}
           prefix={<SolutionOutlined />}
           onChange={handleChange}
-        />
+        /> */}
       </div>
     </div>
   );
