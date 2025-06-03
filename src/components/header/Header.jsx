@@ -21,6 +21,12 @@ function Header() {
   const toggleProfileDropdown = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    dispatch(logout());
+    navigate("/");
+  }
 
   return (
     <>
@@ -112,12 +118,7 @@ function Header() {
                       <div className="navbar-profile-wrapper">
                         <div
                           className="navbar-profile-item"
-                          onClick={() => {
-                            localStorage.removeItem("token");
-                            localStorage.removeItem("userData");
-                            dispatch(logout());
-                            navigate("/");
-                          }}
+                          onClick={handleLogout}
                         >
                           Đăng xuất
                         </div>
