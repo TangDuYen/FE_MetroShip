@@ -32,8 +32,8 @@ function Login() {
       const user = jwtDecode(token);
       
       //Dùng đỡ sau khi có api get user by id thì bỏ
-      const { token: _, refreshToken, refreshTokenExpiredTime, ...userData } = response.data;
-      localStorage.setItem("userData", JSON.stringify(userData));
+      const userId = response.data.id;
+      localStorage.setItem("userId", userId);
 
       dispatch(login(user));
       if (user.role.includes("Customer")) {

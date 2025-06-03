@@ -48,7 +48,6 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
           <Descriptions title="Người nhận" bordered size="small" column={1}>
             <Descriptions.Item label="Name">{personalInfo.recipientName}</Descriptions.Item>
             <Descriptions.Item label="Phone">{personalInfo.recipientPhone}</Descriptions.Item>
-            <Descriptions.Item label="Email">{personalInfo.recipientNationalId}</Descriptions.Item>
           </Descriptions>
         </Col>
       </Row>

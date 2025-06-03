@@ -1,11 +1,12 @@
 import 'leaflet/dist/leaflet.css';
 
-import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Select } from 'antd';
+import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Select, Table } from 'antd';
 import { useEffect, useState } from 'react';
 
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import metroTimeSlot from './../../constants/data';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -28,9 +29,34 @@ function ParcelInfo({
 }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+  };
   const handleChange = (field, value) => {
     setParcelInfo({ ...parcelInfo, [field]: value });
   };
+  const getSingleTimeOptions = () => {
+    return Object.entries(metroTimeSlot).map(([key, slot]) => {
+      const [h, m] = slot.from.split(':').map(Number);
+      const date = new Date();
+      date.setHours(h, m - 30, 0, 0); // -30 phút
+
+      const padded = (n) => n.toString().padStart(2, '0');
+      const formattedTime = `${padded(date.getHours())}:${padded(date.getMinutes())}`;
+
+      return {
+        label: formattedTime,
+        value: formattedTime,
+      };
+    });
+  };
+  const timeOptions = getSingleTimeOptions();
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -62,7 +88,7 @@ function ParcelInfo({
 
       if (selectedTime) {
         const [hour, minute] = selectedTime.split(':').map(Number);
-        const combinedDateTime = dateObj.hour(hour).minute(minute).second(0).toDate();
+        const combinedDateTime = dateObj.hour(hour).minute(minute).second(0).format("YYYY-MM-DDTHH:mm:ss");
         setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
       }
     }
@@ -88,9 +114,8 @@ function ParcelInfo({
   const buildPriceItineraryPayload = () => ({
     departureStationId: metroSelector.departureStationId || '',
     destinationStationId: metroSelector.destinationStationId || '',
-    scheduleShipmentDate: metroSelector.departureDateTime
-      ? metroSelector.departureDateTime.toISOString()
-      : null,
+    scheduleShipmentDate: metroSelector.departureDateTime || null,
+
     parcels: [
       {
         parcelCategoryId: parcelInfo.parcelCategory || '',
@@ -106,29 +131,29 @@ function ParcelInfo({
   });
 
   const fetchTotalPriceItinerary = async () => {
-  const payload = buildPriceItineraryPayload();
+    const payload = buildPriceItineraryPayload();
 
-  try {
-    const res = await api.post('/shipments/total-price-itinerary', payload);
-    const data = res.data?.data;
+    try {
+      const res = await api.post('/shipments/total-price-itinerary', payload);
+      const data = res.data?.data;
 
-    if (data) {
-      // Lấy chargeableWeight từ API và cập nhật vào parcelInfo
-      const chargeableWeightFromApi = data.parcelRequests?.[0]?.chargeableWeight || 0;
-      setParcelInfo(prev => ({
-        ...prev,
-        chargeableWeight: chargeableWeightFromApi,
-      }));
+      if (data) {
+        // Lấy chargeableWeight từ API và cập nhật vào parcelInfo
+        const chargeableWeightFromApi = data.parcelRequests?.[0]?.chargeableWeight || 0;
+        setParcelInfo(prev => ({
+          ...prev,
+          chargeableWeight: chargeableWeightFromApi,
+        }));
 
-      const shippingFee = Number(data.bestPathGraphResponses?.[0]?.shippingFeeByItinerary) || 0;
-      const totalPrice = chargeableWeightFromApi * shippingFee;
-      setPriceVnd(totalPrice);
-      setRouteSolutions(data.bestPathGraphResponses || []);
+        const shippingFee = Number(data.bestPathGraphResponses?.[0]?.shippingFeeByItinerary) || 0;
+        const totalPrice = chargeableWeightFromApi * shippingFee;
+        setPriceVnd(totalPrice);
+        setRouteSolutions(data.bestPathGraphResponses || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch price itinerary:', error);
     }
-  } catch (error) {
-    console.error('Failed to fetch price itinerary:', error);
-  }
-};
+  };
 
 
   useEffect(() => {
@@ -253,71 +278,72 @@ function ParcelInfo({
                 setSelectedDate(formattedDate);
               }}
             />
-            <label>Thời gian gửi:</label>
-            <Select
-              placeholder="Chọn giờ gửi"
-              style={{ width: '100%', marginBottom: "1em", marginTop: "1em" }}
-              className="dateSelector__time"
-              onChange={(value) => setSelectedTime(value)}
-            >
-              <Option value="08:00">08:00</Option>
-              <Option value="08:15">08:15</Option>
-              <Option value="08:30">08:30</Option>
-              <Option value="08:45">08:45</Option>
-              <Option value="09:00">09:00</Option>
-              <Option value="09:15">09:15</Option>
-              <Option value="09:30">09:30</Option>
-              <Option value="09:45">09:45</Option>
-              <Option value="10:00">10:00</Option>
-              <Option value="10:15">10:15</Option>
-              <Option value="10:30">10:30</Option>
-              <Option value="10:45">10:45</Option>
-              <Option value="11:00">11:00</Option>
-              <Option value="11:15">11:15</Option>
-              <Option value="11:30">11:30</Option>
-              <Option value="11:45">11:45</Option>
-              <Option value="12:00">12:00</Option>
-              <Option value="12:15">12:15</Option>
-              <Option value="12:30">12:30</Option>
-              <Option value="12:45">12:45</Option>
-              <Option value="13:00">13:00</Option>
-              <Option value="13:15">13:15</Option>
-              <Option value="13:30">13:30</Option>
-              <Option value="13:45">13:45</Option>
-              <Option value="14:00">14:00</Option>
-              <Option value="14:15">14:15</Option>
-              <Option value="14:30">14:30</Option>
-              <Option value="14:45">14:45</Option>
-              <Option value="15:00">15:00</Option>
-              <Option value="15:15">15:15</Option>
-              <Option value="15:30">15:30</Option>
-              <Option value="15:45">15:45</Option>
-              <Option value="16:00">16:00</Option>
-              <Option value="16:15">16:15</Option>
-              <Option value="16:30">16:30</Option>
-              <Option value="16:45">16:45</Option>
-              <Option value="17:00">17:00</Option>
-              <Option value="17:15">17:15</Option>
-              <Option value="17:30">17:30</Option>
-              <Option value="17:45">17:45</Option>
-              <Option value="18:00">18:00</Option>
-              <Option value="18:15">18:15</Option>
-              <Option value="18:30">18:30</Option>
-              <Option value="18:45">18:45</Option>
-              <Option value="19:00">19:00</Option>
-              <Option value="19:15">19:15</Option>
-              <Option value="19:30">19:30</Option>
-              <Option value="19:45">19:45</Option>
-              <Option value="21:00">21:00</Option>
-            </Select>
-            <p
-              style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
-            >
-              Lưu ý: Khách hàng cần phải mang hàng đến trạm gửi trước giờ gửi trễ
-              nhất 30 phút trước khi tàu chạy
-            </p>
-          </div>
+            {metroSelector.departureStationId && selectedDate && (
+              <>
+                <Button onClick={showModal} style={{ marginBottom: '1em' }}>
+                  Giờ hoạt động
+                </Button>
+                <div className="timeLabel">
+                  <label>Thời gian gửi:</label>
+                </div>
 
+                <Select
+                  placeholder="Chọn giờ gửi"
+                  style={{ width: '100%', marginBottom: "1em", marginTop: "1em" }}
+                  className="dateSelector__time"
+                  onChange={(value) => setSelectedTime(value)}
+                >
+                  {timeOptions.map((opt) => (
+                    <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                  ))}
+                </Select>
+
+
+                <p
+                  style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
+                >
+                  Lưu ý: Đơn hàng sẽ bị hủy nếu khách hàng đến gửi hàng trễ hơn thời gian đã chọn và sẽ không được hoàn phí
+                </p>
+              </>
+            )}
+            <Modal
+              title="Giờ hoạt động của trạm"
+              open={isModalOpen}
+              onCancel={handleClose}
+              footer={[
+                <Button key="close" onClick={handleClose} className="cancel-button">
+                  Đóng
+                </Button>
+              ]}
+              className="modal-confirm"
+            >
+              <Table
+                columns={[
+                  {
+                    title: 'Khung giờ',
+                    dataIndex: 'label',
+                    key: 'label',
+                  },
+                  {
+                    title: 'Bắt đầu',
+                    dataIndex: 'from',
+                    key: 'from',
+                  },
+                  {
+                    title: 'Kết thúc',
+                    dataIndex: 'to',
+                    key: 'to',
+                  },
+                ]}
+                dataSource={Object.entries(metroTimeSlot).map(([key, value], index) => ({
+                  key: index,
+                  label: value.label,
+                  from: value.from,
+                  to: value.to,
+                }))}
+              />
+            </Modal>
+          </div>
           <div
             className="solutions"
             style={{ marginBottom: '1em', display: 'flex', gap: '1em' }}
