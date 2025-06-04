@@ -10,14 +10,14 @@ import { LogoutOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
 import { toast } from "react-toastify";
 
-function SideNav({}) {
+function SideNav({ }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const page = pathname.replace("/", "");
   const dispatch = useDispatch();
   const onClick = (e) => {
     if (e.key === "logout") {
-      handleLogout(); 
+      handleLogout();
     } else {
       navigate(navpath[e.key].path);
     }
@@ -26,16 +26,16 @@ function SideNav({}) {
   const handleLogout = async () => {
     toast.success("Đăng xuất thành công");
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     localStorage.removeItem('userData');
     await dispatch(logout());
     navigate('/');
-}
-
+  }
 
   return (
-    
 
-<div className="menu-side-nav-container">
+
+    <div className="menu-side-nav-container">
       <Menu
         onClick={onClick}
         defaultOpenKeys={["sub1"]}
@@ -45,12 +45,12 @@ function SideNav({}) {
           user?.role == "Admin"
             ? navDashboardConfig
             : user?.role == "Staff"
-            ? navDashboardConfigStaff
-            : user?.role == "Customer"
-            ? navDashboardConfigCustomer
-            : null
+              ? navDashboardConfigStaff
+              : user?.role == "Customer"
+                ? navDashboardConfigCustomer
+                : null
         }
-        
+
         className="menu-sidenav"
       />
       <Menu
@@ -67,7 +67,7 @@ function SideNav({}) {
         ]}
         className="menu-sidenav2"
       />
-     
+
     </div>
   );
 }

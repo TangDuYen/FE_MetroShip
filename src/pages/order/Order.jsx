@@ -121,68 +121,76 @@ function Order() {
     }
   };
   const buildPayload = () => {
+  const {
+    senderName,
+    senderPhone,
+    recipientName,
+    recipientPhone,
+    recipientEmail,
+    recipientNationalId,
+  } = personalInfo;
 
-    const {
-      senderName,
-      senderPhone,
-      recipientName,
-      recipientPhone,
-      recipientEmail,
-      recipientNationalId,
-    } = personalInfo;
+  const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
 
-    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+  const {
+    parcelCategory,
+    weightKg,
+    lengthCm,
+    widthCm,
+    heightCm,
+    isBulk,
+    chargeableWeight,
+  } = parcelInfo;
 
+  // Lấy giải pháp tuyến đã chọn
+  const itinerary = routeSolutions[selectedSolutionIndex];
 
-    const {
-      parcelCategory,
-      weightKg,
-      lengthCm,
-      widthCm,
-      heightCm,
-      isBulk,
-      chargeableWeight,
-    } = parcelInfo;
+  // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
+  const shipmentItineraries = itinerary?.routes.map(route => ({
+    routeId: route.routeId,
+    basePriceVndPerKm: route.basePriceVndPerKm || 0,
+    legOrder: route.legOrder,
+  })) || [];
 
+  // Convert departureDateTime to Date if it's not already a Date object
+  let scheduledDateTime = null;
+  if (departureDateTime) {
+    if (typeof departureDateTime === 'string') {
+      scheduledDateTime = new Date(departureDateTime).toISOString(); // Convert string to Date object
+    } else if (departureDateTime instanceof Date) {
+      scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
+    }
+  }
 
-    // Lấy giải pháp tuyến đã chọn
-    const itinerary = routeSolutions[selectedSolutionIndex];
-
-    // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-    const shipmentItineraries = itinerary?.routes.map(route => ({
-      routeId: route.routeId,
-      basePriceVndPerKm: route.basePriceVndPerKm || 0,
-      legOrder: route.legOrder,
-    })) || [];
-
-    return {
-      departureStationId: departureStationId || "",
-      destinationStationId: destinationStationId || "",
-      senderName: senderName || "",
-      senderPhone: senderPhone || "",
-      recipientId: "",
-      recipientName: recipientName || "",
-      recipientPhone: recipientPhone || "",
-      recipientEmail: recipientEmail || "",
-      recipientNationalId: recipientNationalId,
-      scheduledDateTime: departureDateTime ? departureDateTime.toISOString() : null,
-      totalCostVnd: priceVnd,
-      shippingFeeVnd: priceVnd,
-      shipmentItineraries: shipmentItineraries,
-      parcels: [
-        {
-          parcelCategoryId: parcelCategory || "",
-          weightKg: Number(weightKg) || 0,
-          lengthCm: Number(lengthCm) || 0,
-          widthCm: Number(widthCm) || 0,
-          heightCm: Number(heightCm) || 0,
-          chargeableWeight: chargeableWeight,
-          isBulk: isBulk || false,
-          priceVnd: Number(priceVnd) || 0,
-        },
-      ],
-    };
+  return {
+    departureStationId: departureStationId || "",
+    destinationStationId: destinationStationId || "",
+    senderName: senderName || "",
+    senderPhone: senderPhone || "",
+    recipientId: "",
+    recipientName: recipientName || "",
+    recipientPhone: recipientPhone || "",
+    recipientEmail: recipientEmail || "",
+    recipientNationalId: recipientNationalId,
+    scheduledDateTime: scheduledDateTime, // Updated field to ensure it's a valid ISO string
+    totalCostVnd: priceVnd,
+    shippingFeeVnd: priceVnd,
+    shipmentItineraries: shipmentItineraries,
+    parcels: [
+      {
+        parcelCategoryId: parcelCategory || "",
+        weightKg: Number(weightKg) || 0,
+        lengthCm: Number(lengthCm) || 0,
+        widthCm: Number(widthCm) || 0,
+        heightCm: Number(heightCm) || 0,
+        chargeableWeight: chargeableWeight,
+        isBulk: isBulk || false,
+        priceVnd: Number(priceVnd) || 0,
+      },
+    ],
   };
+};
+
 
   const handleSubmit = async () => {
     try {
