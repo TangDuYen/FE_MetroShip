@@ -153,6 +153,7 @@ function HistoryOrders() {
                     <th>Tổng phí ship</th>
                     <th>Kích thước (cm)</th>
                     <th>Ngày giao hàng</th>
+                    <th>Chi tiết</th>
                     <th>Trạng thái</th>
                   </tr>
                 </thead>
@@ -173,6 +174,9 @@ function HistoryOrders() {
                         <td>{item.price.toLocaleString()}</td>
                         <td>{item.size}</td>
                         <td>{item.deliveryDate}</td>
+                        <td>
+                          <span className="detail-link">Chi tiết</span>
+                        </td>
                         <td>
                           {item.status === "delivered" ? (
                             <span className="status-delivered">
