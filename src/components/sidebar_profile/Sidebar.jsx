@@ -1,11 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PATH_NAME } from "../../constants/pathname";
 import "./Sidebar.scss";
 import { NavLink } from "react-router-dom";
 import { MdAccountCircle, MdPayments } from "react-icons/md";
 import { BsFillBoxSeamFill } from "react-icons/bs";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/features/counterSlice";
+import api from "../../config/axios";
 
 function Sidebar() {
+  const user = useSelector(selectUser);
+  const [userData, setUserData] = useState({
+    fullName: "",
+  });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id || !user?.token) return;
+
+      try {
+        const response = await api.get(`users/${user.id}`, {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+
+        const data = response.data.data;
+
+        setUserData({
+        
+          fullName: data.fullName || "",
+          
+        });
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
   return (
     <div className="profile-sidebar">
       <div className="profile-sidebar-container">
@@ -16,7 +51,7 @@ function Sidebar() {
               alt="Avatar"
             />
           </div>
-          <div className="profile-sidebar-label">Xin chào, API</div>
+          <div className="profile-sidebar-label">Xin chào, {userData.fullName}</div>
         </div>
         <div className="profile-sidebar-bottom">
           <ul>
