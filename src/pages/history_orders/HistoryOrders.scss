@@ -61,6 +61,30 @@
           font-size: 16px;
         }
       }
+      .pay-button {
+        background-color: $secondary-text-color;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .pay-button:hover {
+        background-color: #218838;
+      }
+
+      .detail-link {
+        color: $primary-color;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .detail-link:hover {
+        text-decoration: underline;
+      }
     }
   }
 }
@@ -150,16 +174,6 @@
 .status-pending {
   background-color: #edebd4;
   color: $secondary-color;
-}
-
-.detail-link {
-  color: $primary-color;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.detail-link:hover {
-  text-decoration: underline;
 }
 
 .pagination {

@@ -81,21 +81,6 @@
       .detail-link:hover {
         text-decoration: underline;
       }
-
-      .pay-button {
-        background-color: $secondary-text-color;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: 0.2s;
-      }
-
-      .pay-button:hover {
-        background-color: #218838;
-      }
     }
   }
 }

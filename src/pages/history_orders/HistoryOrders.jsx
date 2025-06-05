@@ -43,9 +43,15 @@ function HistoryOrders() {
 
   const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
 
+  
+
   const displayedGoods = filteredGoods.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
+  );
+
+  const hasPendingPayment = displayedGoods.some(
+    (item) => item.status === "pending"
   );
 
   const handlePageClick = (page) => {
@@ -155,6 +161,7 @@ function HistoryOrders() {
                     <th>Ngày giao hàng</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
+                    {hasPendingPayment && <th>Hành động</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -188,6 +195,15 @@ function HistoryOrders() {
                             </span>
                           )}
                         </td>
+                        {hasPendingPayment && (
+                          <td>
+                            {item.status === "pending" ? (
+                              <button className="pay-button">Thanh toán</button>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
