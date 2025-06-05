@@ -1,22 +1,15 @@
 import "./HistoryOrders.scss";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { MdSearch } from "react-icons/md";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
+import api from "../../config/axios";
+import { toast } from "react-toastify";
 
 function HistoryOrders() {
-  const allGoods = Array.from({ length: 30 }).map((_, i) => ({
-    id: i + 1,
-    code: `MS00${i + 1}`,
-    name: `Hàng hóa ${i + 1}`,
-    weight: 100 + i * 10,
-    price: 10000 + i * 500,
-    size: `10x${i + 1}x5`,
-    status: i % 2 === 0 ? "delivered" : "pending",
-    deliveryDate: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
-  }));
 
+  const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageWindowStart, setPageWindowStart] = useState(1);
@@ -27,7 +20,129 @@ function HistoryOrders() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const filteredGoods = allGoods.filter((item) => {
+  const statusOptions = [
+    { value: "all", label: "Tất cả trạng thái" },
+    { value: "AwaitingConfirmation", label: "Chờ xác nhận" },
+    { value: "Confirm", label: "Đã xác nhận" },
+    { value: "InTransit", label: "Đang vận chuyển" },
+    { value: "Delivered", label: "Đã giao hàng" },
+    { value: "Cancelled", label: "Đã hủy" },
+  ];
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "AwaitingConfirmation":
+        return "Chờ xác nhận";
+      case "Confirm":
+        return "Đã xác nhận";
+      case "InTransit":
+        return "Đang vận chuyển";
+      case "Delivered":
+        return "Đã giao hàng";
+      case "Cancelled":
+        return "Đã hủy";
+      default:
+        return "Không rõ";
+    }
+  };
+
+  // useEffect(() => {
+  //   const fetchParcels = async () => {
+  //     try {
+  //       const res = await api.get("parcels");
+  //       const items = res.data?.data?.items || [];
+
+  //       // Chuyển đổi dữ liệu API sang định dạng mong muốn
+  //       const convertedGoods = items.map((item, index) => ({
+  //         id: index + 1,
+  //         shipmentId: item.shipmentId,
+  //         code: item.parcelCode || "N/A",
+  //         name: item.parcelCategory?.categoryName || "Chưa rõ",
+  //         weight: item.chargeableWeightKg || 0,
+  //         price: parseFloat(item.priceVnd || "0"),
+  //         size: item.volumeCm3,
+  //         status: item.parcelTrackings?.[0]?.status || "Unknown",
+  //       }));
+
+  //       setGoods(convertedGoods);
+  //     } catch (error) {
+  //       console.error("Error fetching parcels:", error);
+  //     }
+  //   };
+
+  //   fetchParcels();
+  // }, []);
+
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [parcelsRes, shipmentsRes] = await Promise.all([
+        api.get("parcels"),
+        api.get("/shipments/customer/history"),
+      ]);
+
+      const parcelItems = parcelsRes.data?.data?.items || [];
+      const shipmentItems = shipmentsRes.data?.data?.items || [];
+
+      
+      const shipmentMap = new Map(
+        shipmentItems.map((item) => [
+          item.trackingCode, 
+          item.scheduledDateTime
+            ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
+            : "",
+        ])
+      );
+      const convertedGoods = parcelItems.map((item, index) => {
+        // Lấy trackingCode từ parcelCode: loại bỏ phần hậu tố (vd "-01")
+        const baseTrackingCode = item.parcelCode
+          ? item.parcelCode.split("-").slice(0, -1).join("-")
+          : "";
+
+        return {
+          id: index + 1,
+          shipmentId: item.shipmentId,
+          code: item.parcelCode || "N/A",
+          name: item.parcelCategory?.categoryName || "Chưa rõ",
+          weight: item.chargeableWeightKg || 0,
+          price: parseFloat(item.priceVnd || "0"),
+          size: item.volumeCm3,
+          status: item.parcelTrackings?.[0]?.status || "Unknown",
+          deliveryDate: shipmentMap.get(baseTrackingCode) || "N/A",
+        };
+      });
+
+      setOrders(convertedGoods);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu:", error);
+    }
+  };
+
+  fetchData();
+}, []);
+
+  const handlePayment = async (shipmentId) => {
+    try {
+      const payload = {
+        shipmentId,
+        returnUrl: "http://localhost:5173/payment-success",
+        cancelUrl: "http://localhost:5173/payment-fail",
+      };
+
+      const res = await api.post("/shipments/vnpay/payment-url", payload);
+
+      if (res.data?.data?.paymentUrl) {
+        window.location.href = res.data.data.paymentUrl; // Redirect sang VNPay
+      } else {
+        toast.error("Không lấy được link thanh toán!");
+      }
+    } catch (err) {
+      console.error("Lỗi khi thanh toán:", err);
+      toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán.");
+    }
+  };
+
+  const filteredGoods = orders.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(searchTerm.toLowerCase());
@@ -43,16 +158,12 @@ function HistoryOrders() {
 
   const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
 
-  
-
   const displayedGoods = filteredGoods.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const hasPendingPayment = displayedGoods.some(
-    (item) => item.status === "pending"
-  );
+  const hasPayment = displayedGoods.some((item) => item.status === "Confirm");
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -125,9 +236,11 @@ function HistoryOrders() {
                     setCurrentPage(1);
                   }}
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="delivered">Đã nhận hàng</option>
-                  <option value="pending">Đang chờ giao</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
 
                 <input
@@ -155,19 +268,19 @@ function HistoryOrders() {
                     <th>STT</th>
                     <th>Mã hàng hóa</th>
                     <th>Tên hàng hóa</th>
-                    <th>Trọng lượng (gram)</th>
-                    <th>Tổng phí ship</th>
-                    <th>Kích thước (cm)</th>
-                    <th>Ngày giao hàng</th>
+                    <th>Trọng lượng (kilogram)</th>
+                    <th>Tổng chi phí (vnd)</th>
+                    <th>Thể tích (cm³)</th>
+                    <th>Ngày gửi hàng</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
-                    {hasPendingPayment && <th>Hành động</th>}
+                    {hasPayment && <th>Hành động</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {displayedGoods.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="no-data">
+                      <td colSpan="10" className="no-data">
                         Không có bản ghi nào
                       </td>
                     </tr>
@@ -185,25 +298,24 @@ function HistoryOrders() {
                           <span className="detail-link">Chi tiết</span>
                         </td>
                         <td>
-                          {item.status === "delivered" ? (
-                            <span className="status-delivered">
-                              Đã nhận hàng
-                            </span>
-                          ) : (
-                            <span className="status-pending">
-                              Đang chờ giao
-                            </span>
-                          )}
+                          <span className={`status-${item.status}`}>
+                            {getStatusLabel(item.status)}
+                          </span>
                         </td>
-                        {hasPendingPayment && (
+                        {item.status === "Confirm" ? (
                           <td>
-                            {item.status === "pending" ? (
-                              <button className="pay-button">Thanh toán</button>
-                            ) : (
-                              "-"
-                            )}
+                            <button
+                              className="pay-button"
+                              onClick={() => handlePayment(item.shipmentId)}
+                            >
+                              Thanh toán
+                            </button>
                           </td>
-                        )}
+                        ) : hasPayment ? (
+                          <td>-</td>
+                        ) : null}
+
+                        {/* <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td> */}
                       </tr>
                     ))
                   )}

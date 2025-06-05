@@ -63,15 +63,6 @@
         font-size: 16px;
       }
 
-      .status-completed {
-        background-color: #d4edda;
-        color: $secondary-text-color;
-        font-weight: bold;
-        padding: 8px;
-        border-radius: 4px;
-        display: inline-block;
-      }
-
       .detail-link {
         color: $primary-color;
         cursor: pointer;
@@ -80,6 +71,24 @@
 
       .detail-link:hover {
         text-decoration: underline;
+      }
+
+      .status-completed,
+      .status-pending {
+        font-weight: bold;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+
+      .status-completed {
+        background-color: #d4edda;
+        color: $secondary-text-color;
+      }
+
+      .status-pending {
+        background-color: #edebd4;
+        color: $secondary-color;
       }
     }
   }
