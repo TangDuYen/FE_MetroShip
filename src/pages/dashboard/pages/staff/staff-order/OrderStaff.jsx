@@ -18,11 +18,23 @@ function OrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
+  const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
   const [dateFilter, setDateFilter] = useState(null);
   const [stationFilter, setStationFilter] = useState(null);
   const [routeFilter, setRouteFilter] = useState(null);
+
+
+  const getAllStation = async () => {
+    try {
+      const response = await api.get("/stations");
+      setStations(response.data.data);
+    } catch (error) {
+      console.log("Không thể lấy thông tin trạm");
+      toast.error("Không thể lấy thông tin trạm");
+    }
+  }
 
   const getAllShipments = async () => {
     try {
@@ -35,14 +47,18 @@ function OrderStaff() {
     }
   };
 
-  const getAllStation = async () => {
+  const getAllParcels = async () => {
     try {
-      const response = await api.get("/stations");
-      setStations(response.data.data);
+      const response = await api.get("/parcels");
+      setParcels(response.data.data.items);
     } catch (error) {
       console.log("Không thể lấy thông tin trạm");
       toast.error("Không thể lấy thông tin trạm");
     }
+  }
+
+  const getParcelsByShipment = (parcel, shipmentId) => {
+
   }
 
   const handleFilterChange = () => {
@@ -55,7 +71,7 @@ function OrderStaff() {
       filtered = filtered.filter(order => order.departureStationName === stationFilter);
     }
     if (routeFilter) {
-      filtered = filtered.filter(order => order.route === routeFilter);  // Assuming `route` is available in the order
+      filtered = filtered.filter(order => order.route === routeFilter);
     }
 
     setFilteredShipments(filtered);
@@ -70,9 +86,9 @@ function OrderStaff() {
   useEffect(() => {
     getAllShipments();
     getAllStation();
+    getAllParcels();
   }, []);
 
-  // Columns bảng
   const columns = [
     {
       title: 'STT',
@@ -85,11 +101,6 @@ function OrderStaff() {
       title: 'Mã đơn hàng',
       dataIndex: 'trackingCode',
       key: 'trackingCode',
-    },
-    {
-      title: 'Trọng lượng (kg)',
-      dataIndex: 'weightKg', // Assuming this comes from the data
-      key: 'weightKg',
     },
     {
       title: 'Trạm gửi',
@@ -126,29 +137,29 @@ function OrderStaff() {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'shipmentStatus', // Assuming status is part of the shipment
+      dataIndex: 'shipmentStatus', 
       key: 'shipmentStatus',
       render: (status) => {
         const statusMapping = {
-          0: 'Processing',
-          1: 'Rejected',
-          2: 'PartiallyConfirmed',
-          3: 'Accepted',
-          4: 'Unpaid',
-          5: 'Cancelled',
-          6: 'AwaitingRefund',
-          7: 'Refunded',
-          8: 'NoDropOff',
-          9: 'Paid',
-          10: 'PickedUp',
-          11: 'InTransit',
-          12: 'AwaitingForDelivery',
-          13: 'ApplyingSurcharge',
-          14: 'Expired',
-          15: 'AwaitingFeedback',
-          16: 'Completed',
+          0: 'Đang xử lý', //Processing
+          1: 'Từ chối', //Rejected
+          2: 'Đợi thanh toán', //PartiallyConfirmed
+          3: 'Đã xác nhận', //Accepted
+          4: 'Chưa thanh toán', //Unpaid
+          5: 'Hủy', //Cancelled
+          6: 'Đợi hoàn tiền', //AwaitingRefund
+          7: 'Đã hoàn tiền', //Refunded
+          8: 'Không xuất hiện', //NoDropOff
+          9: 'Đã thanh toán', //Paid
+          10: 'Đã nhận hàng', //PickedUp
+          11: 'Đang vận chuyển', //In Transit
+          12: 'Đợi lấy hàng', //AwaitingForDelivery
+          13: 'Thu phí tồn kho', //ApplyingSurcharge
+          14: 'Quá hạn', //Expired
+          15: 'Đợi đánh giá', //AwaitingFeedback
+          16: 'Hoàn thành', //Completed
         };
-        return statusMapping[status] || 'Unknown';
+        return statusMapping[status] || 'Không xác nhận';
       },
     },
     {
@@ -160,8 +171,8 @@ function OrderStaff() {
             components: {
               Button: {
                 defaultColor: "white",
-                defaultBg: "#4CAF50",
-                defaultBorderColor: "#4CAF50",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
                 defaultHoverBorderColor: "#FFC107",
                 defaultHoverColor: "black",
                 defaultHoverBg: "#FFC107",
@@ -186,8 +197,8 @@ function OrderStaff() {
             components: {
               Button: {
                 defaultColor: "white",
-                defaultBg: "#0066CC",
-                defaultBorderColor: "#0066CC",
+                defaultBg: "#4CAF50",
+                defaultBorderColor: "#4CAF50",
                 defaultHoverBorderColor: "#FFC107",
                 defaultHoverColor: "black",
                 defaultHoverBg: "#FFC107",
@@ -250,7 +261,7 @@ function OrderStaff() {
   return (
     <>
       <div className="order-staff-container">
-        <div className="filter-sort" style={{marginBottom: "1em"}}>
+        <div className="filter-sort" style={{ marginBottom: "1em" }}>
           <Row gutter={16}>
             <Col span={6}>
               <DatePicker
@@ -293,14 +304,14 @@ function OrderStaff() {
                 onClick={handleBulkAction}
                 disabled={filteredShipments.length === 0}
               >
-                Chuyển trạm cho tất cả
+                Chuyển trạm
               </Button></Col>
           </Row>
         </div>
         <Table
           columns={columns}
-          dataSource={shipments} // Use the shipments data fetched from the API
-          rowKey="trackingCode" // Assuming trackingCode is unique
+          dataSource={shipments}
+          rowKey="trackingCode"
           pagination={{ pageSize: 10 }}
           bordered
           style={{ cursor: 'pointer' }}

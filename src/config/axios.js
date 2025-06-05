@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const baseUrl = "https://localhost:7085/api/";
+const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
+//https://localhost:7085/api/
 const config = {
   baseURL: baseUrl,
   timeout: 3000000,
