@@ -11,20 +11,20 @@ function Page404() {
   const nav =useNavigate();
 
   let homeLink = "/";
-  if (user?.Role === "Admin") {
-    homeLink = "/dashboard";
-  } else if (user?.Role === "Staff") {
+  if (user?.role === "Admin") {
+    homeLink = "/dashboard/admin";
+  } else if (user?.role === "Staff") {
     homeLink = "/dashboard/staff";
-  } else if (user?.Role === "Customer") {
+  } else if (user?.role === "Customer") {
     homeLink = "/";
   }
 
   return (
     <div className="page404">
       <h1>404</h1>
-      <h3>Oops, This Page Not Found!</h3>
-      <h4>The link might be corrupted.</h4>
-      <p>or the page have been removed.</p>
+      <h3>Không thể tìm thấy trang này!</h3>
+      <h4>Liên kết có thể bị hỏng.</h4>
+      <p>hoặc trang này đã bị xóa.</p>
       <ConfigProvider
         theme={{
           components: {
@@ -42,7 +42,7 @@ function Page404() {
           },
         }}
       >
-        <Button onClick={() => nav(homeLink)} className="page404__button">Go back</Button>
+        <Button onClick={() => nav(homeLink)} className="page404__button">Quay về</Button>
       </ConfigProvider>
     </div>
   );
