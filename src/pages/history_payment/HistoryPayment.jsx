@@ -43,6 +43,10 @@ function HistoryPayment() {
     currentPage * itemsPerPage
   );
 
+  const hasPendingPayment = displayedPayments.some(
+    (item) => item.status === "pending"
+  );
+
   const handlePageClick = (page) => {
     setCurrentPage(page);
   };
@@ -146,7 +150,9 @@ function HistoryPayment() {
                     <th>Phương thức</th>
                     <th>Số tiền</th>
                     <th>Ngày giao dịch</th>
+                    <th>Chi tiết</th>
                     <th>Trạng thái</th>
+                    {hasPendingPayment && <th>Hành động</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -165,6 +171,9 @@ function HistoryPayment() {
                         <td>{item.amount.toLocaleString()}đ</td>
                         <td>{item.date}</td>
                         <td>
+                          <span className="detail-link">Chi tiết</span>
+                        </td>
+                        <td>
                           {item.status === "completed" ? (
                             <span className="status-completed">
                               Đã thanh toán
@@ -175,6 +184,15 @@ function HistoryPayment() {
                             </span>
                           )}
                         </td>
+                        {hasPendingPayment && (
+                          <td>
+                            {item.status === "pending" ? (
+                              <button className="pay-button">Thanh toán</button>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}

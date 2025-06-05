@@ -28,14 +28,31 @@ function Login() {
       const response = await api.post("/auth/authentication", payload);
 
       const token = response.data.token;
-      localStorage.setItem("token", token);
-      const user = jwtDecode(token);
+    const userId = response.data.id;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", userId);
+      // const user = jwtDecode(token);
       
       //Dùng đỡ sau khi có api get user by id thì bỏ
-      const userId = response.data.id;
-      localStorage.setItem("userId", userId);
+      // const userId = response.data.id;
+      // localStorage.setItem("userId", userId);
 
-      dispatch(login(user));
+       const userRes = await api.get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const user = userRes.data.data;
+
+    // Dispatch vào Redux
+    dispatch(login({
+      id: user.id,
+      token: user,
+      role: user.role,
+    }));
+      // dispatch(login(user));
       if (user.role.includes("Customer")) {
         nav("/");
       }
