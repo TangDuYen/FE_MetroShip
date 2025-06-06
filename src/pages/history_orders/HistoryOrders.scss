@@ -61,6 +61,30 @@
           font-size: 16px;
         }
       }
+      .pay-button {
+        background-color: $secondary-text-color;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .pay-button:hover {
+        background-color: #218838;
+      }
+
+      .detail-link {
+        color: $primary-color;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .detail-link:hover {
+        text-decoration: underline;
+      }
     }
   }
 }
@@ -134,33 +158,17 @@
   padding: 20px;
 }
 
-.status-delivered,
-.status-pending {
-  font-weight: bold;
-  padding: 8px;
-  border-radius: 4px;
-  display: inline-block;
-}
 
-.status-delivered {
-  background-color: #d4edda;
-  color: $secondary-text-color;
-}
 
-.status-pending {
-  background-color: #edebd4;
-  color: $secondary-color;
-}
+// .status-AwaitingConfirmation {
+//   background-color: #f0ad4e3b;
+//   color: #f0ad4e;
+// }
 
-.detail-link {
-  color: $primary-color;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.detail-link:hover {
-  text-decoration: underline;
-}
+// .status-pending {
+//   background-color: #edebd4;
+//   color: $secondary-color;
+// }
 
 .pagination {
   display: flex;
@@ -188,4 +196,45 @@
 .pagination button:disabled {
   background: $background-color;
   cursor: not-allowed;
+}
+
+[class^="status-"] {
+  font-weight: bold;
+  padding: 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+$statuses: (
+  AwaitingConfirmation: (
+    text: #f0ad4e,
+    bg: rgba(#f0ad4e, 0.2)
+  ),
+  Confirm: (
+    text: #0275d8,
+    bg: rgba(	#0275d8, 0.2)
+  ),
+  InTransit: (
+    text: #5bc0de,
+    bg: rgba(#5bc0de, 0.2)
+  ),
+  Delivered: (
+    text: #5cb85c,
+    bg: rgba(#5cb85c, 0.2)
+  ),
+  Cancelled: (
+    text: #d9534f,
+    bg: rgba(#d9534f, 0.2)
+  ),
+  Unknown: (
+    text: #6c757d,
+    bg: rgba(#6c757d, 0.2)
+  )
+);
+
+@each $status, $props in $statuses {
+  .status-#{$status} {
+    background-color: map-get($props, bg);
+    color: map-get($props, text);
+  }
 }
