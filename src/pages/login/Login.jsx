@@ -1,15 +1,15 @@
-import './Login.scss'
+import "./Login.scss";
 
-import { GoogleOutlined } from '@ant-design/icons';
-import LoginPicture from '../../assets/login.jpg';
+import { GoogleOutlined } from "@ant-design/icons";
+import LoginPicture from "../../assets/login.jpg";
 import Logo from "../../assets/logo2.png";
-import api from '../../config/axios';
-import { jwtDecode } from 'jwt-decode';
-import { login } from '../../redux/features/counterSlice';
-import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import api from "../../config/axios";
+import { jwtDecode } from "jwt-decode";
+import { login } from "../../redux/features/counterSlice";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 function Login() {
   const [username, setUserName] = useState("");
@@ -29,15 +29,19 @@ function Login() {
 
       //DECODE TOKEN 
       const token = response.data.token;
-      localStorage.setItem("token", token);
       const user = jwtDecode(token);
-      console.log(user);
-      
-      //GET USERID
+      //Dùng đỡ sau khi có api get user by id thì bỏ
       const userId = response.data.id;
+      localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
+      dispatch(
+        login({
+          ...user,
+          id: userId,
+          token: token,
+        })
+      );
 
-      dispatch(login(user));
       if (user.role.includes("Customer")) {
         nav("/");
       }
@@ -47,7 +51,7 @@ function Login() {
       if (user.role.includes("Staff")) {
         nav("/dashboard/staff");
       }
-      toast.success('Đăng nhập thành công')
+      toast.success("Đăng nhập thành công");
     } catch (error) {
       let errorMessage = "Có lỗi xảy ra. Hãy thử lại.";
       toast.error(errorMessage);
@@ -57,11 +61,7 @@ function Login() {
   return (
     <div className="login-container">
       <div className="introduction-image">
-        <img
-          src={LoginPicture}
-          alt="Login"
-          onClick={() => nav("/")}
-        />
+        <img src={LoginPicture} alt="Login" onClick={() => nav("/")} />
       </div>
       <div className="login-form-container">
         <div
@@ -116,7 +116,11 @@ function Login() {
               <GoogleOutlined style={{ color: "#0066CC" }} />
             </div>
           </div>
-          <button type="submit" className="login-btn" style={{ marginTop: '1em' }}>
+          <button
+            type="submit"
+            className="login-btn"
+            style={{ marginTop: "1em" }}
+          >
             Đăng nhập
           </button>
           {/* {error && <p className="error-message">{error}</p>} */}
@@ -131,7 +135,7 @@ function Login() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;

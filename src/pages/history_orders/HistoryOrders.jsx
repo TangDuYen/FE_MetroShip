@@ -33,7 +33,7 @@ function HistoryOrders() {
     switch (status) {
       case "AwaitingConfirmation":
         return "Chờ xác nhận";
-      case "Confirm":
+      case "Confirmation":
         return "Đã xác nhận";
       case "InTransit":
         return "Đang vận chuyển";
@@ -163,7 +163,7 @@ function HistoryOrders() {
     currentPage * itemsPerPage
   );
 
-  const hasPayment = displayedGoods.some((item) => item.status === "Confirm");
+  const hasPayment = displayedGoods.some((item) => item.status === "Confirmation");
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -302,7 +302,7 @@ function HistoryOrders() {
                             {getStatusLabel(item.status)}
                           </span>
                         </td>
-                        {item.status === "Confirm" ? (
+                        {item.status === "Confirmation" ? (
                           <td>
                             <button
                               className="pay-button"
