@@ -27,6 +27,19 @@ function OrderStaff() {
   const [dateFilter, setDateFilter] = useState(null);
   const [stationFilter, setStationFilter] = useState(null);
   const [routeFilter, setRouteFilter] = useState(null);
+  const [parcelMap, setParcelMap] = useState(new Map());
+
+  useEffect(() => {
+    const map = new Map();
+    parcels.forEach((parcel) => {
+      if (!map.has(parcel.shipmentId)) {
+        map.set(parcel.shipmentId, []);
+      }
+      map.get(parcel.shipmentId).push(parcel);
+    });
+    setParcelMap(map);
+  }, [parcels]);
+
 
 
   const getAllStation = async () => {
@@ -60,12 +73,10 @@ function OrderStaff() {
     }
   }
 
-  const getParcelsByTrackingCode = (trackingCode) => {
-    return parcels.filter(parcel => {
-      const codePrefix = parcel.parcelCode.substring(0, parcel.parcelCode.lastIndexOf('-'));
-      return codePrefix === trackingCode;
-    });
+  const getParcelsByShipmentId = (shipmentId) => {
+    return parcels.filter(parcel => parcel.shipmentId === shipmentId);
   };
+
 
   const handleFilterChange = () => {
     let filtered = [...shipments];
@@ -196,31 +207,38 @@ function OrderStaff() {
     },
     {
       title: 'Hành động',
-      key: 'action',
-      render: (_, record) => (
-        <ConfigProvider
-          theme={{
-            components: {
-              Button: {
-                defaultColor: "white",
-                defaultBg: "#4CAF50",
-                defaultBorderColor: "#4CAF50",
-                defaultHoverBorderColor: "#FFC107",
-                defaultHoverColor: "black",
-                defaultHoverBg: "#FFC107",
-                defaultActiveBg: "#0066CC",
-                defaultActiveBorderColor: "#0066CC",
-                defaultActiveColor: "white",
+      key: 'confirm',
+      render: (_, record) => {
+        const relatedParcels = parcelMap.get(record.id) || [];
+        const firstParcel = relatedParcels[0]; // dùng kiện hàng đầu tiên
+        return (
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#4CAF50",
+                  defaultBorderColor: "#4CAF50",
+                  defaultHoverBorderColor: "#FFC107",
+                  defaultHoverColor: "black",
+                  defaultHoverBg: "#FFC107",
+                  defaultActiveBg: "#0066CC",
+                  defaultActiveBorderColor: "#0066CC",
+                  defaultActiveColor: "white",
+                }
               }
-            }
-          }}>
-          <Button className='booking-table-staff_button'
-            // onClick={handleConfirmOrder(record.parcelId)}
-            disabled={record.shipmentStatus >= 3}>
-            Xác nhận
-          </Button>
-        </ConfigProvider>
-      ),
+            }}
+          >
+            <Button
+              className='booking-table-staff_button'
+              onClick={() => firstParcel && handleConfirmOrder(firstParcel.id)}
+              disabled={record.shipmentStatus >= 3 || !firstParcel}
+            >
+              Xác nhận
+            </Button>
+          </ConfigProvider>
+        );
+      }
     },
     {
       title: 'Hành động',
@@ -253,21 +271,24 @@ function OrderStaff() {
   ];
 
   const onRowClick = (record) => {
-    setSelectedOrder(record);
+    const relatedParcels = getParcelsByShipmentId(record.id); // Dùng shipment.id
+    setSelectedOrder({ ...record, relatedParcels }); // lưu luôn các parcel liên quan
     setModalOpen(true);
   };
+
 
 
   const handleConfirmOrder = async (parcelId) => {
     try {
       const response = await api.post(`/parcels/staff/confirmation/${parcelId}`);
-      console.log(response.data);
       toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
       setModalOpen(false);
+      getAllParcels(); // reload lại sau khi xác nhận
     } catch (error) {
       toast.error("Không thể xác nhận kiện hàng");
     }
   };
+
 
   const handleRejectOrder = async (parcelId) => {
     // try {
@@ -346,115 +367,113 @@ function OrderStaff() {
           footer={null}
           width={700}
         >
-          {selectedOrder && (() => {
-            const relatedParcels = getParcelsByTrackingCode(selectedOrder.trackingCode);
-            return (
-              <Tabs defaultActiveKey="0">
-                {relatedParcels.map((parcel, index) => (
-                  <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <Table
-                        dataSource={[
-                          {
-                            key: 'parcelCode',
-                            label: 'Mã kiện hàng',
-                            value: parcel.parcelCode || 'N/A',
-                          },
-                          {
-                            key: 'parcelCategory',
-                            label: 'Loại hàng',
-                            value: parcel.parcelCategory?.categoryName || 'N/A',
-                          },
-                          {
-                            key: 'chargeableWeightKg',
-                            label: 'Trọng lượng quy đổi',
-                            value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
-                          },
-                          {
-                            key: 'volumeCm3',
-                            label: 'Thể tích',
-                            value: `${parcel.volumeCm3 || 'N/A'} cm³`,
-                          },
-                          {
-                            key: 'departureStationName',
-                            label: 'Trạm gửi',
-                            value: selectedOrder.departureStationName || 'N/A',
-                          },
-                          {
-                            key: 'destinationStationName',
-                            label: 'Trạm nhận',
-                            value: selectedOrder.destinationStationName || 'N/A',
-                          },
-                          {
-                            key: 'departureDate',
-                            label: 'Ngày gửi',
-                            value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
-                          },
-                          {
-                            key: 'departureTime',
-                            label: 'Giờ gửi',
-                            value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
-                          },
-                          {
-                            key: 'route',
-                            label: 'Lộ trình',
-                            value: selectedOrder.route || 'N/A',
-                          },
-                          {
-                            key: 'createdAt',
-                            label: 'Thời điểm tạo yêu cầu',
-                            value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
-                          },
-                          {
-                            key: 'unitPrice',
-                            label: 'Đơn giá',
-                            value: formatCurrency(selectedOrder.unitPrice || 0),
-                          },
-                          {
-                            key: 'insuranceFee',
-                            label: 'Phí bảo hiểm',
-                            value: formatCurrency(selectedOrder.insuranceFee || 0),
-                          },
-                          {
-                            key: 'shippingFee',
-                            label: 'Phí gửi hàng',
-                            value: formatCurrency(selectedOrder.shippingFee || 0),
-                          },
-                          {
-                            key: 'totalCost',
-                            label: 'Tổng chi phí',
-                            value: formatCurrency(selectedOrder.totalCostVnd || 0),
-                          },
-                        ]}
-                        columns={[
-                          {
-                            title: 'Thông tin',
-                            dataIndex: 'label',
-                            key: 'label',
-                          },
-                          {
-                            title: 'Chi tiết',
-                            dataIndex: 'value',
-                            key: 'value',
-                          },
-                        ]}
-                        pagination={false}
-                        bordered
-                        showHeader={false}
-                        rowClassName="order-detail-row"
-                      />
-                      <Button
-                        type="primary"
-                        onClick={() => handleConfirmOrder(parcel.parcelId)}
-                      >
-                        Xác nhận kiện hàng
-                      </Button>
-                    </Space>
-                  </TabPane>
-                ))}
-              </Tabs>
-            );
-          })()}
+          {selectedOrder && selectedOrder.relatedParcels && (
+            <Tabs defaultActiveKey="0">
+              {selectedOrder.relatedParcels.map((parcel, index) => (
+                <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Table
+                      dataSource={[
+                        {
+                          key: 'parcelCode',
+                          label: 'Mã kiện hàng',
+                          value: parcel.parcelCode || 'N/A',
+                        },
+                        {
+                          key: 'parcelCategory',
+                          label: 'Loại hàng',
+                          value: parcel.parcelCategory?.categoryName || 'N/A',
+                        },
+                        {
+                          key: 'chargeableWeightKg',
+                          label: 'Trọng lượng quy đổi',
+                          value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
+                        },
+                        {
+                          key: 'volumeCm3',
+                          label: 'Thể tích',
+                          value: `${parcel.volumeCm3 || 'N/A'} cm³`,
+                        },
+                        {
+                          key: 'departureStationName',
+                          label: 'Trạm gửi',
+                          value: selectedOrder.departureStationName || 'N/A',
+                        },
+                        {
+                          key: 'destinationStationName',
+                          label: 'Trạm nhận',
+                          value: selectedOrder.destinationStationName || 'N/A',
+                        },
+                        {
+                          key: 'departureDate',
+                          label: 'Ngày gửi',
+                          value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
+                        },
+                        {
+                          key: 'departureTime',
+                          label: 'Giờ gửi',
+                          value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
+                        },
+                        {
+                          key: 'route',
+                          label: 'Lộ trình',
+                          value: selectedOrder.route || 'N/A',
+                        },
+                        {
+                          key: 'createdAt',
+                          label: 'Thời điểm tạo yêu cầu',
+                          value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+                        },
+                        {
+                          key: 'unitPrice',
+                          label: 'Đơn giá',
+                          value: formatCurrency(selectedOrder.unitPrice || 0),
+                        },
+                        {
+                          key: 'insuranceFee',
+                          label: 'Phí bảo hiểm',
+                          value: formatCurrency(selectedOrder.insuranceFee || 0),
+                        },
+                        {
+                          key: 'shippingFee',
+                          label: 'Phí gửi hàng',
+                          value: formatCurrency(selectedOrder.shippingFee || 0),
+                        },
+                        {
+                          key: 'totalCost',
+                          label: 'Tổng chi phí',
+                          value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                        },
+                      ]}
+                      columns={[
+                        {
+                          title: 'Thông tin',
+                          dataIndex: 'label',
+                          key: 'label',
+                        },
+                        {
+                          title: 'Chi tiết',
+                          dataIndex: 'value',
+                          key: 'value',
+                        },
+                      ]}
+                      pagination={false}
+                      bordered
+                      showHeader={false}
+                      rowClassName="order-detail-row"
+                    />
+                    <Button
+                      type="primary"
+                      onClick={() => handleConfirmOrder(parcel.id)}
+                    >
+                      Xác nhận kiện hàng
+                    </Button>
+                  </Space>
+                </TabPane>
+              ))}
+            </Tabs>
+          )}
+
         </Modal>
 
       </div>
