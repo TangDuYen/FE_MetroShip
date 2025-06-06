@@ -20,20 +20,37 @@ function HistoryOrders() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const statusOptions = [
-    { value: "all", label: "Tất cả trạng thái" },
-    { value: "AwaitingConfirmation", label: "Chờ xác nhận" },
-    { value: "Confirm", label: "Đã xác nhận" },
-    { value: "InTransit", label: "Đang vận chuyển" },
-    { value: "Delivered", label: "Đã giao hàng" },
-    { value: "Cancelled", label: "Đã hủy" },
-  ];
+  const shipmentStatusMap = {
+    0: "Đang xử lý",
+    1: "Đã từ chối",
+    2: "Xác nhận một phần",
+    3: "Đã xác nhận",
+    4: "Chưa thanh toán",
+    5: "Đã hủy",
+    6: "Chờ hoàn tiền",
+    7: "Đã hoàn tiền",
+    8: "Không có điểm gửi hàng",
+    9: "Đã thanh toán",
+    10: "Đã lấy hàng",
+    11: "Đang vận chuyển",
+    12: "Chờ giao hàng",
+    13: "Đang áp dụng phụ phí",
+    14: "Hết hạn",
+    15: "Chờ phản hồi",
+    16: "Hoàn thành",
+  };
+  const statusOptions = Object.entries(shipmentStatusMap).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+
 
   const getStatusLabel = (status) => {
     switch (status) {
       case "AwaitingConfirmation":
         return "Chờ xác nhận";
-      case "Confirmation":
+      case "Accepted":
         return "Đã xác nhận";
       case "InTransit":
         return "Đang vận chuyển";
@@ -74,52 +91,57 @@ function HistoryOrders() {
   // }, []);
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [parcelsRes, shipmentsRes] = await Promise.all([
-        api.get("parcels"),
-        api.get("/shipments/customer/history"),
-      ]);
+    const fetchData = async () => {
+      try {
+        const [parcelsRes, shipmentsRes] = await Promise.all([
+          api.get("parcels"),
+          api.get("/shipments/customer/history"),
+        ]);
 
-      const parcelItems = parcelsRes.data?.data?.items || [];
-      const shipmentItems = shipmentsRes.data?.data?.items || [];
+        const parcelItems = parcelsRes.data?.data?.items || [];
+        const shipmentItems = shipmentsRes.data?.data?.items || [];
 
-      
-      const shipmentMap = new Map(
-        shipmentItems.map((item) => [
-          item.trackingCode, 
-          item.scheduledDateTime
-            ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
-            : "",
-        ])
-      );
-      const convertedGoods = parcelItems.map((item, index) => {
-        // Lấy trackingCode từ parcelCode: loại bỏ phần hậu tố (vd "-01")
-        const baseTrackingCode = item.parcelCode
-          ? item.parcelCode.split("-").slice(0, -1).join("-")
-          : "";
 
-        return {
-          id: index + 1,
-          shipmentId: item.shipmentId,
-          code: item.parcelCode || "N/A",
-          name: item.parcelCategory?.categoryName || "Chưa rõ",
-          weight: item.chargeableWeightKg || 0,
-          price: parseFloat(item.priceVnd || "0"),
-          size: item.volumeCm3,
-          status: item.parcelTrackings?.[0]?.status || "Unknown",
-          deliveryDate: shipmentMap.get(baseTrackingCode) || "N/A",
-        };
-      });
+        const shipmentMap = new Map(
+          shipmentItems.map((item) => [
+            item.trackingCode,
+            {
+              date: item.scheduledDateTime
+                ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
+                : "",
 
-      setOrders(convertedGoods);
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu:", error);
-    }
-  };
+              status: item.shipmentStatus,
+            }
+          ])
+        );
+        const convertedGoods = parcelItems.map((item, index) => {
+          // Lấy trackingCode từ parcelCode: loại bỏ phần hậu tố (vd "-01")
+          const baseTrackingCode = item.parcelCode
+            ? item.parcelCode.split("-").slice(0, -1).join("-")
+            : "";
+          const shipmentInfo = shipmentMap.get(baseTrackingCode) || {};
+          return {
+            id: index + 1,
+            shipmentId: item.shipmentId,
+            code: item.parcelCode || "N/A",
+            name: item.parcelCategory?.categoryName || "Chưa rõ",
+            weight: item.chargeableWeightKg || 0,
+            price: parseFloat(item.priceVnd || "0"),
+            size: item.volumeCm3,
+            status: item.parcelTrackings?.[0]?.status || "Unknown",
+            deliveryDate: shipmentInfo.date || "N/A",
+            shipmentStatus: shipmentInfo.status,
+          };
+        });
 
-  fetchData();
-}, []);
+        setOrders(convertedGoods);
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handlePayment = async (shipmentId) => {
     try {
@@ -130,9 +152,11 @@ function HistoryOrders() {
       };
 
       const res = await api.post("/shipments/vnpay/payment-url", payload);
+      console.log(res.data);
 
-      if (res.data?.data?.paymentUrl) {
-        window.location.href = res.data.data.paymentUrl; // Redirect sang VNPay
+      // statusCode nằm trực tiếp trong res.data
+      if (res.data?.statusCode === 200 && res.data.data) {
+        window.location.href = res.data.data; // Redirect to VNPay
       } else {
         toast.error("Không lấy được link thanh toán!");
       }
@@ -142,12 +166,15 @@ function HistoryOrders() {
     }
   };
 
+
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchStatus = filterStatus === "all" || item.status === filterStatus;
+    const matchStatus =
+      filterStatus === "all" || item.shipmentStatus === parseInt(filterStatus, 10);
+
 
     const matchDateRange =
       (!startDate || item.deliveryDate >= startDate) &&
@@ -163,7 +190,7 @@ function HistoryOrders() {
     currentPage * itemsPerPage
   );
 
-  const hasPayment = displayedGoods.some((item) => item.status === "Confirmation");
+  const hasPayment = displayedGoods.some((item) => item.status === "Accepted");
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -298,11 +325,13 @@ function HistoryOrders() {
                           <span className="detail-link">Chi tiết</span>
                         </td>
                         <td>
-                          <span className={`status-${item.status}`}>
-                            {getStatusLabel(item.status)}
+                          <span className={`status-${item.shipmentStatus}`}>
+                            {shipmentStatusMap[item.shipmentStatus] || "Không rõ"}
                           </span>
                         </td>
-                        {item.status === "Confirmation" ? (
+
+
+                        {item.shipmentStatus === 3 ? (
                           <td>
                             <button
                               className="pay-button"
