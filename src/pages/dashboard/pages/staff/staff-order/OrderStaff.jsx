@@ -41,7 +41,7 @@ function OrderStaff() {
 
   const getAllShipments = async () => {
     try {
-      const response = await api.get("/shipments");
+      const response = await api.get("/shipments?PageSize=20");
       const data = response.data.data.items;
       setShipments(data);
       setFilteredShipments(data);
@@ -52,7 +52,7 @@ function OrderStaff() {
 
   const getAllParcels = async () => {
     try {
-      const response = await api.get("/parcels");
+      const response = await api.get("/parcels?PageSize=20");
       setParcels(response.data.data.items);
     } catch (error) {
       console.log("Không thể lấy thông tin trạm");
@@ -215,7 +215,7 @@ function OrderStaff() {
             }
           }}>
           <Button className='booking-table-staff_button'
-            onClick={handleConfirmOrder}
+            // onClick={handleConfirmOrder(record.parcelId)}
             disabled={record.shipmentStatus >= 3}>
             Xác nhận
           </Button>
@@ -243,7 +243,7 @@ function OrderStaff() {
             }
           }}>
           <Button className='booking-table-staff_button'
-            onClick={handleRejectOrder}
+            onClick={handleRejectOrder(record.parcelId)}
             disabled={record.shipmentStatus >= 1}>
             Từ chối
           </Button>
@@ -260,7 +260,8 @@ function OrderStaff() {
 
   const handleConfirmOrder = async (parcelId) => {
     try {
-      await api.post(`/parcels/staff/confirmation/${parcelId}`);
+      const response = await api.post(`/parcels/staff/confirmation/${parcelId}`);
+      console.log(response.data);
       toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
       setModalOpen(false);
     } catch (error) {
@@ -269,13 +270,14 @@ function OrderStaff() {
   };
 
   const handleRejectOrder = async (parcelId) => {
-    try {
-      await api.post(`/parcels/staff/rejection/${parcelId}`);
-      toast.success(`Đã từ chối nhận kiện hàng: ${parcelId}`);
-      setModalOpen(false);
-    } catch (error) {
-      toast.error("Không thể từ chối nhận kiện hàng");
-    }
+    // try {
+    //   const response = await api.post(`/parcels/staff/rejection/${parcelId}`);
+    //   console.log(response.data);
+    //   toast.success(`Đã từ chối nhận kiện hàng: ${parcelId}`);
+    //   setModalOpen(false);
+    // } catch (error) {
+    //   toast.error("Không thể từ chối nhận kiện hàng");
+    // }
   };
 
 
@@ -337,8 +339,6 @@ function OrderStaff() {
           bordered
           style={{ cursor: 'pointer' }}
         />
-
-
         <Modal
           title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
           open={modalOpen}
@@ -348,7 +348,6 @@ function OrderStaff() {
         >
           {selectedOrder && (() => {
             const relatedParcels = getParcelsByTrackingCode(selectedOrder.trackingCode);
-
             return (
               <Tabs defaultActiveKey="0">
                 {relatedParcels.map((parcel, index) => (
