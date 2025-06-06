@@ -27,13 +27,13 @@ function Login() {
     try {
       const response = await api.post("/auth/authentication", payload);
 
+      //DECODE TOKEN 
       const token = response.data.token;
       const user = jwtDecode(token);
       //Dùng đỡ sau khi có api get user by id thì bỏ
       const userId = response.data.id;
       localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
-
       dispatch(
         login({
           ...user,
@@ -41,6 +41,7 @@ function Login() {
           token: token,
         })
       );
+
       if (user.role.includes("Customer")) {
         nav("/");
       }

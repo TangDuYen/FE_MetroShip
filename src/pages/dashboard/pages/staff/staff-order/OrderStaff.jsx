@@ -1,12 +1,15 @@
 import './OrderStaff.scss'
 
-import { Button, Col, ConfigProvider, DatePicker, Modal, Row, Select, Space, Table, Typography } from 'antd';
+import { Button, Col, ConfigProvider, DatePicker, Modal, Row, Select, Space, Table, Tabs, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 import TextArea from 'antd/es/input/TextArea';
 import api from './../../../../../config/axios';
+import dayjs from 'dayjs';
 import moment from 'moment';
 import { toast } from 'react-toastify';
+
+const { TabPane } = Tabs;
 
 const { Text, Title } = Typography;
 
@@ -57,15 +60,18 @@ function OrderStaff() {
     }
   }
 
-  const getParcelsByShipment = (parcel, shipmentId) => {
-
-  }
+  const getParcelsByTrackingCode = (trackingCode) => {
+    return parcels.filter(parcel => {
+      const codePrefix = parcel.parcelCode.substring(0, parcel.parcelCode.lastIndexOf('-'));
+      return codePrefix === trackingCode;
+    });
+  };
 
   const handleFilterChange = () => {
     let filtered = [...shipments];
 
     if (dateFilter) {
-      filtered = filtered.filter(order => moment(order.departureDate).isSame(dateFilter, 'day'));
+      filtered = filtered.filter(order => moment(order.scheduleDateTime).isSame(dateFilter, 'day'));
     }
     if (stationFilter) {
       filtered = filtered.filter(order => order.departureStationName === stationFilter);
@@ -114,21 +120,21 @@ function OrderStaff() {
     },
     {
       title: 'Ngày gửi',
-      dataIndex: 'departureDate', // Add this if it's available in the API
-      key: 'departureDate',
-      render: (_, record) => record.departureDate || 'N/A', // Adjust if necessary
+      dataIndex: 'scheduledDateTime',
+      key: 'scheduledDateTime',
+      render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
       title: 'Giờ gửi',
-      dataIndex: 'departureTime', // Add this if it's available in the API
-      key: 'departureTime',
-      render: (_, record) => record.departureTime || 'N/A', // Adjust if necessary
+      dataIndex: 'scheduledDateTime',
+      key: 'scheduledTime',
+      render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
     },
     {
       title: 'Thời điểm tạo yêu cầu',
-      dataIndex: 'createdAt', // Add this if it's available in the API
-      key: 'createdAt',
-      render: (_, record) => record.createdAt || 'N/A', // Adjust if necessary
+      dataIndex: 'bookedAt', // Add this if it's available in the API
+      key: 'bookedAt',
+      render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A', // Adjust if necessary
     },
     {
       title: 'Tổng chi phí',
@@ -137,7 +143,7 @@ function OrderStaff() {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'shipmentStatus', 
+      dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
       render: (status) => {
         const statusMapping = {
@@ -208,7 +214,9 @@ function OrderStaff() {
               }
             }
           }}>
-          <Button className='booking-table-staff_button' onClick={() => handleConfirmOrder()}>
+          <Button className='booking-table-staff_button'
+            onClick={handleConfirmOrder}
+            disabled={record.shipmentStatus >= 3}>
             Xác nhận
           </Button>
         </ConfigProvider>
@@ -234,7 +242,9 @@ function OrderStaff() {
               }
             }
           }}>
-          <Button className='booking-table-staff_button' onClick={() => handleConfirmOrder()}>
+          <Button className='booking-table-staff_button'
+            onClick={handleRejectOrder}
+            disabled={record.shipmentStatus >= 1}>
             Từ chối
           </Button>
         </ConfigProvider>
@@ -248,15 +258,26 @@ function OrderStaff() {
   };
 
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = async (parcelId) => {
     try {
-      const response = await api.post(``)
+      await api.post(`/parcels/staff/confirmation/${parcelId}`);
+      toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
+      setModalOpen(false);
     } catch (error) {
-
+      toast.error("Không thể xác nhận kiện hàng");
     }
-    alert(`Xác nhận đơn hàng: ${selectedOrder.trackingCode}`);
-    setModalOpen(false);
   };
+
+  const handleRejectOrder = async (parcelId) => {
+    try {
+      await api.post(`/parcels/staff/rejection/${parcelId}`);
+      toast.success(`Đã từ chối nhận kiện hàng: ${parcelId}`);
+      setModalOpen(false);
+    } catch (error) {
+      toast.error("Không thể từ chối nhận kiện hàng");
+    }
+  };
+
 
   return (
     <>
@@ -317,135 +338,126 @@ function OrderStaff() {
           style={{ cursor: 'pointer' }}
         />
 
+
         <Modal
           title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
           open={modalOpen}
           onCancel={() => setModalOpen(false)}
-          footer={[
-            <Button key="cancel" onClick={() => setModalOpen(false)}>
-              Đóng
-            </Button>,
-            <Button
-              key="confirm"
-              type="primary"
-              onClick={handleConfirmOrder}
-              disabled={!selectedOrder}
-            >
-              Xác nhận đơn hàng
-            </Button>,
-          ]}
+          footer={null}
           width={700}
         >
-          {selectedOrder && (
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Table
-                dataSource={[
-                  {
-                    key: 'stt',
-                    label: 'STT',
-                    value: shipments.findIndex(o => o.trackingCode === selectedOrder.trackingCode) + 1,
-                  },
-                  {
-                    key: 'trackingCode',
-                    label: 'Mã đơn hàng',
-                    value: selectedOrder.trackingCode,
-                  },
-                  {
-                    key: 'senderName',
-                    label: 'Người gửi',
-                    value: selectedOrder.senderName,
-                  },
-                  {
-                    key: 'recipientName',
-                    label: 'Người nhận',
-                    value: selectedOrder.recipientName,
-                  },
-                  {
-                    key: 'parcelCategory',
-                    label: 'Loại hàng',
-                    value: selectedOrder.parcelCategory || 'N/A',
-                  },
-                  {
-                    key: 'dimensions',
-                    label: 'Kích thước (D x R x C)',
-                    value: `${selectedOrder.lengthCm || 'N/A'} x ${selectedOrder.widthCm || 'N/A'} x ${selectedOrder.heightCm || 'N/A'} cm`,
-                  },
-                  {
-                    key: 'weightKg',
-                    label: 'Trọng lượng',
-                    value: `${selectedOrder.weightKg || 'N/A'} kg`,
-                  },
-                  {
-                    key: 'departureStationName',
-                    label: 'Trạm gửi',
-                    value: selectedOrder.departureStationName || 'N/A',
-                  },
-                  {
-                    key: 'destinationStationName',
-                    label: 'Trạm nhận',
-                    value: selectedOrder.destinationStationName || 'N/A',
-                  },
-                  {
-                    key: 'departureDate',
-                    label: 'Ngày gửi',
-                    value: selectedOrder.departureDate || 'N/A',
-                  },
-                  {
-                    key: 'departureTime',
-                    label: 'Giờ gửi',
-                    value: selectedOrder.departureTime || 'N/A',
-                  },
-                  {
-                    key: 'route',
-                    label: 'Lộ trình',
-                    value: selectedOrder.route || 'N/A',
-                  },
-                  {
-                    key: 'createdAt',
-                    label: 'Thời điểm tạo yêu cầu',
-                    value: selectedOrder.createdAt || 'N/A',
-                  },
-                  {
-                    key: 'unitPrice',
-                    label: 'Đơn giá',
-                    value: formatCurrency(selectedOrder.unitPrice || 0),
-                  },
-                  {
-                    key: 'insuranceFee',
-                    label: 'Phí bảo hiểm',
-                    value: formatCurrency(selectedOrder.insuranceFee || 0),
-                  },
-                  {
-                    key: 'shippingFee',
-                    label: 'Phí gửi hàng',
-                    value: formatCurrency(selectedOrder.shippingFee || 0),
-                  },
-                  {
-                    key: 'totalCost',
-                    label: 'Tổng chi phí',
-                    value: formatCurrency(selectedOrder.totalCostVnd || 0),
-                  },
-                ]}
-                columns={[
-                  {
-                    title: 'Thông tin',
-                    dataIndex: 'label',
-                    key: 'label',
-                  },
-                  {
-                    title: 'Chi tiết',
-                    dataIndex: 'value',
-                    key: 'value',
-                  },
-                ]}
-                pagination={false}
-                bordered
-                showHeader={false} // Hide the header to make it look like a key-value table
-                rowClassName="order-detail-row"
-              />
-            </Space>
-          )}
+          {selectedOrder && (() => {
+            const relatedParcels = getParcelsByTrackingCode(selectedOrder.trackingCode);
+
+            return (
+              <Tabs defaultActiveKey="0">
+                {relatedParcels.map((parcel, index) => (
+                  <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Table
+                        dataSource={[
+                          {
+                            key: 'parcelCode',
+                            label: 'Mã kiện hàng',
+                            value: parcel.parcelCode || 'N/A',
+                          },
+                          {
+                            key: 'parcelCategory',
+                            label: 'Loại hàng',
+                            value: parcel.parcelCategory?.categoryName || 'N/A',
+                          },
+                          {
+                            key: 'chargeableWeightKg',
+                            label: 'Trọng lượng quy đổi',
+                            value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
+                          },
+                          {
+                            key: 'volumeCm3',
+                            label: 'Thể tích',
+                            value: `${parcel.volumeCm3 || 'N/A'} cm³`,
+                          },
+                          {
+                            key: 'departureStationName',
+                            label: 'Trạm gửi',
+                            value: selectedOrder.departureStationName || 'N/A',
+                          },
+                          {
+                            key: 'destinationStationName',
+                            label: 'Trạm nhận',
+                            value: selectedOrder.destinationStationName || 'N/A',
+                          },
+                          {
+                            key: 'departureDate',
+                            label: 'Ngày gửi',
+                            value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
+                          },
+                          {
+                            key: 'departureTime',
+                            label: 'Giờ gửi',
+                            value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
+                          },
+                          {
+                            key: 'route',
+                            label: 'Lộ trình',
+                            value: selectedOrder.route || 'N/A',
+                          },
+                          {
+                            key: 'createdAt',
+                            label: 'Thời điểm tạo yêu cầu',
+                            value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+                          },
+                          {
+                            key: 'unitPrice',
+                            label: 'Đơn giá',
+                            value: formatCurrency(selectedOrder.unitPrice || 0),
+                          },
+                          {
+                            key: 'insuranceFee',
+                            label: 'Phí bảo hiểm',
+                            value: formatCurrency(selectedOrder.insuranceFee || 0),
+                          },
+                          {
+                            key: 'shippingFee',
+                            label: 'Phí gửi hàng',
+                            value: formatCurrency(selectedOrder.shippingFee || 0),
+                          },
+                          {
+                            key: 'totalCost',
+                            label: 'Tổng chi phí',
+                            value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                          },
+                        ]}
+                        columns={[
+                          {
+                            title: 'Thông tin',
+                            dataIndex: 'label',
+                            key: 'label',
+                          },
+                          {
+                            title: 'Chi tiết',
+                            dataIndex: 'value',
+                            key: 'value',
+                          },
+                        ]}
+                        pagination={false}
+                        bordered
+                        showHeader={false}
+                        rowClassName="order-detail-row"
+                      />
+                      <Button
+                        type="primary"
+                        onClick={() => handleConfirmOrder(parcel.parcelId)}
+                      >
+                        Xác nhận kiện hàng
+                      </Button>
+                    </Space>
+                  </TabPane>
+                ))}
+              </Tabs>
+            );
+          })()}
         </Modal>
+
       </div>
     </>
   );

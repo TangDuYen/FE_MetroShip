@@ -39,9 +39,13 @@ const ProtectedRouteAuth = ({ children }) => {
 
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
-  if (user?.role?.includes("Admin") || user?.role?.includes("Staff")) {
+  if (user?.role?.includes("Admin")) {
     toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard/admin" replace />;
+  }
+  if (user?.role?.includes("Staff")) {
+    toast.error("Bạn không có quyền truy cập vào trang này.");
+    return <Navigate to="/dashboard/staff" replace />;
   }
   return children;
 };
