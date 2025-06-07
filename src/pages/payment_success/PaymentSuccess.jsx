@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
 import "./PaymentSuccess.scss";
+
+import React, { useEffect } from "react";
+
 import { FaCheckCircle } from "react-icons/fa";
-import confetti from "canvas-confetti";
-import { PATH_NAME } from "../../constants/pathname";
 import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
+import confetti from "canvas-confetti";
 
 function PaymentSuccess() {
   useEffect(() => {
@@ -26,7 +28,7 @@ function PaymentSuccess() {
         <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
         <p>Mã đơn hàng của bạn đã được xác nhận và đang chờ xử lý.</p>
         <div className="actions">
-          <Link to="#" className="btn btn-primary">
+          <Link to={PATH_NAME.HISTORY_ORDERS} className="btn btn-primary">
             Xem đơn hàng
           </Link>
           <Link to={PATH_NAME.HOME} className="btn">
