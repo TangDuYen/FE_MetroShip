@@ -108,7 +108,13 @@ function ParcelInfo({
   const disabledDate = current => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return current && current.valueOf() < today.getTime();
+    const threeDaysAhead = new Date();
+    threeDaysAhead.setDate(today.getDate() + 2);
+    threeDaysAhead.setHours(23, 59, 59, 999); // để tính hết ngày
+    return (
+    current &&
+    (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
+  );
   };
 
   const buildPriceItineraryPayload = () => ({
