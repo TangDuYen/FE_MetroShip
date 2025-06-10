@@ -1,4 +1,4 @@
-@import '../../styles/variables.scss';
+@use '../../styles/variables' as *;
 
 .login-container {
     display: flex;
@@ -55,6 +55,7 @@
                     border: 1px solid #ccc;
                     border-radius: 5px;
                     font-family: $font-secondary;
+                    min-width: 100%;
                 }
 
             }
