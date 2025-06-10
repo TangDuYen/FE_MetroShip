@@ -10,6 +10,7 @@ import { GoPerson } from "react-icons/go";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
+import { toast } from "react-toastify";
 
 function Header() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -26,6 +27,10 @@ function Header() {
     localStorage.removeItem("userId");
     dispatch(logout());
     navigate("/");
+  }
+
+  const handleClick = () => {
+    toast.info("Bạn cần phải đăng nhập để sử dụng chức năng này", 3000)
   }
 
   return (
@@ -71,10 +76,15 @@ function Header() {
                 >
                   <Link to={PATH_NAME.SUPPORT}>Hỗ trợ</Link>
                 </li>
-                <li>
+                <li> {user ? (
                   <Link to={PATH_NAME.BOOKING_ORDER}>
                     <button className="header-btn">Tạo đơn</button>
                   </Link>
+                ) : (
+                  <Link to={PATH_NAME.LOGIN}>
+                    <button className="header-btn" onClick={handleClick}>Tạo đơn</button>
+                  </Link>
+                )}
                 </li>
               </ul>
             </nav>

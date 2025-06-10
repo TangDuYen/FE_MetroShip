@@ -172,7 +172,7 @@ function Order() {
     recipientPhone: recipientPhone || "",
     recipientEmail: recipientEmail || "",
     recipientNationalId: recipientNationalId,
-    scheduledDateTime: scheduledDateTime, // Updated field to ensure it's a valid ISO string
+    scheduledDateTime: scheduledDateTime, 
     totalCostVnd: priceVnd,
     shippingFeeVnd: priceVnd,
     shipmentItineraries: shipmentItineraries,
@@ -372,11 +372,12 @@ function Order() {
           </div>
 
           <Modal
-            title="Confirm order"
+            title="Xác nhận đơn hàng"
             open={isModalOpen}
             onOk={handleOk}
             onCancel={handleCancel}
-            okText="Confirm"
+            okText="Xác nhận"
+            cancelText= "Hủy"
             okButtonProps={{ className: "confirm-button" }}
             cancelButtonProps={{ className: "cancel-button" }}
             className="modal-confirm"

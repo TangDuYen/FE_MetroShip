@@ -392,11 +392,11 @@ function ParcelInfo({
               );
             })}
           </div>
-          <div className="insurance-fee">
+          {/* <div className="insurance-fee">
             <Checkbox>
               Phí bảo hiểm: 5% trên tổng giá trị đơn hàng
             </Checkbox>
-          </div>
+          </div> */}
           <div className="calculatePrice">
             <p>
               Giá tiền dự tính: {priceVnd ? Number(priceVnd).toLocaleString() + ' VND' : 'Chưa có'}
