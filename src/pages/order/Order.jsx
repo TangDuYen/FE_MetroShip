@@ -2,6 +2,7 @@ import './Order.scss'
 
 import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
+import { useEffect, useState } from 'react';
 
 import ConfirmPage from './ConfirmPage';
 import { PATH_NAME } from '../../constants/pathname';
@@ -12,7 +13,6 @@ import { selectUser } from '../../redux/features/counterSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
 
 function Order() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,8 +39,13 @@ function Order() {
     chargeableWeight: "",
     description: "",
     isBulk: false,
-  })
+  });
+  const [userLocation, setUserLocation] = useState({
+    latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
+    longitude: parseFloat(localStorage.getItem('userLongitude')) || 0,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const user = useSelector(selectUser);
   const nav = useNavigate();
   const [routeSolutions, setRouteSolutions] = useState([]); // chứa giải pháp từ API
@@ -57,6 +62,32 @@ function Order() {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
+
+  const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          localStorage.setItem('userLatitude', latitude);
+          localStorage.setItem('userLongitude', longitude);
+          setUserLocation({ latitude, longitude });
+          toast.success('Vị trí đã được lưu thành công!');
+        },
+        (error) => {
+          message.error('Không thể lấy vị trí của bạn. Bạn sẽ không thể nhận được gợi ý tuyến đường.');
+        }
+      );
+    } else {
+      toast.error('Trình duyệt của bạn không hỗ trợ tính năng lấy vị trí.');
+    }
+  };
+
+  useEffect(() => {
+    if (!localStorage.getItem('userLatitude') || !localStorage.getItem('userLongitude')) {
+      setIsLocationModalOpen(true);
+    }
+  }, []);
+
   const steps = [
     {
       title: "Xác nhận thông tin cá nhân",
@@ -121,75 +152,75 @@ function Order() {
     }
   };
   const buildPayload = () => {
-  const {
-    senderName,
-    senderPhone,
-    recipientName,
-    recipientPhone,
-    recipientEmail,
-    recipientNationalId,
-  } = personalInfo;
+    const {
+      senderName,
+      senderPhone,
+      recipientName,
+      recipientPhone,
+      recipientEmail,
+      recipientNationalId,
+    } = personalInfo;
 
-  const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
 
-  const {
-    parcelCategory,
-    weightKg,
-    lengthCm,
-    widthCm,
-    heightCm,
-    isBulk,
-    chargeableWeight,
-  } = parcelInfo;
+    const {
+      parcelCategory,
+      weightKg,
+      lengthCm,
+      widthCm,
+      heightCm,
+      isBulk,
+      chargeableWeight,
+    } = parcelInfo;
 
-  // Lấy giải pháp tuyến đã chọn
-  const itinerary = routeSolutions[selectedSolutionIndex];
+    // Lấy giải pháp tuyến đã chọn
+    const itinerary = routeSolutions[selectedSolutionIndex];
 
-  // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-  const shipmentItineraries = itinerary?.routes.map(route => ({
-    routeId: route.routeId,
-    basePriceVndPerKm: route.basePriceVndPerKm || 0,
-    legOrder: route.legOrder,
-  })) || [];
+    // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
+    const shipmentItineraries = itinerary?.routes.map(route => ({
+      routeId: route.routeId,
+      basePriceVndPerKm: route.basePriceVndPerKm || 0,
+      legOrder: route.legOrder,
+    })) || [];
 
-  // Convert departureDateTime to Date if it's not already a Date object
-  let scheduledDateTime = null;
-  if (departureDateTime) {
-    if (typeof departureDateTime === 'string') {
-      scheduledDateTime = new Date(departureDateTime).toISOString(); // Convert string to Date object
-    } else if (departureDateTime instanceof Date) {
-      scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
+    // Convert departureDateTime to Date if it's not already a Date object
+    let scheduledDateTime = null;
+    if (departureDateTime) {
+      if (typeof departureDateTime === 'string') {
+        scheduledDateTime = new Date(departureDateTime).toISOString(); // Convert string to Date object
+      } else if (departureDateTime instanceof Date) {
+        scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
+      }
     }
-  }
 
-  return {
-    departureStationId: departureStationId || "",
-    destinationStationId: destinationStationId || "",
-    senderName: senderName || "",
-    senderPhone: senderPhone || "",
-    recipientId: "",
-    recipientName: recipientName || "",
-    recipientPhone: recipientPhone || "",
-    recipientEmail: recipientEmail || "",
-    recipientNationalId: recipientNationalId,
-    scheduledDateTime: scheduledDateTime, 
-    totalCostVnd: priceVnd,
-    shippingFeeVnd: priceVnd,
-    shipmentItineraries: shipmentItineraries,
-    parcels: [
-      {
-        parcelCategoryId: parcelCategory || "",
-        weightKg: Number(weightKg) || 0,
-        lengthCm: Number(lengthCm) || 0,
-        widthCm: Number(widthCm) || 0,
-        heightCm: Number(heightCm) || 0,
-        chargeableWeight: chargeableWeight,
-        isBulk: isBulk || false,
-        priceVnd: Number(priceVnd) || 0,
-      },
-    ],
+    return {
+      departureStationId: departureStationId || "",
+      destinationStationId: destinationStationId || "",
+      senderName: senderName || "",
+      senderPhone: senderPhone || "",
+      recipientId: "",
+      recipientName: recipientName || "",
+      recipientPhone: recipientPhone || "",
+      recipientEmail: recipientEmail || "",
+      recipientNationalId: recipientNationalId,
+      scheduledDateTime: scheduledDateTime,
+      totalCostVnd: priceVnd,
+      shippingFeeVnd: priceVnd,
+      shipmentItineraries: shipmentItineraries,
+      parcels: [
+        {
+          parcelCategoryId: parcelCategory || "",
+          weightKg: Number(weightKg) || 0,
+          lengthCm: Number(lengthCm) || 0,
+          widthCm: Number(widthCm) || 0,
+          heightCm: Number(heightCm) || 0,
+          chargeableWeight: chargeableWeight,
+          isBulk: isBulk || false,
+          priceVnd: Number(priceVnd) || 0,
+        },
+      ],
+    };
   };
-};
 
 
   const handleSubmit = async () => {
@@ -377,7 +408,7 @@ function Order() {
             onOk={handleOk}
             onCancel={handleCancel}
             okText="Xác nhận"
-            cancelText= "Hủy"
+            cancelText="Hủy"
             okButtonProps={{ className: "confirm-button" }}
             cancelButtonProps={{ className: "cancel-button" }}
             className="modal-confirm"
@@ -386,6 +417,22 @@ function Order() {
               Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
             </p>
           </Modal>
+
+          <Modal
+            title="Yêu cầu quyền truy cập vị trí"
+            open={isLocationModalOpen}
+            onOk={() => {
+              requestLocationPermission();
+              setIsLocationModalOpen(false);
+            }}
+            onCancel={() => setIsLocationModalOpen(false)}
+            okText="Cho phép"
+            cancelText="Không cho phép"
+            className="modal-location"
+          >
+            <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
+          </Modal>
+
         </div>
       </div>
     </>

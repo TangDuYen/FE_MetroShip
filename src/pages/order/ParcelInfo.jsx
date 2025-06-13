@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Select, Table } from 'antd';
 import { useEffect, useState } from 'react';
 
+import Card from 'antd/es/card/Card';
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
@@ -30,7 +31,8 @@ function ParcelInfo({
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const userLatitude = parseFloat(localStorage.getItem('userLatitude')) || 0;
+  const userLongitude = parseFloat(localStorage.getItem('userLongitude')) || 0;
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -112,29 +114,38 @@ function ParcelInfo({
     threeDaysAhead.setDate(today.getDate() + 2);
     threeDaysAhead.setHours(23, 59, 59, 999); // để tính hết ngày
     return (
-    current &&
-    (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-  );
+      current &&
+      (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
+    );
   };
 
-  const buildPriceItineraryPayload = () => ({
-    departureStationId: metroSelector.departureStationId || '',
-    destinationStationId: metroSelector.destinationStationId || '',
-    scheduleShipmentDate: metroSelector.departureDateTime || null,
+  const buildPriceItineraryPayload = () => {
+    const basePayload = {
+      departureStationId: metroSelector.departureStationId || '',
+      destinationStationId: metroSelector.destinationStationId || '',
+      scheduleShipmentDate: metroSelector.departureDateTime || null,
+      parcels: [
+        {
+          parcelCategoryId: parcelInfo.parcelCategory || '',
+          weightKg: Number(parcelInfo.weightKg) || 0,
+          lengthCm: Number(parcelInfo.lengthCm) || 0,
+          widthCm: Number(parcelInfo.widthCm) || 0,
+          heightCm: Number(parcelInfo.heightCm) || 0,
+          chargeableWeight: Number(parcelInfo.chargeableWeight) || 0,
+          isBulk: parcelInfo.isBulk || false,
+          priceVnd: 0,
+        },
+      ],
+    };
 
-    parcels: [
-      {
-        parcelCategoryId: parcelInfo.parcelCategory || '',
-        weightKg: Number(parcelInfo.weightKg) || 0,
-        lengthCm: Number(parcelInfo.lengthCm) || 0,
-        widthCm: Number(parcelInfo.widthCm) || 0,
-        heightCm: Number(parcelInfo.heightCm) || 0,
-        chargeableWeight: Number(parcelInfo.chargeableWeight) || 0,
-        isBulk: parcelInfo.isBulk || false,
-        priceVnd: 0,
-      },
-    ],
-  });
+    if (userLatitude && userLongitude) {
+      basePayload.userLatitude = userLatitude;
+      basePayload.userLongitude = userLongitude;
+    }
+
+    return basePayload;
+  };
+
 
   const fetchTotalPriceItinerary = async () => {
     const payload = buildPriceItineraryPayload();
@@ -143,42 +154,85 @@ function ParcelInfo({
       const res = await api.post('/shipments/total-price-itinerary', payload);
       const data = res.data?.data;
 
-      if (data) {
-        // Lấy chargeableWeight từ API và cập nhật vào parcelInfo
-        const chargeableWeightFromApi = data.parcelRequests?.[0]?.chargeableWeight || 0;
-        setParcelInfo(prev => ({
-          ...prev,
-          chargeableWeight: chargeableWeightFromApi,
-        }));
+      if (!data) return;
 
-        const shippingFee = Number(data.bestPathGraphResponses?.[0]?.shippingFeeByItinerary) || 0;
-        const totalPrice = chargeableWeightFromApi * shippingFee;
-        setPriceVnd(totalPrice);
-        setRouteSolutions(data.bestPathGraphResponses || []);
+      const chargeableWeight = data.parcelRequests?.[0]?.chargeableWeight || 0;
+      setParcelInfo(prev => ({
+        ...prev,
+        chargeableWeight,
+      }));
+
+      // 🎯 Tính giá từ 3 phương án API trả về
+      const solutions = [
+        { type: 'standard', data: data.standard, label: 'Tiêu chuẩn' },
+        { type: 'nearest', data: data.nearest, label: 'Ưu tiên' },
+        { type: 'cheapest', data: data.cheapest, label: 'Giao ban đêm' },
+      ];
+
+      const newRouteSolutions = solutions.map(s => {
+        const fee = s.data.shippingFeeByItinerary || 0;
+        const price = chargeableWeight * fee;
+
+        return {
+          type: s.type,
+          label: s.label,
+          priceVnd: price,
+          ...s.data, // 👈 gộp tất cả routes, stations, metroLines vào
+        };
+      });
+
+      setRouteSolutions(newRouteSolutions);
+
+      // 🧠 Chọn mặc định là “Tiêu chuẩn”
+      const defaultIndex = newRouteSolutions.findIndex(s => s.type === 'standard');
+      if (defaultIndex >= 0) {
+        setSelectedSolutionIndex(defaultIndex);
+        setPriceVnd(newRouteSolutions[defaultIndex].priceVnd);
+
+        const firstStation = newRouteSolutions[defaultIndex].stations?.[0];
+        if (
+          firstStation &&
+          firstStation.stationId !== metroSelector.departureStationId // 👈 Check ở đây!
+        ) {
+          setMetroSelector(prev => ({
+            ...prev,
+            departureStationId: firstStation.stationId,
+          }));
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch price itinerary:', error);
+      console.error('Lỗi fetch giá itinerary:', error);
     }
   };
+
 
 
   useEffect(() => {
     const ready =
       metroSelector.departureStationId &&
       metroSelector.destinationStationId &&
+      metroSelector.departureDateTime &&
       parcelInfo.parcelCategory &&
       parcelInfo.weightKg &&
       parcelInfo.lengthCm &&
       parcelInfo.widthCm &&
-      parcelInfo.heightCm &&
-      metroSelector.departureDateTime;
-    if (ready) fetchTotalPriceItinerary();
-  }, [metroSelector]);
+      parcelInfo.heightCm;
 
+    if (ready) fetchTotalPriceItinerary();
+  }, [
+    metroSelector.departureStationId,
+    metroSelector.destinationStationId,
+    metroSelector.departureDateTime,
+    parcelInfo.parcelCategory,
+    parcelInfo.weightKg,
+    parcelInfo.lengthCm,
+    parcelInfo.widthCm,
+    parcelInfo.heightCm,
+  ]);
   return (
     <>
       <div>
-        <Title level={4}>Điền thông tin kiện hàng</Title>
+        {/* <Title level={4}>Điền thông tin kiện hàng</Title> */}
         <Form layout="vertical" style={{ padding: '1rem' }}>
           <Title level={4}>Chọn trạm Metro</Title>
           <Form.Item label="Loại hàng hóa">
@@ -350,58 +404,85 @@ function ParcelInfo({
               />
             </Modal>
           </div>
-          <div
-            className="solutions"
-            style={{ marginBottom: '1em', display: 'flex', gap: '1em' }}
-          >
-            {[1, 2, 3].map((n, i) => {
-              const isSelected = selectedSolutionIndex === i;
-
-              const colors = [
-                { bg: '#0066CC', hover: '#005bb5' },
-                { bg: '#FFC107', hover: '#e6ac00' },
-                { bg: '#4CAF50', hover: '#449d48' },
-              ];
-
-              const style = {
-                backgroundColor: isSelected ? colors[i].bg : '#fff',
-                color: isSelected ? '#fff' : '#000',
-                border: `1px solid ${colors[i].bg}`,
-                transition: 'all 0.3s ease',
-              };
-
-              return (
-                <Button
-                  key={n}
-                  style={style}
-                  onMouseEnter={e =>
-                    (e.target.style.backgroundColor = colors[i].hover)
-                  }
-                  onMouseLeave={e =>
-                  (e.target.style.backgroundColor = isSelected
-                    ? colors[i].bg
-                    : '#fff')
-                  }
-                  onClick={() => {
-                    setSelectedSolutionIndex(i);
-                    setPriceVnd(routeSolutions[i]?.priceVnd || null);
-                  }}
-                >
-                  Giải pháp {n}
-                </Button>
-              );
-            })}
-          </div>
-          {/* <div className="insurance-fee">
+          <div className="insurance-fee" style={{marginBottom: "1em"}}>
             <Checkbox>
               Phí bảo hiểm: 5% trên tổng giá trị đơn hàng
             </Checkbox>
-          </div> */}
-          <div className="calculatePrice">
-            <p>
-              Giá tiền dự tính: {priceVnd ? Number(priceVnd).toLocaleString() + ' VND' : 'Chưa có'}
-            </p>
           </div>
+          <div
+            className="solutions"
+            style={{
+              marginBottom: '1em',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '1em',
+            }}
+          >
+            {routeSolutions.map((solution, i) => {
+              const isSelected = selectedSolutionIndex === i;
+
+              const bgMap = {
+                cheapest: '#4CAF50',
+                standard: '#0066CC',
+                nearest: '#FFC107',
+              };
+              const hoverMap = {
+                cheapest: '#449d48',
+                standard: '#005bb5',
+                nearest: '#e6ac00',
+              };
+
+              const bg = bgMap[solution.type] || '#ccc';
+              const hover = hoverMap[solution.type] || '#aaa';
+
+              return (
+                <div
+                  key={solution.type}
+                  style={{
+                    cursor: 'pointer',
+                    padding: '1.5em',
+                    borderRadius: '1em',
+                    backgroundColor: isSelected ? bg : '#fff',
+                    color: isSelected ? '#fff' : '#000',
+                    border: `2px solid ${bg}`,
+                    transition: 'all 0.3s ease',
+                    flex: '1 1 0',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.2)' : '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = hover;
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = isSelected ? bg : '#fff';
+                    e.currentTarget.style.color = isSelected ? '#fff' : '#000';
+                  }}
+                  onClick={() => {
+                    setSelectedSolutionIndex(i);
+                    setPriceVnd(solution.priceVnd);
+                  }}
+                >
+                  <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5em' }}>
+                    {solution.label}
+                  </h3>
+                  <p style={{ opacity: 0.85, fontSize: '0.95rem' }}>
+                    {solution.type === 'cheapest'
+                      ? 'Tiết kiệm chi phí • Giao muộn hơn xíu'
+                      : solution.type === 'nearest'
+                        ? 'Giao nhanh hơn • Phí cao hơn'
+                        : 'Giao hàng thông thường'}
+                  </p>
+                  <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
+                    {solution.priceVnd
+                      ? Number(solution.priceVnd).toLocaleString() + ' VND'
+                      : 'Đang tính...'}
+                  </p>
+                </div>
+              );
+            })}
+
+          </div>
+
         </div>
       </div>
     </>

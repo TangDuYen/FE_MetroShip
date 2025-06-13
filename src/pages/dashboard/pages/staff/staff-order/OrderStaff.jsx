@@ -171,6 +171,12 @@ function OrderStaff() {
       key: 'bookedAt',
       render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A', // Adjust if necessary
     },
+    // {
+    //   title: 'Số lượng kiện hàng',
+    //   dataIndex: 'bookedAt', 
+    //   key: 'bookedAt',
+    //   render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A', // Adjust if necessary
+    // },
     {
       title: 'Tổng chi phí',
       key: 'totalCost',
@@ -307,7 +313,8 @@ function OrderStaff() {
       const response = await api.post(`/parcels/staff/confirmation/${parcelId}`);
       toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
       setModalOpen(false);
-      getAllParcels(); // reload lại sau khi xác nhận
+      await getAllShipments();
+      await getAllParcels();
     } catch (error) {
       toast.error("Không thể xác nhận kiện hàng");
     }
@@ -493,6 +500,7 @@ function OrderStaff() {
                     />
                     <Button
                       type="primary"
+                      disabled={parcel.parcelStatus >= 1}
                       onClick={() => handleConfirmOrder(parcel.id)}
                     >
                       Xác nhận kiện hàng
