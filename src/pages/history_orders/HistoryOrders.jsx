@@ -128,7 +128,7 @@ function HistoryOrders() {
             weight: item.chargeableWeightKg || 0,
             price: parseFloat(item.priceVnd || "0"),
             size: item.volumeCm3,
-            status: item.parcelTrackings?.[0]?.status || "Unknown",
+            // status: item.parcelTrackings?.[0]?.status || "Unknown",
             deliveryDate: shipmentInfo.date || "N/A",
             shipmentStatus: shipmentInfo.status,
           };
@@ -190,7 +190,7 @@ function HistoryOrders() {
     currentPage * itemsPerPage
   );
 
-  const hasPayment = displayedGoods.some((item) => item.status === "Accepted");
+  const hasPayment = displayedGoods.some((item) => item.status === 3);
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
