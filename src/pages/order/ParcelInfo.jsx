@@ -166,7 +166,7 @@ function ParcelInfo({
       const solutions = [
         { type: 'standard', data: data.standard, label: 'Tiêu chuẩn' },
         { type: 'nearest', data: data.nearest, label: 'Ưu tiên' },
-        { type: 'cheapest', data: data.cheapest, label: 'Giao ban đêm' },
+        { type: 'cheapest', data: data.cheapest, label: 'Tiết kiệm' },
       ];
 
       const newRouteSolutions = solutions.map(s => {
@@ -232,7 +232,7 @@ function ParcelInfo({
   return (
     <>
       <div>
-        {/* <Title level={4}>Điền thông tin kiện hàng</Title> */}
+        <Title level={4}>Điền thông tin kiện hàng</Title>
         <Form layout="vertical" style={{ padding: '1rem' }}>
           <Title level={4}>Chọn trạm Metro</Title>
           <Form.Item label="Loại hàng hóa">
@@ -469,7 +469,7 @@ function ParcelInfo({
                     {solution.type === 'cheapest'
                       ? 'Tiết kiệm chi phí • Giao muộn hơn xíu'
                       : solution.type === 'nearest'
-                        ? 'Giao nhanh hơn • Phí cao hơn'
+                        ? 'Trạm gần hơn • Phí cao hơn'
                         : 'Giao hàng thông thường'}
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>

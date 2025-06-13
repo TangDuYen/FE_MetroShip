@@ -455,21 +455,21 @@ function OrderStaff() {
                           label: 'Thời điểm tạo yêu cầu',
                           value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
                         },
-                        {
-                          key: 'unitPrice',
-                          label: 'Đơn giá',
-                          value: formatCurrency(selectedOrder.unitPrice || 0),
-                        },
-                        {
-                          key: 'insuranceFee',
-                          label: 'Phí bảo hiểm',
-                          value: formatCurrency(selectedOrder.insuranceFee || 0),
-                        },
-                        {
-                          key: 'shippingFee',
-                          label: 'Phí gửi hàng',
-                          value: formatCurrency(selectedOrder.shippingFee || 0),
-                        },
+                        // {
+                        //   key: 'unitPrice',
+                        //   label: 'Đơn giá',
+                        //   value: formatCurrency(selectedOrder.unitPrice || 0),
+                        // },
+                        // {
+                        //   key: 'insuranceFee',
+                        //   label: 'Phí bảo hiểm',
+                        //   value: formatCurrency(selectedOrder.insuranceFee || 0),
+                        // },
+                        // {
+                        //   key: 'shippingFee',
+                        //   label: 'Phí gửi hàng',
+                        //   value: formatCurrency(selectedOrder.shippingFee || 0),
+                        // },
                         {
                           key: 'totalCost',
                           label: 'Tổng chi phí',

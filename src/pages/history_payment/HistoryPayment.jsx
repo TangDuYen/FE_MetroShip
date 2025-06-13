@@ -1,17 +1,20 @@
-import React, { useState } from "react";
 import "./HistoryPayment.scss";
-import Sidebar from "../../components/sidebar_profile/Sidebar";
+
+import React, { useEffect, useState } from "react";
+
 import { MdSearch } from "react-icons/md";
+import Sidebar from "../../components/sidebar_profile/Sidebar";
+import api from "../../config/axios";
 
 function HistoryPayment() {
-  const allPayments = Array.from({ length: 30 }).map((_, i) => ({
-    id: i + 1,
-    transactionCode: `GD00${i + 1}`,
-    method: i % 2 === 0 ? "Ví điện tử" : "COD",
-    amount: 50000 + i * 10000,
-    status: i % 2 === 0 ? "completed" : "pending",
-    date: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
-  }));
+  // const allPayments = Array.from({ length: 30 }).map((_, i) => ({
+  //   id: i + 1,
+  //   transactionCode: `GD00${i + 1}`,
+  //   method: i % 2 === 0 ? "Ví điện tử" : "COD",
+  //   amount: 50000 + i * 10000,
+  //   status: i % 2 === 0 ? "completed" : "pending",
+  //   date: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
+  // }));
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,12 +25,62 @@ function HistoryPayment() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+
+  const [allPayments, setAllPayments] = useState([]);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await api.get("/Transaction?PageSize=20");
+        const items = res.data?.data?.items || [];
+
+        const formatted = items.map((item, index) => {
+          const methodMap = {
+            1: "Tiền mặt",
+            2: "VNPay",
+            3: "MoMo",
+          };
+
+          const statusMap = {
+            1: "Đang xử lý",
+            2: "Đã thanh toán",
+            3: "Thất bại",
+          };
+
+          return {
+            id: index + 1,
+            shipmentId: item.shipmentId,
+            method: methodMap[item.paymentMethod] || "Không rõ",
+            status: statusMap[item.paymentStatus] || "Không rõ",
+            statusEnum: item.paymentStatus,
+            amount: item.paymentAmount || 0,
+            date:
+              item.paymentTime && item.paymentTime !== "0001-01-01T00:00:00+00:00"
+                ? new Date(item.paymentTime).toLocaleDateString("vi-VN")
+                : "Chưa xác định",
+            rawDate: item.paymentTime, // để sort nếu cần
+          };
+        });
+
+        setAllPayments(formatted);
+      } catch (error) {
+        console.error("Lỗi khi lấy lịch sử thanh toán:", error);
+      }
+    };
+
+    fetchPayments();
+  }, []);
+
   const filteredPayments = allPayments.filter((item) => {
     const matchSearch =
-      item.transactionCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.method.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.paymentTrackingId?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (item.method?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
-    const matchStatus = filterStatus === "all" || item.status === filterStatus;
+    const matchStatus =
+      filterStatus === "all" ||
+      (filterStatus === "completed" && item.statusEnum === 2) ||
+      (filterStatus === "pending" && item.statusEnum !== 2);
+
 
     const matchDateRange =
       (!startDate || item.date >= startDate) &&
@@ -143,13 +196,13 @@ function HistoryPayment() {
                 <thead>
                   <tr>
                     <th>STT</th>
-                    <th>Mã giao dịch</th>
+                    <th>Mã đơn hàng</th>
                     <th>Phương thức</th>
                     <th>Số tiền</th>
                     <th>Ngày giao dịch</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
-                    
+
                   </tr>
                 </thead>
                 <tbody>
@@ -163,7 +216,8 @@ function HistoryPayment() {
                     displayedPayments.map((item, index) => (
                       <tr key={item.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.transactionCode}</td>
+                        <td>{item.shipmentId || "Chưa có"}</td>
+
                         <td>{item.method}</td>
                         <td>{item.amount.toLocaleString()}đ</td>
                         <td>{item.date}</td>
@@ -171,17 +225,14 @@ function HistoryPayment() {
                           <span className="detail-link">Chi tiết</span>
                         </td>
                         <td>
-                          {item.status === "completed" ? (
-                            <span className="status-completed">
-                              Đã thanh toán
-                            </span>
+                          {item.statusEnum === 2 ? (
+                            <span className="status-completed">Đã thanh toán</span>
                           ) : (
-                            <span className="status-pending">
-                              Chưa thanh toán
-                            </span>
+                            <span className="status-pending">Chưa thanh toán</span>
                           )}
                         </td>
-                        
+
+
                       </tr>
                     ))
                   )}

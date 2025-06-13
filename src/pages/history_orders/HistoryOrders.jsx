@@ -45,24 +45,6 @@ function HistoryOrders() {
   }));
 
 
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "AwaitingConfirmation":
-        return "Chờ xác nhận";
-      case "Accepted":
-        return "Đã xác nhận";
-      case "InTransit":
-        return "Đang vận chuyển";
-      case "Delivered":
-        return "Đã giao hàng";
-      case "Cancelled":
-        return "Đã hủy";
-      default:
-        return "Không rõ";
-    }
-  };
-
   // useEffect(() => {
   //   const fetchParcels = async () => {
   //     try {
@@ -111,6 +93,7 @@ function HistoryOrders() {
                 : "",
 
               status: item.shipmentStatus,
+              bookedAt: item.bookedAt,
             }
           ])
         );
@@ -131,10 +114,11 @@ function HistoryOrders() {
             status: item.parcelTrackings?.[0]?.status || "Unknown",
             deliveryDate: shipmentInfo.date || "N/A",
             shipmentStatus: shipmentInfo.status,
+            bookedAt: shipmentInfo.bookedAt,
           };
         });
 
-        setOrders(convertedGoods);
+        setOrders(convertedGoods.sort((a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)));
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }

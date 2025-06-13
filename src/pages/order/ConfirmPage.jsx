@@ -1,4 +1,4 @@
-import { Col, Descriptions, Divider, Row, Typography } from 'antd';
+import { Checkbox, Col, Descriptions, Divider, Row, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 import api from '../../config/axios';
@@ -83,6 +83,11 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
             </Descriptions.Item>
           </Descriptions>
         </Col>
+        <div className="user-payment">
+          <Checkbox>
+            Người nhận trả tiền
+          </Checkbox>
+        </div>
         {/* <Divider orientation="left">Lộ trình đơn hàng</Divider>
         <div style={{ paddingLeft: 12 }}>
           {(!routeSolutions || routeSolutions.length === 0) && <p>Chưa có dữ liệu lộ trình</p>}
