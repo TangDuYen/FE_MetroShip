@@ -73,6 +73,30 @@ function OrderStaff() {
     }
   }
 
+
+  const parcelStatusMap = (status) => {
+    const statusMapping = {
+      0: "Đang xử lý", //AwaitingConfirmation
+      1: "Đợi thanh toán", //AwaitingPayment
+      2: "Đợi gửi hàng", //AwaitingDropOff
+      3: "Từ chối", //Rejected
+      4: "Chưa thanh toán", //Unpaid
+      5: "Đã hủy", //Cancelled
+      6: "Chờ hoàn tiền", //AwaitingRefund
+      7: "Đã hoàn tiền", //Refunded
+      8: "Không đến gửi hàng", //NoDropOff
+      9: "Đã nhận hàng tại trạm", //ReceivedAtStation
+      10: "Đang trên đường vận chuyển - Tuyến ", //InTransitLineXStationXC
+      11: "Chuyển sang tuyến ", //TransferringToLineYStationYD
+      12: "Đã nhận hàng ở trạm", //ReceivedAtStationB
+      13: "Đợi khách đến lấy hàng", //OutForDelivery
+      14: "Hết hạn", //Overdue
+      15: "Lưu kho lâu", //LongTermStorage
+      16: "Hoàn thành", //Delivered
+    };
+    return statusMapping[status] || 'Không xác nhận';
+  };
+
   const getParcelsByShipmentId = (shipmentId) => {
     return parcels.filter(parcel => parcel.shipmentId === shipmentId);
   };
@@ -147,6 +171,12 @@ function OrderStaff() {
       key: 'bookedAt',
       render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A', // Adjust if necessary
     },
+    // {
+    //   title: 'Số lượng kiện hàng',
+    //   dataIndex: 'bookedAt', 
+    //   key: 'bookedAt',
+    //   render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A', // Adjust if necessary
+    // },
     {
       title: 'Tổng chi phí',
       key: 'totalCost',
@@ -283,7 +313,8 @@ function OrderStaff() {
       const response = await api.post(`/parcels/staff/confirmation/${parcelId}`);
       toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
       setModalOpen(false);
-      getAllParcels(); // reload lại sau khi xác nhận
+      await getAllShipments();
+      await getAllParcels();
     } catch (error) {
       toast.error("Không thể xác nhận kiện hàng");
     }
@@ -444,6 +475,11 @@ function OrderStaff() {
                           label: 'Tổng chi phí',
                           value: formatCurrency(selectedOrder.totalCostVnd || 0),
                         },
+                        {
+                          key: 'parcelStatus',
+                          label: 'Trạng thái kiện hàng',
+                          value: parcelStatusMap(parcel.parcelStatus),
+                        },
                       ]}
                       columns={[
                         {
@@ -464,6 +500,7 @@ function OrderStaff() {
                     />
                     <Button
                       type="primary"
+                      disabled={parcel.parcelStatus >= 1}
                       onClick={() => handleConfirmOrder(parcel.id)}
                     >
                       Xác nhận kiện hàng

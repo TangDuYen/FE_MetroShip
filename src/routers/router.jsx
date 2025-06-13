@@ -28,15 +28,6 @@ import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
-const ProtectedRouteAuth = ({ children }) => {
-  const user = useSelector(selectUser);
-  if (!user) {
-    message.error("Bạn cần phải đăng nhập trước!!");
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
-
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
   if (user?.role?.includes("Admin")) {
@@ -59,7 +50,6 @@ const ProtectedDashboard = ({ children }) => {
   if (!validRoles.includes(user?.role)) {
     return <Navigate to="*" replace />;
   }
-
   return children;
 };
 
@@ -157,74 +147,24 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-      //   {
-      //     path: "/about-us",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         {" "}
-      //         <AboutUs />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      // {
-      //   path: PATH_NAME.BOOKING_ORDER,
-      //   element: (
-      //     <ProtectedRouteCustomer>
-      //       <Order />
-      //     </ProtectedRouteCustomer>
-      //   ),
-      // },
-      //   {
-      //     path: "/user-profile/",
-      //     element: <Sidebar />,
-      //     children: [
-      //       {
-      //         path: "profile",
-      //         element: (
-      //           <ProtectedRouteCustomer>
-      //             <Profile />
-      //           </ProtectedRouteCustomer>
-      //         ),
-      //       },
+      {
+        path: PATH_NAME.BOOKING_ORDER,
+        element: <NoFooterLayout />,
+        children: [
+          {
+            path: PATH_NAME.BOOKING_ORDER,
+            element:
+              <ProtectedRouteCustomer>
+                <Order />
+              </ProtectedRouteCustomer>
+          }
+        ]
+      },
       //   {
       //     path: "track-booking",
       //     element: (
       //       <ProtectedRouteCustomer>
       //         <BookingCustomer />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      //   {
-      //     path: "history-bookings",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <HistoryBooking />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      //     ],
-      //   },
-      //   {
-      //     path: "/thank-you",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <ThanksCard />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      //   {
-      //     path: "/payment-cancelled",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <CancelCard />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      //   {
-      //     path: "/booking",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <Booking />
       //       </ProtectedRouteCustomer>
       //     ),
       //   },
@@ -262,32 +202,6 @@ export const router = createBrowserRouter([
     path: PATH_NAME.PAGE404,
     element: <Page404 />,
   },
-  {
-    path: PATH_NAME.BOOKING_ORDER,
-    element: <NoFooterLayout />,
-    children: [
-      {
-        path: PATH_NAME.BOOKING_ORDER,
-        element:
-          <ProtectedRouteCustomer>
-            <Order />
-          </ProtectedRouteCustomer>
-      }
-    ],
-  },
-  // {
-  //   path: "/dashboard",
-  //   element: (
-  //     <Main />
-  //   ), children: [
-  //     {
-  //       path: "/dashboard/staff",
-  //       element: (
-  //         <OrderStaff />
-  //       ),
-  //     }
-  //   ]
-  // },
 
   //dashboard
   {
