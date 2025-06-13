@@ -25,6 +25,8 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
+    localStorage.removeItem("userLatitude");
+    localStorage.removeItem("userLongitude");
     dispatch(logout());
     navigate("/");
   }
