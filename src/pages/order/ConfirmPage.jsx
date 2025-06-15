@@ -13,13 +13,11 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
     return station ? station.stationNameVi : stationId;
   };
   const selectedSolution = routeSolutions?.[selectedSolutionIndex];
+const stations = selectedSolution?.stations || [];
 
-  // Lấy stations từ solution đầu tiên (hoặc bạn có thể lấy theo index phù hợp)
-  const stations = routeSolutions?.[0]?.stations || [];
+const departureStationName = getStationName(stations, metroSelector.departureStationId);
+const destinationStationName = getStationName(stations, metroSelector.destinationStationId);
 
-  // Lấy tên trạm gửi và nhận
-  const departureStationName = getStationName(stations, metroSelector.departureStationId);
-  const destinationStationName = getStationName(stations, metroSelector.destinationStationId);
 
   const getParcelCategoryByID = async () => {
     try {
