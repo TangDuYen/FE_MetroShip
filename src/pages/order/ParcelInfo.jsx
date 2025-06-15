@@ -31,6 +31,8 @@ function ParcelInfo({
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [displayedDepartureStationId, setDisplayedDepartureStationId] = useState(null);
+  const [realDepartureStationId, setRealDepartureStationId] = useState(null);
   const userLatitude = parseFloat(localStorage.getItem('userLatitude')) || 0;
   const userLongitude = parseFloat(localStorage.getItem('userLongitude')) || 0;
   const showModal = () => {
@@ -99,9 +101,16 @@ function ParcelInfo({
   const [metros, setMetros] = useState([]);
   const [parcelCategory, setParcelCategory] = useState([]);
 
-  const handleDepartureChange = value => {
-    setMetroSelector(prev => ({ ...prev, departureStationId: value }));
-  };
+  // const handleDepartureChange = (value) => {
+  //   setMetroSelector(prev => {
+  //     if (prev.departureStationId !== value) {
+  //       return { ...prev, departureStationId: value };
+  //     }
+  //     return prev;
+  //   });
+  // };
+
+
 
   const handleDestinationChange = value => {
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
@@ -121,7 +130,7 @@ function ParcelInfo({
 
   const buildPriceItineraryPayload = () => {
     const basePayload = {
-      departureStationId: metroSelector.departureStationId || '',
+      departureStationId: realDepartureStationId || '',
       destinationStationId: metroSelector.destinationStationId || '',
       scheduleShipmentDate: metroSelector.departureDateTime || null,
       parcels: [
@@ -166,7 +175,7 @@ function ParcelInfo({
       const solutions = [
         { type: 'standard', data: data.standard, label: 'Tiêu chuẩn' },
         { type: 'nearest', data: data.nearest, label: 'Ưu tiên' },
-        { type: 'cheapest', data: data.cheapest, label: 'Tiết kiệm' },
+        { type: 'cheapest', data: data.cheapest, label: 'Tốt nhất' },
       ];
 
       const newRouteSolutions = solutions.map(s => {
@@ -190,16 +199,12 @@ function ParcelInfo({
         setPriceVnd(newRouteSolutions[defaultIndex].priceVnd);
 
         const firstStation = newRouteSolutions[defaultIndex].stations?.[0];
-        if (
-          firstStation &&
-          firstStation.stationId !== metroSelector.departureStationId // 👈 Check ở đây!
-        ) {
-          setMetroSelector(prev => ({
-            ...prev,
-            departureStationId: firstStation.stationId,
-          }));
+        if (firstStation) {
+          setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
+          setDisplayedDepartureStationId(firstStation.stationId); // ✅ UI sync
         }
       }
+
     } catch (error) {
       console.error('Lỗi fetch giá itinerary:', error);
     }
@@ -209,7 +214,7 @@ function ParcelInfo({
 
   useEffect(() => {
     const ready =
-      metroSelector.departureStationId &&
+      realDepartureStationId &&
       metroSelector.destinationStationId &&
       metroSelector.departureDateTime &&
       parcelInfo.parcelCategory &&
@@ -220,7 +225,7 @@ function ParcelInfo({
 
     if (ready) fetchTotalPriceItinerary();
   }, [
-    metroSelector.departureStationId,
+    realDepartureStationId, // ✅ Only real one triggers API
     metroSelector.destinationStationId,
     metroSelector.departureDateTime,
     parcelInfo.parcelCategory,
@@ -229,6 +234,7 @@ function ParcelInfo({
     parcelInfo.widthCm,
     parcelInfo.heightCm,
   ]);
+
   return (
     <>
       <div>
@@ -299,8 +305,12 @@ function ParcelInfo({
             <Select
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để gửi hàng"
-              value={metroSelector.departureStationId}
-              onChange={handleDepartureChange}
+              value={displayedDepartureStationId}
+              onChange={(value) => {
+                // handleDepartureChange();
+                setRealDepartureStationId(value); // 🧠 Trigger fetch
+                setDisplayedDepartureStationId(value); // 👀 UI update
+              }}
             >
               {metros.map(station => (
                 <Option key={station.id} value={station.id}>
@@ -338,7 +348,7 @@ function ParcelInfo({
                 setSelectedDate(formattedDate);
               }}
             />
-            {metroSelector.departureStationId && selectedDate && (
+            {realDepartureStationId && selectedDate && (
               <>
                 <Button onClick={showModal} style={{ marginBottom: '1em' }}>
                   Giờ hoạt động
@@ -404,7 +414,12 @@ function ParcelInfo({
               />
             </Modal>
           </div>
-          <div className="insurance-fee" style={{marginBottom: "1em"}}>
+          <div className="night-discount" style={{ marginBottom: "1em" }}>
+            <Checkbox>
+              Giao vào ban đêm: Giảm 20% trên tổng giá trị đơn hàng
+            </Checkbox>
+          </div>
+          <div className="insurance-fee" style={{ marginBottom: "1em" }}>
             <Checkbox>
               Phí bảo hiểm: 5% trên tổng giá trị đơn hàng
             </Checkbox>
@@ -460,14 +475,24 @@ function ParcelInfo({
                   onClick={() => {
                     setSelectedSolutionIndex(i);
                     setPriceVnd(solution.priceVnd);
+
+                    const firstStation = solution.stations?.[0];
+                    if (firstStation) {
+                      setDisplayedDepartureStationId(firstStation.stationId);
+                      setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
+                      // 💡 Nhưng không setRealDepartureStationId => không fetch lại!
+                    }
                   }}
+
+
+
                 >
                   <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5em' }}>
                     {solution.label}
                   </h3>
                   <p style={{ opacity: 0.85, fontSize: '0.95rem' }}>
                     {solution.type === 'cheapest'
-                      ? 'Tiết kiệm chi phí • Giao muộn hơn xíu'
+                      ? 'Tiết kiệm chi phí'
                       : solution.type === 'nearest'
                         ? 'Trạm gần hơn • Phí cao hơn'
                         : 'Giao hàng thông thường'}
@@ -480,9 +505,7 @@ function ParcelInfo({
                 </div>
               );
             })}
-
           </div>
-
         </div>
       </div>
     </>
