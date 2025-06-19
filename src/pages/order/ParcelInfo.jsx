@@ -73,7 +73,7 @@ function ParcelInfo({
     };
     const fetchCategories = async () => {
       try {
-        const res = await api.get('/categories/get-all');
+        const res = await api.get('/parcel-category');
         setParcelCategory(res.data.data.items);
       } catch {
         console.log('Error fetching parcel categories');

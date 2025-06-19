@@ -3,6 +3,7 @@ import "./Login.scss";
 import { GoogleOutlined } from "@ant-design/icons";
 import LoginPicture from "../../assets/login.jpg";
 import Logo from "../../assets/logo2.png";
+import { Spin } from "antd";
 import api from "../../config/axios";
 import { jwtDecode } from "jwt-decode";
 import { login } from "../../redux/features/counterSlice";
@@ -16,10 +17,12 @@ function Login() {
   const [password, setPassword] = useState("");
   const nav = useNavigate();
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     const payload = {
       username,
       password,
@@ -49,7 +52,7 @@ function Login() {
         nav("/dashboard/admin");
       }
       if (user.role.includes("Staff")) {
-        nav("/dashboard/staff");
+        nav("/dashboard/staff/pending-order");
       }
       toast.success("Đăng nhập thành công");
     } catch (error) {
@@ -59,7 +62,8 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
+     <Spin spinning={loading} tip="Đang đăng nhập..." size="large">
+      <div className="login-container" style={{ pointerEvents: loading ? "none" : "auto", opacity: loading ? 0.6 : 1 }}>
       <div className="introduction-image">
         <img src={LoginPicture} alt="Login" onClick={() => nav("/")} />
       </div>
@@ -135,6 +139,8 @@ function Login() {
         </div>
       </div>
     </div>
+     </Spin>
+    
   );
 }
 
