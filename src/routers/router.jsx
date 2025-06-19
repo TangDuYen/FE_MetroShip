@@ -14,13 +14,16 @@ import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
 import Page404 from "../pages/page404/Page404";
 import PaymentFail from "../pages/payment_fail/PaymentFail";
+import PaymentStaff from "../pages/dashboard/pages/staff/staff-payment/PaymentStaff";
 import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
 import Pincode from "../pages/pinCode/Pincode";
 import Policy from './../pages/policy/Policy';
 import Profile from "../pages/profile/Profile";
 import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
+import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
 import ScrollToTop from "../components/ScrollToTop";
+import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
 import { message } from "antd";
@@ -36,7 +39,7 @@ const ProtectedRouteCustomer = ({ children }) => {
   }
   if (user?.role?.includes("Staff")) {
     toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard/staff" replace />;
+    return <Navigate to="/dashboard/staff/pending-order" replace />;
   }
   return children;
 };
@@ -160,22 +163,6 @@ export const router = createBrowserRouter([
           }
         ]
       },
-      //   {
-      //     path: "track-booking",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <BookingCustomer />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
-      //   {
-      //     path: "/feedback",
-      //     element: (
-      //       <ProtectedRouteCustomer>
-      //         <Feedback />
-      //       </ProtectedRouteCustomer>
-      //     ),
-      //   },
     ],
   },
   {
@@ -214,10 +201,34 @@ export const router = createBrowserRouter([
     children: [
       //staff
       {
-        path: "/dashboard/staff",
+        path: "/dashboard/staff/pending-order",
         element: (
           <ProtectedRouteStaff>
             <OrderStaff />
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
+        path: "/dashboard/staff/tracking-order",
+        element: (
+          <ProtectedRouteStaff>
+            <TrackingOrderStaff />
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
+        path: "/dashboard/staff/payments",
+        element: (
+          <ProtectedRouteStaff>
+            <PaymentStaff />
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
+        path: "/dashboard/staff/route-management",
+        element: (
+          <ProtectedRouteStaff>
+            <RouteStaff />
           </ProtectedRouteStaff>
         ),
       },

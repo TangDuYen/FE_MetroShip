@@ -25,13 +25,6 @@ function HeaderDashboard({ name, subName, onPress }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    dispatch(logout());
-    navigate("/");
-  };
-
-
   return (
     <Row className="header-dashboard">
       <Col
@@ -60,12 +53,9 @@ function HeaderDashboard({ name, subName, onPress }) {
         xs={23}
         className="header-dashboard__header-control dash-info"
       >
-    
         <p className="header-dashboard__title" style={{color:'white'}}>
           Chào {user?.role} !
         </p>
-        
-  
       </Col>
     </Row>
   );
