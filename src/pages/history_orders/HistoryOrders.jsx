@@ -76,8 +76,8 @@ function HistoryOrders() {
     const fetchData = async () => {
       try {
         const [parcelsRes, shipmentsRes] = await Promise.all([
-          api.get("parcels"),
-          api.get("/shipments/customer/history"),
+          api.get("parcels?PageSize=1000"),
+          api.get("/shipments/customer/history?PageSize=1000"),
         ]);
 
         const parcelItems = parcelsRes.data?.data?.items || [];

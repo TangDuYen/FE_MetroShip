@@ -17,9 +17,8 @@ function VerifyMail() {
 
     const validationSchema = Yup.object({
         email: Yup.string()
-            .email("Invalid email format")
-            .matches(/@gmail\.com$/, "Email must be a @gmail.com account")
-            .required("Email is required"),
+            .email("Email không hợp lệ")
+            .required("Cần phải nhập email để nhận OTP"),
     });
 
     const handleSubmit = async (values) => {
@@ -75,7 +74,7 @@ function VerifyMail() {
                                 </div>
 
                                 <button type="submit" className="register-btn">
-                                    Submit
+                                    Xác nhận
                                 </button>
                                 {error && <p className="error-message">{error}</p>}
                             </Form>
@@ -83,9 +82,9 @@ function VerifyMail() {
                     </Formik>
                     <div className="register-options">
                         <p>
-                            Have an account yet?{" "}
+                            Đã có tài khoản?{" "}
                             <a href="/login" className="login-link">
-                                Back to login
+                                Đăng nhập
                             </a>
                         </p>
                     </div>
