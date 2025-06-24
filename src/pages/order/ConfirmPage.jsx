@@ -1,4 +1,4 @@
-import { Col, Descriptions, Divider, Row, Typography } from 'antd';
+import { Checkbox, Col, Descriptions, Divider, Row, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 import api from '../../config/axios';
@@ -13,13 +13,11 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
     return station ? station.stationNameVi : stationId;
   };
   const selectedSolution = routeSolutions?.[selectedSolutionIndex];
+const stations = selectedSolution?.stations || [];
 
-  // Lấy stations từ solution đầu tiên (hoặc bạn có thể lấy theo index phù hợp)
-  const stations = routeSolutions?.[0]?.stations || [];
+const departureStationName = getStationName(stations, metroSelector.departureStationId);
+const destinationStationName = getStationName(stations, metroSelector.destinationStationId);
 
-  // Lấy tên trạm gửi và nhận
-  const departureStationName = getStationName(stations, metroSelector.departureStationId);
-  const destinationStationName = getStationName(stations, metroSelector.destinationStationId);
 
   const getParcelCategoryByID = async () => {
     try {
@@ -83,6 +81,11 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
             </Descriptions.Item>
           </Descriptions>
         </Col>
+        <div className="user-payment">
+          <Checkbox>
+            Người nhận trả tiền
+          </Checkbox>
+        </div>
         {/* <Divider orientation="left">Lộ trình đơn hàng</Divider>
         <div style={{ paddingLeft: 12 }}>
           {(!routeSolutions || routeSolutions.length === 0) && <p>Chưa có dữ liệu lộ trình</p>}

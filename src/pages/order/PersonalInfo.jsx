@@ -49,7 +49,6 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
 
   return (
     <div className="personalInfo">
-      <p>Customer Information</p>
       <div className="personalInfo__input">
         <Input
           size="middle"

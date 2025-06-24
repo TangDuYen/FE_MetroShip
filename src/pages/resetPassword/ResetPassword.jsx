@@ -17,14 +17,14 @@ function ResetPassword() {
 
     const validationSchema = Yup.object({
         token: Yup.string()
-            .min(6, "OTP must be at least 6 numbers")
-            .required("OTP is required"),
+            .min(6, "OTP cần ít nhất 6 kí tự")
+            .required("Không để trống OTP"),
         password: Yup.string()
-            .min(6, "Password must be at least 6 characters")
-            .required("Password is required"),
+            .min(8, "Mật khẩu ít nhất 8 kí tự")
+            .required("Không để trống mật khẩu!"),
         confirmPassword: Yup.string()
-            .oneOf([Yup.ref("password"), null], "Passwords must match")
-            .required("Confirm password is required"),
+            .oneOf([Yup.ref("password"), null], "Mật khẩu không khớp")
+            .required("Cần phải xác nhận mật khẩu"),
     });
 
     const handleSubmit = async (values) => {
@@ -118,9 +118,9 @@ function ResetPassword() {
                     </Formik>
                     <div className="register-options">
                         <p>
-                            Have an account yet?{" "}
+                            Đã có tài khoản?{" "}
                             <a href="/login" className="login-link">
-                                Back to login
+                                Đăng nhập
                             </a>
                         </p>
                     </div>

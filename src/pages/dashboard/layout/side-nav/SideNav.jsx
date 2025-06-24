@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AiOutlineLogout } from "react-icons/ai";
 import { LogoutOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { PATH_NAME } from "../../../../constants/pathname";
 import { toast } from "react-toastify";
 
 function SideNav({ }) {
@@ -26,15 +27,15 @@ function SideNav({ }) {
   const handleLogout = async () => {
     toast.success("Đăng xuất thành công");
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('refreshTokenExpiredTime');
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
     await dispatch(logout());
-    navigate('/');
+    navigate(PATH_NAME.HOME);
   }
 
   return (
-
-
     <div className="menu-side-nav-container">
       <Menu
         onClick={onClick}

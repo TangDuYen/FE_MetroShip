@@ -9,6 +9,7 @@ import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
+import metroMarker from '../../assets/subway.png'
 import { selectUser } from '../../redux/features/counterSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,12 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // chứa giải pháp từ API
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // đang chọn giải pháp nào
   const [priceVnd, setPriceVnd] = useState(null); // giá
+  const customIcon = L.icon({
+    iconUrl: metroMarker,
+    iconSize: [40, 40],       // size icon (pixel)
+    iconAnchor: [20, 40],     // tâm điểm icon nằm dưới
+    popupAnchor: [0, -40],    // vị trí popup
+  });
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -134,6 +141,7 @@ function Order() {
           pickedTime={pickedTime}
           priceVnd={priceVnd}
           routeSolutions={routeSolutions}
+          selectedSolutionIndex={selectedSolutionIndex}
         />
       ),
     },
@@ -238,21 +246,8 @@ function Order() {
 
         return;
       }
-
-      // const { id: shipmentId, paymentId } = bookingResponse.data.data;
       toast.success("Đặt giao thành công!");
       nav(PATH_NAME.HISTORY_ORDERS);
-
-      // localStorage.setItem("paymentId", paymentId);
-
-      // const paymentResponse = await api.post(`/shipments/vnpay/payment-url`);
-
-      // const paymentUrl = paymentResponse.data.data.checkoutUrl;
-      // if (paymentUrl) {
-      //   window.location.href = paymentUrl;
-      // } else {
-      //   toast.error("Cannot find payment URL");
-      // }
     } catch (error) {
       console.error(error);
       const errorMessage = error.response?.data.message || "An error occurred";
@@ -302,6 +297,7 @@ function Order() {
               <Marker
                 key={station.stationId}
                 position={[station.latitude, station.longitude]}
+                icon={customIcon}
               >
                 <Popup>
                   {station.stationNameVi}

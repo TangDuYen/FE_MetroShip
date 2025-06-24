@@ -1,4 +1,5 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const baseUrl = "https://localhost:7085/api/";
 // const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
@@ -9,16 +10,68 @@ const config = {
 
 const api = axios.create(config);
 
-const handleBefore = (config) => {
-  //CONFIG API NO TOKEN
-  const noAuthEndpoints = ["/auth/register"];
-  const requiresAuth = !noAuthEndpoints.some((endpoint) => 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
+const handleBefore = async (config) => {
+  const noAuthEndpoints = ["/auth/register", "/auth/authentication", "/auth/refresh-token"];
+  const requiresAuth = !noAuthEndpoints.some((endpoint) =>
     config.url.includes(endpoint)
   );
 
-  if (requiresAuth) {
-    const token = localStorage.getItem("token")?.replaceAll('"', "");
-    if (token) {
+  const token = localStorage.getItem("token")?.replaceAll('"', "");
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (requiresAuth && token) {
+    const decodedToken = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+
+    if (decodedToken.exp < currentTime) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        try {
+          const response = await axios.post(`${baseUrl}auth/refresh-token`, {
+            token: refreshToken,
+          });
+
+          const newToken = response.data.token;
+          localStorage.setItem("token", newToken);
+
+          processQueue(null, newToken);
+          config.headers["Authorization"] = `Bearer ${newToken}`;
+        } catch (err) {
+          processQueue(err, null);
+          throw err;
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({
+            resolve: (token) => {
+              config.headers["Authorization"] = `Bearer ${token}`;
+              resolve(config);
+            },
+            reject: (err) => {
+              reject(err);
+            },
+          });
+        });
+      }
+    } else {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
   }
@@ -28,7 +81,7 @@ const handleBefore = (config) => {
 
 const handleError = (error) => {
   console.error("Request Error: ", error);
-  return Promise.reject(error);  
+  return Promise.reject(error);
 };
 
 api.interceptors.request.use(handleBefore, handleError);

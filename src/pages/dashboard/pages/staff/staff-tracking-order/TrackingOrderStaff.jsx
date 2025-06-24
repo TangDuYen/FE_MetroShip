@@ -1,4 +1,4 @@
-import './OrderStaff.scss'
+import './TrackingOrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Table, Tabs, Typography } from 'antd';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
@@ -15,8 +15,7 @@ import { toast } from 'react-toastify';
 const { TabPane } = Tabs;
 
 const { Title } = Typography;
-
-function OrderStaff() {
+function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
@@ -24,42 +23,16 @@ function OrderStaff() {
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
   const [dateFilter, setDateFilter] = useState(null);
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [rejectParcel, setRejectParcel] = useState(null);
-  const [rejectReason, setRejectReason] = useState("");
-
   const [stationFilter, setStationFilter] = useState(null);
   const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+  const today = dayjs();
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-
-  const parcelStatusMap = (status) => {
-    const statusMapping = {
-      0: "Đang xử lý", //AwaitingConfirmation
-      1: "Đợi thanh toán", //AwaitingPayment
-      2: "Đợi gửi hàng", //AwaitingDropOff
-      3: "Từ chối", //Rejected
-      4: "Chưa thanh toán", //Unpaid
-      5: "Đã hủy", //Cancelled
-      6: "Chờ hoàn tiền", //AwaitingRefund
-      7: "Đã hoàn tiền", //Refunded
-      8: "Không đến gửi hàng", //NoDropOff
-      9: "Đã nhận hàng tại trạm", //ReceivedAtStation
-      10: "Đang trên đường vận chuyển - Tuyến ", //InTransitLineXStationXC
-      11: "Chuyển sang tuyến ", //TransferringToLineYStationYD
-      12: "Đã nhận hàng ở trạm", //ReceivedAtStationB
-      13: "Đợi khách đến lấy hàng", //OutForDelivery
-      14: "Hết hạn", //Overdue
-      15: "Lưu kho lâu", //LongTermStorage
-      16: "Hoàn thành", //Delivered
-    };
-    return statusMapping[status] || 'Không xác nhận';
-  };
 
   //API ONE TIME
   useEffect(() => {
@@ -104,20 +77,16 @@ function OrderStaff() {
   };
 
   const handleFilterChange = () => {
-    const now = moment();
-    const start = now.clone().subtract(48, 'hours');
-    const end = now.clone().add(48, 'hours');
-
     // Bước 1: lọc các đơn chưa xác nhận, tạo trong vòng 48h
     let filtered = shipments.filter(order =>
-      order.shipmentStatus === 0 &&
-      moment(order.bookedAt).isBetween(start, end)
+      order.shipmentStatus >= 1
     );
 
     // Bước 2: nếu chọn ngày => lọc thêm theo ngày gửi (scheduleDateTime)
+    // CHỈNH SỬA FILTER
     if (dateFilter) {
       filtered = filtered.filter(order =>
-        moment(order.bookedAt).isSame(dateFilter, 'day')
+        dayjs(order.scheduledDateTime).isSame(dayjs(dateFilter), 'day')
       );
     }
 
@@ -224,11 +193,11 @@ function OrderStaff() {
                 defaultColor: "white",
                 defaultBg: "#0066CC",
                 defaultBorderColor: "#0066CC",
-                defaultHoverBorderColor: "#0066CC",
-                defaultHoverColor: "white",
-                defaultHoverBg: "#0066CC",
-                defaultActiveBg: "#0066CC",
-                defaultActiveBorderColor: "#0066CC",
+                defaultHoverBorderColor: "#FFC107",
+                defaultHoverColor: "black",
+                defaultHoverBg: "#FFC107",
+                defaultActiveBg: "#4CAF50",
+                defaultActiveBorderColor: "#4CAF50",
                 defaultActiveColor: "white",
               }
             }
@@ -239,114 +208,6 @@ function OrderStaff() {
         </ConfigProvider>
       ),
     },
-    {
-      title: 'Hành động',
-      key: 'confirm',
-      render: (_, record) => {
-        const relatedParcels = parcelMap.get(record.id) || [];
-        const firstParcel = relatedParcels[0];
-        return (
-          <ConfigProvider
-            theme={{
-              components: {
-                Button: {
-                  defaultColor: "white",
-                  defaultBg: "#4CAF50",
-                  defaultBorderColor: "#4CAF50",
-                  defaultHoverColor: "white",
-                  defaultHoverBg: "#4CAF50",
-                  defaultHoverBorderColor: "#4CAF50",
-                  defaultActiveColor: "white",
-                  defaultActiveBg: "#4CAF50",
-                  defaultActiveBorderColor: "#4CAF50",
-                }
-              }
-            }}
-          >
-            <Button
-              className='booking-table-staff_button'
-              onClick={() => firstParcel && handleConfirmOrder(firstParcel.id)}
-              disabled={record.shipmentStatus >= 3 || !firstParcel}
-            >
-              Xác nhận
-            </Button>
-          </ConfigProvider>
-        );
-      }
-    },
-    {
-      title: 'Hành động',
-      key: 'action',
-      render: (_, record) => {
-        const relatedParcels = parcelMap.get(record.id) || [];
-        const firstParcel = relatedParcels[0];
-        return (
-          <ConfigProvider
-            theme={{
-              components: {
-                Button: {
-                  defaultColor: "white",
-                  defaultBg: "red",
-                  defaultBorderColor: "red",
-                  defaultHoverColor: "white",
-                  defaultHoverBg: "red",
-                  defaultHoverBorderColor: "red",
-                  defaultActiveColor: "white",
-                  defaultActiveBg: "red",
-                  defaultActiveBorderColor: "red",
-                }
-              }
-            }}>
-            <Button
-              className='booking-table-staff_button'
-              onClick={() => {
-                if (firstParcel) {
-                  setRejectParcel(firstParcel);
-                  setRejectModalOpen(true);
-                }
-              }}
-              disabled={record.shipmentStatus >= 3 || !firstParcel}
-            >
-              Từ chối
-            </Button>
-
-          </ConfigProvider>
-        );
-      }
-    },
-    {
-      title: 'Hành động',
-      key: 'action',
-      render: (_, record) => {
-        const relatedParcels = parcelMap.get(record.id) || [];
-        const firstParcel = relatedParcels[0];
-        return (
-          <ConfigProvider
-            theme={{
-              components: {
-                Button: {
-                  defaultColor: "black",
-                  defaultBg: "#FFC107",
-                  defaultBorderColor: "#FFC107",
-                  defaultHoverColor: "black",
-                  defaultHoverBg: "#FFC107",
-                  defaultHoverBorderColor: "#FFC107",
-                  defaultActiveColor: "black",
-                  defaultActiveBg: "#FFC107",
-                  defaultActiveBorderColor: "#FFC107",
-                }
-              }
-            }}>
-            <Button className='booking-table-staff_button'
-              onClick={() => firstParcel && handleCheckOrder(firstParcel.id)}
-              disabled={record.shipmentStatus >= 3 || !firstParcel}
-            >
-              Kiểm tra
-            </Button>
-          </ConfigProvider>
-        );
-      }
-    },
   ];
 
   const onRowClick = (record) => {
@@ -354,45 +215,6 @@ function OrderStaff() {
     setSelectedOrder({ ...record, relatedParcels });
     setModalOpen(true);
   };
-
-  const handleConfirmOrder = async (parcelId) => {
-    try {
-      await api.post(`/parcels/staff/confirmation/${parcelId}`);
-      toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
-      await getAllShipments();
-      await getAllParcels();
-    } catch (error) {
-      toast.error("Không thể xác nhận kiện hàng");
-    }
-  };
-
-  const handleRejectOrder = async (parcelId) => {
-    const payload = {
-      parcelId: parcelId,
-      rejectReason: "string"
-    }
-    try {
-      await api.post(`/parcels/staff/rejection/${parcelId}`, payload);
-      toast.success(`Đã từ chối kiện hàng: ${parcelId}`);
-      setModalOpen(false);
-      await getAllShipments();
-      await getAllParcels();
-    } catch (error) {
-      toast.error("Không thể từ chối kiện hàng");
-    }
-  };
-  const handleCheckOrder = async (parcelId) => {
-    try {
-      // await api.post(`/parcels/staff/rejection/${parcelId}`);
-      toast.success(`Kiện hàng đủ tiêu chuẩn: ${parcelId}`);
-      setModalOpen(false);
-      await getAllShipments();
-      await getAllParcels();
-    } catch (error) {
-      toast.error("Toa tàu đã đầy. Hãy đợi chuyến sau");
-    }
-  };
-
   return (
     <>
       <div className="order-staff-container">
@@ -485,8 +307,7 @@ function OrderStaff() {
             <Row gutter={16}>
               <Col span={6}>
                 <DatePicker
-                  defaultValue={moment()}
-                  // value={dateFilter}
+                  value={dateFilter ?? today}
                   onChange={(date) => setDateFilter(date)}
                   style={{ width: '100%' }}
                 />
@@ -552,30 +373,6 @@ function OrderStaff() {
                       </Option>
                     ))}
                   </Select>
-                </Col>
-                <Col span={6}>
-                  <ConfigProvider
-                    theme={{
-                      components: {
-                        Button: {
-                          defaultColor: "black",
-                          defaultBg: "#FFC107",
-                          defaultBorderColor: "#FFC107",
-                          defaultHoverColor: "black",
-                          defaultHoverBg: "#FFC107",
-                          defaultHoverBorderColor: "#FFC107",
-                          defaultActiveColor: "black",
-                          defaultActiveBg: "#FFC107",
-                          defaultActiveBorderColor: "#FFC107",
-                        }
-                      }
-                    }}>
-                    <Button className='check-order-auto'
-                      style={{ marginLeft: "1em" }}
-                    >
-                      Kiểm tra
-                    </Button>
-                  </ConfigProvider>
                 </Col>
               </Row>
             </div>
@@ -654,7 +451,25 @@ function OrderStaff() {
                             {
                               key: 'parcelStatus',
                               label: 'Trạng thái kiện hàng',
-                              value: parcelStatusMap(parcel.parcelStatus),
+                              value: ({
+                                0: "Đang xử lý",
+                                1: "Đợi thanh toán",
+                                2: "Đợi gửi hàng",
+                                3: "Từ chối",
+                                4: "Chưa thanh toán",
+                                5: "Đã hủy",
+                                6: "Chờ hoàn tiền",
+                                7: "Đã hoàn tiền",
+                                8: "Không đến gửi hàng",
+                                9: "Đã nhận hàng tại trạm",
+                                10: "Đang trên đường vận chuyển - Tuyến ",
+                                11: "Chuyển sang tuyến ",
+                                12: "Đã nhận hàng ở trạm",
+                                13: "Đợi khách đến lấy hàng",
+                                14: "Hết hạn",
+                                15: "Lưu kho lâu",
+                                16: "Hoàn thành"
+                              })[parcel.parcelStatus] || "Không xác nhận"
                             },
                           ]}
                           columns={[
@@ -685,7 +500,7 @@ function OrderStaff() {
 
                           <Button
                             type="primary"
-                            disabled={parcel.parcelStatus <= 1}
+                            disabled={parcel.parcelStatus === 2}
                             onClick={() => handleConfirmOrder(parcel.id)}
                           >
                             Xác minh người gửi
@@ -697,52 +512,11 @@ function OrderStaff() {
                 </Tabs>
               )}
             </Modal>
-            <Modal
-              title={`Từ chối kiện hàng: ${rejectParcel?.parcelCode}`}
-              open={rejectModalOpen}
-              onCancel={() => {
-                setRejectModalOpen(false);
-                setRejectReason("");
-              }}
-              onOk={async () => {
-                if (!rejectReason.trim()) {
-                  toast.error("Vui lòng nhập lý do từ chối!");
-                  return;
-                }
-                try {
-                  const payload = {
-                    parcelId: rejectParcel.id,
-                    rejectReason,
-                  };
-                  await api.post(`/parcels/staff/rejection/${rejectParcel.id}`, payload);
-                  toast.success(`Đã từ chối kiện hàng: ${rejectParcel.parcelCode}`);
-                  setRejectModalOpen(false);
-                  setRejectReason("");
-                } catch (err) {
-                  toast.error("Không thể từ chối kiện hàng");
-                }
-              }}
-              okText="Xác nhận"
-              cancelText="Huỷ"
-            >
-              <textarea
-                placeholder="Nhập lý do từ chối..."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                style={{
-                  width: "100%",
-                  minHeight: "120px",
-                  resize: "vertical",
-                  padding: "0.5em",
-                  fontSize: "1em",
-                }}
-              />
-            </Modal>
           </Card>
         </div>
       </div>
     </>
-  );
+  )
 }
 
-export default OrderStaff;
+export default TrackingOrderStaff
