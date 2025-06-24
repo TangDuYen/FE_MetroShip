@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AiOutlineLogout } from "react-icons/ai";
 import { LogoutOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { PATH_NAME } from "../../../../constants/pathname";
 import { toast } from "react-toastify";
 
 function SideNav({ }) {
@@ -31,7 +32,7 @@ function SideNav({ }) {
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
     await dispatch(logout());
-    navigate('/');
+    navigate(PATH_NAME.HOME);
   }
 
   return (

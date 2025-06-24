@@ -26,7 +26,6 @@ import ScrollToTop from "../components/ScrollToTop";
 import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
-import { message } from "antd";
 import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
@@ -35,11 +34,11 @@ const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
   if (user?.role?.includes("Admin")) {
     toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard/admin" replace />;
+    return <Navigate to={PATH_NAME.DASHBOARD_ADMIN} replace />;
   }
   if (user?.role?.includes("Staff")) {
     toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard/staff/pending-order" replace />;
+    return <Navigate to={PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER} replace />;
   }
   return children;
 };
@@ -51,7 +50,7 @@ const ProtectedDashboard = ({ children }) => {
   const validRoles = ["Admin", "Staff"];
 
   if (!validRoles.includes(user?.role)) {
-    return <Navigate to="*" replace />;
+    return <Navigate to={PATH_NAME.PAGE404} replace />;
   }
   return children;
 };
@@ -59,8 +58,8 @@ const ProtectedDashboard = ({ children }) => {
 const ProtectedRouteAdmin = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user?.role?.includes("Admin")) {
-    message.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard/admin" replace />;
+    toast.error("Bạn không có quyền truy cập vào trang này.");
+    return <Navigate to={PATH_NAME.DASHBOARD_ADMIN} replace />;
   }
   return children;
 };
@@ -68,8 +67,8 @@ const ProtectedRouteAdmin = ({ children }) => {
 const ProtectedRouteStaff = ({ children }) => {
   const user = useSelector(selectUser);
   if (!user?.role?.includes("Staff")) {
-    message.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to="/dashboard/staff" replace />;
+    toast.error("Bạn không có quyền truy cập vào trang này.");
+    return <Navigate to={PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER} replace />;
   }
   return children;
 };
@@ -190,18 +189,18 @@ export const router = createBrowserRouter([
     element: <Page404 />,
   },
 
-  //dashboard
+  //DASHBOARD
   {
-    path: "/dashboard",
+    path: PATH_NAME.DASHBOARD,
     element: (
       <ProtectedDashboard>
         <Main />
       </ProtectedDashboard>
     ),
     children: [
-      //staff
+      //STAFF
       {
-        path: "/dashboard/staff/pending-order",
+        path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
         element: (
           <ProtectedRouteStaff>
             <OrderStaff />
@@ -209,15 +208,15 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/staff/tracking-order",
+        path: PATH_NAME.DASHBOARD_STAFF_TRACKING_ORDER,
         element: (
           <ProtectedRouteStaff>
             <TrackingOrderStaff />
           </ProtectedRouteStaff>
         ),
       },
-      {
-        path: "/dashboard/staff/payments",
+      { 
+        path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>
             <PaymentStaff />
@@ -225,7 +224,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/staff/route-management",
+        path: PATH_NAME.DASHBOARD_STAFF_ROUTE_MANAGEMENT,
         element: (
           <ProtectedRouteStaff>
             <RouteStaff />
@@ -233,7 +232,7 @@ export const router = createBrowserRouter([
         ),
       },
 
-      //admin
+      //ADMIN
       // {
       //   path: "/dashboard/admin/salon-manage",
       //   element: (
