@@ -28,7 +28,7 @@ function Header() {
     localStorage.removeItem("userLatitude");
     localStorage.removeItem("userLongitude");
     dispatch(logout());
-    navigate("/");
+    navigate(PATH_NAME.HOME);
   }
 
   const handleClick = () => {
