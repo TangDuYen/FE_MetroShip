@@ -24,6 +24,9 @@ function OrderStaff() {
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
   const [dateFilter, setDateFilter] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectParcel, setRejectParcel] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const [stationFilter, setStationFilter] = useState(null);
   const [routeFilter, setRouteFilter] = useState(null);
@@ -221,11 +224,11 @@ function OrderStaff() {
                 defaultColor: "white",
                 defaultBg: "#0066CC",
                 defaultBorderColor: "#0066CC",
-                defaultHoverBorderColor: "#FFC107",
-                defaultHoverColor: "black",
-                defaultHoverBg: "#FFC107",
-                defaultActiveBg: "#4CAF50",
-                defaultActiveBorderColor: "#4CAF50",
+                defaultHoverBorderColor: "#0066CC",
+                defaultHoverColor: "white",
+                defaultHoverBg: "#0066CC",
+                defaultActiveBg: "#0066CC",
+                defaultActiveBorderColor: "#0066CC",
                 defaultActiveColor: "white",
               }
             }
@@ -250,12 +253,12 @@ function OrderStaff() {
                   defaultColor: "white",
                   defaultBg: "#4CAF50",
                   defaultBorderColor: "#4CAF50",
-                  defaultHoverBorderColor: "#FFC107",
-                  defaultHoverColor: "black",
-                  defaultHoverBg: "#FFC107",
-                  defaultActiveBg: "#0066CC",
-                  defaultActiveBorderColor: "#0066CC",
+                  defaultHoverColor: "white",
+                  defaultHoverBg: "#4CAF50",
+                  defaultHoverBorderColor: "#4CAF50",
                   defaultActiveColor: "white",
+                  defaultActiveBg: "#4CAF50",
+                  defaultActiveBorderColor: "#4CAF50",
                 }
               }
             }}
@@ -285,21 +288,28 @@ function OrderStaff() {
                   defaultColor: "white",
                   defaultBg: "red",
                   defaultBorderColor: "red",
-                  defaultHoverBorderColor: "#FFC107",
-                  defaultHoverColor: "black",
-                  defaultHoverBg: "#FFC107",
-                  defaultActiveBg: "#0066CC",
-                  defaultActiveBorderColor: "#0066CC",
+                  defaultHoverColor: "white",
+                  defaultHoverBg: "red",
+                  defaultHoverBorderColor: "red",
                   defaultActiveColor: "white",
+                  defaultActiveBg: "red",
+                  defaultActiveBorderColor: "red",
                 }
               }
             }}>
-            <Button className='booking-table-staff_button'
-              onClick={() => firstParcel && handleRejectOrder(firstParcel.id)}
-              disabled={record.shipmentStatus >= 0}
+            <Button
+              className='booking-table-staff_button'
+              onClick={() => {
+                if (firstParcel) {
+                  setRejectParcel(firstParcel);
+                  setRejectModalOpen(true);
+                }
+              }}
+              disabled={record.shipmentStatus >= 3 || !firstParcel}
             >
               Từ chối
             </Button>
+
           </ConfigProvider>
         );
       }
@@ -318,11 +328,17 @@ function OrderStaff() {
                   defaultColor: "black",
                   defaultBg: "#FFC107",
                   defaultBorderColor: "#FFC107",
+                  defaultHoverColor: "black",
+                  defaultHoverBg: "#FFC107",
+                  defaultHoverBorderColor: "#FFC107",
+                  defaultActiveColor: "black",
+                  defaultActiveBg: "#FFC107",
+                  defaultActiveBorderColor: "#FFC107",
                 }
               }
             }}>
             <Button className='booking-table-staff_button'
-              onClick={() => firstParcel && handleRejectOrder(firstParcel.id)}
+              onClick={() => firstParcel && handleCheckOrder(firstParcel.id)}
               disabled={record.shipmentStatus >= 3 || !firstParcel}
             >
               Kiểm tra
@@ -343,7 +359,6 @@ function OrderStaff() {
     try {
       await api.post(`/parcels/staff/confirmation/${parcelId}`);
       toast.success(`Đã xác nhận kiện hàng: ${parcelId}`);
-      setModalOpen(false);
       await getAllShipments();
       await getAllParcels();
     } catch (error) {
@@ -352,14 +367,29 @@ function OrderStaff() {
   };
 
   const handleRejectOrder = async (parcelId) => {
+    const payload = {
+      parcelId: parcelId,
+      rejectReason: "string"
+    }
     try {
-      await api.post(`/parcels/staff/rejection/${parcelId}`);
-      toast.success(`Đã từ chối nhận kiện hàng: ${parcelId}`);
+      await api.post(`/parcels/staff/rejection/${parcelId}`, payload);
+      toast.success(`Đã từ chối kiện hàng: ${parcelId}`);
       setModalOpen(false);
       await getAllShipments();
       await getAllParcels();
     } catch (error) {
-      toast.error("Không thể từ chối nhận kiện hàng");
+      toast.error("Không thể từ chối kiện hàng");
+    }
+  };
+  const handleCheckOrder = async (parcelId) => {
+    try {
+      // await api.post(`/parcels/staff/rejection/${parcelId}`);
+      toast.success(`Kiện hàng đủ tiêu chuẩn: ${parcelId}`);
+      setModalOpen(false);
+      await getAllShipments();
+      await getAllParcels();
+    } catch (error) {
+      toast.error("Toa tàu đã đầy. Hãy đợi chuyến sau");
     }
   };
 
@@ -523,6 +553,30 @@ function OrderStaff() {
                     ))}
                   </Select>
                 </Col>
+                <Col span={6}>
+                  <ConfigProvider
+                    theme={{
+                      components: {
+                        Button: {
+                          defaultColor: "black",
+                          defaultBg: "#FFC107",
+                          defaultBorderColor: "#FFC107",
+                          defaultHoverColor: "black",
+                          defaultHoverBg: "#FFC107",
+                          defaultHoverBorderColor: "#FFC107",
+                          defaultActiveColor: "black",
+                          defaultActiveBg: "#FFC107",
+                          defaultActiveBorderColor: "#FFC107",
+                        }
+                      }
+                    }}>
+                    <Button className='check-order-auto'
+                      style={{ marginLeft: "1em" }}
+                    >
+                      Kiểm tra
+                    </Button>
+                  </ConfigProvider>
+                </Col>
               </Row>
             </div>
             <Table
@@ -642,6 +696,47 @@ function OrderStaff() {
                   ))}
                 </Tabs>
               )}
+            </Modal>
+            <Modal
+              title={`Từ chối kiện hàng: ${rejectParcel?.parcelCode}`}
+              open={rejectModalOpen}
+              onCancel={() => {
+                setRejectModalOpen(false);
+                setRejectReason("");
+              }}
+              onOk={async () => {
+                if (!rejectReason.trim()) {
+                  toast.error("Vui lòng nhập lý do từ chối!");
+                  return;
+                }
+                try {
+                  const payload = {
+                    parcelId: rejectParcel.id,
+                    rejectReason,
+                  };
+                  await api.post(`/parcels/staff/rejection/${rejectParcel.id}`, payload);
+                  toast.success(`Đã từ chối kiện hàng: ${rejectParcel.parcelCode}`);
+                  setRejectModalOpen(false);
+                  setRejectReason("");
+                } catch (err) {
+                  toast.error("Không thể từ chối kiện hàng");
+                }
+              }}
+              okText="Xác nhận"
+              cancelText="Huỷ"
+            >
+              <textarea
+                placeholder="Nhập lý do từ chối..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: "120px",
+                  resize: "vertical",
+                  padding: "0.5em",
+                  fontSize: "1em",
+                }}
+              />
             </Modal>
           </Card>
         </div>

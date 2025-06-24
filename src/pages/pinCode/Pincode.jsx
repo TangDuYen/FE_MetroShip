@@ -44,7 +44,7 @@ function Pincode() {
             }
         } catch (error) {
             console.error(error);
-            setMessage("Pin verification failed!");
+            setMessage("Xác nhận OTP thất bại");
         }
     };
 
@@ -52,9 +52,9 @@ function Pincode() {
         <div className="pin">
             <div className="pin__wrapper">
                 <p className="pin__back" onClick={() => nav("/login")}>
-                    <ArrowLeftOutlined /> Back
+                    <ArrowLeftOutlined /> Quay lại
                 </p>
-                <h1 className="pin__title">Enter Pin Code</h1>
+                <h1 className="pin__title">Nhập mã OTP</h1>
                 <div className="pin__email">{registrationData?.email}</div>
                 <Input
                     value={pin}
@@ -66,7 +66,7 @@ function Pincode() {
                 />
                 {message1 && <p className="pin__error">{message1}</p>}
                 <div className="pin__btn" onClick={verifyPin}>
-                    Verify Pin
+                    Xác nhận
                 </div>
             </div>
         </div>

@@ -26,6 +26,8 @@ function SideNav({ }) {
   const handleLogout = async () => {
     toast.success("Đăng xuất thành công");
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('refreshTokenExpiredTime');
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
     await dispatch(logout());
@@ -33,8 +35,6 @@ function SideNav({ }) {
   }
 
   return (
-
-
     <div className="menu-side-nav-container">
       <Menu
         onClick={onClick}
