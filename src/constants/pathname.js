@@ -2,9 +2,11 @@ export const PATH_NAME = {
     PAGE404: "*",
     HOME: "/",
     ABOUT_US: "/about-us",
-    TRACKING: "#",
-    SUPPORT: "#",
-    SERVICE: "#",
+    TRACKING: "/tracking",
+    SUPPORT: "/support",
+    SERVICE: "/service",
+    EXPRESS_DELIVERY: "/service/express-delivery",
+    ADDITIONAL_SERVICE: "/service/additional-service",
 
     //AUTHENTICATION 
     LOGIN: "/login",

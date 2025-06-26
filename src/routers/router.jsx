@@ -29,6 +29,11 @@ import { element } from "prop-types";
 import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import Service from "../pages/services/Service";
+import Tracking from "../pages/tracking/Tracking";
+import Support from "../pages/support/Support";
+import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
+import Additional from "../pages/services/additionalService/Additional";
 
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
@@ -146,6 +151,46 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <PaymentFail />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.SERVICE,
+        element: (
+          <ProtectedRouteCustomer>
+            <Service />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.EXPRESS_DELIVERY,
+        element: (
+          <ProtectedRouteCustomer>
+            <ExpressDelivery />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.ADDITIONAL_SERVICE,
+        element: (
+          <ProtectedRouteCustomer>
+            <Additional />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.TRACKING,
+        element: (
+          <ProtectedRouteCustomer>
+            <Tracking />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.SUPPORT,
+        element: (
+          <ProtectedRouteCustomer>
+            <Support />
           </ProtectedRouteCustomer>
         ),
       },
