@@ -1,0 +1,29 @@
+.banner {
+  position: relative;
+  background: url('https://www.aljazeera.com/wp-content/uploads/2024/12/AFP__20241222__36R84CL__v1__HighRes__VietnamTransportMetro-1734867803.jpg?fit=1170%2C780&quality=80') center bottom / cover no-repeat;
+  height: 400px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .banner-content {
+    text-align: center;
+    z-index: 2;
+
+    h1 {
+      font-size: 48px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+}

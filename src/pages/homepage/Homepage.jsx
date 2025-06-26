@@ -94,7 +94,7 @@ function Homepage() {
               <input
                 type="text"
                 id="tracking-code"
-                placeholder="VD: MS123456"
+                placeholder="Nhập mã vận đơn (VD: MS123456)"
               />
             </div>
             <button type="submit" className="btn-track">
