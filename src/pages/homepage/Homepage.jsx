@@ -1,12 +1,16 @@
 import "./Homepage.scss";
-import metroShipImg from "../../assets/image_1.png";
-import fastDeliveryImg from "../../assets/image_2.png";
-import secureSafeImg from "../../assets/image_3.png";
-import metroDeliveryImg from "../../assets/image_4.png";
-import googlePlay from "../../assets/ggPlay.png";
+
+import { Avatar, Carousel } from "antd";
+
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
 import appStore from "../../assets/appleStore.png";
 import deliveryImage from "../../assets/image_5.png";
-import { Avatar, Carousel } from "antd";
+import fastDeliveryImg from "../../assets/image_2.png";
+import googlePlay from "../../assets/ggPlay.png";
+import metroDeliveryImg from "../../assets/image_4.png";
+import metroShipImg from "../../assets/image_1.png";
+import secureSafeImg from "../../assets/image_3.png";
 
 function Homepage() {
   const feedbacks = [
@@ -97,9 +101,11 @@ function Homepage() {
                 placeholder="Nhập mã vận đơn (VD: MS123456)"
               />
             </div>
-            <button type="submit" className="btn-track">
-              Tra cứu
-            </button>
+            <Link to={PATH_NAME.TRACKING}>
+              <button type="submit" className="btn-track">
+                Tra cứu
+              </button></Link>
+
           </form>
         </section>
 
