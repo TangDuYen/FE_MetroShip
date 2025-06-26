@@ -31,13 +31,13 @@ function Order() {
   });
   const [pickedDate, setPickedDate] = useState(null);
   const [pickedTime, setPickedTime] = useState(null);
+  const [timeSlots, setTimeSlots] = useState(null);
   const [parcelInfo, setParcelInfo] = useState({
     parcelCategory: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
     widthCm: "",
-    chargeableWeight: "",
     description: "",
     isBulk: false,
   });
@@ -120,6 +120,8 @@ function Order() {
           setPickedDate={setPickedDate}
           pickedTime={pickedTime}
           setPickedTime={setPickedTime}
+          timeSlots={timeSlots}
+          setTimeSlots={setTimeSlots}
           routeSolutions={routeSolutions}
           setRouteSolutions={setRouteSolutions}
           selectedSolutionIndex={selectedSolutionIndex}
@@ -139,6 +141,7 @@ function Order() {
           parcelInfo={parcelInfo}
           pickedDate={pickedDate}
           pickedTime={pickedTime}
+          timeSlots={timeSlots}
           priceVnd={priceVnd}
           routeSolutions={routeSolutions}
           selectedSolutionIndex={selectedSolutionIndex}
@@ -185,7 +188,7 @@ function Order() {
     const itinerary = routeSolutions[selectedSolutionIndex];
 
     // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-    const shipmentItineraries = itinerary?.routes.map(route => ({
+    const shipmentItineraries = itinerary?.data?.routes.map(route => ({
       routeId: route.routeId,
       basePriceVndPerKm: route.basePriceVndPerKm || 0,
       legOrder: route.legOrder,
@@ -212,8 +215,9 @@ function Order() {
       recipientEmail: recipientEmail || "",
       recipientNationalId: recipientNationalId,
       scheduledDateTime: scheduledDateTime,
+      timeSlotId: timeSlots || "",
       totalCostVnd: priceVnd,
-      shippingFeeVnd: priceVnd,
+      shippingFeeVnd: Number(priceVnd),
       shipmentItineraries: shipmentItineraries,
       parcels: [
         {
@@ -222,7 +226,7 @@ function Order() {
           lengthCm: Number(lengthCm) || 0,
           widthCm: Number(widthCm) || 0,
           heightCm: Number(heightCm) || 0,
-          chargeableWeight: chargeableWeight,
+          chargeableWeight: Number(chargeableWeight) || 0,
           isBulk: isBulk || false,
           priceVnd: Number(priceVnd) || 0,
         },
@@ -235,15 +239,10 @@ function Order() {
     try {
       const payload = buildPayload();
       console.log(payload);
-      console.log(typeof (payload.totalCostVnd));
-
-
       const bookingResponse = await api.post('/shipments', payload);
-
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
-
         return;
       }
       toast.success("Đặt giao thành công!");
@@ -260,51 +259,44 @@ function Order() {
     <>
       <div className="order">
         <div className="order__map-background">
-          <MapContainer
-            center={[10.776, 106.700]}
-            zoom={12}
-            style={{ height: '100vh', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.routes.map((routeLeg, idx) => {
-              // Lấy toạ độ fromStation và toStation từ danh sách stations
-              const fromStation = routeSolutions[selectedSolutionIndex].stations.find(
-                (s) => s.stationId === routeLeg.fromStationId
-              );
-              const toStation = routeSolutions[selectedSolutionIndex].stations.find(
-                (s) => s.stationId === routeLeg.toStationId
-              );
+          <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
+  <TileLayer
+    attribution='&copy; OpenStreetMap contributors'
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  />
 
-              if (!fromStation || !toStation) return null;
+  {routeSolutions.length > 0 &&
+    routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
+      const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
 
-              // Vẽ polyline cho đoạn tuyến này
-              return (
-                <Polyline
-                  key={routeLeg.routeId}
-                  positions={[
-                    [fromStation.latitude, fromStation.longitude],
-                    [toStation.latitude, toStation.longitude],
-                  ]}
-                />
-              );
-            })}
+      const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
+      const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
 
-            {/* Vẽ marker tất cả các trạm tuyến */}
-            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.stations.map((station) => (
-              <Marker
-                key={station.stationId}
-                position={[station.latitude, station.longitude]}
-                icon={customIcon}
-              >
-                <Popup>
-                  {station.stationNameVi}
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+      if (!fromStation || !toStation) return null;
+
+      return (
+        <Polyline
+          key={routeLeg.routeId}
+          positions={[
+            [fromStation.latitude, fromStation.longitude],
+            [toStation.latitude, toStation.longitude],
+          ]}
+        />
+      );
+    })}
+
+  {routeSolutions.length > 0 &&
+    routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+      <Marker
+        key={station.stationId}
+        position={[station.latitude, station.longitude]}
+        icon={customIcon}
+      >
+        <Popup>{station.stationNameVi}</Popup>
+      </Marker>
+    ))}
+</MapContainer>
+
 
         </div>
         <div className="order__container--vertical">
@@ -428,7 +420,6 @@ function Order() {
           >
             <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
           </Modal>
-
         </div>
       </div>
     </>

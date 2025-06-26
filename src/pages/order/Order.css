@@ -1,0 +1,206 @@
+.order {
+  overflow-y: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.order__map-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  z-index: 1;
+}
+.order__text {
+  color: #212121;
+  font-size: 2em;
+  font-weight: bold;
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  margin-bottom: 1em;
+  padding-top: 10rem;
+}
+.order__container--vertical {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+  min-height: 220vh;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+  background-color: white;
+}
+.order__steps-horizontal {
+  margin-bottom: 2rem;
+}
+
+.confirm-button {
+  background-color: #0066CC;
+  color: white;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  border-color: #0066CC;
+}
+
+.cancel-button {
+  background-color: white;
+  color: rgb(117, 115, 115);
+  font-weight: 500;
+}
+
+.confirm-button:hover {
+  background-color: #FFC107 !important;
+  border-color: #FFC107;
+  color: black !important;
+}
+
+.cancel-button:hover {
+  background-color: #d32f2f;
+  border-color: rgb(0, 0, 0) !important;
+  color: black !important;
+}
+
+.modal-confirm p {
+  font-family: "Roboto", sans-serif;
+}
+
+.personalInfo p {
+  font-family: "Roboto", sans-serif;
+  font-size: 1.2em;
+  margin-bottom: 1em;
+}
+.personalInfo .ant-input-affix-wrapper {
+  border-radius: 10px;
+  border-color: rgb(193, 190, 190);
+}
+.personalInfo .ant-input {
+  margin-left: 0.7em;
+  padding: 2em 0;
+}
+.personalInfo .ant-steps .ant-steps-item-process .ant-steps-item-icon .ant-steps-icon .ant-steps-icon-dot {
+  background: #96885f !important;
+  color: #96885f !important;
+}
+.personalInfo__input {
+  line-height: 3em;
+}
+.personalInfo .slider-container {
+  width: 100%;
+  margin: 0 auto;
+}
+.personalInfo .slider-container .slick-slide {
+  display: flex;
+  justify-content: left;
+}
+.personalInfo .slider-container .slick-slide .slider-image {
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.personalInfo .slider-container .slick-prev,
+.personalInfo .slider-container .slick-next {
+  z-index: 1;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.personalInfo .slider-container .slick-prev {
+  left: -1.3em;
+  z-index: 1;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.personalInfo .slider-container .slick-next {
+  right: -0.5em;
+}
+.personalInfo__input {
+  font-family: "Roboto", sans-serif;
+}
+.personalInfo__input__inside {
+  font-family: "Roboto", sans-serif;
+}
+.personalInfo__card {
+  display: flex;
+  width: 96%;
+  height: 27vh;
+  border-radius: 0px;
+  margin-top: 1.2em;
+}
+.personalInfo__card img {
+  height: 27vh;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.personalInfo__card__title {
+  font-size: 1.2em !important;
+}
+.personalInfo__card__subtitle {
+  font-size: 1em !important;
+  color: #4CAF50;
+}
+
+.order-confirm {
+  height: 390px;
+  overflow-y: scroll;
+}
+
+.service-container__title {
+  font-family: "Roboto", sans-serif;
+  font-size: 1.2em;
+  margin-bottom: 1em;
+}
+.service-container .service-container__scroll {
+  height: 370px;
+  overflow-y: scroll;
+}
+.service-container__card {
+  border-radius: 0px;
+}
+.service-container__card__content {
+  padding-bottom: 1.5em;
+}
+.service-container__card__content__title {
+  font-size: 1.2em;
+  font-weight: 600;
+  padding-bottom: 0.5em;
+}
+.service-container__card__content__subtitle {
+  display: flex;
+  color: #4CAF50;
+  font-size: 0.8em;
+}
+.service-container__card__buttons {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.service-container__card__buttons__left {
+  width: 69%;
+}
+.service-container__card__buttons__right {
+  width: 29%;
+}
+
+.date-container {
+  display: flex;
+  gap: 2em;
+}
+.date-container p {
+  font-family: "Roboto", sans-serif;
+  padding-top: 0.3em;
+  font-size: 1.2em;
+}
+
+.dateSelector {
+  font-family: "Roboto", sans-serif;
+  border-color: rgb(193, 190, 190) !important;
+}
+.dateSelector__date {
+  font-family: "Roboto", sans-serif;
+  border-color: rgb(193, 190, 190);
+}
+.dateSelector__date:focus {
+  font-family: "Roboto", sans-serif;
+  border-color: rgb(193, 190, 190) !important;
+}/*# sourceMappingURL=Order.css.map */

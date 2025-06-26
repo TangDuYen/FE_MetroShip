@@ -1,0 +1,43 @@
+.pin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+.pin__wrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  height: 70vh;
+  width: 600px;
+  gap: 10px;
+  padding: 4em 5em 2.4em 5em;
+}
+.pin__back {
+  align-self: flex-start;
+  cursor: pointer;
+}
+.pin > * {
+  font-family: "Inter", sans-serif;
+}
+.pin__title {
+  font-size: 32px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.pin__email {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.pin__btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #0066CC;
+  border-radius: 10px;
+  color: white;
+  gap: 10px;
+  padding: 0.5em 1em;
+  cursor: pointer;
+}/*# sourceMappingURL=Pincode.css.map */

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 
-import PropTypes from "prop-types"; // Import PropTypes
-import { useLocation } from "react-router-dom"; // Điều chỉnh dựa trên thư viện route bạn đang sử dụng
+import PropTypes from "prop-types";
+import { useLocation } from "react-router-dom";
 
 function ScrollToTop() {
   const { pathname } = useLocation();

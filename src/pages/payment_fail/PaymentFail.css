@@ -1,0 +1,99 @@
+.payment-fail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  margin-top: 7%;
+}
+.payment-fail .card {
+  background: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 600px;
+  height: auto;
+  width: 100%;
+  animation: fadeInUp 0.6s ease;
+}
+.payment-fail .card .icon-container {
+  position: relative;
+}
+.payment-fail .card .icon {
+  font-size: 70px;
+  color: #e74c3c;
+  margin-bottom: 20px;
+  transform-origin: center;
+}
+.payment-fail .card .animate-shake {
+  animation: shake 0.6s ease;
+}
+.payment-fail .card h1 {
+  font-size: 28px;
+  color: #212121;
+  margin-bottom: 10px;
+}
+.payment-fail .card p {
+  color: #666;
+  font-size: 16px;
+  margin: 6px 0;
+}
+.payment-fail .card .actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+.payment-fail .card .actions .btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 550;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.payment-fail .card .actions .btn.btn-primary {
+  background-color: #e74c3c;
+  color: white;
+}
+.payment-fail .card .actions .btn.btn-primary:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+.payment-fail .card .actions .btn:not(.btn-primary) {
+  background-color: #ecf0f1;
+  color: #212121;
+}
+.payment-fail .card .actions .btn:not(.btn-primary):hover {
+  background-color: #d0d7dd;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes shake {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}/*# sourceMappingURL=PaymentFail.css.map */

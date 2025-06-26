@@ -91,7 +91,7 @@ function ResetPassword() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="password">Password</label>
+                                    <label htmlFor="password">Mật khẩu</label>
                                     <Field name="password" type="password" />
                                     <ErrorMessage
                                         name="password"
@@ -100,7 +100,7 @@ function ResetPassword() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="confirmPassword">Confirm Password</label>
+                                    <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
                                     <Field name="confirmPassword" type="password" />
                                     <ErrorMessage
                                         name="confirmPassword"
@@ -110,7 +110,7 @@ function ResetPassword() {
                                 </div>
 
                                 <button type="submit" className="register-btn">
-                                    Recovery Password
+                                    Xác nhận
                                 </button>
                                 {error && <p className="error-message">{error}</p>}
                             </Form>
