@@ -1,0 +1,32 @@
+.page404 {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: #f8f9fa;
+  font-family: "Roboto", sans-serif;
+}
+.page404 h1 {
+  font-size: 6em;
+  font-family: "Inter", sans-serif;
+}
+.page404 h3 {
+  color: rgb(102, 109, 109);
+  font-size: 1.7em;
+  font-weight: 500;
+}
+.page404 h4 {
+  color: rgb(168, 174, 174);
+  font-weight: 400;
+  font-size: 1.1em;
+}
+.page404__button {
+  border-radius: 20px;
+  margin-top: 3em;
+  height: 3em;
+  width: 7em;
+  font-family: "Roboto", sans-serif;
+  font-weight: 600;
+}/*# sourceMappingURL=Page404.css.map */

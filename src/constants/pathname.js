@@ -5,6 +5,7 @@ export const PATH_NAME = {
     TRACKING: "#",
     SUPPORT: "#",
     SERVICE: "#",
+    POLICY: "/policy",
 
     //AUTHENTICATION 
     LOGIN: "/login",
@@ -12,13 +13,15 @@ export const PATH_NAME = {
     PIN_CODE: "/pin-code",
     RECOVERY_PASSWORD: "/recovery-password",
     VERIFY_MAIL: "/verify-mail",
+
+    //CUSTOMER
     PROFILE: "/profile",
     HISTORY_ORDERS: "/history-orders",
     HISTORY_PAYMENT: "/history-payment",
     PAYMENT_SUCCESS: "/payment-success",
     PAYMENT_FAILED: "/payment-fail",
     BOOKING_ORDER: "/booking-order",
-    POLICY: "/policy",
+    TRACKING_ORDER: "/tracking-order",
 
     //STAFF
     DASHBOARD: "/dashboard",

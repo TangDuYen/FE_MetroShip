@@ -3,6 +3,7 @@ import "./HistoryOrders.scss";
 import React, { useEffect, useState } from "react";
 
 import { MdSearch } from "react-icons/md";
+import { PATH_NAME } from "../../constants/pathname";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
@@ -306,15 +307,15 @@ function HistoryOrders() {
                         <td>{item.size}</td>
                         <td>{item.deliveryDate}</td>
                         <td>
-                          <span className="detail-link">Chi tiết</span>
+                          <Link to={PATH_NAME.TRACKING_ORDER}>
+                            <span className="detail-link">Chi tiết</span>
+                          </Link>
                         </td>
                         <td>
                           <span className={`status-${item.shipmentStatus}`}>
                             {shipmentStatusMap[item.shipmentStatus] || "Không rõ"}
                           </span>
                         </td>
-
-
                         {item.shipmentStatus === 3 ? (
                           <td>
                             <button

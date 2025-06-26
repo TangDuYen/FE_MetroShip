@@ -23,6 +23,7 @@ import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
 import ScrollToTop from "../components/ScrollToTop";
+import TrackingOrder from "../pages/tracking-order/TrackingOrder";
 import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
@@ -146,6 +147,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <PaymentFail />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.TRACKING_ORDER,
+        element: (
+          <ProtectedRouteCustomer>
+            <TrackingOrder />
           </ProtectedRouteCustomer>
         ),
       },

@@ -32,6 +32,7 @@ export const getAllParcelCategories = async () => {
     try {
         const res = await api.get('/parcel-category?PageSize=1000');
         return res.data.data.items;
+        console.log(res);     
     } catch (error) {
         toast.error("Không thể lấy dữ liệu phân loại kiện hàng");
     }
