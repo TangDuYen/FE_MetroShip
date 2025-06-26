@@ -1,12 +1,13 @@
 import 'leaflet/dist/leaflet.css';
 
-import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Table } from 'antd';
-import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
+import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Select, Table } from 'antd';
 import { useEffect, useState } from 'react';
 
+import Card from 'antd/es/card/Card';
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import metroTimeSlot from './../../constants/data';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -20,8 +21,6 @@ function ParcelInfo({
   setPickedDate,
   pickedTime,
   setPickedTime,
-  timeSlots,
-  setTimeSlots,
   selectedSolutionIndex,
   setSelectedSolutionIndex,
   routeSolutions,
@@ -36,11 +35,6 @@ function ParcelInfo({
   const [realDepartureStationId, setRealDepartureStationId] = useState(null);
   const userLatitude = parseFloat(localStorage.getItem('userLatitude')) || 0;
   const userLongitude = parseFloat(localStorage.getItem('userLongitude')) || 0;
-  const [stations, setStations] = useState([]);
-  const [parcelCategory, setParcelCategory] = useState([]);
-  const [timeSlot, setTimeSlot] = useState([]);
-  const [dimensionError, setDimensionError] = useState('');
-
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -51,54 +45,72 @@ function ParcelInfo({
   const handleChange = (field, value) => {
     setParcelInfo({ ...parcelInfo, [field]: value });
   };
-
-  //API ONE TIME
-  useEffect(() => {
-    Promise.all([getMetroTimeSlots(), getAllStations(), getAllParcelCategories()]).then(
-      ([timeSlotsData, stationData, parcelCategoryData]) => {
-        setStations(stationData);
-        setTimeSlot(timeSlotsData);
-        setParcelCategory(parcelCategoryData);
-      }
-    );
-  }, []);
-
   const getSingleTimeOptions = () => {
-    return timeSlot.map((slot) => {
-      const [h, m] = slot.openTime.split(':').map(Number);
+    return Object.entries(metroTimeSlot).map(([key, slot]) => {
+      const [h, m] = slot.from.split(':').map(Number);
       const date = new Date();
-      date.setHours(h, m - 30, 0, 0);
+      date.setHours(h, m - 30, 0, 0); // -30 phút
 
       const padded = (n) => n.toString().padStart(2, '0');
-      const labelTime = `${padded(date.getHours())}:${padded(date.getMinutes())}`;
+      const formattedTime = `${padded(date.getHours())}:${padded(date.getMinutes())}`;
 
       return {
-        label: labelTime,
-        value: slot.id,
+        label: formattedTime,
+        value: formattedTime,
       };
     });
   };
-
   const timeOptions = getSingleTimeOptions();
+
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const res = await api.get('/stations');
+        setMetros(res.data.data);
+      } catch {
+        console.log('Error fetching metro stations');
+      }
+    };
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/parcel-category');
+        setParcelCategory(res.data.data.items);
+      } catch {
+        console.log('Error fetching parcel categories');
+      }
+    };
+    fetchStations();
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (selectedDate || selectedTime) {
       setPickedDate(selectedDate);
       setPickedTime(selectedTime);
 
-      if (selectedDate && selectedTime) {
-        const dateObj = dayjs(selectedDate);
-        const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
-        setTimeSlots(selectedSlot.id);
-        if (selectedSlot) {
-          const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-          const combinedDateTime = dateObj.hour(hour).minute(minute).second(0).format("YYYY-MM-DDTHH:mm:ss");
+      const dateObj = dayjs(selectedDate, "YYYY-MM-DD");
 
-          setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
-        }
+      if (selectedTime) {
+        const [hour, minute] = selectedTime.split(':').map(Number);
+        const combinedDateTime = dateObj.hour(hour).minute(minute).second(0).format("YYYY-MM-DDTHH:mm:ss");
+        setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
       }
     }
-  }, [selectedDate, selectedTime, timeSlot]);
+  }, [selectedDate, selectedTime]);
+
+  const [metros, setMetros] = useState([]);
+  const [parcelCategory, setParcelCategory] = useState([]);
+
+  // const handleDepartureChange = (value) => {
+  //   setMetroSelector(prev => {
+  //     if (prev.departureStationId !== value) {
+  //       return { ...prev, departureStationId: value };
+  //     }
+  //     return prev;
+  //   });
+  // };
+
+
 
   const handleDestinationChange = value => {
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
@@ -109,40 +121,18 @@ function ParcelInfo({
     today.setHours(0, 0, 0, 0);
     const threeDaysAhead = new Date();
     threeDaysAhead.setDate(today.getDate() + 2);
-    threeDaysAhead.setHours(23, 59, 59, 999);
+    threeDaysAhead.setHours(23, 59, 59, 999); // để tính hết ngày
     return (
       current &&
       (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
     );
   };
 
-  useEffect(() => {
-    const selectedCategory = parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory);
-    if (!selectedCategory) {
-      setDimensionError('');
-      return;
-    }
-    const { lengthLimitCm, widthLimitCm, heightLimitCm } = selectedCategory;
-    const { lengthCm = 0, widthCm = 0, heightCm = 0 } = parcelInfo;
-    const errors = [];
-    if (lengthCm > lengthLimitCm) errors.push(`Chiều dài đã vượt quá ${lengthLimitCm}cm`);
-    if (widthCm > widthLimitCm) errors.push(`Chiều rộng đã vượt quá ${widthLimitCm}cm`);
-    if (heightCm > heightLimitCm) errors.push(`Chiều cao đã vượt quá ${heightLimitCm}cm`);
-    setDimensionError(errors.join(', '));
-  }, [
-    parcelInfo.parcelCategory,
-    parcelInfo.lengthCm,
-    parcelInfo.widthCm,
-    parcelInfo.heightCm,
-    parcelCategory,
-  ]);
-
   const buildPriceItineraryPayload = () => {
     const basePayload = {
       departureStationId: realDepartureStationId || '',
       destinationStationId: metroSelector.destinationStationId || '',
-      scheduledDateTime: metroSelector.departureDateTime || null,
-      timeSlotId: selectedTime || '',
+      scheduleShipmentDate: metroSelector.departureDateTime || null,
       parcels: [
         {
           parcelCategoryId: parcelInfo.parcelCategory || '',
@@ -150,15 +140,21 @@ function ParcelInfo({
           lengthCm: Number(parcelInfo.lengthCm) || 0,
           widthCm: Number(parcelInfo.widthCm) || 0,
           heightCm: Number(parcelInfo.heightCm) || 0,
+          chargeableWeight: Number(parcelInfo.chargeableWeight) || 0,
+          isBulk: parcelInfo.isBulk || false,
+          priceVnd: 0,
         },
       ],
     };
-    // if (userLatitude && userLongitude) {
-    //   basePayload.userLatitude = userLatitude;
-    //   basePayload.userLongitude = userLongitude;
-    // }
+
+    if (userLatitude && userLongitude) {
+      basePayload.userLatitude = userLatitude;
+      basePayload.userLongitude = userLongitude;
+    }
+
     return basePayload;
   };
+
 
   const fetchTotalPriceItinerary = async () => {
     const payload = buildPriceItineraryPayload();
@@ -167,27 +163,54 @@ function ParcelInfo({
       const res = await api.post('/shipments/total-price-itinerary', payload);
       const data = res.data?.data;
 
+      if (!data) return;
+
+      const chargeableWeight = data.parcelRequests?.[0]?.chargeableWeight || 0;
+      setParcelInfo(prev => ({
+        ...prev,
+        chargeableWeight,
+      }));
+
+      // 🎯 Tính giá từ 3 phương án API trả về
       const solutions = [
         { type: 'standard', data: data.standard, label: 'Tiêu chuẩn' },
         { type: 'nearest', data: data.nearest, label: 'Ưu tiên' },
         { type: 'cheapest', data: data.cheapest, label: 'Tốt nhất' },
       ];
-      setRouteSolutions(solutions);
 
-      const defaultIndex = solutions.findIndex(s => s.type === 'standard');
+      const newRouteSolutions = solutions.map(s => {
+        const fee = s.data.shippingFeeByItinerary || 0;
+        const price = chargeableWeight * fee;
+
+        return {
+          type: s.type,
+          label: s.label,
+          priceVnd: price,
+          ...s.data, // 👈 gộp tất cả routes, stations, metroLines vào
+        };
+      });
+
+      setRouteSolutions(newRouteSolutions);
+
+      // 🧠 Chọn mặc định là “Tiêu chuẩn”
+      const defaultIndex = newRouteSolutions.findIndex(s => s.type === 'standard');
       if (defaultIndex >= 0) {
         setSelectedSolutionIndex(defaultIndex);
-        setPriceVnd(solutions[defaultIndex].data?.totalCostVnd);
-        const firstStation = solutions[defaultIndex].stations?.[0];
+        setPriceVnd(newRouteSolutions[defaultIndex].priceVnd);
+
+        const firstStation = newRouteSolutions[defaultIndex].stations?.[0];
         if (firstStation) {
           setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
-          setDisplayedDepartureStationId(firstStation.stationId);
+          setDisplayedDepartureStationId(firstStation.stationId); // ✅ UI sync
         }
       }
+
     } catch (error) {
       console.error('Lỗi fetch giá itinerary:', error);
     }
   };
+
+
 
   useEffect(() => {
     const ready =
@@ -202,7 +225,7 @@ function ParcelInfo({
 
     if (ready) fetchTotalPriceItinerary();
   }, [
-    realDepartureStationId,
+    realDepartureStationId, // ✅ Only real one triggers API
     metroSelector.destinationStationId,
     metroSelector.departureDateTime,
     parcelInfo.parcelCategory,
@@ -241,11 +264,7 @@ function ParcelInfo({
             />
           </Form.Item>
 
-          <Form.Item
-            label="Kích thước (cm)"
-            validateStatus={dimensionError ? 'error' : ''}
-            help={dimensionError || ''}
-          >
+          <Form.Item label="Kích thước (cm)">
             <Input.Group compact>
               <InputNumber
                 min={0}
@@ -271,7 +290,6 @@ function ParcelInfo({
             </Input.Group>
           </Form.Item>
 
-
           <Form.Item label="Mô tả">
             <TextArea
               rows={4}
@@ -289,11 +307,12 @@ function ParcelInfo({
               placeholder="Chọn trạm để gửi hàng"
               value={displayedDepartureStationId}
               onChange={(value) => {
-                setRealDepartureStationId(value);
-                setDisplayedDepartureStationId(value);
+                // handleDepartureChange();
+                setRealDepartureStationId(value); // 🧠 Trigger fetch
+                setDisplayedDepartureStationId(value); // 👀 UI update
               }}
             >
-              {stations.map(station => (
+              {metros.map(station => (
                 <Option key={station.id} value={station.id}>
                   {station.stationNameVi}
                 </Option>
@@ -309,7 +328,7 @@ function ParcelInfo({
               value={metroSelector.destinationStationId}
               onChange={handleDestinationChange}
             >
-              {stations.map(station => (
+              {metros.map(station => (
                 <Option key={station.id} value={station.id}>
                   {station.stationNameVi}
                 </Option>
@@ -331,26 +350,25 @@ function ParcelInfo({
             />
             {realDepartureStationId && selectedDate && (
               <>
-                <Flex>
-                  <div className="timeLabel" style={{ marginBottom: '1em', marginRight: '1em' }}>
-                    <label>Thời gian gửi:</label>
-                  </div>
-                  <Select
-                    placeholder="Chọn giờ gửi"
-                    value={selectedTime}
-                    onChange={(value) => setSelectedTime(value)}
-                    style={{ marginBottom: '1em', marginRight: '1em' }}
-                  >
-                    {timeOptions.map((opt) => (
-                      <Option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </Option>
-                    ))}
-                  </Select>
-                  <Button onClick={showModal} style={{ marginBottom: '1em' }}>
-                    Giờ hoạt động
-                  </Button>
-                </Flex>
+                <Button onClick={showModal} style={{ marginBottom: '1em' }}>
+                  Giờ hoạt động
+                </Button>
+                <div className="timeLabel">
+                  <label>Thời gian gửi:</label>
+                </div>
+
+                <Select
+                  placeholder="Chọn giờ gửi"
+                  style={{ width: '100%', marginBottom: "1em", marginTop: "1em" }}
+                  className="dateSelector__time"
+                  onChange={(value) => setSelectedTime(value)}
+                >
+                  {timeOptions.map((opt) => (
+                    <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                  ))}
+                </Select>
+
+
                 <p
                   style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
                 >
@@ -362,16 +380,19 @@ function ParcelInfo({
               title="Giờ hoạt động của trạm"
               open={isModalOpen}
               onCancel={handleClose}
-              footer={null}
+              footer={[
+                <Button key="close" onClick={handleClose} className="cancel-button">
+                  Đóng
+                </Button>
+              ]}
               className="modal-confirm"
             >
               <Table
                 columns={[
                   {
                     title: 'Khung giờ',
-                    dataIndex: 'shift',
-                    key: 'shift',
-                    render: shift => `Ca ${shift}`,
+                    dataIndex: 'label',
+                    key: 'label',
                   },
                   {
                     title: 'Bắt đầu',
@@ -384,18 +405,23 @@ function ParcelInfo({
                     key: 'to',
                   },
                 ]}
-                dataSource={timeSlot.map((slot, index) => ({
+                dataSource={Object.entries(metroTimeSlot).map(([key, value], index) => ({
                   key: index,
-                  shift: slot.shift,
-                  from: slot.openTime,
-                  to: slot.closeTime,
+                  label: value.label,
+                  from: value.from,
+                  to: value.to,
                 }))}
               />
             </Modal>
           </div>
+          <div className="night-discount" style={{ marginBottom: "1em" }}>
+            <Checkbox>
+              Giao vào ban đêm: Giảm 20% trên tổng giá trị đơn hàng
+            </Checkbox>
+          </div>
           <div className="insurance-fee" style={{ marginBottom: "1em" }}>
             <Checkbox>
-              Áp dụng bảo hiểm hàng hóa: {parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory)?.insuranceFeeVnd || 0} VND
+              Phí bảo hiểm: 5% trên tổng giá trị đơn hàng
             </Checkbox>
           </div>
           <div
@@ -448,14 +474,18 @@ function ParcelInfo({
                   }}
                   onClick={() => {
                     setSelectedSolutionIndex(i);
-                    setPriceVnd(solution.data?.totalCostVnd);
+                    setPriceVnd(solution.priceVnd);
 
-                    const firstStation = solution.data?.stations?.[0];
+                    const firstStation = solution.stations?.[0];
                     if (firstStation) {
                       setDisplayedDepartureStationId(firstStation.stationId);
                       setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
+                      // 💡 Nhưng không setRealDepartureStationId => không fetch lại!
                     }
                   }}
+
+
+
                 >
                   <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5em' }}>
                     {solution.label}
@@ -468,8 +498,8 @@ function ParcelInfo({
                         : 'Giao hàng thông thường'}
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
-                    {solution.data?.totalCostVnd
-                      ? Number(solution.data?.totalCostVnd).toLocaleString() + ' VND'
+                    {solution.priceVnd
+                      ? Number(solution.priceVnd).toLocaleString() + ' VND'
                       : 'Đang tính...'}
                   </p>
                 </div>

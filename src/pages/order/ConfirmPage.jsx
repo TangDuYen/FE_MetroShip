@@ -2,55 +2,26 @@ import { Checkbox, Col, Descriptions, Divider, Row, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 import api from '../../config/axios';
-import dayjs from 'dayjs';
-import { getMetroTimeSlots } from '../../config/metroApi';
 
 const { Title } = Typography;
 
 function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pickedTime,
   priceVnd, routeSolutions, selectedSolutionIndex }) {
   const [parcelCategory, setParcelCategory] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
-  const [departureStationName, setDepartureStationName] = useState("");
-  const [destinationStationName, setDestinationStationName] = useState("");
-  
+  const getStationName = (stations, stationId) => {
+    const station = stations.find(s => s.stationId === stationId);
+    return station ? station.stationNameVi : stationId;
+  };
   const selectedSolution = routeSolutions?.[selectedSolutionIndex];
-  const stations = selectedSolution?.stations || [];
+const stations = selectedSolution?.stations || [];
 
-  const departureStationId = metroSelector.departureStationId;
-  const destinationStationId = metroSelector.destinationStationId;
+const departureStationName = getStationName(stations, metroSelector.departureStationId);
+const destinationStationName = getStationName(stations, metroSelector.destinationStationId);
 
-  const getStationByID = async () => {
-  try {
-    const [departureStationRes, destinationStationRes] = await Promise.all([
-      api.get(`/stations/${departureStationId}`),
-      api.get(`/stations/${destinationStationId}`)
-    ]);
-
-    const departureStation = departureStationRes.data;
-    const destinationStation = destinationStationRes.data;
-    setDepartureStationName(departureStation.stationNameVi);
-    setDestinationStationName(destinationStation.stationNameVi);
-
-    // Xử lý dữ liệu từ cả hai trạm
-    console.log('Departure Station:', departureStation);
-    console.log('Destination Station:', destinationStation);
-
-    // Có thể lưu vào state hoặc làm gì đó với dữ liệu này
-    setMetroSelector(prev => ({
-      ...prev,
-      departureStationId: departureStation.stationId,
-      destinationStationId: destinationStation.stationId
-    }));
-
-  } catch (error) {
-    console.error('Error fetching station details:', error);
-  }
-};
 
   const getParcelCategoryByID = async () => {
     try {
-      const response = await api.get(`/parcel-category/${parcelInfo.parcelCategory}`);
+      const response = await api.get(`/categories/${parcelInfo.parcelCategory}`);
       const name = response.data.data.categoryName;
       setParcelCategory(name);
     } catch (error) {
@@ -58,20 +29,9 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
     }
   }
 
-
   useEffect(() => {
     getParcelCategoryByID();
-    getMetroTimeSlots().then(timeSlots => {
-      const timeSlot = timeSlots.find(slot => slot.id === pickedTime);
-      if (timeSlot) {
-        setSelectedTime(timeSlot.openTime);
-      }
-    });
-    getStationByID();
-  }, []);
-
-  const adjustedTime = dayjs(selectedTime, 'HH:mm:ss').subtract(30, 'minute').format('HH:mm');
-
+  }, [])
   return (
     <div style={{ padding: '1rem' }}>
 
@@ -107,15 +67,15 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="Trạm gửi">
-              {departureStationName || 'Chưa chọn'}
+              {departureStationName || 'Not selected'}
             </Descriptions.Item>
             <Descriptions.Item label="Trạm nhận">
-              {destinationStationName || 'Chưa chọn'}
+              {destinationStationName || 'Not selected'}
             </Descriptions.Item>
           </Descriptions>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Ngày">{pickedDate || "Chưa chọn"}</Descriptions.Item>
-            <Descriptions.Item label="Thời gian">{adjustedTime || "Chưa chọn selected"}</Descriptions.Item>
+            <Descriptions.Item label="Ngày">{pickedDate || "Not selected"}</Descriptions.Item>
+            <Descriptions.Item label="Thời gian">{pickedTime || "Not selected"}</Descriptions.Item>
             <Descriptions.Item label="Giá tiền dự tính">
               {priceVnd ? `${Number(priceVnd).toLocaleString()} VND` : "Chưa có"}
             </Descriptions.Item>
@@ -126,6 +86,24 @@ function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pick
             Người nhận trả tiền
           </Checkbox>
         </div>
+        {/* <Divider orientation="left">Lộ trình đơn hàng</Divider>
+        <div style={{ paddingLeft: 12 }}>
+          {(!routeSolutions || routeSolutions.length === 0) && <p>Chưa có dữ liệu lộ trình</p>}
+
+          {selectedSolution && selectedSolution.routes?.length > 0 ? (
+            selectedSolution.routes.map(route => (
+              <p key={route.routeId} style={{ marginBottom: 4 }}>
+                <b>{route.legOrder}:</b>{' '}
+                {getStationName(selectedSolution.stations, route.fromStationId)} -{' '}
+                {getStationName(selectedSolution.stations, route.toStationId)} -{' '}
+                {route.lengthKm.toFixed(2)} km - {route.travelTimeMin} phút
+              </p>
+            ))
+          ) : (
+            <p>Không có tuyến nào</p>
+          )}
+        </div> */}
+
       </Row>
     </div>
   );

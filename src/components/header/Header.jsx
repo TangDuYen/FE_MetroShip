@@ -25,8 +25,6 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("refreshTokenExpiredTime");
     localStorage.removeItem("userLatitude");
     localStorage.removeItem("userLongitude");
     dispatch(logout());
