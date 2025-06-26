@@ -1,6 +1,8 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import AboutUs from "../pages/about_us/AboutUs";
+import Additional from "../pages/services/additionalService/Additional";
+import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
@@ -23,6 +25,9 @@ import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
 import ScrollToTop from "../components/ScrollToTop";
+import Service from "../pages/services/Service";
+import Support from "../pages/support/Support";
+import Tracking from "../pages/tracking/Tracking";
 import TrackingOrder from "../pages/tracking-order/TrackingOrder";
 import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
@@ -147,6 +152,46 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <PaymentFail />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.SERVICE,
+        element: (
+          <ProtectedRouteCustomer>
+            <Service />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.EXPRESS_DELIVERY,
+        element: (
+          <ProtectedRouteCustomer>
+            <ExpressDelivery />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.ADDITIONAL_SERVICE,
+        element: (
+          <ProtectedRouteCustomer>
+            <Additional />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.TRACKING,
+        element: (
+          <ProtectedRouteCustomer>
+            <Tracking />
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.SUPPORT,
+        element: (
+          <ProtectedRouteCustomer>
+            <Support />
           </ProtectedRouteCustomer>
         ),
       },
