@@ -1,8 +1,6 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import AboutUs from "../pages/about_us/AboutUs";
-import Additional from "../pages/services/additionalService/Additional";
-import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import HistoryOrders from "../pages/history_orders/HistoryOrders";
@@ -25,16 +23,17 @@ import Register from "../pages/register/Register";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
 import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
 import ScrollToTop from "../components/ScrollToTop";
-import Service from "../pages/services/Service";
-import Support from "../pages/support/Support";
-import Tracking from "../pages/tracking/Tracking";
-import TrackingOrder from "../pages/tracking-order/TrackingOrder";
 import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
 import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import Service from "../pages/services/Service";
+import Tracking from "../pages/tracking/Tracking";
+import Support from "../pages/support/Support";
+import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
+import Additional from "../pages/services/additionalService/Additional";
 
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
@@ -192,14 +191,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteCustomer>
             <Support />
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.TRACKING_ORDER,
-        element: (
-          <ProtectedRouteCustomer>
-            <TrackingOrder />
           </ProtectedRouteCustomer>
         ),
       },
