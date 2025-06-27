@@ -15,7 +15,7 @@ function AdminAccount() {
                 className="admin-account_avatar"
             />
             <div className="admin-account_info">
-                <p className="admin-account_info_role">{user?.Role}</p>
+                <p className="admin-account_info_role">{user?.role}</p>
             </div>
         </div>
     );

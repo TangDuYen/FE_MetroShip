@@ -17,9 +17,9 @@ function NavDashboard() {
   return (
     <div className="dashboard-navigator">
       {navDashboardConfig(
-        user.Role == "Admin"
+        user.role == "Admin"
           ? navDashboardConfig
-          : user.Role == "Staff"
+          : user.role == "Staff"
           ? navDashboardConfigStaff
           : null
       ).map((nav, index) => (

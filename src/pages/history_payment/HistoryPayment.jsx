@@ -31,7 +31,7 @@ function HistoryPayment() {
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const res = await api.get("/Transaction?PageSize=20");
+        const res = await api.get("/transactions?PageSize=1000");
         const items = res.data?.data?.items || [];
 
         const formatted = items.map((item, index) => {
