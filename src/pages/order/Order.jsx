@@ -9,6 +9,7 @@ import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
+import dayjs from 'dayjs';
 import metroMarker from '../../assets/subway.png'
 import { selectUser } from '../../redux/features/counterSlice';
 import { toast } from 'react-toastify';
@@ -31,13 +32,13 @@ function Order() {
   });
   const [pickedDate, setPickedDate] = useState(null);
   const [pickedTime, setPickedTime] = useState(null);
+  const [timeSlots, setTimeSlots] = useState(null);
   const [parcelInfo, setParcelInfo] = useState({
     parcelCategory: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
     widthCm: "",
-    chargeableWeight: "",
     description: "",
     isBulk: false,
   });
@@ -45,6 +46,9 @@ function Order() {
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
     longitude: parseFloat(localStorage.getItem('userLongitude')) || 0,
   });
+  const [chargeableWeight, setChargeableWeight] = useState(0);
+  const [shippingFeeVnd, setShippingFeeVnd] = useState(0);
+  const [totalKm, setTotalKm] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const user = useSelector(selectUser);
@@ -120,12 +124,20 @@ function Order() {
           setPickedDate={setPickedDate}
           pickedTime={pickedTime}
           setPickedTime={setPickedTime}
+          timeSlots={timeSlots}
+          setTimeSlots={setTimeSlots}
           routeSolutions={routeSolutions}
           setRouteSolutions={setRouteSolutions}
           selectedSolutionIndex={selectedSolutionIndex}
           setSelectedSolutionIndex={setSelectedSolutionIndex}
+          totalKm={totalKm}
+          setTotalKm={setTotalKm}
           priceVnd={priceVnd}
           setPriceVnd={setPriceVnd}
+          chargeableWeight={chargeableWeight}
+          setChargeableWeight={setChargeableWeight}
+          shippingFeeVnd={shippingFeeVnd}
+          setShippingFeeVnd={setShippingFeeVnd}
           onNext={() => setCurrentStep(2)}
         />
       ),
@@ -139,6 +151,7 @@ function Order() {
           parcelInfo={parcelInfo}
           pickedDate={pickedDate}
           pickedTime={pickedTime}
+          timeSlots={timeSlots}
           priceVnd={priceVnd}
           routeSolutions={routeSolutions}
           selectedSolutionIndex={selectedSolutionIndex}
@@ -178,28 +191,27 @@ function Order() {
       widthCm,
       heightCm,
       isBulk,
-      chargeableWeight,
     } = parcelInfo;
 
     // Lấy giải pháp tuyến đã chọn
     const itinerary = routeSolutions[selectedSolutionIndex];
 
     // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-    const shipmentItineraries = itinerary?.routes.map(route => ({
+    const shipmentItineraries = itinerary?.data?.routes.map(route => ({
       routeId: route.routeId,
       basePriceVndPerKm: route.basePriceVndPerKm || 0,
       legOrder: route.legOrder,
     })) || [];
 
     // Convert departureDateTime to Date if it's not already a Date object
-    let scheduledDateTime = null;
-    if (departureDateTime) {
-      if (typeof departureDateTime === 'string') {
-        scheduledDateTime = new Date(departureDateTime).toISOString(); // Convert string to Date object
-      } else if (departureDateTime instanceof Date) {
-        scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
-      }
-    }
+    // let scheduledDateTime = null;
+    // if (departureDateTime) {
+    //   if (typeof departureDateTime === 'string') {
+    //     scheduledDateTime = dayjs(departureDateTime); // Convert string to Date object
+    //   } else if (departureDateTime instanceof Date) {
+    //     scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
+    //   }
+    // }
 
     return {
       departureStationId: departureStationId || "",
@@ -211,9 +223,11 @@ function Order() {
       recipientPhone: recipientPhone || "",
       recipientEmail: recipientEmail || "",
       recipientNationalId: recipientNationalId,
-      scheduledDateTime: scheduledDateTime,
+      scheduledDateTime: departureDateTime,
+      timeSlotId: timeSlots || "",
       totalCostVnd: priceVnd,
-      shippingFeeVnd: priceVnd,
+      totalKm: Number(totalKm),
+      totalShippingFeeVnd: Number(priceVnd),
       shipmentItineraries: shipmentItineraries,
       parcels: [
         {
@@ -222,7 +236,8 @@ function Order() {
           lengthCm: Number(lengthCm) || 0,
           widthCm: Number(widthCm) || 0,
           heightCm: Number(heightCm) || 0,
-          chargeableWeight: chargeableWeight,
+          shippingFeeVnd: Number(shippingFeeVnd) || 0,
+          chargeableWeight: Number(chargeableWeight) || 0,
           isBulk: isBulk || false,
           priceVnd: Number(priceVnd) || 0,
         },
@@ -230,20 +245,14 @@ function Order() {
     };
   };
 
-
   const handleSubmit = async () => {
     try {
       const payload = buildPayload();
       console.log(payload);
-      console.log(typeof (payload.totalCostVnd));
-
-
       const bookingResponse = await api.post('/shipments', payload);
-
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
-
         return;
       }
       toast.success("Đặt giao thành công!");
@@ -260,51 +269,44 @@ function Order() {
     <>
       <div className="order">
         <div className="order__map-background">
-          <MapContainer
-            center={[10.776, 106.700]}
-            zoom={12}
-            style={{ height: '100vh', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.routes.map((routeLeg, idx) => {
-              // Lấy toạ độ fromStation và toStation từ danh sách stations
-              const fromStation = routeSolutions[selectedSolutionIndex].stations.find(
-                (s) => s.stationId === routeLeg.fromStationId
-              );
-              const toStation = routeSolutions[selectedSolutionIndex].stations.find(
-                (s) => s.stationId === routeLeg.toStationId
-              );
+          <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
+  <TileLayer
+    attribution='&copy; OpenStreetMap contributors'
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  />
 
-              if (!fromStation || !toStation) return null;
+  {routeSolutions.length > 0 &&
+    routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
+      const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
 
-              // Vẽ polyline cho đoạn tuyến này
-              return (
-                <Polyline
-                  key={routeLeg.routeId}
-                  positions={[
-                    [fromStation.latitude, fromStation.longitude],
-                    [toStation.latitude, toStation.longitude],
-                  ]}
-                />
-              );
-            })}
+      const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
+      const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
 
-            {/* Vẽ marker tất cả các trạm tuyến */}
-            {routeSolutions.length > 0 && routeSolutions[selectedSolutionIndex]?.stations.map((station) => (
-              <Marker
-                key={station.stationId}
-                position={[station.latitude, station.longitude]}
-                icon={customIcon}
-              >
-                <Popup>
-                  {station.stationNameVi}
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+      if (!fromStation || !toStation) return null;
+
+      return (
+        <Polyline
+          key={routeLeg.routeId}
+          positions={[
+            [fromStation.latitude, fromStation.longitude],
+            [toStation.latitude, toStation.longitude],
+          ]}
+        />
+      );
+    })}
+
+  {routeSolutions.length > 0 &&
+    routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+      <Marker
+        key={station.stationId}
+        position={[station.latitude, station.longitude]}
+        icon={customIcon}
+      >
+        <Popup>{station.stationNameVi}</Popup>
+      </Marker>
+    ))}
+</MapContainer>
+
 
         </div>
         <div className="order__container--vertical">
@@ -428,7 +430,6 @@ function Order() {
           >
             <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
           </Modal>
-
         </div>
       </div>
     </>

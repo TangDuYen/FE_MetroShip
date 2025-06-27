@@ -1,7 +1,7 @@
 import './OrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Table, Tabs, Typography } from 'antd';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
+import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -33,6 +33,7 @@ function OrderStaff() {
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [metroTrains, setMetroTrains] = useState([]);
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -63,13 +64,14 @@ function OrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines()]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
+    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getAllMetroTrains()]).then(
+      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setShipments(shipmentsData);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
+        setMetroTrains(metroTrainData);
       }
     );
   }, []);
