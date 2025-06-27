@@ -35,6 +35,6 @@ export const PATH_NAME = {
     //ADMIN
     DASHBOARD_ADMIN: "/dashboard/admin",
     DASHBOARD_ADMIN_USER_MANAGEMENT: "/dashboard/admin/user-management",
-    DASHBOARD_ADMIN_METRO_MANAGEMENT: "/dashboard/admin/metro-management",
+    DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT: "/dashboard/admin/metroline-management",
     
 }

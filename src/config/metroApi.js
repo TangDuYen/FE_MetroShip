@@ -31,7 +31,7 @@ export const getAllParcels = async () => {
 export const getAllParcelCategories = async () => {
     try {
         const res = await api.get('/parcel-category?PageSize=1000');
-        return res.data.data.items;
+        return res.data.data.items;  
     } catch (error) {
         toast.error("Không thể lấy dữ liệu phân loại kiện hàng");
     }
@@ -48,7 +48,7 @@ export const getAllStations = async () => {
 
 export const getMetroLines = async () => {
     try {
-        const res = await api.get('/metro-lines');
+        const res = await api.get('/metro-lines/dropdown');
         return res.data.data;
     } catch (error) {
         toast.error("Không thể lấy dữ liệu các tuyến metro");
@@ -63,3 +63,31 @@ export const getMetroTimeSlots = async () => {
         toast.error("Không thể lấy dữ liệu thời gian biểu của metro");
     }
 };
+
+export const getAllTransactions = async () => {
+    try {
+        const res = await api.get('/transactions?PageSize=1000');
+        return res.data.data.items;
+    } catch (error) {
+        toast.error("Không thể lấy dữ liệu giao dịch");
+    }
+};
+
+export const getAllMetroTrains = async () => {
+    try {
+        const res = await api.get('/metro-trains?PageSize=1000');
+        return res.data.data.items;
+        
+    } catch (error) {
+        toast.error("Không thể lấy dữ liệu các tàu metro");
+    }
+}
+
+export const getAllUsers = async () => {
+    try {
+        const res = await api.get('/users?PageSize=1000');
+        return res.data.data.items;
+    } catch (error) {
+        toast.error("Không thể lấy dữ liệu người dùng");
+    }
+}
