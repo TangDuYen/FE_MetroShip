@@ -2,6 +2,7 @@ import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import AboutUs from "../pages/about_us/AboutUs";
 import Additional from "../pages/services/additionalService/Additional";
+import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AminDashboard";
 import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
@@ -10,6 +11,7 @@ import HistoryPayment from "../pages/history_payment/HistoryPayment";
 import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
 import Main from "../pages/dashboard/layout/main-dashboard/Main";
+import MetroLineManagement from "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement";
 import NoFooterLayout from "../components/no_footer_layout/NoFooterLayout";
 import Order from "../pages/order/Order";
 import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
@@ -30,6 +32,7 @@ import Support from "../pages/support/Support";
 import Tracking from "../pages/tracking/Tracking";
 import TrackingOrder from "../pages/tracking-order/TrackingOrder";
 import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
+import UserManagement from "../pages/dashboard/pages/admin/admin-usermanage/UserManagement";
 import VerifyMail from "../pages/resetPassword/VerifyMail";
 import { element } from "prop-types";
 import { selectUser } from "../redux/features/counterSlice";
@@ -287,46 +290,31 @@ export const router = createBrowserRouter([
       },
 
       //ADMIN
-      // {
-      //   path: "/dashboard/admin/salon-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <SalonAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <AdminDashboard />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/user-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <UserAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/members-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <MemberAdmin />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
-      // {
-      //   path: "/dashboard/admin/services-manage",
-      //   element: (
-      //     <ProtectedRouteAdmin>
-      //       <AdminServices />
-      //     </ProtectedRouteAdmin>
-      //   ),
-      // },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN,
+        element: (
+          <ProtectedRouteAdmin>
+            <AdminDashboard />
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_USER_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            <UserManagement />
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            <MetroLineManagement />
+          </ProtectedRouteAdmin>
+        ),
+      },
+      
     ],
   },
 ]);

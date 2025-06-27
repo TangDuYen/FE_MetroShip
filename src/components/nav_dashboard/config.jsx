@@ -9,6 +9,8 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 
+import { PATH_NAME } from "../../constants/pathname";
+
 export const navDashboardConfig = [
   {
     key: "1",
@@ -18,7 +20,7 @@ export const navDashboardConfig = [
   {
     key: "2",
     icon: <TeamOutlined style={{ fontSize: "1.4em" }} />,
-    label: "Quản lý Staff",
+    label: "Quản lý Người dùng",
   },
   {
     key: "4",
@@ -41,11 +43,11 @@ export const navDashboardConfig = [
     icon: <OrderedListOutlined  style={{ fontSize: "1.4em" }} />,
     label: "Đơn hàng",
   },
-  {
-    key: "5",
-    icon: <UserOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Người dùng",
-  },
+  // {
+  //   key: "5",
+  //   icon: <UserOutlined  style={{ fontSize: "1.4em" }} />,
+  //   label: "Người dùng",
+  // },
 ];
 export const navDashboardConfigCustomer = [
  
@@ -83,23 +85,23 @@ export const navDashboardConfigStaff = [
 
 export const navpath = {
   1: {
-    path: "/dashboard/admin",
+    path: PATH_NAME.DASHBOARD_ADMIN,
   },
   2: {
-    path: "/dashboard/admin/staff-manage",
+    path: PATH_NAME.DASHBOARD_ADMIN_USER_MANAGEMENT,
   },
   3: {
     path: "/dashboard/admin/orders",
   },
   41: {
-    path: "/dashboard/admin/view-metro-line",
+    path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
   },
   42: {
     path: "/dashboard/admin/add-metro-line",
   },
-  5: {
-    path: "/dashboard/admin/users",
-  },
+  // 5: {
+  //   path: "/dashboard/admin/users",
+  // },
   71: {
     path: "/dashboard/staff/pending-order",
   },
