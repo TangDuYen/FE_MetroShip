@@ -33,7 +33,7 @@ export const navDashboardConfig = [
       },
       {
         key: "42",
-        label: "Tạo tuyến Metro mới",
+        label: "Danh sách tàu Metro",
       },
      
     ],
@@ -97,7 +97,7 @@ export const navpath = {
     path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
   },
   42: {
-    path: "/dashboard/admin/add-metro-line",
+    path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
   },
   // 5: {
   //   path: "/dashboard/admin/users",

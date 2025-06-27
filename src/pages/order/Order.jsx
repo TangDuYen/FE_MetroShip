@@ -212,6 +212,11 @@ function Order() {
     //     scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
     //   }
     // }
+    let scheduledDateTime = null;
+    if (departureDateTime) {
+      // Sử dụng dayjs để chuyển về định dạng đúng
+      scheduledDateTime = dayjs(departureDateTime).toISOString(); // Chuyển đổi sang định dạng ISO 8601 (chứa thông tin múi giờ)
+    }
 
     return {
       departureStationId: departureStationId || "",
@@ -223,7 +228,7 @@ function Order() {
       recipientPhone: recipientPhone || "",
       recipientEmail: recipientEmail || "",
       recipientNationalId: recipientNationalId,
-      scheduledDateTime: departureDateTime,
+      scheduledDateTime: scheduledDateTime,
       timeSlotId: timeSlots || "",
       totalCostVnd: priceVnd,
       totalKm: Number(totalKm),
@@ -249,7 +254,10 @@ function Order() {
     try {
       const payload = buildPayload();
       console.log(payload);
+      console.log(typeof(payload.scheduledDateTime));
+
       const bookingResponse = await api.post('/shipments', payload);
+      
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
