@@ -14,12 +14,15 @@ export const PATH_NAME = {
     PIN_CODE: "/pin-code",
     RECOVERY_PASSWORD: "/recovery-password",
     VERIFY_MAIL: "/verify-mail",
+
+    //CUSTOMER
     PROFILE: "/profile",
     HISTORY_ORDERS: "/history-orders",
     HISTORY_PAYMENT: "/history-payment",
     PAYMENT_SUCCESS: "/payment-success",
     PAYMENT_FAILED: "/payment-fail",
     BOOKING_ORDER: "/booking-order",
+    TRACKING_ORDER: "/tracking-order",
     POLICY: "/policy",
 
     //STAFF
