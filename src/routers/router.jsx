@@ -2,7 +2,7 @@ import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import AboutUs from "../pages/about_us/AboutUs";
 import Additional from "../pages/services/additionalService/Additional";
-import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AminDashboard";
+import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
 import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
@@ -12,6 +12,7 @@ import Homepage from "../pages/homepage/Homepage";
 import Login from "../pages/login/Login";
 import Main from "../pages/dashboard/layout/main-dashboard/Main";
 import MetroLineManagement from "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement";
+import MetroTrainManagement from "../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement";
 import NoFooterLayout from "../components/no_footer_layout/NoFooterLayout";
 import Order from "../pages/order/Order";
 import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
@@ -311,6 +312,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteAdmin>
             <MetroLineManagement />
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            <MetroTrainManagement />
           </ProtectedRouteAdmin>
         ),
       },

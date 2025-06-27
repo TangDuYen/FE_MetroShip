@@ -76,7 +76,8 @@ export const getAllTransactions = async () => {
 export const getAllMetroTrains = async () => {
     try {
         const res = await api.get('/metro-trains?PageSize=1000');
-        return res.data.data.items;
+        return res.data;
+        console.log(res.data.data.items);
         
     } catch (error) {
         toast.error("Không thể lấy dữ liệu các tàu metro");
