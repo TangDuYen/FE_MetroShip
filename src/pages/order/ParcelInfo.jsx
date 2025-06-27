@@ -97,8 +97,9 @@ function ParcelInfo({
         const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
         if (selectedSlot) {
           const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-          const combinedDateTime = dateObj.hour(hour).minute(minute).second(0).format("YYYY-MM-DDTHH:mm:ss");
+          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ss");
           console.log(selectedSlot.id);
+          console.log('Combined DateTime:', combinedDateTime);
           setTimeSlots(selectedSlot.id);
           setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
         }
@@ -458,7 +459,8 @@ function ParcelInfo({
                   onClick={() => {
                     setSelectedSolutionIndex(i);
                     setPriceVnd(solution.data?.totalCostVnd);
-
+                    setTotalKm(solution.data?.totalKm);
+                    setChargeableWeight(solution.data?.parcels?.[0].chargeableWeight);
                     const firstStation = solution.data?.stations?.[0];
                     if (firstStation) {
                       setDisplayedDepartureStationId(firstStation.stationId);

@@ -9,6 +9,7 @@ import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
+import dayjs from 'dayjs';
 import metroMarker from '../../assets/subway.png'
 import { selectUser } from '../../redux/features/counterSlice';
 import { toast } from 'react-toastify';
@@ -203,14 +204,14 @@ function Order() {
     })) || [];
 
     // Convert departureDateTime to Date if it's not already a Date object
-    let scheduledDateTime = null;
-    if (departureDateTime) {
-      if (typeof departureDateTime === 'string') {
-        scheduledDateTime = new Date(departureDateTime).toISOString(); // Convert string to Date object
-      } else if (departureDateTime instanceof Date) {
-        scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
-      }
-    }
+    // let scheduledDateTime = null;
+    // if (departureDateTime) {
+    //   if (typeof departureDateTime === 'string') {
+    //     scheduledDateTime = dayjs(departureDateTime); // Convert string to Date object
+    //   } else if (departureDateTime instanceof Date) {
+    //     scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
+    //   }
+    // }
 
     return {
       departureStationId: departureStationId || "",
@@ -222,7 +223,7 @@ function Order() {
       recipientPhone: recipientPhone || "",
       recipientEmail: recipientEmail || "",
       recipientNationalId: recipientNationalId,
-      scheduledDateTime: scheduledDateTime,
+      scheduledDateTime: departureDateTime,
       timeSlotId: timeSlots || "",
       totalCostVnd: priceVnd,
       totalKm: Number(totalKm),
@@ -243,7 +244,6 @@ function Order() {
       ],
     };
   };
-
 
   const handleSubmit = async () => {
     try {
