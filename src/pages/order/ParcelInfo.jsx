@@ -7,6 +7,11 @@ import { useEffect, useState } from 'react';
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -97,9 +102,11 @@ function ParcelInfo({
         const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
         if (selectedSlot) {
           const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ss");
+          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ssz[Z]");
+          const combinedDateTimeObj = dayjs(combinedDateTime).tz(dayjs.tz.guess());
           console.log(selectedSlot.id);
           console.log('Combined DateTime:', combinedDateTime);
+          // console.log('Combined DateTime Object:', combinedDateTimeObj.toISOString());
           setTimeSlots(selectedSlot.id);
           setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
         }

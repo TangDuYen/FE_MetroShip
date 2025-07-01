@@ -172,6 +172,7 @@ function Order() {
       setCurrentStep((prevStep) => prevStep - 1);
     }
   };
+
   const buildPayload = () => {
     const {
       senderName,
@@ -203,48 +204,34 @@ function Order() {
       legOrder: route.legOrder,
     })) || [];
 
-    // Convert departureDateTime to Date if it's not already a Date object
-    // let scheduledDateTime = null;
-    // if (departureDateTime) {
-    //   if (typeof departureDateTime === 'string') {
-    //     scheduledDateTime = dayjs(departureDateTime); // Convert string to Date object
-    //   } else if (departureDateTime instanceof Date) {
-    //     scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
-    //   }
-    // }
-    let scheduledDateTime = null;
-    if (departureDateTime) {
-      // Sử dụng dayjs để chuyển về định dạng đúng
-      scheduledDateTime = dayjs(departureDateTime).toISOString(); // Chuyển đổi sang định dạng ISO 8601 (chứa thông tin múi giờ)
-    }
-
     return {
-      departureStationId: departureStationId || "",
-      destinationStationId: destinationStationId || "",
-      senderName: senderName || "",
-      senderPhone: senderPhone || "",
-      recipientId: "",
-      recipientName: recipientName || "",
-      recipientPhone: recipientPhone || "",
-      recipientEmail: recipientEmail || "",
-      recipientNationalId: recipientNationalId,
-      scheduledDateTime: scheduledDateTime,
-      timeSlotId: timeSlots || "",
+      departureStationId: departureStationId,
+      destinationStationId: destinationStationId,
+      ...(senderName ? { senderName } : {}),
+      ...(senderPhone ? { senderPhone } : {}),
+      ...(recipientId ? { recipientId } : {}),
+      ...(recipientName ? { recipientName } : {}),
+      ...(recipientPhone ? { recipientPhone } : {}),
+      ...(recipientEmail ? { recipientEmail } : {}),
+      ...(recipientNationalId ? { recipientNationalId } : {}),
+      // scheduledDateTime: departureDateTime,
+      scheduledDateTime: departureDateTime ? dayjs(departureDateTime).toISOString() : null,
+      timeSlotId: timeSlots,
       totalCostVnd: priceVnd,
       totalKm: Number(totalKm),
       totalShippingFeeVnd: Number(priceVnd),
       shipmentItineraries: shipmentItineraries,
       parcels: [
         {
-          parcelCategoryId: parcelCategory || "",
-          weightKg: Number(weightKg) || 0,
-          lengthCm: Number(lengthCm) || 0,
-          widthCm: Number(widthCm) || 0,
-          heightCm: Number(heightCm) || 0,
-          shippingFeeVnd: Number(shippingFeeVnd) || 0,
-          chargeableWeight: Number(chargeableWeight) || 0,
+          parcelCategoryId: parcelCategory,
+          weightKg: Number(weightKg),
+          lengthCm: Number(lengthCm),
+          widthCm: Number(widthCm),
+          heightCm: Number(heightCm),
+          shippingFeeVnd: Number(shippingFeeVnd),
+          chargeableWeight: Number(chargeableWeight),
           isBulk: isBulk || false,
-          priceVnd: Number(priceVnd) || 0,
+          priceVnd: Number(priceVnd),
         },
       ],
     };
@@ -254,10 +241,10 @@ function Order() {
     try {
       const payload = buildPayload();
       console.log(payload);
-      console.log(typeof(payload.scheduledDateTime));
+      console.log(typeof (payload.scheduledDateTime));
 
       const bookingResponse = await api.post('/shipments', payload);
-      
+
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
@@ -278,42 +265,42 @@ function Order() {
       <div className="order">
         <div className="order__map-background">
           <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
-  <TileLayer
-    attribution='&copy; OpenStreetMap contributors'
-    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  />
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-  {routeSolutions.length > 0 &&
-    routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
-      const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
+            {routeSolutions.length > 0 &&
+              routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
+                const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
 
-      const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
-      const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
+                const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
+                const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
 
-      if (!fromStation || !toStation) return null;
+                if (!fromStation || !toStation) return null;
 
-      return (
-        <Polyline
-          key={routeLeg.routeId}
-          positions={[
-            [fromStation.latitude, fromStation.longitude],
-            [toStation.latitude, toStation.longitude],
-          ]}
-        />
-      );
-    })}
+                return (
+                  <Polyline
+                    key={routeLeg.routeId}
+                    positions={[
+                      [fromStation.latitude, fromStation.longitude],
+                      [toStation.latitude, toStation.longitude],
+                    ]}
+                  />
+                );
+              })}
 
-  {routeSolutions.length > 0 &&
-    routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
-      <Marker
-        key={station.stationId}
-        position={[station.latitude, station.longitude]}
-        icon={customIcon}
-      >
-        <Popup>{station.stationNameVi}</Popup>
-      </Marker>
-    ))}
-</MapContainer>
+            {routeSolutions.length > 0 &&
+              routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+                <Marker
+                  key={station.stationId}
+                  position={[station.latitude, station.longitude]}
+                  icon={customIcon}
+                >
+                  <Popup>{station.stationNameVi}</Popup>
+                </Marker>
+              ))}
+          </MapContainer>
 
 
         </div>
