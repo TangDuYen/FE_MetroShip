@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate loading={<div className="loading">Đang tải dữ liệu...</div>} persistor={persistor}>
           <RouterProvider router={router} />
           <ToastContainer position="top-right" autoClose={3000} />
         </PersistGate>
