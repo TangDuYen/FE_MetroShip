@@ -51,7 +51,8 @@ function ParcelInfo({
   const [stations, setStations] = useState([]);
   const [parcelCategory, setParcelCategory] = useState([]);
   const [timeSlot, setTimeSlot] = useState([]);
-  const [dimensionError, setDimensionError] = useState('');
+  const [dimensionError, setDimensionError] = useState([]);
+
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -130,30 +131,61 @@ function ParcelInfo({
     );
   };
 
+  // useEffect(() => {
+  //   const selectedCategory = parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory);
+  //   if (!selectedCategory) {
+  //     setDimensionError('');
+  //     return;
+  //   }
+  //   const { lengthLimitCm, widthLimitCm, heightLimitCm } = selectedCategory;
+  //   const { lengthCm = 0, widthCm = 0, heightCm = 0 } = parcelInfo;
+  //   const errors = [];
+  //   if (lengthCm > lengthLimitCm) errors.push(`Chiều dài đã vượt quá ${lengthLimitCm}cm`);
+  //   if (widthCm > widthLimitCm) errors.push(`Chiều rộng đã vượt quá ${widthLimitCm}cm`);
+  //   if (heightCm > heightLimitCm) errors.push(`Chiều cao đã vượt quá ${heightLimitCm}cm`);
+  //   setDimensionError(errors.join(', '));
+  // }, [
+  //   parcelInfo.parcelCategory,
+  //   parcelInfo.lengthCm,
+  //   parcelInfo.widthCm,
+  //   parcelInfo.heightCm,
+  //   parcelCategory,
+  // ]);
   useEffect(() => {
-    const selectedCategory = parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory);
-    if (!selectedCategory) {
-      setDimensionError('');
-      return;
-    }
-    const { lengthLimitCm, widthLimitCm, heightLimitCm } = selectedCategory;
-    const { lengthCm = 0, widthCm = 0, heightCm = 0 } = parcelInfo;
-    const errors = [];
-    if (lengthCm > lengthLimitCm) errors.push(`Chiều dài đã vượt quá ${lengthLimitCm}cm`);
-    if (widthCm > widthLimitCm) errors.push(`Chiều rộng đã vượt quá ${widthLimitCm}cm`);
-    if (heightCm > heightLimitCm) errors.push(`Chiều cao đã vượt quá ${heightLimitCm}cm`);
-    setDimensionError(errors.join(', '));
-  }, [
-    parcelInfo.parcelCategory,
-    parcelInfo.lengthCm,
-    parcelInfo.widthCm,
-    parcelInfo.heightCm,
-    parcelCategory,
-  ]);
+    const errors = parcelInfo.map((parcel) => {
+      const selectedCategory = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
+      if (!selectedCategory) return '';
+
+      const { lengthLimitCm, widthLimitCm, heightLimitCm } = selectedCategory;
+      const { lengthCm = 0, widthCm = 0, heightCm = 0 } = parcel;
+
+      const errorList = [];
+      if (lengthCm > lengthLimitCm) errorList.push(`Chiều dài không được vượt quá ${lengthLimitCm}cm`);
+      if (widthCm > widthLimitCm) errorList.push(`Chiều rộng không được vượt quá ${widthLimitCm}cm`);
+      if (heightCm > heightLimitCm) errorList.push(`Chiều cao không được vượt quá ${heightLimitCm}cm`);
+
+      return errorList.join(', ');
+    });
+
+    setDimensionError(errors);
+  }, [parcelInfo, parcelCategory]);
+
 
   const updateParcel = (index, field, value) => {
     const updatedList = [...parcelInfo];
     updatedList[index][field] = value;
+
+    if (field === 'parcelCategory') {
+      const selectedCat = parcelCategory.find(cat => cat.id === value);
+      updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
+
+      if (selectedCat?.insuranceRate) {
+        updatedList[index].valueVnd = updatedList[index].valueVnd || 0;
+      } else {
+        delete updatedList[index].valueVnd;
+      }
+    }
+
     setParcelInfo(updatedList);
   };
 
@@ -183,6 +215,7 @@ function ParcelInfo({
         lengthCm: Number(p.lengthCm) || 0,
         widthCm: Number(p.widthCm) || 0,
         heightCm: Number(p.heightCm) || 0,
+        ...p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {},
       })),
       userLatitude,
       userLongitude,
@@ -235,7 +268,7 @@ function ParcelInfo({
         const stations = selected.data?.stations || [];
         const parcels = selected.data?.parcels || [];
 
-        // Update các parcel trong form với thông tin từ response
+        //PARCELS INFO
         const updatedParcels = parcelInfo.map((original, i) => ({
           ...original,
           shippingFeeVnd: parcels[i]?.shippingFeeVnd || 0,
@@ -246,7 +279,7 @@ function ParcelInfo({
         }));
         setParcelInfo(updatedParcels);
 
-        // Tổng quan đơn hàng
+        //SHIPMENT INFO
         setSelectedSolutionIndex(defaultIndex);
         setPriceVnd(selected.data?.totalCostVnd || 0);
         setTotalKm(selected.data?.totalKm || 0);
@@ -318,6 +351,7 @@ function ParcelInfo({
   //   metroSelector.departureDateTime,
   //   parcelInfo,
   // ]);
+
   const removeParcel = (indexToRemove) => {
     const updated = parcelInfo.filter((_, index) => index !== indexToRemove);
     setParcelInfo(updated);
@@ -348,6 +382,28 @@ function ParcelInfo({
                   <Option key={cat.id} value={cat.id}>{cat.categoryName}</Option>
                 ))}
               </Select>
+              {parcelCategory.find(c => c.id === parcel.parcelCategory)?.isInsuranceRequired && (
+                <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
+                  ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {parcelCategory.find(c => c.id === parcel.parcelCategory)?.insuranceRate?.toLocaleString() || 0}% trên giá trị món hàng
+                </div>
+              )}
+              {(() => {
+                const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
+                return selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate > 0;
+              })() && (
+                  <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
+                    <InputNumber
+                      min={0}
+                      style={{ width: '100%' }}
+                      value={parcel.valueVnd}
+                      onChange={value => updateParcel(index, 'valueVnd', value)}
+                    />
+                    <div style={{ marginTop: '0.5em', color: '#888' }}>
+                      Phí bảo hiểm: {Math.round((parcel.valueVnd || 0) * (parcelCategory.find(cat => cat.id === parcel.parcelCategory)?.insuranceRate)).toLocaleString()} VND
+                    </div>
+                  </Form.Item>
+                )}
+
             </Form.Item>
             <Form.Item label="Trọng lượng (kg)">
               <InputNumber
@@ -381,6 +437,11 @@ function ParcelInfo({
                   onChange={value => updateParcel(index, 'heightCm', value)}
                 />
               </Input.Group>
+              {dimensionError[index] && (
+                <div style={{ color: 'red', marginTop: '0.5em', fontWeight: 500 }}>
+                  {dimensionError[index]}
+                </div>
+              )}
             </Form.Item>
 
             <Form.Item label="Mô tả">
