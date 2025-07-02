@@ -33,15 +33,14 @@ function Order() {
   const [pickedDate, setPickedDate] = useState(null);
   const [pickedTime, setPickedTime] = useState(null);
   const [timeSlots, setTimeSlots] = useState(null);
-  const [parcelInfo, setParcelInfo] = useState({
+  const [parcelInfo, setParcelInfo] = useState([{
     parcelCategory: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
     widthCm: "",
     description: "",
-    isBulk: false,
-  });
+  }]);
   const [userLocation, setUserLocation] = useState({
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
     longitude: parseFloat(localStorage.getItem('userLongitude')) || 0,
@@ -160,6 +159,13 @@ function Order() {
     },
   ];
   const handleNext = () => {
+
+    if (currentStep === 0) {
+      if (!personalInfo.recipientName?.trim() || !personalInfo.recipientPhone?.trim()) {
+        toast.error("Vui lòng điền đầy đủ thông tin người nhận");
+        return;
+      }
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
@@ -173,6 +179,69 @@ function Order() {
     }
   };
 
+  // const buildPayload = () => {
+  //   const {
+  //     senderName,
+  //     senderPhone,
+  //     recipientName,
+  //     recipientPhone,
+  //     recipientEmail,
+  //     recipientNationalId,
+  //   } = personalInfo;
+
+  //   const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+
+  //   const {
+  //     parcelCategory,
+  //     weightKg,
+  //     lengthCm,
+  //     widthCm,
+  //     heightCm,
+  //     isBulk,
+  //   } = parcelInfo;
+
+  //   // Lấy giải pháp tuyến đã chọn
+  //   const itinerary = routeSolutions[selectedSolutionIndex];
+
+  //   // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
+  //   const shipmentItineraries = itinerary?.data?.routes.map(route => ({
+  //     routeId: route.routeId,
+  //     basePriceVndPerKm: route.basePriceVndPerKm || 0,
+  //     legOrder: route.legOrder,
+  //   })) || [];
+
+  //   return {
+  //     departureStationId: departureStationId,
+  //     destinationStationId: destinationStationId,
+  //     ...(senderName ? { senderName } : {}),
+  //     ...(senderPhone ? { senderPhone } : {}),
+  //     ...(recipientName ? { recipientName } : {}),
+  //     ...(recipientPhone ? { recipientPhone } : {}),
+  //     ...(recipientEmail ? { recipientEmail } : {}),
+  //     ...(recipientNationalId ? { recipientNationalId } : {}),
+  //     scheduledDateTime: departureDateTime,
+  //     // scheduledDateTime: departureDateTime ? dayjs(departureDateTime).toISOString() : null,
+  //     timeSlotId: timeSlots,
+  //     totalCostVnd: priceVnd,
+  //     totalKm: Number(totalKm),
+  //     totalShippingFeeVnd: Number(priceVnd),
+  //     shipmentItineraries: shipmentItineraries,
+  //     parcels: [
+  //       {
+  //         parcelCategoryId: parcelCategory,
+  //         weightKg: Number(weightKg),
+  //         lengthCm: Number(lengthCm),
+  //         widthCm: Number(widthCm),
+  //         heightCm: Number(heightCm),
+  //         shippingFeeVnd: Number(shippingFeeVnd),
+  //         chargeableWeight: Number(chargeableWeight),
+  //         isBulk: isBulk || false,
+  //         priceVnd: Number(priceVnd),
+  //       },
+  //     ],
+  //   };
+  // };
+
   const buildPayload = () => {
     const {
       senderName,
@@ -183,57 +252,65 @@ function Order() {
       recipientNationalId,
     } = personalInfo;
 
-    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
-
     const {
-      parcelCategory,
-      weightKg,
-      lengthCm,
-      widthCm,
-      heightCm,
-      isBulk,
-    } = parcelInfo;
+      departureStationId,
+      destinationStationId,
+      departureDateTime,
+    } = metroSelector;
 
-    // Lấy giải pháp tuyến đã chọn
     const itinerary = routeSolutions[selectedSolutionIndex];
 
-    // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-    const shipmentItineraries = itinerary?.data?.routes.map(route => ({
+    const shipmentItineraries = itinerary?.data?.routes?.map(route => ({
       routeId: route.routeId,
-      basePriceVndPerKm: route.basePriceVndPerKm || 0,
       legOrder: route.legOrder,
     })) || [];
 
+    const validParcels = parcelInfo
+      .filter(p =>
+        p.parcelCategory &&
+        p.weightKg &&
+        p.lengthCm &&
+        p.widthCm &&
+        p.heightCm
+      )
+      .map((p, idx) => {
+        const base = {
+          parcelCategoryId: p.parcelCategory,
+          weightKg: Number(p.weightKg),
+          lengthCm: Number(p.lengthCm),
+          widthCm: Number(p.widthCm),
+          heightCm: Number(p.heightCm),
+          isBulk: idx > 0,
+        };
+
+        if (p.description) base.description = p.description;
+        if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
+        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
+        if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
+        if (p.priceVnd !== undefined) base.priceVnd = Number(p.priceVnd);
+        if (p.valueVnd !== undefined) base.valueVnd = p.valueVnd;
+
+        return base;
+      });
+
     return {
-      departureStationId: departureStationId,
-      destinationStationId: destinationStationId,
-      ...(senderName ? { senderName } : {}),
-      ...(senderPhone ? { senderPhone } : {}),
-      ...(recipientId ? { recipientId } : {}),
-      ...(recipientName ? { recipientName } : {}),
-      ...(recipientPhone ? { recipientPhone } : {}),
-      ...(recipientEmail ? { recipientEmail } : {}),
-      ...(recipientNationalId ? { recipientNationalId } : {}),
-      // scheduledDateTime: departureDateTime,
-      scheduledDateTime: departureDateTime ? dayjs(departureDateTime).toISOString() : null,
-      timeSlotId: timeSlots,
-      totalCostVnd: priceVnd,
-      totalKm: Number(totalKm),
-      totalShippingFeeVnd: Number(priceVnd),
-      shipmentItineraries: shipmentItineraries,
-      parcels: [
-        {
-          parcelCategoryId: parcelCategory,
-          weightKg: Number(weightKg),
-          lengthCm: Number(lengthCm),
-          widthCm: Number(widthCm),
-          heightCm: Number(heightCm),
-          shippingFeeVnd: Number(shippingFeeVnd),
-          chargeableWeight: Number(chargeableWeight),
-          isBulk: isBulk || false,
-          priceVnd: Number(priceVnd),
-        },
-      ],
+      ...(departureStationId && { departureStationId }),
+      ...(destinationStationId && { destinationStationId }),
+      ...(senderName && { senderName }),
+      ...(senderPhone && { senderPhone }),
+      ...(recipientName && { recipientName }),
+      ...(recipientPhone && { recipientPhone }),
+      ...(recipientEmail && { recipientEmail }),
+      ...(recipientNationalId && { recipientNationalId }),
+      ...(departureDateTime && { scheduledDateTime: departureDateTime }),
+      ...(timeSlots && { timeSlotId: timeSlots }),
+      ...(priceVnd && {
+        totalCostVnd: Number(priceVnd),
+        totalShippingFeeVnd: Number(priceVnd), 
+      }),
+      ...(totalKm && { totalKm: Number(totalKm) }),
+      ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
+      parcels: validParcels,
     };
   };
 
@@ -254,6 +331,8 @@ function Order() {
       nav(PATH_NAME.HISTORY_ORDERS);
     } catch (error) {
       console.error(error);
+      console.log(buildPayload());
+
       const errorMessage = error.response?.data.message || "An error occurred";
       toast.error(errorMessage);
     }
