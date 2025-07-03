@@ -300,7 +300,7 @@ function Order() {
       ...(senderPhone && { senderPhone }),
       ...(recipientName && { recipientName }),
       ...(recipientPhone && { recipientPhone }),
-      ...(recipientEmail && { recipientEmail }),
+      ...(recipientEmail ? { recipientEmail } : {}),
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: departureDateTime }),
       ...(timeSlots && { timeSlotId: timeSlots }),
