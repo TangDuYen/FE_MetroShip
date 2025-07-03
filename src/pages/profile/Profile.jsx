@@ -10,6 +10,7 @@ function Profile() {
   const user = useSelector(selectUser);
   const [userData, setUserData] = useState({
     id: "",
+    userName: "",
     fullName: "",
     email: "",
     phoneNumber: "",
@@ -34,6 +35,7 @@ function Profile() {
 
         setUserData({
           id: data.id || "",
+          userName: data.userName || "",
           fullName: data.fullName || "",
           email: data.email || "",
           phoneNumber: data.phoneNumber || "",
@@ -52,14 +54,24 @@ function Profile() {
   const handleSaveInfomationUser = async (e) => {
     e.preventDefault();
 
-    if (!userData.id) {
-      alert("Không tìm thấy ID người dùng. Vui lòng tải lại trang.");
-      return;
-    }
+    // if (!userData.id) {
+    //   alert("Không tìm thấy ID người dùng. Vui lòng tải lại trang.");
+    //   return;
+    // }
+
+    const patchUserData = {
+      userName: userData.userName,
+      fullName: userData.fullName,
+      email: userData.email,
+      birthDate: userData.birthDate,
+      bankId: userData.bankId,
+      address: userData.address,
+    };
+
+     console.log("Payload gửi đi:", patchUserData);
 
     try {
-      console.log("Dữ liệu gửi:", userData);
-      await api.put("/users", userData, {
+      await api.put("/users", patchUserData, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
@@ -84,6 +96,14 @@ function Profile() {
             <div className="account-form">
               <h2>THÔNG TIN TÀI KHOẢN</h2>
               <form onSubmit={handleSaveInfomationUser}>
+                <label>Tên đăng nhập</label>
+                <input
+                  type="text"
+                  value={userData.userName}
+                  onChange={(e) =>
+                    setUserData({ ...userData, userName: e.target.value })
+                  }
+                />
                 <label>Tên khách hàng</label>
                 <input
                   type="text"
@@ -106,12 +126,7 @@ function Profile() {
 
                 <label>Số điện thoại</label>
                 <div className="input-group">
-                  <input
-                    type="text"
-                    value={userData.phoneNumber}
-                    readOnly
-                    
-                  />
+                  <input type="text" value={userData.phoneNumber} readOnly />
                 </div>
 
                 <label>Ngày sinh</label>
