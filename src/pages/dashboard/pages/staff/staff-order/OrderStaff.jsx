@@ -27,13 +27,16 @@ function OrderStaff() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectParcel, setRejectParcel] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-
   const [stationFilter, setStationFilter] = useState(null);
   const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [metroTrains, setMetroTrains] = useState([]);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [verifyingParcel, setVerifyingParcel] = useState(null);
+  const [verifyImage, setVerifyImage] = useState(null);
+
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -340,7 +343,7 @@ function OrderStaff() {
               }
             }}>
             <Button className='booking-table-staff_button'
-              onClick={() => firstParcel && handleCheckOrder(firstParcel.id)}
+              onClick={() => handleCheckOrder(record.id)}
               disabled={record.shipmentStatus >= 3 || !firstParcel}
             >
               Kiểm tra
@@ -368,25 +371,10 @@ function OrderStaff() {
     }
   };
 
-  const handleRejectOrder = async (parcelId) => {
-    const payload = {
-      parcelId: parcelId,
-      rejectReason: "string"
-    }
+  const handleCheckOrder = async (shipmentId) => {
     try {
-      await api.post(`/parcels/staff/rejection/${parcelId}`, payload);
-      toast.success(`Đã từ chối kiện hàng: ${parcelId}`);
-      setModalOpen(false);
-      await getAllShipments();
-      await getAllParcels();
-    } catch (error) {
-      toast.error("Không thể từ chối kiện hàng");
-    }
-  };
-  const handleCheckOrder = async (parcelId) => {
-    try {
-      // await api.post(`/parcels/staff/rejection/${parcelId}`);
-      toast.success(`Kiện hàng đủ tiêu chuẩn: ${parcelId}`);
+      await api.get(`/shipments/available-time-slots?ShipmentId=${shipmentId}`);
+      toast.success(`Kiện hàng đủ tiêu chuẩn: ${shipmentId}`);
       setModalOpen(false);
       await getAllShipments();
       await getAllParcels();
@@ -573,6 +561,7 @@ function OrderStaff() {
                       }
                     }}>
                     <Button className='check-order-auto'
+                      onClick={handleCheckOrder}
                       style={{ marginLeft: "1em" }}
                     >
                       Kiểm tra
@@ -687,11 +676,15 @@ function OrderStaff() {
 
                           <Button
                             type="primary"
-                            disabled={parcel.parcelStatus <= 1}
-                            onClick={() => handleConfirmOrder(parcel.id)}
+                            // disabled={parcel.parcelStatus <= 1}
+                            onClick={() => {
+                              setVerifyingParcel(parcel);
+                              setVerifyModalOpen(true);
+                            }}
                           >
                             Xác minh người gửi
                           </Button>
+
                         </Space>
                       </Space>
                     </TabPane>
@@ -740,6 +733,65 @@ function OrderStaff() {
                 }}
               />
             </Modal>
+            <Modal
+              title={`Upload ảnh xác minh cho: ${verifyingParcel?.parcelCode}`}
+              open={verifyModalOpen}
+              onCancel={() => {
+                setVerifyModalOpen(false);
+                setVerifyImage(null);
+              }}
+              onOk={async () => {
+                if (!verifyImage) return toast.error("Vui lòng chọn ảnh!");
+
+                const formData = new FormData();
+                formData.append("file", verifyImage);
+                console.log(formData);
+
+                try {
+                  // Upload ảnh lên BE
+                  const res = await api.post("/media/image", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                  });
+                  const resData = res.data;
+                  console.log("Upload ảnh thành công:", resData);
+
+                  const secureUrl = res.data.secure_url;
+
+                  // // Gửi URL ảnh vào DB gắn với parcel
+                  // await api.post(`/parcels/staff/verify-sender/${verifyingParcel.id}`, {
+                  //   imageUrl: secureUrl
+                  // });
+
+                  toast.success("Đã xác minh kiện hàng!");
+                  setVerifyModalOpen(false);
+                  setVerifyImage(null);
+                  await getAllParcels();
+                } catch (err) {
+                  toast.error("Lỗi khi xác minh kiện hàng. Vui lòng thử lại!");
+                  console.log("Error uploading image:", err);
+                }
+              }}
+              okText="Xác minh"
+              cancelText="Huỷ"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setVerifyImage(e.target.files[0])}
+              />
+              {verifyImage && (
+                <div style={{ marginTop: 10 }}>
+                  <strong>Ảnh đã chọn:</strong>
+                  <br />
+                  <img
+                    src={URL.createObjectURL(verifyImage)}
+                    alt="preview"
+                    style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
+                  />
+                </div>
+              )}
+            </Modal>
+
           </Card>
         </div>
       </div>
