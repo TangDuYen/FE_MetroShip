@@ -16,19 +16,19 @@ function Homepage() {
   const feedbacks = [
     {
       content:
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste itaque omnis dolorum, aut mollitia error nam inventore odio placeat quo optio necessitatibus cum labore ratione tempore officiis modi expedita laudantium?",
+        "Dịch vụ của MetroShip rất nhanh chóng và chuyên nghiệp. Tôi gửi hàng từ Hà Nội vào TP.HCM chỉ mất 1 ngày! Giao diện tra cứu đơn hàng cũng rất dễ sử dụng.",
       name: "Nguyễn Văn A",
       avatar: "https://i.pravatar.cc/100?img=1",
     },
     {
       content:
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste itaque omnis dolorum, aut mollitia error nam inventore odio placeat quo optio necessitatibus cum labore ratione tempore officiis modi expedita laudantium?",
+        "Tôi rất yên tâm khi sử dụng MetroShip để gửi quà cho người thân ở nước ngoài. Thời gian vận chuyển đúng như cam kết và đội ngũ hỗ trợ nhiệt tình.",
       name: "Trần Thị B",
       avatar: "https://i.pravatar.cc/100?img=2",
     },
     {
       content:
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste itaque omnis dolorum, aut mollitia error nam inventore odio placeat quo optio necessitatibus cum labore ratione tempore officiis modi expedita laudantium?",
+        "Lần đầu sử dụng MetroShip nhưng tôi thật sự hài lòng. Hệ thống theo dõi đơn hàng rõ ràng, nhân viên giao hàng lịch sự và đúng giờ.",
       name: "Lê Văn C",
       avatar: "https://i.pravatar.cc/100?img=3",
     },
@@ -72,12 +72,13 @@ function Homepage() {
         <section className="home-section-1">
           <div className="home-content-1">
             <div className="home-content">
-              <h2>Dịch vụ chuyển phát bưu kiện khẩn cấp</h2>
+              <h2>MetroShip - Giao hàng nhanh, an toàn, toàn quốc</h2>
               <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. At
-                quae quo fugiat distinctio fugit adipisci illum sequi quis
-                repudiandae a voluptate soluta recusandae quidem dolor esse,
-                iusto sit velit commodi!
+                MetroShip cung cấp dịch vụ chuyển phát bưu kiện khẩn cấp với tốc
+                độ vượt trội, theo dõi hành trình vận đơn theo thời gian thực.
+                Với mạng lưới phủ khắp toàn quốc và quốc tế, chúng tôi cam kết
+                giao hàng đúng hẹn, hỗ trợ 24/7 và chính sách đảm bảo tối đa
+                quyền lợi khách hàng.
               </p>
               <div className="home-btn">
                 <button className="btn-learn-more">Tìm hiểu thêm</button>
@@ -85,12 +86,12 @@ function Homepage() {
               </div>
             </div>
             <div className="home-image-1">
-              <img src={metroShipImg} alt="Metro" />
+              <img src={metroShipImg} alt="MetroShip - Dịch vụ vận chuyển" />
             </div>
           </div>
         </section>
 
-        <section className="home-section-2">
+        {/* <section className="home-section-2">
           <h2>Tra cứu vận đơn</h2>
           <form className="tracking-form">
             <div className="form-group">
@@ -107,7 +108,7 @@ function Homepage() {
               </button></Link>
 
           </form>
-        </section>
+        </section> */}
 
         <section className="home-section-3">
           <div className="home-feature-card">
@@ -118,10 +119,10 @@ function Homepage() {
             />
             <h3>Giao hàng nhanh</h3>
             <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sapiente
-              error explicabo, ad necessitatibus dolor pariatur temporibus alias
-              iure iusto tempore quas nisi porro animi blanditiis dicta, ipsa
-              maiores minus saepe!
+              Với hệ thống vận hành hiện đại và đội ngũ giao hàng chuyên nghiệp,
+              MetroShip cam kết giao hàng siêu tốc trong ngày tại nội thành và
+              từ 1-2 ngày đối với liên tỉnh. Theo dõi trạng thái đơn hàng theo
+              thời gian thực.
             </p>
           </div>
           <div className="home-feature-card">
@@ -132,10 +133,10 @@ function Homepage() {
             />
             <h3>Bảo mật & An toàn</h3>
             <p>
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Dolores
-              eveniet tempore quae autem deleniti ratione incidunt laborum
-              magnam quis doloremque labore odit facilis reiciendis unde
-              temporibus nam, itaque quam eligendi.
+              Mỗi bưu kiện đều được quản lý chặt chẽ từ lúc gửi đến lúc nhận.
+              MetroShip sử dụng hệ thống mã hóa thông tin và quy trình kiểm soát
+              nội bộ nghiêm ngặt, đảm bảo an toàn tuyệt đối cho hàng hóa và dữ
+              liệu người dùng.
             </p>
           </div>
         </section>
@@ -147,43 +148,39 @@ function Homepage() {
             </div>
             <div className="home-metro-content">
               <h3>Chúng tôi là</h3>
-              <h2>
-                Dịch vụ bưu kiện tốt nhất từ trước đến nay.
-              </h2>
+              <h2>Dịch vụ bưu kiện hàng đầu Việt Nam</h2>
               <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autem
-                tempore, commodi quos excepturi tempora aliquam eligendi, cumque
-                sunt quam magnam dolores quibusdam quae officiis omnis aperiam
-                vel alias cupiditate fuga.
+                MetroShip tự hào mang đến giải pháp chuyển phát nhanh hiện đại,
+                an toàn và tiết kiệm. Với mạng lưới trải rộng khắp cả nước và
+                quốc tế, chúng tôi giúp hàng hóa của bạn được vận chuyển nhanh
+                chóng và theo dõi dễ dàng mọi lúc mọi nơi.
               </p>
               <div className="home-features">
                 <ul>
                   <ul>
                     <li>
                       <span className="home-check-icon"></span> Tài khoản miễn
-                      phí
+                      phí, đăng ký dễ dàng
                     </li>
                     <li>
-                      <span className="home-check-icon"></span> Dễ dàng sử dụng
+                      <span className="home-check-icon"></span> Giao diện thân
+                      thiện, dễ sử dụng
                     </li>
                     <li>
                       <span className="home-check-icon"></span> Chi phí vận
-                      chuyển thấp
+                      chuyển cạnh tranh
                     </li>
                   </ul>
                 </ul>
                 <ul>
                   <ul>
                     <li>
-                      <span className="home-check-icon"></span> Tài khoản miễn
-                      phí
+                      <span className="home-check-icon"></span> Hệ thống theo
+                      dõi đơn hàng thông minh
                     </li>
                     <li>
-                      <span className="home-check-icon"></span> Dễ dàng sử dụng
-                    </li>
-                    <li>
-                      <span className="home-check-icon"></span> Chi phí vận
-                      chuyển thấp
+                      <span className="home-check-icon"></span> Hỗ trợ 24/7 mọi
+                      thắc mắc của khách hàng
                     </li>
                   </ul>
                 </ul>
@@ -235,13 +232,13 @@ function Homepage() {
               <img src={deliveryImage} alt="Delivery Van" />
             </div>
             <div className="home-download-text">
-              <h4>Để tăng tính trải nghiệm</h4>
-              <h2>Hãy tải app của chúng tôi</h2>
+              <h4>Trải nghiệm vận chuyển thông minh</h4>
+              <h2>Tải ứng dụng MetroShip ngay hôm nay</h2>
               <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Vel
-                fugit ipsam cupiditate rerum iure voluptate eius consequatur
-                suscipit expedita aspernatur temporibus exercitationem hic ad
-                veritatis dolor, aut adipisci porro error?
+                Dễ dàng tạo đơn hàng, theo dõi hành trình vận chuyển theo thời
+                gian thực, nhận thông báo trạng thái, và quản lý lịch sử gửi
+                hàng mọi lúc mọi nơi chỉ với vài thao tác. MetroShip – đồng hành
+                cùng bạn trên mọi hành trình!
               </p>
               <div className="app-buttons">
                 <a href="#">
