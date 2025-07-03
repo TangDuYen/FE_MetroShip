@@ -33,15 +33,14 @@ function Order() {
   const [pickedDate, setPickedDate] = useState(null);
   const [pickedTime, setPickedTime] = useState(null);
   const [timeSlots, setTimeSlots] = useState(null);
-  const [parcelInfo, setParcelInfo] = useState({
+  const [parcelInfo, setParcelInfo] = useState([{
     parcelCategory: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
     widthCm: "",
     description: "",
-    isBulk: false,
-  });
+  }]);
   const [userLocation, setUserLocation] = useState({
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
     longitude: parseFloat(localStorage.getItem('userLongitude')) || 0,
@@ -160,6 +159,13 @@ function Order() {
     },
   ];
   const handleNext = () => {
+
+    if (currentStep === 0) {
+      if (!personalInfo.recipientName?.trim() || !personalInfo.recipientPhone?.trim()) {
+        toast.error("Vui lòng điền đầy đủ thông tin người nhận");
+        return;
+      }
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
@@ -172,6 +178,70 @@ function Order() {
       setCurrentStep((prevStep) => prevStep - 1);
     }
   };
+
+  // const buildPayload = () => {
+  //   const {
+  //     senderName,
+  //     senderPhone,
+  //     recipientName,
+  //     recipientPhone,
+  //     recipientEmail,
+  //     recipientNationalId,
+  //   } = personalInfo;
+
+  //   const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+
+  //   const {
+  //     parcelCategory,
+  //     weightKg,
+  //     lengthCm,
+  //     widthCm,
+  //     heightCm,
+  //     isBulk,
+  //   } = parcelInfo;
+
+  //   // Lấy giải pháp tuyến đã chọn
+  //   const itinerary = routeSolutions[selectedSolutionIndex];
+
+  //   // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
+  //   const shipmentItineraries = itinerary?.data?.routes.map(route => ({
+  //     routeId: route.routeId,
+  //     basePriceVndPerKm: route.basePriceVndPerKm || 0,
+  //     legOrder: route.legOrder,
+  //   })) || [];
+
+  //   return {
+  //     departureStationId: departureStationId,
+  //     destinationStationId: destinationStationId,
+  //     ...(senderName ? { senderName } : {}),
+  //     ...(senderPhone ? { senderPhone } : {}),
+  //     ...(recipientName ? { recipientName } : {}),
+  //     ...(recipientPhone ? { recipientPhone } : {}),
+  //     ...(recipientEmail ? { recipientEmail } : {}),
+  //     ...(recipientNationalId ? { recipientNationalId } : {}),
+  //     scheduledDateTime: departureDateTime,
+  //     // scheduledDateTime: departureDateTime ? dayjs(departureDateTime).toISOString() : null,
+  //     timeSlotId: timeSlots,
+  //     totalCostVnd: priceVnd,
+  //     totalKm: Number(totalKm),
+  //     totalShippingFeeVnd: Number(priceVnd),
+  //     shipmentItineraries: shipmentItineraries,
+  //     parcels: [
+  //       {
+  //         parcelCategoryId: parcelCategory,
+  //         weightKg: Number(weightKg),
+  //         lengthCm: Number(lengthCm),
+  //         widthCm: Number(widthCm),
+  //         heightCm: Number(heightCm),
+  //         shippingFeeVnd: Number(shippingFeeVnd),
+  //         chargeableWeight: Number(chargeableWeight),
+  //         isBulk: isBulk || false,
+  //         priceVnd: Number(priceVnd),
+  //       },
+  //     ],
+  //   };
+  // };
+
   const buildPayload = () => {
     const {
       senderName,
@@ -182,71 +252,65 @@ function Order() {
       recipientNationalId,
     } = personalInfo;
 
-    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
-
     const {
-      parcelCategory,
-      weightKg,
-      lengthCm,
-      widthCm,
-      heightCm,
-      isBulk,
-    } = parcelInfo;
+      departureStationId,
+      destinationStationId,
+      departureDateTime,
+    } = metroSelector;
 
-    // Lấy giải pháp tuyến đã chọn
     const itinerary = routeSolutions[selectedSolutionIndex];
 
-    // Mảng các tuyến trong shipmentItineraries (routeId, basePriceVndPerKm, legOrder)
-    const shipmentItineraries = itinerary?.data?.routes.map(route => ({
+    const shipmentItineraries = itinerary?.data?.routes?.map(route => ({
       routeId: route.routeId,
-      basePriceVndPerKm: route.basePriceVndPerKm || 0,
       legOrder: route.legOrder,
     })) || [];
 
-    // Convert departureDateTime to Date if it's not already a Date object
-    // let scheduledDateTime = null;
-    // if (departureDateTime) {
-    //   if (typeof departureDateTime === 'string') {
-    //     scheduledDateTime = dayjs(departureDateTime); // Convert string to Date object
-    //   } else if (departureDateTime instanceof Date) {
-    //     scheduledDateTime = departureDateTime.toISOString(); // Already a Date object, use it
-    //   }
-    // }
-    let scheduledDateTime = null;
-    if (departureDateTime) {
-      // Sử dụng dayjs để chuyển về định dạng đúng
-      scheduledDateTime = dayjs(departureDateTime).toISOString(); // Chuyển đổi sang định dạng ISO 8601 (chứa thông tin múi giờ)
-    }
+    const validParcels = parcelInfo
+      .filter(p =>
+        p.parcelCategory &&
+        p.weightKg &&
+        p.lengthCm &&
+        p.widthCm &&
+        p.heightCm
+      )
+      .map((p, idx) => {
+        const base = {
+          parcelCategoryId: p.parcelCategory,
+          weightKg: Number(p.weightKg),
+          lengthCm: Number(p.lengthCm),
+          widthCm: Number(p.widthCm),
+          heightCm: Number(p.heightCm),
+          isBulk: idx > 0,
+        };
+
+        if (p.description) base.description = p.description;
+        if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
+        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
+        if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
+        if (p.priceVnd !== undefined) base.priceVnd = Number(p.priceVnd);
+        if (p.valueVnd !== undefined) base.valueVnd = p.valueVnd;
+
+        return base;
+      });
 
     return {
-      departureStationId: departureStationId || "",
-      destinationStationId: destinationStationId || "",
-      senderName: senderName || "",
-      senderPhone: senderPhone || "",
-      recipientId: "",
-      recipientName: recipientName || "",
-      recipientPhone: recipientPhone || "",
-      recipientEmail: recipientEmail || "",
-      recipientNationalId: recipientNationalId,
-      scheduledDateTime: scheduledDateTime,
-      timeSlotId: timeSlots || "",
-      totalCostVnd: priceVnd,
-      totalKm: Number(totalKm),
-      totalShippingFeeVnd: Number(priceVnd),
-      shipmentItineraries: shipmentItineraries,
-      parcels: [
-        {
-          parcelCategoryId: parcelCategory || "",
-          weightKg: Number(weightKg) || 0,
-          lengthCm: Number(lengthCm) || 0,
-          widthCm: Number(widthCm) || 0,
-          heightCm: Number(heightCm) || 0,
-          shippingFeeVnd: Number(shippingFeeVnd) || 0,
-          chargeableWeight: Number(chargeableWeight) || 0,
-          isBulk: isBulk || false,
-          priceVnd: Number(priceVnd) || 0,
-        },
-      ],
+      ...(departureStationId && { departureStationId }),
+      ...(destinationStationId && { destinationStationId }),
+      ...(senderName && { senderName }),
+      ...(senderPhone && { senderPhone }),
+      ...(recipientName && { recipientName }),
+      ...(recipientPhone && { recipientPhone }),
+      ...(recipientEmail ? { recipientEmail } : {}),
+      ...(recipientNationalId && { recipientNationalId }),
+      ...(departureDateTime && { scheduledDateTime: departureDateTime }),
+      ...(timeSlots && { timeSlotId: timeSlots }),
+      ...(priceVnd && {
+        totalCostVnd: Number(priceVnd),
+        totalShippingFeeVnd: Number(priceVnd), 
+      }),
+      ...(totalKm && { totalKm: Number(totalKm) }),
+      ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
+      parcels: validParcels,
     };
   };
 
@@ -254,10 +318,10 @@ function Order() {
     try {
       const payload = buildPayload();
       console.log(payload);
-      console.log(typeof(payload.scheduledDateTime));
+      console.log(typeof (payload.scheduledDateTime));
 
       const bookingResponse = await api.post('/shipments', payload);
-      
+
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
@@ -267,6 +331,8 @@ function Order() {
       nav(PATH_NAME.HISTORY_ORDERS);
     } catch (error) {
       console.error(error);
+      console.log(buildPayload());
+
       const errorMessage = error.response?.data.message || "An error occurred";
       toast.error(errorMessage);
     }
@@ -278,42 +344,42 @@ function Order() {
       <div className="order">
         <div className="order__map-background">
           <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
-  <TileLayer
-    attribution='&copy; OpenStreetMap contributors'
-    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  />
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-  {routeSolutions.length > 0 &&
-    routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
-      const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
+            {routeSolutions.length > 0 &&
+              routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
+                const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
 
-      const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
-      const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
+                const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
+                const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
 
-      if (!fromStation || !toStation) return null;
+                if (!fromStation || !toStation) return null;
 
-      return (
-        <Polyline
-          key={routeLeg.routeId}
-          positions={[
-            [fromStation.latitude, fromStation.longitude],
-            [toStation.latitude, toStation.longitude],
-          ]}
-        />
-      );
-    })}
+                return (
+                  <Polyline
+                    key={routeLeg.routeId}
+                    positions={[
+                      [fromStation.latitude, fromStation.longitude],
+                      [toStation.latitude, toStation.longitude],
+                    ]}
+                  />
+                );
+              })}
 
-  {routeSolutions.length > 0 &&
-    routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
-      <Marker
-        key={station.stationId}
-        position={[station.latitude, station.longitude]}
-        icon={customIcon}
-      >
-        <Popup>{station.stationNameVi}</Popup>
-      </Marker>
-    ))}
-</MapContainer>
+            {routeSolutions.length > 0 &&
+              routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+                <Marker
+                  key={station.stationId}
+                  position={[station.latitude, station.longitude]}
+                  icon={customIcon}
+                >
+                  <Popup>{station.stationNameVi}</Popup>
+                </Marker>
+              ))}
+          </MapContainer>
 
 
         </div>

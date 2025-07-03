@@ -1,44 +1,60 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
+import { Suspense, lazy } from "react";
 
-import AboutUs from "../pages/about_us/AboutUs";
-import Additional from "../pages/services/additionalService/Additional";
-import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
-import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
-import HistoryOrders from "../pages/history_orders/HistoryOrders";
-import HistoryPayment from "../pages/history_payment/HistoryPayment";
-import Homepage from "../pages/homepage/Homepage";
-import Login from "../pages/login/Login";
-import Main from "../pages/dashboard/layout/main-dashboard/Main";
-import MetroLineManagement from "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement";
-import MetroTrainManagement from "../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement";
 import NoFooterLayout from "../components/no_footer_layout/NoFooterLayout";
-import Order from "../pages/order/Order";
-import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
 import { PATH_NAME } from "../constants/pathname";
-import Page404 from "../pages/page404/Page404";
-import PaymentFail from "../pages/payment_fail/PaymentFail";
-import PaymentStaff from "../pages/dashboard/pages/staff/staff-payment/PaymentStaff";
-import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
-import Pincode from "../pages/pinCode/Pincode";
-import Policy from './../pages/policy/Policy';
-import Profile from "../pages/profile/Profile";
-import Register from "../pages/register/Register";
-import ResetPassword from "../pages/resetPassword/ResetPassword";
-import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
 import ScrollToTop from "../components/ScrollToTop";
-import Service from "../pages/services/Service";
-import Support from "../pages/support/Support";
-import Tracking from "../pages/tracking/Tracking";
-import TrackingOrder from "../pages/tracking-order/TrackingOrder";
-import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
-import UserManagement from "../pages/dashboard/pages/admin/admin-usermanage/UserManagement";
-import VerifyMail from "../pages/resetPassword/VerifyMail";
-import { element } from "prop-types";
 import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+
+// import AboutUs from "../pages/about_us/AboutUs";
+// import Additional from "../pages/services/additionalService/Additional";
+// import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
+// import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
+
+
+// import HistoryOrders from "../pages/history_orders/HistoryOrders";
+// import HistoryPayment from "../pages/history_payment/HistoryPayment";
+// import Homepage from "../pages/homepage/Homepage";
+// import Login from "../pages/login/Login";
+// import Main from "../pages/dashboard/layout/main-dashboard/Main";
+// import MetroLineManagement from "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement";
+// import MetroTrainManagement from "../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement";
+
+// import Order from "../pages/order/Order";
+// import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
+
+// import Page404 from "../pages/page404/Page404";
+// import PaymentFail from "../pages/payment_fail/PaymentFail";
+// import PaymentStaff from "../pages/dashboard/pages/staff/staff-payment/PaymentStaff";
+// import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
+// import Pincode from "../pages/pinCode/Pincode";
+// import Policy from './../pages/policy/Policy';
+// import Profile from "../pages/profile/Profile";
+// import Register from "../pages/register/Register";
+// import ResetPassword from "../pages/resetPassword/ResetPassword";
+// import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
+
+// import Service from "../pages/services/Service";
+// import Support from "../pages/support/Support";
+// import Tracking from "../pages/tracking/Tracking";
+// import TrackingOrder from "../pages/tracking-order/TrackingOrder";
+// import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
+// import UserManagement from "../pages/dashboard/pages/admin/admin-usermanage/UserManagement";
+// import VerifyMail from "../pages/resetPassword/VerifyMail";
+// import { element } from "prop-types";
+
+const lazyLoad = (importFn) => {
+  const Component = lazy(importFn);
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Component />
+    </Suspense>
+  );
+};
 
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
@@ -99,7 +115,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.HOME,
         element: (
           <ProtectedRouteCustomer>
-            <Homepage />
+            {lazyLoad(() => import("../pages/homepage/Homepage"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -107,7 +123,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.ABOUT_US,
         element: (
           <ProtectedRouteCustomer>
-            <AboutUs />
+            {lazyLoad(() => import("../pages/about_us/AboutUs"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -115,7 +131,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.POLICY,
         element: (
           <ProtectedRouteCustomer>
-            <Policy />
+            {lazyLoad(() => import("../pages/policy/Policy"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -123,7 +139,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.PROFILE,
         element: (
           <ProtectedRouteCustomer>
-            <Profile />
+            {lazyLoad(() => import("../pages/profile/Profile"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -131,7 +147,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.HISTORY_ORDERS,
         element: (
           <ProtectedRouteCustomer>
-            <HistoryOrders />
+            {lazyLoad(() => import("../pages/history_orders/HistoryOrders"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -139,7 +155,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.HISTORY_PAYMENT,
         element: (
           <ProtectedRouteCustomer>
-            <HistoryPayment />
+            {lazyLoad(() => import("../pages/history_payment/HistoryPayment"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -147,7 +163,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.PAYMENT_SUCCESS,
         element: (
           <ProtectedRouteCustomer>
-            <PaymentSuccess />
+            {lazyLoad(() => import("../pages/payment_success/PaymentSuccess"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -155,7 +171,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.PAYMENT_FAILED,
         element: (
           <ProtectedRouteCustomer>
-            <PaymentFail />
+            {lazyLoad(() => import("../pages/payment_fail/PaymentFail"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -163,7 +179,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.SERVICE,
         element: (
           <ProtectedRouteCustomer>
-            <Service />
+            {lazyLoad(() => import("../pages/services/Service"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -171,7 +187,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.EXPRESS_DELIVERY,
         element: (
           <ProtectedRouteCustomer>
-            <ExpressDelivery />
+            {lazyLoad(() => import("../pages/services/expressDelivery/ExpressDelivery"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -179,7 +195,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.ADDITIONAL_SERVICE,
         element: (
           <ProtectedRouteCustomer>
-            <Additional />
+            {lazyLoad(() => import("../pages/services/additionalService/Additional"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -187,7 +203,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.TRACKING,
         element: (
           <ProtectedRouteCustomer>
-            <Tracking />
+            {lazyLoad(() => import("../pages/tracking/Tracking"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -195,7 +211,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.SUPPORT,
         element: (
           <ProtectedRouteCustomer>
-            <Support />
+            {lazyLoad(() => import("../pages/support/Support"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -203,7 +219,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.TRACKING_ORDER,
         element: (
           <ProtectedRouteCustomer>
-            <TrackingOrder />
+            {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -213,55 +229,36 @@ export const router = createBrowserRouter([
         children: [
           {
             path: PATH_NAME.BOOKING_ORDER,
-            element:
+            element: (
               <ProtectedRouteCustomer>
-                <Order />
+                {lazyLoad(() => import("../pages/order/Order"))}
               </ProtectedRouteCustomer>
-          }
-        ]
+            ),
+          },
+        ],
       },
     ],
   },
-  {
-    path: PATH_NAME.LOGIN,
-    element: <Login />,
-  },
-  {
-    path: PATH_NAME.REGISTER,
-    element: <Register />,
-  },
-  {
-    path: PATH_NAME.PIN_CODE,
-    element: <Pincode />,
-  },
-  {
-    path: PATH_NAME.RECOVERY_PASSWORD,
-    element: <ResetPassword />,
-  },
-  {
-    path: PATH_NAME.VERIFY_MAIL,
-    element: <VerifyMail />,
-  },
-  {
-    path: PATH_NAME.PAGE404,
-    element: <Page404 />,
-  },
+  { path: PATH_NAME.LOGIN, element: lazyLoad(() => import("../pages/login/Login")) },
+  { path: PATH_NAME.REGISTER, element: lazyLoad(() => import("../pages/register/Register")) },
+  { path: PATH_NAME.PIN_CODE, element: lazyLoad(() => import("../pages/pinCode/Pincode")) },
+  { path: PATH_NAME.RECOVERY_PASSWORD, element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")) },
+  { path: PATH_NAME.VERIFY_MAIL, element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")) },
+  { path: PATH_NAME.PAGE404, element: lazyLoad(() => import("../pages/page404/Page404")) },
 
-  //DASHBOARD
   {
     path: PATH_NAME.DASHBOARD,
     element: (
       <ProtectedDashboard>
-        <Main />
+        {lazyLoad(() => import("../pages/dashboard/layout/main-dashboard/Main"))}
       </ProtectedDashboard>
     ),
     children: [
-      //STAFF
       {
         path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
         element: (
           <ProtectedRouteStaff>
-            <OrderStaff />
+            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-order/OrderStaff"))}
           </ProtectedRouteStaff>
         ),
       },
@@ -269,15 +266,15 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_TRACKING_ORDER,
         element: (
           <ProtectedRouteStaff>
-            <TrackingOrderStaff />
+            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff"))}
           </ProtectedRouteStaff>
         ),
       },
-      { 
+      {
         path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>
-            <PaymentStaff />
+            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-payment/PaymentStaff"))}
           </ProtectedRouteStaff>
         ),
       },
@@ -285,17 +282,15 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_ROUTE_MANAGEMENT,
         element: (
           <ProtectedRouteStaff>
-            <RouteStaff />
+            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-route/RouteStaff"))}
           </ProtectedRouteStaff>
         ),
       },
-
-      //ADMIN
       {
         path: PATH_NAME.DASHBOARD_ADMIN,
         element: (
           <ProtectedRouteAdmin>
-            <AdminDashboard />
+            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard"))}
           </ProtectedRouteAdmin>
         ),
       },
@@ -303,7 +298,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_USER_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            <UserManagement />
+            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-usermanage/UserManagement"))}
           </ProtectedRouteAdmin>
         ),
       },
@@ -311,7 +306,7 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            <MetroLineManagement />
+            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement"))}
           </ProtectedRouteAdmin>
         ),
       },
@@ -319,11 +314,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            <MetroTrainManagement />
+            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement"))}
           </ProtectedRouteAdmin>
         ),
       },
-      
     ],
   },
 ]);
+
