@@ -15,7 +15,6 @@ import { useSelector } from "react-redux";
 // import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
 // import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
 
-
 // import HistoryOrders from "../pages/history_orders/HistoryOrders";
 // import HistoryPayment from "../pages/history_payment/HistoryPayment";
 // import Homepage from "../pages/homepage/Homepage";
@@ -103,10 +102,14 @@ export const router = createBrowserRouter([
   {
     path: PATH_NAME.HOME,
     element: (
-      <div>
+      <div
+        style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
         <ScrollToTop />
         <Header />
-        <Outlet />
+        <div style={{ flex: 1 }}>
+          <Outlet />
+        </div>
         <Footer />
       </div>
     ),
@@ -187,7 +190,9 @@ export const router = createBrowserRouter([
         path: PATH_NAME.EXPRESS_DELIVERY,
         element: (
           <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/services/expressDelivery/ExpressDelivery"))}
+            {lazyLoad(() =>
+              import("../pages/services/expressDelivery/ExpressDelivery")
+            )}
           </ProtectedRouteCustomer>
         ),
       },
@@ -195,7 +200,9 @@ export const router = createBrowserRouter([
         path: PATH_NAME.ADDITIONAL_SERVICE,
         element: (
           <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/services/additionalService/Additional"))}
+            {lazyLoad(() =>
+              import("../pages/services/additionalService/Additional")
+            )}
           </ProtectedRouteCustomer>
         ),
       },
@@ -239,18 +246,38 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { path: PATH_NAME.LOGIN, element: lazyLoad(() => import("../pages/login/Login")) },
-  { path: PATH_NAME.REGISTER, element: lazyLoad(() => import("../pages/register/Register")) },
-  { path: PATH_NAME.PIN_CODE, element: lazyLoad(() => import("../pages/pinCode/Pincode")) },
-  { path: PATH_NAME.RECOVERY_PASSWORD, element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")) },
-  { path: PATH_NAME.VERIFY_MAIL, element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")) },
-  { path: PATH_NAME.PAGE404, element: lazyLoad(() => import("../pages/page404/Page404")) },
+  {
+    path: PATH_NAME.LOGIN,
+    element: lazyLoad(() => import("../pages/login/Login")),
+  },
+  {
+    path: PATH_NAME.REGISTER,
+    element: lazyLoad(() => import("../pages/register/Register")),
+  },
+  {
+    path: PATH_NAME.PIN_CODE,
+    element: lazyLoad(() => import("../pages/pinCode/Pincode")),
+  },
+  {
+    path: PATH_NAME.RECOVERY_PASSWORD,
+    element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")),
+  },
+  {
+    path: PATH_NAME.VERIFY_MAIL,
+    element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")),
+  },
+  {
+    path: PATH_NAME.PAGE404,
+    element: lazyLoad(() => import("../pages/page404/Page404")),
+  },
 
   {
     path: PATH_NAME.DASHBOARD,
     element: (
       <ProtectedDashboard>
-        {lazyLoad(() => import("../pages/dashboard/layout/main-dashboard/Main"))}
+        {lazyLoad(() =>
+          import("../pages/dashboard/layout/main-dashboard/Main")
+        )}
       </ProtectedDashboard>
     ),
     children: [
@@ -258,7 +285,9 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
         element: (
           <ProtectedRouteStaff>
-            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-order/OrderStaff"))}
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/staff/staff-order/OrderStaff")
+            )}
           </ProtectedRouteStaff>
         ),
       },
@@ -266,7 +295,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_TRACKING_ORDER,
         element: (
           <ProtectedRouteStaff>
-            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff"
+              )
+            )}
           </ProtectedRouteStaff>
         ),
       },
@@ -274,7 +307,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>
-            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-payment/PaymentStaff"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-payment/PaymentStaff"
+              )
+            )}
           </ProtectedRouteStaff>
         ),
       },
@@ -282,7 +319,9 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_STAFF_ROUTE_MANAGEMENT,
         element: (
           <ProtectedRouteStaff>
-            {lazyLoad(() => import("../pages/dashboard/pages/staff/staff-route/RouteStaff"))}
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/staff/staff-route/RouteStaff")
+            )}
           </ProtectedRouteStaff>
         ),
       },
@@ -290,7 +329,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN,
         element: (
           <ProtectedRouteAdmin>
-            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard"
+              )
+            )}
           </ProtectedRouteAdmin>
         ),
       },
@@ -298,7 +341,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_USER_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-usermanage/UserManagement"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-usermanage/UserManagement"
+              )
+            )}
           </ProtectedRouteAdmin>
         ),
       },
@@ -306,7 +353,11 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement"
+              )
+            )}
           </ProtectedRouteAdmin>
         ),
       },
@@ -314,11 +365,14 @@ export const router = createBrowserRouter([
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
-            {lazyLoad(() => import("../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement"))}
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement"
+              )
+            )}
           </ProtectedRouteAdmin>
         ),
       },
     ],
   },
 ]);
-
