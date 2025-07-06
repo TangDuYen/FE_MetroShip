@@ -1,6 +1,7 @@
 import './PaymentStaff.scss';
 
 import { Col, DatePicker, Row, Select, Table } from 'antd';
+import { getAllShipments, getAllTransactions } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import api from '../../../../../config/axios';
@@ -14,57 +15,53 @@ function PaymentStaff() {
     new Intl.NumberFormat('vi-VN').format(value);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Gọi cả 2 API song song
-        const [paymentsRes, shipmentsRes] = await Promise.all([
-          api.get('/Transaction?PageSize=100'),
-          api.get('/shipments?PageSize=100'),
-        ]);
+  const fetchData = async () => {
+    try {
+      const [shipmentsRes, paymentsRes] = await Promise.all([
+        getAllShipments(),
+        getAllTransactions(),
+      ]);
 
-        const payments = paymentsRes.data?.data?.items || [];
-        const shipments = shipmentsRes.data?.data?.items || [];
-        console.log(payments);
+      const shipments = shipmentsRes || [];
+      const payments = paymentsRes || [];
 
-        // Tạo map shipmentId -> trackingCode
-        const shipmentMap = {};
-        shipments.forEach((s) => {
-          shipmentMap[s.id] = s.trackingCode;
-        });
+      const shipmentMap = {};
+      shipments.forEach((s) => {
+        shipmentMap[s.id] = s.trackingCode;
+      });
 
-        // Format data để đưa vào table
-        const formatted = payments.map((item, index) => {
-          const methodMap = {
-            1: 'Tiền mặt',
-            2: 'VNPay',
-            3: 'MoMo',
-          };
+      const formatted = payments.map((item, index) => {
+        const methodMap = {
+          1: 'Tiền mặt',
+          2: 'VNPay',
+          3: 'MoMo',
+        };
 
-          return {
-            key: item.paymentTrackingId || index,
-            stt: index + 1,
-            trackingCode: shipmentMap[item.shipmentId] || 'Không tìm thấy',
-            shipmentId: item.shipmentId,
-            paymentTrackingId: item.paymentTrackingId || 'N/A',
-            paymentMethod: methodMap[item.paymentMethod] || 'Không rõ',
-            paymentStatus: item.paymentStatus || 'Không rõ',
-            paymentDate: item.paymentDate,
-            paymentTime: item.paymentTime,
-            paymentAmount: item.paymentAmount,
-            paymentCurrency: item.paymentCurrency || 'VND',
-            transactionType: item.transactionType,
-          };
-        });
+        return {
+          key: item.paymentTrackingId || index,
+          stt: index + 1,
+          trackingCode: shipmentMap[item.shipmentId] || 'Không tìm thấy',
+          shipmentId: item.shipmentId,
+          paymentTrackingId: item.paymentTrackingId || 'N/A',
+          paymentMethod: methodMap[item.paymentMethod] || 'Không rõ',
+          paymentStatus: item.paymentStatus || 'Không rõ',
+          paymentDate: item.paymentDate,
+          paymentTime: item.paymentTime,
+          paymentAmount: item.paymentAmount,
+          paymentCurrency: item.paymentCurrency || 'VND',
+          transactionType: item.transactionType,
+        };
+      });
 
-        setAllPayments(formatted);
-      } catch (error) {
-        toast.error('Lỗi khi lấy dữ liệu thanh toán hoặc đơn hàng');
-        console.error(error);
-      }
-    };
+      setAllPayments(formatted);
+    } catch (error) {
+      toast.error('Lỗi khi lấy dữ liệu thanh toán hoặc đơn hàng');
+      console.error(error);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
 
   const columns = [
     {

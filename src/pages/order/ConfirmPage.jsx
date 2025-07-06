@@ -1,4 +1,4 @@
-import { Checkbox, Col, Descriptions, Divider, Row, Typography } from 'antd';
+import { Checkbox, Col, Descriptions, Divider, Row, Space, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 import api from '../../config/axios';
@@ -7,115 +7,153 @@ import { getMetroTimeSlots } from '../../config/metroApi';
 
 const { Title } = Typography;
 
-function ConfirmPage({ personalInfo, parcelInfo, metroSelector, pickedDate, pickedTime,
-  priceVnd, routeSolutions, selectedSolutionIndex }) {
-  const [parcelCategory, setParcelCategory] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
-  const [departureStationName, setDepartureStationName] = useState("");
-  const [destinationStationName, setDestinationStationName] = useState("");
-  
-  const selectedSolution = routeSolutions?.[selectedSolutionIndex];
-  const stations = selectedSolution?.stations || [];
+function ConfirmPage({
+  personalInfo,
+  parcelInfo,     // array of parcels
+  metroSelector,
+  pickedDate,
+  pickedTime,
+  priceVnd,
+  routeSolutions,
+  selectedSolutionIndex,
+}) {
+  const [stationsMap, setStationsMap] = useState({});
+  const [parcelCategoriesMap, setCategoriesMap] = useState({});
+  const [selectedTimeLabel, setSelectedTimeLabel] = useState('');
+  const selectedSolution = routeSolutions[selectedSolutionIndex] || {};
 
-  const departureStationId = metroSelector.departureStationId;
-  const destinationStationId = metroSelector.destinationStationId;
-
-  const getStationByID = async () => {
-  try {
-    const [departureStationRes, destinationStationRes] = await Promise.all([
-      api.get(`/stations/${departureStationId}`),
-      api.get(`/stations/${destinationStationId}`)
-    ]);
-
-    const departureStation = departureStationRes.data;
-    const destinationStation = destinationStationRes.data;
-    setDepartureStationName(departureStation.stationNameVi);
-    setDestinationStationName(destinationStation.stationNameVi);
-
-  } catch (error) {
-    console.error('Error fetching station details:', error);
-  }
-};
-
-  const getParcelCategoryByID = async () => {
-    try {
-      const response = await api.get(`/parcel-category/${parcelInfo.parcelCategory}`);
-      const name = response.data.data.categoryName;
-      setParcelCategory(name);
-    } catch (error) {
-      console.log("Error");
-    }
-  }
-
-
+  // Fetch station names
   useEffect(() => {
-    getParcelCategoryByID();
-    getMetroTimeSlots().then(timeSlots => {
-      const timeSlot = timeSlots.find(slot => slot.id === pickedTime);
-      if (timeSlot) {
-        setSelectedTime(timeSlot.openTime);
+    const fetchStations = async () => {
+      try {
+        const ids = [metroSelector.departureStationId, metroSelector.destinationStationId].filter(Boolean);
+        const requests = ids.map(id => api.get(`/stations/${id}`));
+        const responses = await Promise.all(requests);
+        const map = {};
+        responses.forEach(res => {
+          const st = res.data;
+          map[st.id] = st.stationNameVi;
+        });
+        setStationsMap(map);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchStations();
+  }, [metroSelector.departureStationId, metroSelector.destinationStationId]);
+
+  // Fetch parcel category names
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const ids = [...new Set(parcelInfo.map(p => p.parcelCategory).filter(Boolean))];
+        const responses = await Promise.all(ids.map(id => api.get(`/parcel-category/${id}`)));
+        const map = {};
+        responses.forEach(res => {
+          const cat = res.data.data;
+          map[cat.id] = cat.categoryName;
+        });
+        setCategoriesMap(map);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    if (parcelInfo.length) fetchCategories();
+  }, [parcelInfo]);
+
+  // Fetch time label
+  useEffect(() => {
+    getMetroTimeSlots().then(slots => {
+      const slot = slots.find(s => s.id === pickedTime);
+      if (slot) {
+        const adj = dayjs(slot.openTime, 'HH:mm:ss').subtract(30, 'minute').format('HH:mm');
+        setSelectedTimeLabel(adj);
       }
     });
-    getStationByID();
-  }, []);
+  }, [pickedTime]);
 
-  const adjustedTime = dayjs(selectedTime, 'HH:mm:ss').subtract(30, 'minute').format('HH:mm');
+  const totalParcels = parcelInfo.length;
+  const totalWeight = parcelInfo.reduce((sum, p) => sum + Number(p.weightKg || 0), 0);
 
   return (
     <div style={{ padding: '1rem' }}>
+      <Title level={3}>Xác nhận thông tin đơn hàng</Title>
 
-      <Title level={3}>Xác nhận thông tin đơn hàng của bạn</Title>
-      <Divider orientation="left">Thông tin người gửi và người nhận</Divider>
+      <Divider orientation="left">Thông tin người gửi / nhận</Divider>
       <Row gutter={24}>
         <Col span={12}>
           <Descriptions title="Người gửi" bordered size="small" column={1}>
-            <Descriptions.Item label="Name">{personalInfo.senderName}</Descriptions.Item>
-            <Descriptions.Item label="Phone">{personalInfo.senderPhone}</Descriptions.Item>
+            <Descriptions.Item label="Tên">{personalInfo.senderName}</Descriptions.Item>
+            <Descriptions.Item label="SĐT">{personalInfo.senderPhone}</Descriptions.Item>
           </Descriptions>
         </Col>
         <Col span={12}>
           <Descriptions title="Người nhận" bordered size="small" column={1}>
-            <Descriptions.Item label="Name">{personalInfo.recipientName}</Descriptions.Item>
-            <Descriptions.Item label="Phone">{personalInfo.recipientPhone}</Descriptions.Item>
+            <Descriptions.Item label="Tên">{personalInfo.recipientName}</Descriptions.Item>
+            <Descriptions.Item label="SĐT">{personalInfo.recipientPhone}</Descriptions.Item>
+            {personalInfo.recipientEmail && (
+              <Descriptions.Item label="Email">{personalInfo.recipientEmail}</Descriptions.Item>
+            )}
           </Descriptions>
         </Col>
       </Row>
 
-      <Divider orientation="left">Thông tin đơn hàng</Divider>
+      <Divider orientation="left">Chi tiết kiện hàng ({totalParcels})</Divider>
+      {parcelInfo.map((parcel, i) => (
+        <Descriptions
+          key={i}
+          bordered
+          size="small"
+          column={1}
+          style={{ marginBottom: 16 }}
+          title={`Kiện ${i + 1}`}
+        >
+          <Descriptions.Item label="Loại">
+            {parcelCategoriesMap[parcel.parcelCategory] || parcel.parcelCategory}
+          </Descriptions.Item>
+          <Descriptions.Item label="Trọng lượng">
+            {parcel.weightKg} kg
+          </Descriptions.Item>
+          <Descriptions.Item label="Kích thước">
+            {parcel.lengthCm} × {parcel.widthCm} × {parcel.heightCm} cm
+          </Descriptions.Item>
+          {parcel.description && (
+            <Descriptions.Item label="Mô tả">{parcel.description}</Descriptions.Item>
+          )}
+        </Descriptions>
+      ))}
+
+      <Divider orientation="left">Thông tin vận chuyển</Divider>
       <Row gutter={24}>
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Loại hàng hóa">{parcelCategory}</Descriptions.Item>
-            <Descriptions.Item label="Trọng lượng">{parcelInfo.weightKg} kg</Descriptions.Item>
-            <Descriptions.Item label="Kích thước">
-              {parcelInfo.lengthCm} x {parcelInfo.widthCm} x {parcelInfo.heightCm} cm
+            <Descriptions.Item label="Từ trạm">
+              {stationsMap[metroSelector.departureStationId] || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Mô tả">{parcelInfo.description}</Descriptions.Item>
+            <Descriptions.Item label="Đến trạm">
+              {stationsMap[metroSelector.destinationStationId] || '—'}
+            </Descriptions.Item>
           </Descriptions>
         </Col>
+
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Trạm gửi">
-              {departureStationName || 'Chưa chọn'}
+            <Descriptions.Item label="Ngày gửi">{pickedDate || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Thời gian gửi">{selectedTimeLabel || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Tổng trọng lượng">
+              {totalWeight} kg
             </Descriptions.Item>
-            <Descriptions.Item label="Trạm nhận">
-              {destinationStationName || 'Chưa chọn'}
-            </Descriptions.Item>
-          </Descriptions>
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Ngày">{pickedDate || "Chưa chọn"}</Descriptions.Item>
-            <Descriptions.Item label="Thời gian">{adjustedTime || "Chưa chọn selected"}</Descriptions.Item>
-            <Descriptions.Item label="Giá tiền dự tính">
-              {priceVnd ? `${Number(priceVnd).toLocaleString()} VND` : "Chưa có"}
+            <Descriptions.Item label="Giá ước tính">
+              {priceVnd ? `${Number(priceVnd).toLocaleString()} VND` : '—'}
             </Descriptions.Item>
           </Descriptions>
         </Col>
-        <div className="user-payment">
-          <Checkbox>
-            Người nhận trả tiền
-          </Checkbox>
-        </div>
       </Row>
+      <Divider />
+
+      <Space direction="vertical">
+        <Checkbox>Người nhận trả tiền</Checkbox>
+      </Space>
     </div>
   );
 }

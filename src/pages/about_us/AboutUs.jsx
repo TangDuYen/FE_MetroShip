@@ -7,8 +7,19 @@ import {
   FaTrophy,
 } from "react-icons/fa";
 import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/features/counterSlice";
+import { toast } from "react-toastify";
+import { PATH_NAME } from "../../constants/pathname";
+import { Link } from "react-router-dom";
 
 function AboutUs() {
+  const user = useSelector(selectUser);
+
+  const handleClick = () => {
+    toast.info("Bạn cần phải đăng nhập để sử dụng chức năng này", 3000);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
@@ -25,25 +36,26 @@ function AboutUs() {
   const features = [
     {
       icon: <FaShieldAlt />,
-      title: "An toàn",
-      desc: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+      title: "An toàn tuyệt đối",
+      desc: "MetroShip đảm bảo bưu kiện của bạn được bảo vệ nghiêm ngặt, từ khâu tiếp nhận đến khi giao đến tay người nhận.",
     },
     {
       icon: <FaShippingFast />,
-      title: "Giao hàng nhanh",
-      desc: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+      title: "Giao hàng siêu tốc",
+      desc: "Dịch vụ vận chuyển nhanh chóng trong nước và quốc tế với hệ thống tuyến đường tối ưu và đội ngũ giao nhận chuyên nghiệp.",
     },
     {
       icon: <FaMapMarkedAlt />,
-      title: "Theo dõi dễ dàng",
-      desc: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+      title: "Theo dõi trực tuyến",
+      desc: "Bạn có thể dễ dàng theo dõi trạng thái đơn hàng theo thời gian thực trên hệ thống MetroShip mọi lúc, mọi nơi.",
     },
     {
       icon: <FaTrophy />,
-      title: "Đáng tin cậy",
-      desc: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+      title: "Đối tác tin cậy",
+      desc: "Hàng nghìn khách hàng doanh nghiệp và cá nhân đã và đang tin dùng MetroShip như một giải pháp giao hàng ổn định và hiệu quả.",
     },
   ];
+
   return (
     <div className="about">
       <div className="about-container">
@@ -58,16 +70,17 @@ function AboutUs() {
             <div className="about-metro-content">
               <h2 className="about-heading">Về công ty của chúng tôi</h2>
               <p className="about-description">
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autem
-                tempore, commodi quos excepturi tempora aliquam eligendi, cumque
-                sunt quam magnam dolores quibusdam quae officiis omnis aperiam
-                vel alias cupiditate fuga. Sed ut perspiciatis unde omnis iste
-                natus error sit voluptatem accusantium dolore mque laudantium,
-                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis
-                et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim
-                ipsam voluptatem quia voluptas sit aspernatur aut odit aut
-                fugit, sed quia consequuntur magni dolores eos qui ratione
-                voluptatem sequi nesciunt.
+                MetroShip là đơn vị tiên phong trong lĩnh vực vận chuyển bưu
+                kiện nội địa và quốc tế tại Việt Nam, cung cấp giải pháp giao
+                nhận hiện đại, nhanh chóng và an toàn cho mọi khách hàng. Với hệ
+                thống kho bãi thông minh, đội ngũ nhân viên chuyên nghiệp và nền
+                tảng công nghệ mạnh mẽ, chúng tôi cam kết mang đến trải nghiệm
+                vận chuyển tối ưu – từ khâu tạo đơn, theo dõi hành trình, đến
+                lúc giao hàng tận tay.
+                <br />
+                MetroShip không chỉ đơn thuần là dịch vụ vận chuyển, mà là người
+                bạn đồng hành đáng tin cậy trong mọi hoạt động kinh doanh và
+                cuộc sống cá nhân của bạn.
               </p>
             </div>
           </div>
@@ -78,10 +91,11 @@ function AboutUs() {
             <div className="content">
               <h2>Tại sao chọn chúng tôi</h2>
               <p className="intro">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Veniam quis nostrud exercitation ullamco laboris nisi ut
-                aliquip.
+                MetroShip không chỉ cung cấp dịch vụ giao nhận thông thường, mà
+                còn mang đến trải nghiệm vận chuyển toàn diện – nhanh, an toàn,
+                dễ kiểm soát và đáng tin cậy. Với đội ngũ chuyên nghiệp và nền
+                tảng công nghệ tiên tiến, chúng tôi là lựa chọn hàng đầu cho mọi
+                nhu cầu giao hàng của bạn.
               </p>
               <div className="features">
                 {features.map((item, index) => (
@@ -112,7 +126,17 @@ function AboutUs() {
                   Chúng tôi tận tâm cung cấp những dịch vụ chất lượng cao với
                   mức chi phí tiết kiệm tối đa.
                 </h2>
-                <button>Tạo đơn ngay</button>
+                {/* <button>Tạo đơn ngay</button> */}
+
+                {user ? (
+                  <Link to={PATH_NAME.BOOKING_ORDER}>
+                    <button>Tạo đơn ngay</button>
+                  </Link>
+                ) : (
+                  <Link to={PATH_NAME.LOGIN}>
+                    <button onClick={handleClick}>Tạo đơn ngay</button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

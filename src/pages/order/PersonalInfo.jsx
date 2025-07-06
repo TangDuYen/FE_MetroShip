@@ -32,8 +32,8 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
     if (userData) {
       setPersonalInfo((prev) => ({
         ...prev,
-        senderName: userData.fullName || '',
-        senderPhone: userData.phoneNumber || ''
+        senderName: userData.fullName,
+        senderPhone: userData.phoneNumber,
       }));
     }
   }, [userData]);
@@ -58,6 +58,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           value={personalInfo.senderName}
           onChange={handleChange}
           className="personalInfo__input__inside"
+          required={true}
         />
         <Input
           size="middle"
@@ -67,6 +68,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           value={personalInfo.senderPhone}
           prefix={<PhoneOutlined />}
           onChange={handleChange}
+          required={true}
         />
       </div>
       <div className="personalInfo__input">
@@ -78,6 +80,7 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           value={personalInfo.recipientName}
           onChange={handleChange}
           className="personalInfo__input__inside"
+          required={true}
         />
         <Input
           size="middle"
@@ -87,17 +90,19 @@ function PersonalInfo({ personalInfo, setPersonalInfo, onNext }) {
           value={personalInfo.recipientPhone}
           prefix={<PhoneOutlined />}
           onChange={handleChange}
+          required={true}
         />
-        {/* <Input
+        <Input
           size="middle"
-          placeholder="Email người nhận"
+          placeholder="Email người nhận (Optional)"
           name="recipientEmail"
           className="personalInfo__input__inside"
           value={personalInfo.recipientEmail}
           prefix={<MailOutlined />}
           onChange={handleChange}
+          required={false}
         />
-        <Input
+        {/* <Input
           size="middle"
           placeholder="CCCD/CMT người nhận"
           name="recipientNationalId"
