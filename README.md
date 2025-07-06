@@ -25,3 +25,12 @@ To get started with this project, follow these steps:
     ```bash
    npm i
     ```
+
+3. Run the project: 
+    ```bash
+   npm run
+    ```
+If you want the change to apply immediately after coding, run this:
+    ```bash
+    npm run dev
+    ```
