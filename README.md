@@ -30,7 +30,9 @@ To get started with this project, follow these steps:
     ```bash
    npm run
     ```
+
 If you want the change to apply immediately after coding, run this:
-    ```bash
+```bash
     npm run dev
-    ```
+```
+
