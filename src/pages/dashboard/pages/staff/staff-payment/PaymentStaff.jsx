@@ -22,7 +22,7 @@ function PaymentStaff() {
         getAllTransactions(),
       ]);
 
-      const shipments = shipmentsRes || [];
+      const shipments = shipmentsRes.items || [];
       const payments = paymentsRes || [];
 
       const shipmentMap = {};

@@ -28,6 +28,9 @@ function TrackingOrderStaff() {
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [verifyingParcel, setVerifyingParcel] = useState(null);
+  const [verifyImage, setVerifyImage] = useState(null);
   const today = dayjs();
 
   //FORMAT TIỀN
@@ -40,7 +43,7 @@ function TrackingOrderStaff() {
       ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
-        setShipments(shipmentsData);
+        setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
       }
@@ -77,12 +80,19 @@ function TrackingOrderStaff() {
   };
 
   const handleFilterChange = () => {
-    // Bước 1: lọc các đơn chưa xác nhận, tạo trong vòng 48h
     let filtered = shipments.filter(order =>
-      order.shipmentStatus >= 1
+      order.shipmentStatus == 4
+      || order.shipmentStatus == 8 
+      || order.shipmentStatus == 9 
+      || order.shipmentStatus == 10 
+      || order.shipmentStatus == 11 
+      || order.shipmentStatus == 13 
+      || order.shipmentStatus == 14 
+      || order.shipmentStatus == 15
+      || order.shipmentStatus == 16
+      || order.shipmentStatus == 18
     );
 
-    // Bước 2: nếu chọn ngày => lọc thêm theo ngày gửi (scheduleDateTime)
     // CHỈNH SỬA FILTER
     if (dateFilter) {
       filtered = filtered.filter(order =>
@@ -90,7 +100,6 @@ function TrackingOrderStaff() {
       );
     }
 
-    // Bước 3: filter theo trạm và tuyến (nếu có)
     if (stationFilter) {
       filtered = filtered.filter(order => order.departureStationName === stationFilter);
     }
@@ -161,23 +170,25 @@ function TrackingOrderStaff() {
       key: 'shipmentStatus',
       render: (status) => {
         const statusMapping = {
-          0: 'Đang xử lý', //Processing
-          1: 'Từ chối', //Rejected
-          2: 'Đợi thanh toán', //PartiallyConfirmed
-          3: 'Đã xác nhận', //Accepted
-          4: 'Chưa thanh toán', //Unpaid
-          5: 'Hủy', //Cancelled
-          6: 'Đợi hoàn tiền', //AwaitingRefund
-          7: 'Đã hoàn tiền', //Refunded
-          8: 'Không xuất hiện', //NoDropOff
-          9: 'Đã thanh toán', //Paid
-          10: 'Đã nhận hàng', //PickedUp
-          11: 'Đang vận chuyển', //In Transit
-          12: 'Đợi lấy hàng', //AwaitingForDelivery
-          13: 'Thu phí tồn kho', //ApplyingSurcharge
-          14: 'Quá hạn', //Expired
-          15: 'Đợi đánh giá', //AwaitingFeedback
-          16: 'Hoàn thành', //Completed
+          0: 'Đợi thanh toán',
+          1: 'Từ chối',
+          2: 'Không thanh toán',
+          3: 'Đã hủy',
+          4: 'Đợi hoàn tiền',
+          5: 'Đã hoàn tiền',
+          6: 'Không xuất hiện',
+          7: 'Đợi gửi hàng',
+          8: 'Đã lấy hàng',
+          9: 'Đang vận chuyển',
+          10: 'Đợi lấy hàng',
+          11: 'Thu phí tồn kho',
+          12: 'Quá hạn',
+          13: 'Hoàn đơn',
+          14: 'Đang hoàn đơn',
+          15: 'Đã hoàn đơn',
+          16: 'Đợi phản hồi',
+          17: 'Đã hoàn thành',
+          18: 'Delayed',
         };
         return statusMapping[status] || 'Không xác nhận';
       },
@@ -500,8 +511,10 @@ function TrackingOrderStaff() {
 
                           <Button
                             type="primary"
-                            disabled={parcel.parcelStatus === 2}
-                            onClick={() => handleConfirmOrder(parcel.id)}
+                            onClick={() => {
+                              setVerifyingParcel(parcel);
+                              setVerifyModalOpen(true);
+                            }}
                           >
                             Xác minh người gửi
                           </Button>
@@ -510,6 +523,61 @@ function TrackingOrderStaff() {
                     </TabPane>
                   ))}
                 </Tabs>
+              )}
+            </Modal>
+            <Modal
+              title={`Upload ảnh xác minh cho: ${verifyingParcel?.parcelCode}`}
+              open={verifyModalOpen}
+              onCancel={() => {
+                setVerifyModalOpen(false);
+                setVerifyImage(null);
+              }}
+              onOk={async () => {
+                if (!verifyImage) return toast.error("Vui lòng chọn ảnh!");
+
+                const formData = new FormData();
+                formData.append("file", verifyImage);
+                console.log(formData);
+
+                try {
+                  const res = await api.post("/media/image", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                  });
+                  const resData = res.data;
+                  console.log("Upload ảnh thành công:", resData);
+                  const secureUrl = resData.data;
+                  // Gửi URL ảnh vào DB gắn với parcel
+                  await api.post('/shipments/staff/pickup-confirmation', {
+                    shipmentId: verifyingParcel.shipmentId,
+                    pickedUpImageLink: secureUrl
+                  });
+                  toast.success("Đã xác minh kiện hàng!");
+                  setVerifyModalOpen(false);
+                  setVerifyImage(null);
+                  await getAllParcels();
+                } catch (err) {
+                  toast.error("Lỗi khi xác nhận đơn hàng. Vui lòng thử lại!");
+                  console.log("Error uploading image:", err);
+                }
+              }}
+              okText="Xác nhận"
+              cancelText="Huỷ"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setVerifyImage(e.target.files[0])}
+              />
+              {verifyImage && (
+                <div style={{ marginTop: 10 }}>
+                  <strong>Ảnh đã chọn:</strong>
+                  <br />
+                  <img
+                    src={URL.createObjectURL(verifyImage)}
+                    alt="preview"
+                    style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
+                  />
+                </div>
               )}
             </Modal>
           </Card>

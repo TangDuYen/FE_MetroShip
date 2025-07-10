@@ -1,7 +1,8 @@
-import React from "react";
 import "./Service.scss";
+
 import Banner from "./banner/Banner";
 import { PATH_NAME } from "../../constants/pathname";
+import React from "react";
 
 function Service() {
   const services = [
@@ -33,7 +34,7 @@ function Service() {
       title: "Quy định hàng cấm gửi, gửi có điều kiện",
       description:
         "Thuốc phiện, các hợp chất từ thuốc phiện, các chất ma túy, các chất kích thích thần kinh. 2. Vũ khí, đạn dược, chất nổ, trang thiết bị quân sự. 3. Các loại văn hóa phẩm đồi trụy, phản động,....",
-      link: "#",
+      link: PATH_NAME.PARCEL_RULES,
     },
     {
       title: "Quy định về điều kiện cung ứng dịch vụ bưu chính",

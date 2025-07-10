@@ -1,6 +1,6 @@
 import './Order.scss'
 
-import { Button, Col, ConfigProvider, Modal, Row, Steps, message } from 'antd';
+import { Button, Col, ConfigProvider, Modal, Row, Spin, Steps, message } from 'antd';
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
@@ -45,6 +45,7 @@ function Order() {
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
     longitude: parseFloat(localStorage.getItem('userLongitude')) || 0,
   });
+  const [loading, setLoading] = useState(false);
   const [chargeableWeight, setChargeableWeight] = useState(0);
   const [shippingFeeVnd, setShippingFeeVnd] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
@@ -302,11 +303,11 @@ function Order() {
       ...(recipientPhone && { recipientPhone }),
       ...(recipientEmail ? { recipientEmail } : {}),
       ...(recipientNationalId && { recipientNationalId }),
-      ...(departureDateTime && { scheduledDateTime: departureDateTime }),
+      ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
       ...(priceVnd && {
         totalCostVnd: Number(priceVnd),
-        totalShippingFeeVnd: Number(priceVnd), 
+        totalShippingFeeVnd: Number(priceVnd),
       }),
       ...(totalKm && { totalKm: Number(totalKm) }),
       ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
@@ -315,24 +316,41 @@ function Order() {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
+
     try {
       const payload = buildPayload();
       console.log(payload);
       console.log(typeof (payload.scheduledDateTime));
-
       const bookingResponse = await api.post('/shipments', payload);
-
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
         console.log(payload);
+        setLoading(false);
         return;
       }
+
       toast.success("Đặt giao thành công!");
-      nav(PATH_NAME.HISTORY_ORDERS);
+      const paymentPayload = {
+        shipmentId: bookingResponse.data.data.item1,
+        returnUrl: "http://localhost:5173/payment-success",
+        cancelUrl: "http://localhost:5173/payment-fail",
+      };
+
+      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
+      console.log(res.data);
+
+      // statusCode nằm trực tiếp trong res.data
+      if (res.data?.statusCode === 200 && res.data.data) {
+        window.location.href = res.data.data; // Redirect to VNPay
+      } else {
+        toast.error("Không lấy được link thanh toán!");
+      }
+      // nav(PATH_NAME.HISTORY_ORDERS);
     } catch (error) {
       console.error(error);
       console.log(buildPayload());
-
+      setLoading(false);
       const errorMessage = error.response?.data.message || "An error occurred";
       toast.error(errorMessage);
     }
@@ -341,171 +359,173 @@ function Order() {
 
   return (
     <>
-      <div className="order">
-        <div className="order__map-background">
-          <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+      <Spin spinning={loading} tip="Đang đặt đơn..." size="large">
+        <div className="order">
+          <div className="order__map-background">
+            <MapContainer center={[10.776, 106.700]} zoom={12} style={{ height: '100vh', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; OpenStreetMap contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
 
-            {routeSolutions.length > 0 &&
-              routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
-                const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
+              {routeSolutions.length > 0 &&
+                routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
+                  const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
 
-                const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
-                const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
+                  const fromStation = stations.find(s => s.stationId === routeLeg.fromStationId);
+                  const toStation = stations.find(s => s.stationId === routeLeg.toStationId);
 
-                if (!fromStation || !toStation) return null;
+                  if (!fromStation || !toStation) return null;
 
-                return (
-                  <Polyline
-                    key={routeLeg.routeId}
-                    positions={[
-                      [fromStation.latitude, fromStation.longitude],
-                      [toStation.latitude, toStation.longitude],
-                    ]}
-                  />
-                );
-              })}
+                  return (
+                    <Polyline
+                      key={routeLeg.routeId}
+                      positions={[
+                        [fromStation.latitude, fromStation.longitude],
+                        [toStation.latitude, toStation.longitude],
+                      ]}
+                    />
+                  );
+                })}
 
-            {routeSolutions.length > 0 &&
-              routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
-                <Marker
-                  key={station.stationId}
-                  position={[station.latitude, station.longitude]}
-                  icon={customIcon}
-                >
-                  <Popup>{station.stationNameVi}</Popup>
-                </Marker>
-              ))}
-          </MapContainer>
+              {routeSolutions.length > 0 &&
+                routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+                  <Marker
+                    key={station.stationId}
+                    position={[station.latitude, station.longitude]}
+                    icon={customIcon}
+                  >
+                    <Popup>{station.stationNameVi}</Popup>
+                  </Marker>
+                ))}
+            </MapContainer>
 
 
-        </div>
-        <div className="order__container--vertical">
-          <div className="order__text">Thông tin đơn hàng</div>
-          <ConfigProvider
-            theme={{
-              components: {
-                Steps: {
-                  processIconColor: "black",
-                  processTitleColor: "black",
+          </div>
+          <div className="order__container--vertical">
+            <div className="order__text">Thông tin đơn hàng</div>
+            <ConfigProvider
+              theme={{
+                components: {
+                  Steps: {
+                    processIconColor: "black",
+                    processTitleColor: "black",
+                  },
                 },
-              },
-            }}
-          >
-            <Steps
-              progressDot
-              current={currentStep}
-              direction="horizontal"
-              items={steps.map((step) => ({
-                title: step.title,
-                description: step.description,
-              }))}
-              className="order__steps-horizontal"
-            />
-          </ConfigProvider>
-
-          <div className="order__step-content">
-            {steps[currentStep].component}
-
-            <div
-              className="order__buttons"
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: "1em",
               }}
             >
-              {currentStep > 0 && (
+              <Steps
+                progressDot
+                current={currentStep}
+                direction="horizontal"
+                items={steps.map((step) => ({
+                  title: step.title,
+                  description: step.description,
+                }))}
+                className="order__steps-horizontal"
+              />
+            </ConfigProvider>
+
+            <div className="order__step-content">
+              {steps[currentStep].component}
+
+              <div
+                className="order__buttons"
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "1em",
+                }}
+              >
+                {currentStep > 0 && (
+                  <ConfigProvider
+                    theme={{
+                      components: {
+                        Button: {
+                          defaultColor: "white",
+                          defaultBg: "#4CAF50",
+                          defaultBorderColor: "#4CAF50",
+                          defaultHoverBorderColor: "#FFC107",
+                          defaultHoverColor: "black",
+                          defaultHoverBg: "#FFC107",
+                          defaultActiveBg: "#4CAF50",
+                          defaultActiveBorderColor: "#4CAF50",
+                          defaultActiveColor: "white",
+                        },
+                      },
+                    }}
+                  >
+                    <Button
+                      onClick={handlePrevious}
+                      style={{
+                        marginRight: 8,
+                        fontWeight: "500",
+                      }}
+                    >
+                      Trước
+                    </Button>
+                  </ConfigProvider>
+                )}
                 <ConfigProvider
                   theme={{
                     components: {
                       Button: {
                         defaultColor: "white",
-                        defaultBg: "#4CAF50",
-                        defaultBorderColor: "#4CAF50",
+                        defaultBg: "#0066CC",
+                        defaultBorderColor: "#0066CC",
                         defaultHoverBorderColor: "#FFC107",
                         defaultHoverColor: "black",
                         defaultHoverBg: "#FFC107",
-                        defaultActiveBg: "#4CAF50",
-                        defaultActiveBorderColor: "#4CAF50",
+                        defaultActiveBg: "#0066CC",
+                        defaultActiveBorderColor: "#0066CC",
                         defaultActiveColor: "white",
                       },
                     },
                   }}
                 >
                   <Button
-                    onClick={handlePrevious}
-                    style={{
-                      marginRight: 8,
-                      fontWeight: "500",
-                    }}
+                    onClick={handleNext}
+                    style={{ fontWeight: "500" }}
                   >
-                    Trước
+                    {currentStep === steps.length - 1 ? "Xác nhận" : "Sau"}
                   </Button>
                 </ConfigProvider>
-              )}
-              <ConfigProvider
-                theme={{
-                  components: {
-                    Button: {
-                      defaultColor: "white",
-                      defaultBg: "#0066CC",
-                      defaultBorderColor: "#0066CC",
-                      defaultHoverBorderColor: "#FFC107",
-                      defaultHoverColor: "black",
-                      defaultHoverBg: "#FFC107",
-                      defaultActiveBg: "#0066CC",
-                      defaultActiveBorderColor: "#0066CC",
-                      defaultActiveColor: "white",
-                    },
-                  },
-                }}
-              >
-                <Button
-                  onClick={handleNext}
-                  style={{ fontWeight: "500" }}
-                >
-                  {currentStep === steps.length - 1 ? "Xác nhận" : "Sau"}
-                </Button>
-              </ConfigProvider>
+              </div>
             </div>
+
+            <Modal
+              title="Xác nhận đơn hàng"
+              open={isModalOpen}
+              onOk={handleOk}
+              onCancel={handleCancel}
+              okText="Xác nhận"
+              cancelText="Hủy"
+              okButtonProps={{ className: "confirm-button" }}
+              cancelButtonProps={{ className: "cancel-button" }}
+              className="modal-confirm"
+            >
+              <p>
+                Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
+              </p>
+            </Modal>
+
+            <Modal
+              title="Yêu cầu quyền truy cập vị trí"
+              open={isLocationModalOpen}
+              onOk={() => {
+                requestLocationPermission();
+                setIsLocationModalOpen(false);
+              }}
+              onCancel={() => setIsLocationModalOpen(false)}
+              okText="Cho phép"
+              cancelText="Không cho phép"
+              className="modal-location"
+            >
+              <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
+            </Modal>
           </div>
-
-          <Modal
-            title="Xác nhận đơn hàng"
-            open={isModalOpen}
-            onOk={handleOk}
-            onCancel={handleCancel}
-            okText="Xác nhận"
-            cancelText="Hủy"
-            okButtonProps={{ className: "confirm-button" }}
-            cancelButtonProps={{ className: "cancel-button" }}
-            className="modal-confirm"
-          >
-            <p>
-              Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
-            </p>
-          </Modal>
-
-          <Modal
-            title="Yêu cầu quyền truy cập vị trí"
-            open={isLocationModalOpen}
-            onOk={() => {
-              requestLocationPermission();
-              setIsLocationModalOpen(false);
-            }}
-            onCancel={() => setIsLocationModalOpen(false)}
-            okText="Cho phép"
-            cancelText="Không cho phép"
-            className="modal-location"
-          >
-            <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
-          </Modal>
         </div>
-      </div>
+      </Spin>
     </>
   )
 }
