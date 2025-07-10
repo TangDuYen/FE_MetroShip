@@ -2,10 +2,10 @@ import './Register.scss'
 
 import * as Yup from "yup";
 
+import { Checkbox, Spin } from 'antd';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
 
-import { Checkbox } from 'antd';
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login.jpg';
 import api from '../../config/axios';
@@ -16,6 +16,7 @@ function Register() {
   const [error, setError] = useState(null);
   const nav = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
   //VALIDATION
   const validationSchema = Yup.object({
     userName: Yup.string().required("Tên đăng nhập không được để trống"),
@@ -35,10 +36,10 @@ function Register() {
   const handleSubmit = async (values) => {
     if (!isChecked) {
       toast.error("Bạn cần đồng ý với Điều khoản Dịch vụ và Chính sách Bảo Mật để tiếp tục!");
-
+      setLoading(false);
       return;
     }
-
+    setLoading(true);
     const payload = {
       userName: values.userName,
       fullName: values.fullName,
@@ -59,134 +60,138 @@ function Register() {
         console.log("registrationData");
         nav("/pin-code");
       } else {
+        setLoading(false);
         toast.error(responseData.data);
       }
     } catch (error) {
+      setLoading(false);
       console.error("Lỗi đăng ký:", error?.response?.data.message);
-      toast.error("Đăng ký thất bại. " +error?.response?.data.message);
+      toast.error("Đăng ký thất bại. " + error?.response?.data.message);
     }
   };
   return (
     <>
-      <div className="register-container">
-        <div className="register-form-container">
-          <div
-            style={{ width: "100%", display: "flex", justifyContent: "center" }}
-          >
-            <img
-              onClick={() => nav("/")}
-              src={Logo}
-              alt="Logo"
-              style={{
-                width: "18vw",
-                height: "20vh",
-                marginBottom: "1em",
-                cursor: "pointer",
+      <Spin spinning={loading} tip="Đang đăng ký..." size="large">
+        <div className="register-container">
+          <div className="register-form-container">
+            <div
+              style={{ width: "100%", display: "flex", justifyContent: "center" }}
+            >
+              <img
+                onClick={() => nav("/")}
+                src={Logo}
+                alt="Logo"
+                style={{
+                  width: "18vw",
+                  height: "20vh",
+                  marginBottom: "1em",
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+            <Formik
+              initialValues={{
+                userName: "",
+                fullName: "",
+                phoneNumber: "",
+                email: "",
+                password: "",
+                confirmPassword: "",
               }}
-            />
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+            >
+              {() => (
+                <Form className="register-form">
+                  <div className="form-group">
+                    <label htmlFor="userName">Tên đăng nhập</label>
+                    <Field name="userName" type="text" />
+                    <ErrorMessage
+                      name="userName"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="fullName">Họ tên</label>
+                    <Field name="fullName" type="text" />
+                    <ErrorMessage
+                      name="fullName"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="phoneNumber">Số điện thoại</label>
+                    <Field name="phoneNumber" type="text" />
+                    <ErrorMessage
+                      name="phoneNumber"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email">Email</label>
+                    <Field name="email" type="email" />
+                    <ErrorMessage
+                      name="email"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="password">Mật khẩu</label>
+                    <Field name="password" type="password" />
+                    <ErrorMessage
+                      name="password"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+                    <Field name="confirmPassword" type="password" />
+                    <ErrorMessage
+                      name="confirmPassword"
+                      component="div"
+                      className="error-message"
+                    />
+                  </div>
+                  <Checkbox
+                    className="privacy-checked"
+                    checked={isChecked}
+                    onChange={(e) => setIsChecked(e.target.checked)}
+                  >
+                    Tôi đồng ý với{" "}
+                    <span style={{ fontWeight: "bold" }}>Điều khoản dịch vụ</span>{" "}
+                    và <span style={{ fontWeight: "bold" }}>Chính sách bảo mật</span>
+                    .{" "}
+                  </Checkbox>
+                  <button
+                    type="submit"
+                    className="register-btn"
+                    disabled={!isChecked}
+                  >
+                    Đăng kí
+                  </button>
+                  {error && <p className="error-message">{error}</p>}
+                </Form>
+              )}
+            </Formik>
+            <div className="register-options">
+              <p>
+                Đã có tài khoản?{" "}
+                <a href="/login" className="login-link">
+                  Đăng nhập
+                </a>
+              </p>
+            </div>
           </div>
-          <Formik
-            initialValues={{
-              userName: "",
-              fullName: "",
-              phoneNumber: "",
-              email: "",
-              password: "",
-              confirmPassword: "",
-            }}
-            validationSchema={validationSchema}
-            onSubmit={handleSubmit}
-          >
-            {() => (
-              <Form className="register-form">
-                <div className="form-group">
-                  <label htmlFor="userName">Tên đăng nhập</label>
-                  <Field name="userName" type="text" />
-                  <ErrorMessage
-                    name="userName"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="fullName">Họ tên</label>
-                  <Field name="fullName" type="text" />
-                  <ErrorMessage
-                    name="fullName"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="phoneNumber">Số điện thoại</label>
-                  <Field name="phoneNumber" type="text" />
-                  <ErrorMessage
-                    name="phoneNumber"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <Field name="email" type="email" />
-                  <ErrorMessage
-                    name="email"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="password">Mật khẩu</label>
-                  <Field name="password" type="password" />
-                  <ErrorMessage
-                    name="password"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-                  <Field name="confirmPassword" type="password" />
-                  <ErrorMessage
-                    name="confirmPassword"
-                    component="div"
-                    className="error-message"
-                  />
-                </div>
-                <Checkbox
-                  className="privacy-checked"
-                  checked={isChecked}
-                  onChange={(e) => setIsChecked(e.target.checked)}
-                >
-                  Tôi đồng ý với{" "}
-                  <span style={{ fontWeight: "bold" }}>Điều khoản dịch vụ</span>{" "}
-                  và <span style={{ fontWeight: "bold" }}>Chính sách bảo mật</span>
-                  .{" "}
-                </Checkbox>
-                <button
-                  type="submit"
-                  className="register-btn"
-                  disabled={!isChecked}
-                >
-                  Đăng kí
-                </button>
-                {error && <p className="error-message">{error}</p>}
-              </Form>
-            )}
-          </Formik>
-          <div className="register-options">
-            <p>
-              Đã có tài khoản?{" "}
-              <a href="/login" className="login-link">
-                Đăng nhập
-              </a>
-            </p>
+          <div className="introduction-image">
+            <img src={RegisterPicture} alt="Register" />
           </div>
         </div>
-        <div className="introduction-image">
-          <img src={RegisterPicture} alt="Register" />
-        </div>
-      </div>
+      </Spin>
     </>
   );
 }

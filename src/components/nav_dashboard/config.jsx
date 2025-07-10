@@ -1,5 +1,5 @@
 import {
-  BranchesOutlined,
+  CarOutlined,
   DashboardOutlined,
   OrderedListOutlined,
   ProductOutlined,
@@ -67,6 +67,10 @@ export const navDashboardConfigStaff = [
       {
         key: "72",
         label: "Theo dõi đơn hàng"
+      },
+      {
+        key: "73",
+        label: "Đơn hàng đã hoàn thành"
       }
     ]
   },
@@ -77,8 +81,8 @@ export const navDashboardConfigStaff = [
   },  
   {
     key: "9",
-    icon: <BranchesOutlined />,
-    label: "Lộ trình",
+    icon: <CarOutlined />,
+    label: "Tàu Metro",
   },  
 ];
   
@@ -91,7 +95,7 @@ export const navpath = {
     path: PATH_NAME.DASHBOARD_ADMIN_USER_MANAGEMENT,
   },
   3: {
-    path: "/dashboard/admin/orders",
+    path: PATH_NAME.DASHBOARD_ADMIN_ORDERS,
   },
   41: {
     path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
@@ -103,16 +107,19 @@ export const navpath = {
   //   path: "/dashboard/admin/users",
   // },
   71: {
-    path: "/dashboard/staff/pending-order",
+    path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
   },
   72: {
-    path: "/dashboard/staff/tracking-order",
+    path: PATH_NAME.DASHBOARD_STAFF_TRACKING_ORDER,
+  },
+  73: {
+    path: PATH_NAME.DASHBOARD_STAFF_HANDLED_ORDER,
   },
   8: {
-    path: "/dashboard/staff/payments",
+    path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
   },
   9: {
-    path: "/dashboard/staff/route-management",
+    path: PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION,
   },
 };
 
