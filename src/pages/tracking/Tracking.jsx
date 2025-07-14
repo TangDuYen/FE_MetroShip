@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from "react";
 import "./Tracking.scss";
 import "react-vertical-timeline-component/style.min.css";
+
+import { FaShippingFast, FaTimesCircle } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
 import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
-import { FaShippingFast, FaTimesCircle } from "react-icons/fa";
-import { toast } from "react-toastify";
+
 import { getAllShipments } from "../../config/metroApi";
+import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
+
 function Tracking() {
   // const trackingShipment = {
   //   MS12345: {
@@ -123,7 +126,7 @@ function Tracking() {
       <div className="tracking-search">
         <input
           type="text"
-          placeholder="Nhập mã vận đơn (VD: MS12345)"
+          placeholder="Nhập mã vận đơn (VD: MSHCMC123)"
           value={code}
           onChange={(e) => setTrackingCode(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -201,7 +204,7 @@ function Tracking() {
               </div>
             ))}
           </div> */}
-          {Array.isArray(result.history) && result.history.length > 0 ? (
+          {/* {Array.isArray(result.history) && result.history.length > 0 ? (
             <VerticalTimeline>
               {result.history.map((item, idx) => (
                 <VerticalTimelineElement
@@ -225,7 +228,7 @@ function Tracking() {
             <div className="no-history">
               <p>Không có lịch sử vận đơn.</p>
             </div>
-          )}
+          )} */}
         </div>
       )}
     </div>
