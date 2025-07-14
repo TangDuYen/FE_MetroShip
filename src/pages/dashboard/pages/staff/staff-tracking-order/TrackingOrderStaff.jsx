@@ -10,6 +10,7 @@ import MetroStation from '../../../../../assets/metro_station.png';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import moment from 'moment';
+import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
 
 const { TabPane } = Tabs;
@@ -82,12 +83,12 @@ function TrackingOrderStaff() {
   const handleFilterChange = () => {
     let filtered = shipments.filter(order =>
       order.shipmentStatus == 4
-      || order.shipmentStatus == 8 
-      || order.shipmentStatus == 9 
-      || order.shipmentStatus == 10 
-      || order.shipmentStatus == 11 
-      || order.shipmentStatus == 13 
-      || order.shipmentStatus == 14 
+      || order.shipmentStatus == 8
+      || order.shipmentStatus == 9
+      || order.shipmentStatus == 10
+      || order.shipmentStatus == 11
+      || order.shipmentStatus == 13
+      || order.shipmentStatus == 14
       || order.shipmentStatus == 15
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
@@ -168,30 +169,15 @@ function TrackingOrderStaff() {
       title: 'Trạng thái',
       dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
-      render: (status) => {
-        const statusMapping = {
-          0: 'Đợi thanh toán',
-          1: 'Từ chối',
-          2: 'Không thanh toán',
-          3: 'Đã hủy',
-          4: 'Đợi hoàn tiền',
-          5: 'Đã hoàn tiền',
-          6: 'Không xuất hiện',
-          7: 'Đợi gửi hàng',
-          8: 'Đã lấy hàng',
-          9: 'Đang vận chuyển',
-          10: 'Đợi lấy hàng',
-          11: 'Thu phí tồn kho',
-          12: 'Quá hạn',
-          13: 'Hoàn đơn',
-          14: 'Đang hoàn đơn',
-          15: 'Đã hoàn đơn',
-          16: 'Đợi phản hồi',
-          17: 'Đã hoàn thành',
-          18: 'Delayed',
-        };
-        return statusMapping[status] || 'Không xác nhận';
-      },
+      render: (status) => { return shipmentStatusMap[status] || 'Không xác nhận'; },
+    },
+    {
+      title: 'Vị trí hiện tại',
+      dataIndex: 'departureStationName',
+      key: 'departureStation',
+      render: (_, record) => {
+        return `Trạm ${record.currentStationName}` || 'Không xác định';
+      }
     },
     {
       title: 'Xem chi tiết',
@@ -462,25 +448,7 @@ function TrackingOrderStaff() {
                             {
                               key: 'parcelStatus',
                               label: 'Trạng thái kiện hàng',
-                              value: ({
-                                0: "Đang xử lý",
-                                1: "Đợi thanh toán",
-                                2: "Đợi gửi hàng",
-                                3: "Từ chối",
-                                4: "Chưa thanh toán",
-                                5: "Đã hủy",
-                                6: "Chờ hoàn tiền",
-                                7: "Đã hoàn tiền",
-                                8: "Không đến gửi hàng",
-                                9: "Đã nhận hàng tại trạm",
-                                10: "Đang trên đường vận chuyển - Tuyến ",
-                                11: "Chuyển sang tuyến ",
-                                12: "Đã nhận hàng ở trạm",
-                                13: "Đợi khách đến lấy hàng",
-                                14: "Hết hạn",
-                                15: "Lưu kho lâu",
-                                16: "Hoàn thành"
-                              })[parcel.parcelStatus] || "Không xác nhận"
+                              value: shipmentStatusMap[selectedOrder.shipmentStatus] || "Không xác nhận"
                             },
                           ]}
                           columns={[
@@ -500,84 +468,10 @@ function TrackingOrderStaff() {
                           showHeader={false}
                           rowClassName="order-detail-row"
                         />
-                        <Space>
-                          <Button
-                            type="primary"
-                            disabled={parcel.parcelStatus >= 1}
-                            onClick={() => handleConfirmOrder(parcel.id)}
-                          >
-                            Xác nhận kiện hàng
-                          </Button>
-
-                          <Button
-                            type="primary"
-                            onClick={() => {
-                              setVerifyingParcel(parcel);
-                              setVerifyModalOpen(true);
-                            }}
-                          >
-                            Xác minh người gửi
-                          </Button>
-                        </Space>
                       </Space>
                     </TabPane>
                   ))}
                 </Tabs>
-              )}
-            </Modal>
-            <Modal
-              title={`Upload ảnh xác minh cho: ${verifyingParcel?.parcelCode}`}
-              open={verifyModalOpen}
-              onCancel={() => {
-                setVerifyModalOpen(false);
-                setVerifyImage(null);
-              }}
-              onOk={async () => {
-                if (!verifyImage) return toast.error("Vui lòng chọn ảnh!");
-
-                const formData = new FormData();
-                formData.append("file", verifyImage);
-                console.log(formData);
-
-                try {
-                  const res = await api.post("/media/image", formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
-                  });
-                  const resData = res.data;
-                  console.log("Upload ảnh thành công:", resData);
-                  const secureUrl = resData.data;
-                  // Gửi URL ảnh vào DB gắn với parcel
-                  await api.post('/shipments/staff/pickup-confirmation', {
-                    shipmentId: verifyingParcel.shipmentId,
-                    pickedUpImageLink: secureUrl
-                  });
-                  toast.success("Đã xác minh kiện hàng!");
-                  setVerifyModalOpen(false);
-                  setVerifyImage(null);
-                  await getAllParcels();
-                } catch (err) {
-                  toast.error("Lỗi khi xác nhận đơn hàng. Vui lòng thử lại!");
-                  console.log("Error uploading image:", err);
-                }
-              }}
-              okText="Xác nhận"
-              cancelText="Huỷ"
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setVerifyImage(e.target.files[0])}
-              />
-              {verifyImage && (
-                <div style={{ marginTop: 10 }}>
-                  <strong>Ảnh đã chọn:</strong>
-                  <br />
-                  <img
-                    src={URL.createObjectURL(verifyImage)}
-                    alt="preview"
-                    style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
-                  />
-                </div>
               )}
             </Modal>
           </Card>

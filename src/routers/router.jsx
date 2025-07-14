@@ -179,60 +179,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: PATH_NAME.SERVICE,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/services/Service"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.EXPRESS_DELIVERY,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() =>
-              import("../pages/services/expressDelivery/ExpressDelivery")
-            )}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.ADDITIONAL_SERVICE,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() =>
-              import("../pages/services/additionalService/Additional")
-            )}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.PARCEL_RULES,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() =>
-              import("../pages/services/parcelRules/ParcelRules")
-            )}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.TRACKING,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/tracking/Tracking"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.SUPPORT,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/support/Support"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
         path: PATH_NAME.TRACKING_ORDER,
         element: (
           <ProtectedRouteCustomer>
@@ -255,6 +201,30 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: PATH_NAME.SERVICE,
+    element: lazyLoad(() => import("../pages/services/Service")),
+  },
+  {
+    path: PATH_NAME.EXPRESS_DELIVERY,
+    element: lazyLoad(() => import("../pages/services/expressDelivery/ExpressDelivery")),
+  },
+  {
+    path: PATH_NAME.ADDITIONAL_SERVICE,
+    element: lazyLoad(() => import("../pages/services/additionalService/Additional")),
+  },
+  {
+    path: PATH_NAME.PARCEL_RULES,
+    element: lazyLoad(() => import("../pages/services/parcelRules/ParcelRules")),
+  },
+  {
+    path: PATH_NAME.TRACKING,
+    element: lazyLoad(() => import("../pages/tracking/Tracking")),
+  },
+  {
+    path: PATH_NAME.SUPPORT,
+    element: lazyLoad(() => import("../pages/support/Support")),
   },
   {
     path: PATH_NAME.LOGIN,

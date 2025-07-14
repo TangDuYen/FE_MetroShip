@@ -2,6 +2,7 @@ import './OrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
 import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
+import { parcelStatusMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -44,28 +45,28 @@ function OrderStaff() {
   const formatCurrency = (value) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
-  const parcelStatusMap = (status) => {
-    const statusMapping = {
-      0: "Đang xử lý", //AwaitingConfirmation
-      1: "Đợi thanh toán", //AwaitingPayment
-      2: "Đợi gửi hàng", //AwaitingDropOff
-      3: "Từ chối", //Rejected
-      4: "Chưa thanh toán", //Unpaid
-      5: "Đã hủy", //Cancelled
-      6: "Chờ hoàn tiền", //AwaitingRefund
-      7: "Đã hoàn tiền", //Refunded
-      8: "Không đến gửi hàng", //NoDropOff
-      9: "Đã nhận hàng tại trạm", //ReceivedAtStation
-      10: "Đang trên đường vận chuyển - Tuyến ", //InTransitLineXStationXC
-      11: "Chuyển sang tuyến ", //TransferringToLineYStationYD
-      12: "Đã nhận hàng ở trạm", //ReceivedAtStationB
-      13: "Đợi khách đến lấy hàng", //OutForDelivery
-      14: "Hết hạn", //Overdue
-      15: "Lưu kho lâu", //LongTermStorage
-      16: "Hoàn thành", //Delivered
-    };
-    return statusMapping[status] || 'Không xác nhận';
-  };
+  // const parcelStatusMap = (status) => {
+  //   const statusMapping = {
+  //     0: "Đang xử lý", //AwaitingConfirmation
+  //     1: "Đợi thanh toán", //AwaitingPayment
+  //     2: "Đợi gửi hàng", //AwaitingDropOff
+  //     3: "Từ chối", //Rejected
+  //     4: "Chưa thanh toán", //Unpaid
+  //     5: "Đã hủy", //Cancelled
+  //     6: "Chờ hoàn tiền", //AwaitingRefund
+  //     7: "Đã hoàn tiền", //Refunded
+  //     8: "Không đến gửi hàng", //NoDropOff
+  //     9: "Đã nhận hàng tại trạm", //ReceivedAtStation
+  //     10: "Đang trên đường vận chuyển - Tuyến ", //InTransitLineXStationXC
+  //     11: "Chuyển sang tuyến ", //TransferringToLineYStationYD
+  //     12: "Đã nhận hàng ở trạm", //ReceivedAtStationB
+  //     13: "Đợi khách đến lấy hàng", //OutForDelivery
+  //     14: "Hết hạn", //Overdue
+  //     15: "Lưu kho lâu", //LongTermStorage
+  //     16: "Hoàn thành", //Delivered
+  //   };
+  //   return statusMapping[status] || 'Không xác nhận';
+  // };
 
   //API ONE TIME
   useEffect(() => {
@@ -197,28 +198,7 @@ function OrderStaff() {
       dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
       render: (status) => {
-        const statusMapping = {
-          0: 'Đợi thanh toán',
-          1: 'Từ chối',
-          2: 'Không thanh toán',
-          3: 'Đã hủy',
-          4: 'Đợi hoàn tiền',
-          5: 'Đã hoàn tiền',
-          6: 'Không xuất hiện',
-          7: 'Đợi gửi hàng',
-          8: 'Đã lấy hàng',
-          9: 'Đang vận chuyển',
-          10: 'Đợi lấy hàng',
-          11: 'Thu phí tồn kho',
-          12: 'Quá hạn',
-          13: 'Hoàn đơn',
-          14: 'Đang hoàn đơn',
-          15: 'Đã hoàn đơn',
-          16: 'Đợi phản hồi',
-          17: 'Đã hoàn thành',
-          18: 'Delayed',
-        };
-        return statusMapping[status] || 'Không xác nhận';
+        return shipmentStatusMap[status] || 'Không xác nhận';
       },
     },
     {
@@ -561,8 +541,8 @@ function OrderStaff() {
                               {
                                 key: 'parcelStatus',
                                 label: 'Trạng thái kiện hàng',
-                                value: parcelStatusMap(parcel.parcelStatus),
-                              },
+                                value: shipmentStatusMap[selectedOrder.shipmentStatus] || 'Không xác nhận',
+                              }
                             ]}
                             columns={[
                               {
