@@ -53,4 +53,12 @@ export const paymentTransactionTypeMap = {
 //     16: "Hoàn thành"
 // }
 
+export const shipmentStatusSteps = [
+  { id: 0, label: 'Đơn hàng đã được đặt' },
+  { id: 8, label: 'Đơn vị vận chuyển đã lấy hàng' },
+  { id: 9, label: 'Đơn hàng đang được vận chuyển' },
+  { id: 10, label: 'Đơn hàng đang chờ lấy' },
+  { id: 17, label: 'Đơn hàng đã giao thành công' },
+];
+
 
