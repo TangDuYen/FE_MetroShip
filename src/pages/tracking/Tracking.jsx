@@ -8,6 +8,8 @@ import {
 import { FaShippingFast, FaTimesCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { getAllShipments } from "../../config/metroApi";
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
 function Tracking() {
   // const trackingShipment = {
   //   MS12345: {
@@ -162,17 +164,21 @@ function Tracking() {
             </div>
 
             <div>
-              <strong>Người gửi:</strong> {result.senderName} -{" "}
-              {result.senderPhone}
+              <strong>Người gửi:</strong> {result.senderName}
             </div>
             <div>
-              <strong>Người nhận:</strong> {result.recipientName} -{" "}
-              {result.recipientPhone}
+              <strong>Người nhận:</strong> {result.recipientName}
             </div>
             <div>
               <strong>Ngày gửi:</strong>{" "}
               {new Date(result.scheduledDateTime).toLocaleString()}
             </div>
+            <Link to={`/test/${result.trackingCode}`} className="detail-btn">
+              Xem chi tiết
+            </Link>
+            {/* <Link to={`${PATH_NAME.TRACKING_ORDER}/${result.trackingCode}`} className="detail-btn">
+              Xem chi tiết
+            </Link> */}
           </div>
           {/* <div>
               <strong>Ngày nhận hàng dự kiến:</strong> {result.estimatedReceive}
