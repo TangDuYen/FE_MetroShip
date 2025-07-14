@@ -216,6 +216,16 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.PARCEL_RULES,
+        element: (
+          <ProtectedRouteCustomer>
+            {lazyLoad(() =>
+              import("../pages/services/parcelRules/ParcelRules")
+            )}
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
         path: PATH_NAME.TRACKING,
         element: (
           <ProtectedRouteCustomer>
@@ -280,6 +290,7 @@ export const router = createBrowserRouter([
     element: lazyLoad(() => import("../pages/page404/Page404")),
   },
 
+  //DASHBOARD ROUTES
   {
     path: PATH_NAME.DASHBOARD,
     element: (
@@ -290,6 +301,8 @@ export const router = createBrowserRouter([
       </ProtectedDashboard>
     ),
     children: [
+
+      //STAFF ROUTES
       {
         path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
         element: (
@@ -313,6 +326,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_STAFF_HANDLED_ORDER,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-order-done/HandledOrderStaff"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>
@@ -325,15 +350,17 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: PATH_NAME.DASHBOARD_STAFF_ROUTE_MANAGEMENT,
+        path: PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION,
         element: (
           <ProtectedRouteStaff>
             {lazyLoad(() =>
-              import("../pages/dashboard/pages/staff/staff-route/RouteStaff")
+              import("../pages/dashboard/pages/staff/staff-train/TrainStaff")
             )}
           </ProtectedRouteStaff>
         ),
       },
+
+      //ADMIN ROUTES
       {
         path: PATH_NAME.DASHBOARD_ADMIN,
         element: (
@@ -341,6 +368,18 @@ export const router = createBrowserRouter([
             {lazyLoad(() =>
               import(
                 "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_ORDERS,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-orders/AdminOrders"
               )
             )}
           </ProtectedRouteAdmin>
