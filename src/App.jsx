@@ -1,6 +1,6 @@
 import './App.scss'
 import 'react-toastify/dist/ReactToastify.css';
-
+import 'leaflet/dist/leaflet.css';
 import { persistor, store } from './redux/store';
 
 import { PersistGate } from 'redux-persist/integration/react';

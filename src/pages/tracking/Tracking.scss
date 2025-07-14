@@ -84,6 +84,15 @@
         color: red;
         font-weight: bold;
       }
+
+      .detail-btn{
+        font-weight: bold;
+        color: $primary-color;
+
+        &:hover{
+          color: $button-hover;
+        }
+      }
     }
 
     .tracking-history {
