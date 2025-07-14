@@ -1,24 +1,25 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Table, Tabs, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
+import { PATH_NAME } from '../../../../../constants/pathname';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const { TabPane } = Tabs;
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
@@ -29,10 +30,8 @@ function TrackingOrderStaff() {
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
-  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
-  const [verifyingParcel, setVerifyingParcel] = useState(null);
-  const [verifyImage, setVerifyImage] = useState(null);
   const today = dayjs();
+  const navigate = useNavigate();
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -199,7 +198,8 @@ function TrackingOrderStaff() {
               }
             }
           }}>
-          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
+          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}
+          >
             Xem chi tiết
           </Button>
         </ConfigProvider>
@@ -210,8 +210,14 @@ function TrackingOrderStaff() {
   const onRowClick = (record) => {
     const relatedParcels = getParcelsByShipmentId(record.id);
     setSelectedOrder({ ...record, relatedParcels });
-    setModalOpen(true);
+    navigate(
+      PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
   };
+  
   return (
     <>
       <div className="order-staff-container">
@@ -381,99 +387,6 @@ function TrackingOrderStaff() {
               bordered
               style={{ cursor: 'pointer' }}
             />
-            <Modal
-              title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
-              open={modalOpen}
-              onCancel={() => setModalOpen(false)}
-              footer={null}
-              width={700}
-            >
-              {selectedOrder && selectedOrder.relatedParcels && (
-                <Tabs defaultActiveKey="0">
-                  {selectedOrder.relatedParcels.map((parcel, index) => (
-                    <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
-                      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                        <Table
-                          dataSource={[
-                            {
-                              key: 'parcelCode',
-                              label: 'Mã kiện hàng',
-                              value: parcel.parcelCode || 'N/A',
-                            },
-                            {
-                              key: 'parcelCategory',
-                              label: 'Loại hàng',
-                              value: parcel.parcelCategory?.categoryName || 'N/A',
-                            },
-                            {
-                              key: 'chargeableWeightKg',
-                              label: 'Trọng lượng quy đổi',
-                              value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
-                            },
-                            {
-                              key: 'volumeCm3',
-                              label: 'Thể tích',
-                              value: `${parcel.volumeCm3 || 'N/A'} cm³`,
-                            },
-                            {
-                              key: 'departureStationName',
-                              label: 'Trạm gửi',
-                              value: selectedOrder.departureStationName || 'N/A',
-                            },
-                            {
-                              key: 'destinationStationName',
-                              label: 'Trạm nhận',
-                              value: selectedOrder.destinationStationName || 'N/A',
-                            },
-                            {
-                              key: 'departureDate',
-                              label: 'Ngày gửi',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
-                            },
-                            {
-                              key: 'departureTime',
-                              label: 'Giờ gửi',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
-                            },
-                            {
-                              key: 'createdAt',
-                              label: 'Thời điểm tạo yêu cầu',
-                              value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
-                            },
-                            {
-                              key: 'totalCost',
-                              label: 'Tổng chi phí',
-                              value: formatCurrency(selectedOrder.totalCostVnd || 0),
-                            },
-                            {
-                              key: 'parcelStatus',
-                              label: 'Trạng thái kiện hàng',
-                              value: shipmentStatusMap[selectedOrder.shipmentStatus] || "Không xác nhận"
-                            },
-                          ]}
-                          columns={[
-                            {
-                              title: 'Thông tin',
-                              dataIndex: 'label',
-                              key: 'label',
-                            },
-                            {
-                              title: 'Chi tiết',
-                              dataIndex: 'value',
-                              key: 'value',
-                            },
-                          ]}
-                          pagination={false}
-                          bordered
-                          showHeader={false}
-                          rowClassName="order-detail-row"
-                        />
-                      </Space>
-                    </TabPane>
-                  ))}
-                </Tabs>
-              )}
-            </Modal>
           </Card>
         </div>
       </div>

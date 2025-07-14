@@ -33,6 +33,7 @@ export const PATH_NAME = {
     DASHBOARD_STAFF_HANDLED_ORDER: "/dashboard/staff/handled-order",
     DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
     DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
+    DASHBOARD_STAFF_ORDER_INFORMATION: "/dashboard/staff/order-information/:trackingCode",
 
     //ADMIN
     DASHBOARD_ADMIN: "/dashboard/admin",

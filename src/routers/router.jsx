@@ -303,6 +303,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-order-information/OrderInformationStaff"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_STAFF_HANDLED_ORDER,
         element: (
           <ProtectedRouteStaff>

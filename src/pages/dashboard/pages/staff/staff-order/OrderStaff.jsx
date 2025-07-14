@@ -2,7 +2,6 @@ import './OrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
 import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
-import { parcelStatusMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -11,6 +10,7 @@ import MetroStation from '../../../../../assets/metro_station.png';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import moment from 'moment';
+import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
 
 const { TabPane } = Tabs;
