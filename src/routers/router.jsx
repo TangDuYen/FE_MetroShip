@@ -10,7 +10,6 @@ import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
-
 // import AboutUs from "../pages/about_us/AboutUs";
 // import Additional from "../pages/services/additionalService/Additional";
 // import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
@@ -189,6 +188,14 @@ export const router = createBrowserRouter([
       },
       {
         path: `${PATH_NAME.TRACKING_ORDER}/:trackingCode`,
+        element: (
+          <ProtectedRouteCustomer>
+            {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
+        path: PATH_NAME.TRACKING_ORDER,
         element: (
           <ProtectedRouteCustomer>
             {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}

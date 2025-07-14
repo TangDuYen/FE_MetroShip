@@ -2,136 +2,208 @@ import './TrackingOrder.scss';
 
 import { Badge, Button, Card, Divider, Timeline } from 'antd';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import { use, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getAllCustomerShipments, getAllParcels, getAllStations } from '../../config/metroApi';
+import { shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
 
 import { Icon } from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
+import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
-// Dữ liệu mẫu
-const orderStatuses = [
-  { id: 1, label: 'Đã xác nhận', date: '10 Tháng 4', completed: true, summary: 'Đã xác nhận đơn hàng' },
-  { id: 2, label: 'Đang vận chuyển', date: '10 Tháng 4', completed: true, summary: 'Đang vận chuyển tới khu vực trung chuyển' },
-  { id: 3, label: 'Đang giao hàng', date: '15 Tháng 4', completed: false, summary: 'Đang trên tàu AA - Tuyến XX' },
-  { id: 4, label: 'Đã giao hàng', date: '17 Tháng 4', completed: false, summary: 'Giao vào 17 Tháng 4' },
-];
-
-const shipmentTimeline = [
-  { date: '26 Th06 06:28', description: 'Đơn hàng đã đến trạm giao hàng tại khu vực Phường 13, Quận 4, TP. Hồ Chí Minh và sẽ được giao trong vòng 24 giờ tiếp theo.' },
-  { date: '26 Th06 00:24', description: 'Đơn hàng đã rời kho phân loại tới 50-HCM D4 Hub.' },
-  { date: '25 Th06 23:16', description: 'Đơn hàng đã đến kho phân loại Xã Tân Phú Trung, Huyện Củ Chi, TP. Hồ Chí Minh.' },
-  { date: '25 Th06 23:10', description: 'Đơn hàng đã đến bưu cục.' },
-];
-
 function TrackingOrder() {
-  const [currentStatus, setCurrentStatus] = useState(4);
-  const nav = useNavigate();
+  const [shipments, setShipments] = useState([]);
+  const [parcels, setParcels] = useState([]);
+  const [parcelMap, setParcelMap] = useState(new Map());
+  const [selectedShipment, setSelectedShipment] = useState(null);
 
-  const handleStatusChange = (statusId) => {
-    setCurrentStatus(statusId);
-  };
+  const navigate = useNavigate();
 
-  const handleReorder = () => {
-    nav(PATH_NAME.BOOKING_ORDER);
-  };
+  const formatCurrency = (v) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
+
+  useEffect(() => {
+    Promise.all([getAllCustomerShipments(), getAllParcels(), getAllStations()])
+      .then(([shipmentsData, parcelsData, stations]) => {
+        setShipments(shipmentsData);
+        setParcels(parcelsData);
+        if (shipmentsData.length > 0) {
+          setSelectedShipment(shipmentsData[0]);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const m = new Map();
+    parcels.forEach(p => {
+      if (!m.has(p.shipmentId)) m.set(p.shipmentId, []);
+      m.get(p.shipmentId).push(p);
+    });
+    setParcelMap(m);
+  }, [parcels]);
+
+  if (!selectedShipment) return <div>Đang tải đơn...</div>;
+
+  const currentStatus = selectedShipment.shipmentStatus;
+  const shipmentParcels = parcelMap.get(selectedShipment.id) || [];
+
+  const orderStatuses = [
+    { id: 8, label: 'PickedUp' },
+    { id: 9, label: 'InTransit' },
+    { id: 10, label: 'AwaitingDelivery' },
+    { id: 17, label: 'Completed' },
+  ];
+
+  const shipmentTimeline = selectedShipment.histories || [];
 
   return (
     <div className="tracking-order-container">
       <div className="tracking-order-wrapper">
-        {/* Cột bên trái */}
         <div className="left-column">
-          <div className="map-container">
-            <Card style={{ marginBottom: '16px', marginTop: '2em' }}>
-              <div className="map-content">
-                <MapContainer center={[10.762622, 106.660172]} zoom={13} style={{ width: '100%', height: '300px' }}>
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  />
-                  <Marker position={[10.762622, 106.660172]} icon={new Icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png' })}>
-                    <Popup>
-                      Địa chỉ giao hàng: Phường 13, Quận 4, TP. Hồ Chí Minh.
-                    </Popup>
-                  </Marker>
-                </MapContainer>
-              </div>
-            </Card>
+          <Card style={{ marginTop: '2em', marginBottom: '16px' }}>
+            <MapContainer center={[10.762622, 106.660172]} zoom={13} style={{ width: '100%', height: '300px' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <Marker position={[10.762622, 106.660172]} icon={new Icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png' })}>
+                <Popup>
+                  Station: {selectedShipment.currentStationName}
+                </Popup>
+              </Marker>
+            </MapContainer>
+          </Card>
 
-            <Card title={orderStatuses.find(status => status.id === currentStatus)?.summary} bordered={false} style={{ marginBottom: '16px' }}>
-            {/* Hiển thị trạng thái tóm tắt với progress bar */}
-            <div className="status-summary">
-              <Timeline mode="horizontal" style={{ marginBottom: '16px' }}>
-                {orderStatuses.map((status) => (
-                  <Timeline.Item
-                    key={status.id}
-                    dot={<div className={`custom-dot ${status.id <= currentStatus ? 'completed' : ''}`} />}
-                    color={status.id <= currentStatus ? 'green' : 'gray'}
-                  >
-                    <div className="status-label">{status.label}</div>
-                  </Timeline.Item>
-                ))}
-              </Timeline>
+          <Card title={`Giao vào ${dayjs(selectedShipment.scheduledDateTime).format('DD [Th]MM')}`} bordered={false}>
+            <div className="custom-progress">
+              {[
+                { id: 8, label: 'Đã lấy hàng' },
+                { id: 9, label: 'Đang giao hàng' },
+                { id: 17, label: 'Đã giao hàng' },
+              ].map((step, idx, arr) => {
+                const isCompleted = currentStatus >= step.id;
+                const isLast = idx === arr.length - 1;
+                return (
+                  <div key={step.id} className="progress-step">
+                    <div className={`dot ${isCompleted ? 'completed' : ''}`}>
+                      {isLast && isCompleted ? '✔️' : ''}
+                    </div>
+                    {!isLast && <div className={`line ${currentStatus >= arr[idx + 1].id ? 'completed' : ''}`} />}
+                    <div className={`label ${isCompleted ? 'active' : ''}`}>{step.label}</div>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
-            {/* Timeline giao hàng */}
-            <Card  bordered={false}>
-              <div className="timeline">
-                <Timeline>
-                  {shipmentTimeline.map((entry, index) => (
-                    <Timeline.Item key={index} color="blue">
-                      <div className="timeline-date">{entry.date}</div>
-                      <div className="timeline-description">{entry.description}</div>
+          <Card bordered={false}>
+            <Timeline>
+              {shipmentStatusSteps
+                .filter((step) => currentStatus >= step.id)
+                .reverse()
+                .map((step, idx) => {
+                  // Giả lập thời gian cho mỗi bước, chỉ bước đầu dùng bookedAt
+                  const timestamp = idx === shipmentStatusSteps.length - 1
+                    ? dayjs(selectedShipment.bookedAt).format('DD/MM HH:mm')
+                    : dayjs().subtract(idx, 'hour').format('DD/MM HH:mm');
+
+                  return (
+                    <Timeline.Item key={step.id} color={idx === 0 ? 'green' : 'gray'}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div className="timeline-date" style={{ color: '#999' }}>{timestamp}</div>
+                        <div className={`timeline-description ${idx === 0 ? 'highlight' : ''}`}>
+                          {step.label}
+                        </div>
+                      </div>
                     </Timeline.Item>
-                  ))}
-                </Timeline>
-              </div>
-            </Card>
-          </div>
+                  );
+                })}
+            </Timeline>
+          </Card>
+
+
         </div>
 
-        {/* Cột bên phải */}
         <div className="right-column" style={{ marginTop: '2em' }}>
-          {/* Thông tin đơn hàng */}
           <Card title="Thông tin đơn hàng" bordered={false}>
             <div className="shipment-details">
               <div className="detail-item">
-                <span className="detail-label">Sản phẩm</span>
-                <span className="detail-value">All mega 200M & 4P-15 DOHF Filter Set</span>
+                <span className="detail-label">Tracking Code</span>
+                <span className="detail-value">{selectedShipment.trackingCode}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Giá</span>
-                <span className="detail-value">$183.97</span>
+                <span className="detail-label">Người gửi</span>
+                <span className="detail-value">{selectedShipment.senderName} – {selectedShipment.senderPhone}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Tổng phụ</span>
-                <span className="detail-value">$183.97</span>
+                <span className="detail-label">Người nhận</span>
+                <span className="detail-value">{selectedShipment.recipientName} – {selectedShipment.recipientPhone}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Vận chuyển</span>
-                <span className="detail-value">Miễn phí</span>
+                <span className="detail-label">Tổng phí</span>
+                <span className="detail-value">{formatCurrency(selectedShipment.totalCostVnd)}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Thuế</span>
-                <span className="detail-value">$12.88</span>
+                <span className="detail-label">Đặt lúc</span>
+                <span className="detail-value">{dayjs(selectedShipment.bookedAt).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Tổng cộng</span>
-                <span className="detail-value">$196.85</span>
+                <span className="detail-label">Dự kiến giao</span>
+                <span className="detail-value">{dayjs(selectedShipment.scheduledDateTime).format('DD/MM/YYYY HH:mm')}</span>
               </div>
+              {shipmentParcels.map((p, i) => (
+                <React.Fragment key={p.id || i}>
+                  <Divider />
+                  <div className="detail-item">
+                    <span className="detail-label">Mã kiện #{i + 1}</span>
+                    <span className="detail-value">{p.parcelCode}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Khối lượng</span>
+                    <span className="detail-value">{p.weightKg} kg</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Kích thước</span>
+                    <span className="detail-value">{p.lengthCm} × {p.widthCm} × {p.heightCm} cm</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Phí vận chuyển</span>
+                    <span className="detail-value">{formatCurrency(p.shippingFeeVnd)}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Phí bảo hiểm</span>
+                    <span className="detail-value">{formatCurrency(p.insuranceFeeVnd)}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Tổng phí</span>
+                    <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
+                  </div>
+                  {p.parcelCategory && (
+                    <>
+                      <div className="detail-item">
+                        <span className="detail-label">Loại hàng</span>
+                        <span className="detail-value">{p.parcelCategory.categoryName}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Mô tả</span>
+                        <span className="detail-value">{p.parcelCategory.description}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Bắt buộc bảo hiểm</span>
+                        <span className="detail-value">{p.parcelCategory.isInsuranceRequired ? 'Có' : 'Không'}</span>
+                      </div>
+                    </>
+                  )}
+                </React.Fragment>
+              ))}
             </div>
           </Card>
-
-          {/* Thẻ trạng thái */}
-          <Card title="Trạng thái" bordered={false} >
-            <Badge className={`status-badge ${currentStatus === 4 ? 'delivered' : 'in-transit'}`}>
-              {orderStatuses.find((s) => s.id === currentStatus)?.label}
+          <Card title="Trạng thái" bordered={false}>
+            <Badge className={`status-badge ${currentStatus >= 17 ? 'delivered' : 'in-transit'}`}>
+              {shipmentStatusMap[selectedShipment.shipmentStatus] || 'Không rõ trạng thái'}
             </Badge>
           </Card>
 
-          {/* Nút đặt lại đơn hàng */}
           <Card bordered={false}>
-            <Button onClick={handleReorder} type="primary" block>
+            <Button type="primary" block onClick={() => navigate(PATH_NAME.BOOKING_ORDER)}>
               Đặt lại đơn hàng
             </Button>
           </Card>

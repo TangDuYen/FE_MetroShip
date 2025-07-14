@@ -89,7 +89,7 @@ function HistoryOrders() {
 
         const shipmentMap = new Map(
           shipmentItems.map((item) => [
-            item.id, // 👈 Dùng shipmentId thay vì trackingCode
+            item.id,
             {
               date: item.scheduledDateTime
                 ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
@@ -97,29 +97,55 @@ function HistoryOrders() {
               status: item.shipmentStatus,
               bookedAt: item.bookedAt,
               totalCost: item.totalCostVnd || 0,
+              trackingCode: item.trackingCode,
             },
           ])
         );
 
-        const convertedGoods = parcelItems.map((item, index) => {
-          const shipmentInfo = shipmentMap.get(item.shipmentId) || {};
+        // Gom tất cả parcels theo shipmentId
+        const groupedByShipment = parcelItems.reduce((acc, parcel) => {
+          const { shipmentId } = parcel;
+          if (!acc[shipmentId]) acc[shipmentId] = [];
+          acc[shipmentId].push(parcel);
+          return acc;
+        }, {});
 
-          return {
-            id: index + 1,
-            shipmentId: item.shipmentId,
-            code: item.parcelCode || "N/A",
-            name: item.parcelCategory?.categoryName || "Chưa rõ",
-            weight: item.chargeableWeightKg || 0,
-            price: parseFloat(item.priceVnd|| "0"), // lấy giá từ shipment theo ID
-            size: item.volumeCm3,
-            deliveryDate: shipmentInfo.date || "N/A",
-            shipmentStatus: shipmentInfo.status,
-            bookedAt: shipmentInfo.bookedAt,
-          };
-        });
+        // Gộp thành danh sách đơn hàng
+        const convertedOrders = Object.entries(groupedByShipment).map(
+          ([shipmentId, parcels], index) => {
+            const shipmentInfo = shipmentMap.get(shipmentId) || {};
 
+            const totalWeight = parcels.reduce(
+              (sum, p) => sum + (p.chargeableWeightKg || 0),
+              0
+            );
 
-        setOrders(convertedGoods.sort((a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)));
+            const totalVolume = parcels.reduce(
+              (sum, p) => sum + (p.volumeCm3 || 0),
+              0
+            );
+
+            return {
+              id: index + 1,
+              shipmentId,
+              code: shipmentInfo.trackingCode || "N/A",
+              name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
+              weight: totalWeight,
+              volume: totalVolume,
+              price: shipmentInfo.totalCost || 0,
+              deliveryDate: shipmentInfo.date || "N/A",
+              shipmentStatus: shipmentInfo.status,
+              bookedAt: shipmentInfo.bookedAt,
+            };
+          }
+        );
+
+        setOrders(
+          convertedOrders.sort(
+            (a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)
+          )
+        );
+
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }
@@ -278,11 +304,10 @@ function HistoryOrders() {
                 <thead>
                   <tr>
                     <th>STT</th>
-                    <th>Mã hàng hóa</th>
-                    <th>Tên hàng hóa</th>
-                    <th>Trọng lượng (kilogram)</th>
+                    <th>Mã vận đơn</th>
+                    <th>Tổng trọng lượng (kilogram)</th>
                     <th>Tổng chi phí (vnd)</th>
-                    <th>Thể tích (cm³)</th>
+                    <th>Tổng thể tích (cm³)</th>
                     <th>Ngày gửi hàng</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
@@ -301,10 +326,9 @@ function HistoryOrders() {
                       <tr key={item.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{item.code}</td>
-                        <td>{item.name}</td>
                         <td>{item.weight}</td>
                         <td>{item.price.toLocaleString()}</td>
-                        <td>{item.size}</td>
+                        <td>{item.volume}</td>
                         <td>{item.deliveryDate}</td>
                         <td>
                           <Link to={PATH_NAME.TRACKING_ORDER}>
