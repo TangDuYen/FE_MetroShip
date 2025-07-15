@@ -7,6 +7,7 @@ import { MdSearch } from "react-icons/md";
 import { PATH_NAME } from "../../constants/pathname";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
+import { shipmentStatusMap } from "../../constants/statusMap";
 import { toast } from "react-toastify";
 
 function HistoryOrders() {
@@ -22,25 +23,25 @@ function HistoryOrders() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const shipmentStatusMap = {
-    0: "Đang xử lý",
-    1: "Đã từ chối",
-    2: "Xác nhận một phần",
-    3: "Đã xác nhận",
-    4: "Chưa thanh toán",
-    5: "Đã hủy",
-    6: "Chờ hoàn tiền",
-    7: "Đã hoàn tiền",
-    8: "Không có điểm gửi hàng",
-    9: "Đã thanh toán",
-    10: "Đã lấy hàng",
-    11: "Đang vận chuyển",
-    12: "Chờ giao hàng",
-    13: "Đang áp dụng phụ phí",
-    14: "Hết hạn",
-    15: "Chờ phản hồi",
-    16: "Hoàn thành",
-  };
+  // const shipmentStatusMap = {
+  //   0: "Đang xử lý",
+  //   1: "Đã từ chối",
+  //   2: "Xác nhận một phần",
+  //   3: "Đã xác nhận",
+  //   4: "Chưa thanh toán",
+  //   5: "Đã hủy",
+  //   6: "Chờ hoàn tiền",
+  //   7: "Đã hoàn tiền",
+  //   8: "Không có điểm gửi hàng",
+  //   9: "Đã thanh toán",
+  //   10: "Đã lấy hàng",
+  //   11: "Đang vận chuyển",
+  //   12: "Chờ giao hàng",
+  //   13: "Đang áp dụng phụ phí",
+  //   14: "Hết hạn",
+  //   15: "Chờ phản hồi",
+  //   16: "Hoàn thành",
+  // };
   const statusOptions = Object.entries(shipmentStatusMap).map(([value, label]) => ({
     value,
     label,
@@ -88,39 +89,63 @@ function HistoryOrders() {
 
         const shipmentMap = new Map(
           shipmentItems.map((item) => [
-            item.trackingCode,
+            item.id,
             {
               date: item.scheduledDateTime
                 ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
                 : "",
-
               status: item.shipmentStatus,
               bookedAt: item.bookedAt,
-            }
+              totalCost: item.totalCostVnd || 0,
+              trackingCode: item.trackingCode,
+            },
           ])
         );
-        const convertedGoods = parcelItems.map((item, index) => {
-          // Lấy trackingCode từ parcelCode: loại bỏ phần hậu tố (vd "-01")
-          const baseTrackingCode = item.parcelCode
-            ? item.parcelCode.split("-").slice(0, -1).join("-")
-            : "";
-          const shipmentInfo = shipmentMap.get(baseTrackingCode) || {};
-          return {
-            id: index + 1,
-            shipmentId: item.shipmentId,
-            code: item.parcelCode || "N/A",
-            name: item.parcelCategory?.categoryName || "Chưa rõ",
-            weight: item.chargeableWeightKg || 0,
-            price: parseFloat(item.priceVnd || "0"),
-            size: item.volumeCm3,
-            // status: item.parcelTrackings?.[0]?.status || "Unknown",
-            deliveryDate: shipmentInfo.date || "N/A",
-            shipmentStatus: shipmentInfo.status,
-            bookedAt: shipmentInfo.bookedAt,
-          };
-        });
 
-        setOrders(convertedGoods.sort((a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)));
+        // Gom tất cả parcels theo shipmentId
+        const groupedByShipment = parcelItems.reduce((acc, parcel) => {
+          const { shipmentId } = parcel;
+          if (!acc[shipmentId]) acc[shipmentId] = [];
+          acc[shipmentId].push(parcel);
+          return acc;
+        }, {});
+
+        // Gộp thành danh sách đơn hàng
+        const convertedOrders = Object.entries(groupedByShipment).map(
+          ([shipmentId, parcels], index) => {
+            const shipmentInfo = shipmentMap.get(shipmentId) || {};
+
+            const totalWeight = parcels.reduce(
+              (sum, p) => sum + (p.chargeableWeightKg || 0),
+              0
+            );
+
+            const totalVolume = parcels.reduce(
+              (sum, p) => sum + (p.volumeCm3 || 0),
+              0
+            );
+
+            return {
+              id: index + 1,
+              shipmentId,
+              code: shipmentInfo.trackingCode || "N/A",
+              name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
+              weight: totalWeight,
+              volume: totalVolume,
+              price: shipmentInfo.totalCost || 0,
+              deliveryDate: shipmentInfo.date || "N/A",
+              shipmentStatus: shipmentInfo.status,
+              bookedAt: shipmentInfo.bookedAt,
+            };
+          }
+        );
+
+        setOrders(
+          convertedOrders.sort(
+            (a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)
+          )
+        );
+
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }
@@ -129,28 +154,28 @@ function HistoryOrders() {
     fetchData();
   }, []);
 
-  const handlePayment = async (shipmentId) => {
-    try {
-      const payload = {
-        shipmentId,
-        returnUrl: "http://localhost:5173/payment-success",
-        cancelUrl: "http://localhost:5173/payment-fail",
-      };
+  // const handlePayment = async (shipmentId) => {
+  //   try {
+  //     const payload = {
+  //       shipmentId,
+  //       returnUrl: "http://localhost:5173/payment-success",
+  //       cancelUrl: "http://localhost:5173/payment-fail",
+  //     };
 
-      const res = await api.post("/shipments/vnpay/payment-url", payload);
-      console.log(res.data);
+  //     const res = await api.post("/shipments/vnpay/payment-url", payload);
+  //     console.log(res.data);
 
-      // statusCode nằm trực tiếp trong res.data
-      if (res.data?.statusCode === 200 && res.data.data) {
-        window.location.href = res.data.data; // Redirect to VNPay
-      } else {
-        toast.error("Không lấy được link thanh toán!");
-      }
-    } catch (err) {
-      console.error("Lỗi khi thanh toán:", err);
-      toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán.");
-    }
-  };
+  //     // statusCode nằm trực tiếp trong res.data
+  //     if (res.data?.statusCode === 200 && res.data.data) {
+  //       window.location.href = res.data.data; // Redirect to VNPay
+  //     } else {
+  //       toast.error("Không lấy được link thanh toán!");
+  //     }
+  //   } catch (err) {
+  //     console.error("Lỗi khi thanh toán:", err);
+  //     toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán.");
+  //   }
+  // };
 
 
   const filteredGoods = orders.filter((item) => {
@@ -176,7 +201,7 @@ function HistoryOrders() {
     currentPage * itemsPerPage
   );
 
-  const hasPayment = displayedGoods.some((item) => item.status === 3);
+  // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -279,15 +304,14 @@ function HistoryOrders() {
                 <thead>
                   <tr>
                     <th>STT</th>
-                    <th>Mã hàng hóa</th>
-                    <th>Tên hàng hóa</th>
-                    <th>Trọng lượng (kilogram)</th>
+                    <th>Mã vận đơn</th>
+                    <th>Tổng trọng lượng (kilogram)</th>
                     <th>Tổng chi phí (vnd)</th>
-                    <th>Thể tích (cm³)</th>
+                    <th>Tổng thể tích (cm³)</th>
                     <th>Ngày gửi hàng</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
-                    {hasPayment && <th>Hành động</th>}
+                    {/* {hasPayment && <th>Hành động</th>} */}
                   </tr>
                 </thead>
                 <tbody>
@@ -302,10 +326,9 @@ function HistoryOrders() {
                       <tr key={item.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{item.code}</td>
-                        <td>{item.name}</td>
                         <td>{item.weight}</td>
                         <td>{item.price.toLocaleString()}</td>
-                        <td>{item.size}</td>
+                        <td>{item.volume}</td>
                         <td>{item.deliveryDate}</td>
                         <td>
                           <Link to={PATH_NAME.TRACKING_ORDER}>
@@ -319,7 +342,7 @@ function HistoryOrders() {
                         </td>
 
 
-                        {item.shipmentStatus === 3 ? (
+                        {/* {item.shipmentStatus === 3 ? (
                           <td>
                             <button
                               className="pay-button"
@@ -332,7 +355,7 @@ function HistoryOrders() {
                           <td>-</td>
                         ) : null}
 
-                        {/* <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td> */}
+                         <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td>  */}
                       </tr>
                     ))
                   )}

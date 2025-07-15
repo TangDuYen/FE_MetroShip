@@ -1,0 +1,29 @@
+@use "../../../styles/variables.scss" as *;
+.parcel-rules-container {
+  max-width: 900px;
+  margin: 7% auto;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
+
+  // Cách 1: dùng selector mạnh hơn
+  .main-title.ant-typography {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: $primary-color;
+    text-align: center;
+  }
+
+  ul {
+    margin-left: 1.5em;
+    li {
+      margin-bottom: 6px;
+    }
+  }
+
+  .ant-typography {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+}

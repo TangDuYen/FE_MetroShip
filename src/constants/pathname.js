@@ -7,6 +7,7 @@ export const PATH_NAME = {
     SERVICE: "/service",
     EXPRESS_DELIVERY: "/service/express-delivery",
     ADDITIONAL_SERVICE: "/service/additional-service",
+    PARCEL_RULES: "/service/parcel-rules",
 
     //AUTHENTICATION 
     LOGIN: "/login",
@@ -23,19 +24,22 @@ export const PATH_NAME = {
     PAYMENT_FAILED: "/payment-fail",
     BOOKING_ORDER: "/booking-order",
     TRACKING_ORDER: "/tracking-order",
+    PRINT_ORDER: "/print-order",
     POLICY: "/policy",
 
     //STAFF
     DASHBOARD: "/dashboard",
     DASHBOARD_STAFF_PENDING_ORDER: "/dashboard/staff/pending-order",
     DASHBOARD_STAFF_TRACKING_ORDER: "/dashboard/staff/tracking-order",
+    DASHBOARD_STAFF_HANDLED_ORDER: "/dashboard/staff/handled-order",
     DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
-    DASHBOARD_STAFF_ROUTE_MANAGEMENT: "/dashboard/staff/route-management",
+    DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
+    DASHBOARD_STAFF_ORDER_INFORMATION: "/dashboard/staff/order-information/:trackingCode",
 
     //ADMIN
     DASHBOARD_ADMIN: "/dashboard/admin",
+    DASHBOARD_ADMIN_ORDERS: "/dashboard/admin/orders",
     DASHBOARD_ADMIN_USER_MANAGEMENT: "/dashboard/admin/user-management",
     DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT: "/dashboard/admin/metroline-management",
     DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT: "/dashboard/admin/metrotrain-management",
-    
 }

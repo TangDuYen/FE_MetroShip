@@ -1,0 +1,10 @@
+.map {
+    margin-top: 7%;
+  height: 500px; // trừ header nếu có
+  width: 100%;
+  border: 2px solid #3c3c3c;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}

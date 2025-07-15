@@ -4,6 +4,7 @@ import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Se
 import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
 import { useEffect, useState } from 'react';
 
+import { PATH_NAME } from '../../constants/pathname';
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
@@ -105,7 +106,7 @@ function ParcelInfo({
         const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
         if (selectedSlot) {
           const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ss[Z]");
+          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ss");
           console.log(selectedSlot.id);
           console.log('Combined DateTime:', combinedDateTime);
           setTimeSlots(selectedSlot.id);
@@ -119,38 +120,29 @@ function ParcelInfo({
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
   };
 
-  const disabledDate = current => {
+  // const disabledDate = current => {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   // const threeDaysAhead = new Date();
+  //   // threeDaysAhead.setDate(today.getDate() + 2);
+  //   // threeDaysAhead.setHours(23, 59, 59, 999);
+  //   return (
+  //     current &&
+  //     (current.valueOf() < today.getTime())
+  //     // current &&
+  //     // (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
+  //   );
+  // };
+  const disabledDate = (current) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const threeDaysAhead = new Date();
-    threeDaysAhead.setDate(today.getDate() + 2);
-    threeDaysAhead.setHours(23, 59, 59, 999);
-    return (
-      current &&
-      (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-    );
+    today.setHours(0, 0, 0, 0); // reset to 00:00 of today
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // +1 day
+    return current && current.valueOf() < tomorrow.getTime();
   };
 
-  // useEffect(() => {
-  //   const selectedCategory = parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory);
-  //   if (!selectedCategory) {
-  //     setDimensionError('');
-  //     return;
-  //   }
-  //   const { lengthLimitCm, widthLimitCm, heightLimitCm } = selectedCategory;
-  //   const { lengthCm = 0, widthCm = 0, heightCm = 0 } = parcelInfo;
-  //   const errors = [];
-  //   if (lengthCm > lengthLimitCm) errors.push(`Chiều dài đã vượt quá ${lengthLimitCm}cm`);
-  //   if (widthCm > widthLimitCm) errors.push(`Chiều rộng đã vượt quá ${widthLimitCm}cm`);
-  //   if (heightCm > heightLimitCm) errors.push(`Chiều cao đã vượt quá ${heightLimitCm}cm`);
-  //   setDimensionError(errors.join(', '));
-  // }, [
-  //   parcelInfo.parcelCategory,
-  //   parcelInfo.lengthCm,
-  //   parcelInfo.widthCm,
-  //   parcelInfo.heightCm,
-  //   parcelCategory,
-  // ]);
+
   useEffect(() => {
     const errors = parcelInfo.map((parcel) => {
       const selectedCategory = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
@@ -298,60 +290,6 @@ function ParcelInfo({
     }
   };
 
-  // const fetchTotalPriceItinerary = async () => {
-  //   const payload = buildPriceItineraryPayload();
-
-  //   try {
-  //     const res = await api.post('/shipments/total-price-itinerary', payload);
-  //     const data = res.data?.data;
-
-  //     const solutions = [
-  //       { type: 'standard', data: data.standard, label: 'Tiêu chuẩn' },
-  //       { type: 'nearest', data: data.nearest, label: 'Ưu tiên' },
-  //       { type: 'shortest', data: data.shortest, label: 'Tốt nhất' },
-  //     ];
-  //     setRouteSolutions(solutions);
-
-  //     const defaultIndex = solutions.findIndex(s => s.type === 'standard');
-  //     if (defaultIndex >= 0) {
-  //       setSelectedSolutionIndex(defaultIndex);
-  //       setPriceVnd(solutions[defaultIndex].data?.totalCostVnd);
-  //       setTotalKm(solutions[defaultIndex].data?.totalKm);
-  //       setChargeableWeight(solutions[defaultIndex].data?.parcels?.[0].chargeableWeight);
-  //       setShippingFeeVnd(solutions[defaultIndex].data?.parcels?.[0].shippingFeeVnd);
-  //       const firstStation = solutions[defaultIndex].stations?.[0];
-  //       if (firstStation) {
-  //         setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
-  //         setDisplayedDepartureStationId(firstStation.stationId);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Lỗi fetch giá itinerary:', error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   const ready =
-  //     realDepartureStationId &&
-  //     metroSelector.destinationStationId &&
-  //     metroSelector.departureDateTime &&
-  //     parcelInfo.length > 0 &&
-  //     parcelInfo.every(p =>
-  //       p.parcelCategory &&
-  //       p.weightKg &&
-  //       p.lengthCm &&
-  //       p.widthCm &&
-  //       p.heightCm
-  //     );
-
-  //   if (ready) fetchTotalPriceItinerary();
-  // }, [
-  //   realDepartureStationId,
-  //   metroSelector.destinationStationId,
-  //   metroSelector.departureDateTime,
-  //   parcelInfo,
-  // ]);
-
   const removeParcel = (indexToRemove) => {
     const updated = parcelInfo.filter((_, index) => index !== indexToRemove);
     setParcelInfo(updated);
@@ -384,7 +322,10 @@ function ParcelInfo({
               </Select>
               {parcelCategory.find(c => c.id === parcel.parcelCategory)?.isInsuranceRequired && (
                 <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
-                  ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {parcelCategory.find(c => c.id === parcel.parcelCategory)?.insuranceRate?.toLocaleString() || 0}% trên giá trị món hàng
+                  ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {parcelCategory.find(c => c.id === parcel.parcelCategory)?.insuranceRate?.toLocaleString() || 0}% trên giá trị món hàng.
+                  <div>
+                    ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
+                  </div>
                 </div>
               )}
               {(() => {
@@ -570,11 +511,11 @@ function ParcelInfo({
               />
             </Modal>
           </div>
-          <div className="insurance-fee" style={{ marginBottom: "1em" }}>
+          {/* <div className="insurance-fee" style={{ marginBottom: "1em" }}>
             <Checkbox>
               Áp dụng bảo hiểm hàng hóa: {parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory)?.insuranceFeeVnd || 0} VND
             </Checkbox>
-          </div>
+          </div> */}
           <div
             className="solutions"
             style={{

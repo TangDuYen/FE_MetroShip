@@ -19,6 +19,7 @@ function Header() {
   const location = useLocation();
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const toggleProfileDropdown = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
@@ -31,11 +32,72 @@ function Header() {
     localStorage.removeItem("userLongitude");
     dispatch(logout());
     navigate(PATH_NAME.HOME);
-  }
+  };
 
   const handleClick = () => {
-    toast.info("Bạn cần phải đăng nhập để sử dụng chức năng này", 3000)
-  }
+    toast.info("Bạn cần phải đăng nhập để sử dụng chức năng này", 3000);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const navItems = (
+    <>
+      <li
+        className={`header-nav-item ${
+          location.pathname === PATH_NAME.HOME ? "active" : ""
+        }`}
+      >
+        <Link to={PATH_NAME.HOME}>Trang chủ</Link>
+      </li>
+      <li
+        className={`header-nav-item ${
+          location.pathname === PATH_NAME.ABOUT_US ? "active" : ""
+        }`}
+      >
+        <Link to={PATH_NAME.ABOUT_US}>Về chúng tôi</Link>
+      </li>
+      <li
+        className={`header-nav-item ${
+          location.pathname === PATH_NAME.SERVICE ? "active" : ""
+        }`}
+      >
+        <Link to={PATH_NAME.SERVICE}>Dịch vụ</Link>
+      </li>
+      <li
+        className={`header-nav-item ${
+          location.pathname === PATH_NAME.TRACKING ? "active" : ""
+        }`}
+      >
+        <Link to={PATH_NAME.TRACKING}>Theo dõi</Link>
+      </li>
+      <li
+        className={`header-nav-item ${
+          location.pathname === PATH_NAME.SUPPORT ? "active" : ""
+        }`}
+      >
+        <Link to={PATH_NAME.SUPPORT}>Hỗ trợ</Link>
+      </li>
+      <li>
+        {user ? (
+          <Link to={PATH_NAME.BOOKING_ORDER}>
+            <button className="header-btn">Tạo đơn</button>
+          </Link>
+        ) : (
+          <Link to={PATH_NAME.LOGIN}>
+            <button className="header-btn" onClick={handleClick}>
+              Tạo đơn
+            </button>
+          </Link>
+        )}
+      </li>
+    </>
+  );
 
   return (
     <>
@@ -47,52 +109,21 @@ function Header() {
             </Link>
           </div>
 
-          <div className="header-position-relative">
-            <nav className="header-nav">
-              <ul className="header-items">
-                <li
-                  className={`header-nav-item ${location.pathname === PATH_NAME.HOME ? "active" : ""
-                    }`}
-                >
-                  <Link to={PATH_NAME.HOME}>Trang chủ</Link>
-                </li>
-                <li
-                  className={`header-nav-item ${location.pathname === PATH_NAME.ABOUT_US ? "active" : ""
-                    }`}
-                >
-                  <Link to={PATH_NAME.ABOUT_US}>Về chúng tôi</Link>
-                </li>
-                <li
-                  className={`header-nav-item ${location.pathname === PATH_NAME.SERVICE ? "active" : ""
-                    }`}
-                >
-                  <Link to={PATH_NAME.SERVICE}>Dịch vụ</Link>
-                </li>
-                <li
-                  className={`header-nav-item ${location.pathname === PATH_NAME.TRACKING ? "active" : ""
-                    }`}
-                >
-                  <Link to={PATH_NAME.TRACKING}>Theo dõi</Link>
-                </li>
-                <li
-                  className={`header-nav-item ${location.pathname === PATH_NAME.SUPPORT ? "active" : ""
-                    }`}
-                >
-                  <Link to={PATH_NAME.SUPPORT}>Hỗ trợ</Link>
-                </li>
-                <li> {user ? (
-                  <Link to={PATH_NAME.BOOKING_ORDER}>
-                    <button className="header-btn">Tạo đơn</button>
-                  </Link>
-                ) : (
-                  <Link to={PATH_NAME.LOGIN}>
-                    <button className="header-btn" onClick={handleClick}>Tạo đơn</button>
-                  </Link>
-                )}
-                </li>
-              </ul>
-            </nav>
-          </div>
+          {/* Desktop menu */}
+          <nav className="header-nav">
+            <ul className="header-items">{navItems}</ul>
+          </nav>
+
+          
+          {/* Mobile menu */}
+          <nav
+            className={`header-mobile-menu ${isMobileMenuOpen ? "open" : ""}`}
+          >
+            <ul className="header-items" onClick={closeMobileMenu}>
+              {navItems}
+            </ul>
+          </nav>
+
           <div className="header-right">
             {/* <form method="get" className="header-form-search" role="search">
             <input
@@ -110,6 +141,9 @@ function Header() {
               <GoSearch />
             </button>
           </form> */}
+          <button className="hamburger-icon" onClick={toggleMobileMenu}>
+            ☰
+          </button>
             <div
               className="header-block-account"
               ref={profileDropdownRef}
@@ -163,9 +197,9 @@ function Header() {
                 </div>
               )}
             </div>
-          </div >
-        </div >
-      </header >
+          </div>
+        </div>
+      </header>
     </>
   );
 }

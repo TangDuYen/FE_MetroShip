@@ -1,23 +1,27 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Table, Tabs, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
+import { Html5Qrcode } from "html5-qrcode";
 import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
+import { PATH_NAME } from '../../../../../constants/pathname';
+import { QrcodeOutlined } from '@ant-design/icons';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import moment from 'moment';
+import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const { TabPane } = Tabs;
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
@@ -29,6 +33,51 @@ function TrackingOrderStaff() {
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const today = dayjs();
+  const navigate = useNavigate();
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  // Mở camera
+  const handleCameraOpen = () => {
+    setIsScannerOpen(true);
+    setTimeout(() => startScanner(), 300); // Chờ modal mở
+  };
+
+  // Hàm khởi động scanner
+  const startScanner = () => {
+    const qrCodeRegionId = "qr-scanner";
+    const html5QrCode = new Html5Qrcode(qrCodeRegionId);
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const cameraId = devices[0].id;
+
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText, decodedResult) => {
+            html5QrCode.stop();
+            setIsScannerOpen(false);
+            // Xử lý mã QR tại đây
+            toast.success(`Đã quét mã: ${decodedText}`);
+            navigate(
+              PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+                ":trackingCode",
+                decodedText
+              )
+            );
+          },
+          (errorMessage) => {
+            // console.warn(`Scan error: ${errorMessage}`);
+          }
+        );
+      }
+    }).catch(err => {
+      toast.error("Không tìm thấy camera hoặc bị chặn");
+    });
+  };
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -40,7 +89,7 @@ function TrackingOrderStaff() {
       ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
-        setShipments(shipmentsData);
+        setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
       }
@@ -77,12 +126,19 @@ function TrackingOrderStaff() {
   };
 
   const handleFilterChange = () => {
-    // Bước 1: lọc các đơn chưa xác nhận, tạo trong vòng 48h
     let filtered = shipments.filter(order =>
-      order.shipmentStatus >= 1
+      order.shipmentStatus == 4
+      || order.shipmentStatus == 8
+      || order.shipmentStatus == 9
+      || order.shipmentStatus == 10
+      || order.shipmentStatus == 11
+      || order.shipmentStatus == 13
+      || order.shipmentStatus == 14
+      || order.shipmentStatus == 15
+      || order.shipmentStatus == 16
+      || order.shipmentStatus == 18
     );
 
-    // Bước 2: nếu chọn ngày => lọc thêm theo ngày gửi (scheduleDateTime)
     // CHỈNH SỬA FILTER
     if (dateFilter) {
       filtered = filtered.filter(order =>
@@ -90,7 +146,6 @@ function TrackingOrderStaff() {
       );
     }
 
-    // Bước 3: filter theo trạm và tuyến (nếu có)
     if (stationFilter) {
       filtered = filtered.filter(order => order.departureStationName === stationFilter);
     }
@@ -159,28 +214,15 @@ function TrackingOrderStaff() {
       title: 'Trạng thái',
       dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
-      render: (status) => {
-        const statusMapping = {
-          0: 'Đang xử lý', //Processing
-          1: 'Từ chối', //Rejected
-          2: 'Đợi thanh toán', //PartiallyConfirmed
-          3: 'Đã xác nhận', //Accepted
-          4: 'Chưa thanh toán', //Unpaid
-          5: 'Hủy', //Cancelled
-          6: 'Đợi hoàn tiền', //AwaitingRefund
-          7: 'Đã hoàn tiền', //Refunded
-          8: 'Không xuất hiện', //NoDropOff
-          9: 'Đã thanh toán', //Paid
-          10: 'Đã nhận hàng', //PickedUp
-          11: 'Đang vận chuyển', //In Transit
-          12: 'Đợi lấy hàng', //AwaitingForDelivery
-          13: 'Thu phí tồn kho', //ApplyingSurcharge
-          14: 'Quá hạn', //Expired
-          15: 'Đợi đánh giá', //AwaitingFeedback
-          16: 'Hoàn thành', //Completed
-        };
-        return statusMapping[status] || 'Không xác nhận';
-      },
+      render: (status) => { return shipmentStatusMap[status] || 'Không xác nhận'; },
+    },
+    {
+      title: 'Vị trí hiện tại',
+      dataIndex: 'departureStationName',
+      key: 'departureStation',
+      render: (_, record) => {
+        return `Trạm ${record.currentStationName}` || 'Không xác định';
+      }
     },
     {
       title: 'Xem chi tiết',
@@ -202,8 +244,39 @@ function TrackingOrderStaff() {
               }
             }
           }}>
-          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
+          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}
+          >
             Xem chi tiết
+          </Button>
+        </ConfigProvider>
+      ),
+    },
+    {
+      title: 'QR Scanner',
+      key: 'action',
+      render: (_, record) => (
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+                defaultHoverBorderColor: "#FFC107",
+                defaultHoverColor: "black",
+                defaultHoverBg: "#FFC107",
+                defaultActiveBg: "#4CAF50",
+                defaultActiveBorderColor: "#4CAF50",
+                defaultActiveColor: "white",
+              }
+            }
+          }}>
+          <Button
+            type="primary"
+            icon={<QrcodeOutlined />}
+            onClick={handleCameraOpen}
+          >
+            Quét mã QR
           </Button>
         </ConfigProvider>
       ),
@@ -213,8 +286,14 @@ function TrackingOrderStaff() {
   const onRowClick = (record) => {
     const relatedParcels = getParcelsByShipmentId(record.id);
     setSelectedOrder({ ...record, relatedParcels });
-    setModalOpen(true);
+    navigate(
+      PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
   };
+
   return (
     <>
       <div className="order-staff-container">
@@ -384,135 +463,15 @@ function TrackingOrderStaff() {
               bordered
               style={{ cursor: 'pointer' }}
             />
-            <Modal
-              title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
-              open={modalOpen}
-              onCancel={() => setModalOpen(false)}
-              footer={null}
-              width={700}
-            >
-              {selectedOrder && selectedOrder.relatedParcels && (
-                <Tabs defaultActiveKey="0">
-                  {selectedOrder.relatedParcels.map((parcel, index) => (
-                    <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
-                      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                        <Table
-                          dataSource={[
-                            {
-                              key: 'parcelCode',
-                              label: 'Mã kiện hàng',
-                              value: parcel.parcelCode || 'N/A',
-                            },
-                            {
-                              key: 'parcelCategory',
-                              label: 'Loại hàng',
-                              value: parcel.parcelCategory?.categoryName || 'N/A',
-                            },
-                            {
-                              key: 'chargeableWeightKg',
-                              label: 'Trọng lượng quy đổi',
-                              value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
-                            },
-                            {
-                              key: 'volumeCm3',
-                              label: 'Thể tích',
-                              value: `${parcel.volumeCm3 || 'N/A'} cm³`,
-                            },
-                            {
-                              key: 'departureStationName',
-                              label: 'Trạm gửi',
-                              value: selectedOrder.departureStationName || 'N/A',
-                            },
-                            {
-                              key: 'destinationStationName',
-                              label: 'Trạm nhận',
-                              value: selectedOrder.destinationStationName || 'N/A',
-                            },
-                            {
-                              key: 'departureDate',
-                              label: 'Ngày gửi',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
-                            },
-                            {
-                              key: 'departureTime',
-                              label: 'Giờ gửi',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
-                            },
-                            {
-                              key: 'createdAt',
-                              label: 'Thời điểm tạo yêu cầu',
-                              value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
-                            },
-                            {
-                              key: 'totalCost',
-                              label: 'Tổng chi phí',
-                              value: formatCurrency(selectedOrder.totalCostVnd || 0),
-                            },
-                            {
-                              key: 'parcelStatus',
-                              label: 'Trạng thái kiện hàng',
-                              value: ({
-                                0: "Đang xử lý",
-                                1: "Đợi thanh toán",
-                                2: "Đợi gửi hàng",
-                                3: "Từ chối",
-                                4: "Chưa thanh toán",
-                                5: "Đã hủy",
-                                6: "Chờ hoàn tiền",
-                                7: "Đã hoàn tiền",
-                                8: "Không đến gửi hàng",
-                                9: "Đã nhận hàng tại trạm",
-                                10: "Đang trên đường vận chuyển - Tuyến ",
-                                11: "Chuyển sang tuyến ",
-                                12: "Đã nhận hàng ở trạm",
-                                13: "Đợi khách đến lấy hàng",
-                                14: "Hết hạn",
-                                15: "Lưu kho lâu",
-                                16: "Hoàn thành"
-                              })[parcel.parcelStatus] || "Không xác nhận"
-                            },
-                          ]}
-                          columns={[
-                            {
-                              title: 'Thông tin',
-                              dataIndex: 'label',
-                              key: 'label',
-                            },
-                            {
-                              title: 'Chi tiết',
-                              dataIndex: 'value',
-                              key: 'value',
-                            },
-                          ]}
-                          pagination={false}
-                          bordered
-                          showHeader={false}
-                          rowClassName="order-detail-row"
-                        />
-                        <Space>
-                          <Button
-                            type="primary"
-                            disabled={parcel.parcelStatus >= 1}
-                            onClick={() => handleConfirmOrder(parcel.id)}
-                          >
-                            Xác nhận kiện hàng
-                          </Button>
-
-                          <Button
-                            type="primary"
-                            disabled={parcel.parcelStatus === 2}
-                            onClick={() => handleConfirmOrder(parcel.id)}
-                          >
-                            Xác minh người gửi
-                          </Button>
-                        </Space>
-                      </Space>
-                    </TabPane>
-                  ))}
-                </Tabs>
-              )}
-            </Modal>
           </Card>
+          <Modal
+            open={isScannerOpen}
+            onCancel={() => setIsScannerOpen(false)}
+            footer={null}
+            destroyOnClose
+          >
+            <div id="qr-scanner" style={{ width: "100%", height: "300px" }} />
+          </Modal>
         </div>
       </div>
     </>

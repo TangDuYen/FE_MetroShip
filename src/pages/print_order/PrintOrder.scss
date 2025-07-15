@@ -1,0 +1,131 @@
+.invoice-container {
+    margin-top: 10em;
+    padding: 30px;
+    background: #fff;
+    color: #000;
+    font-family: "Arial", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .print-order-button {
+        margin-top: 30px;
+        display: block;
+        font-size: 16px;
+        padding: 8px 20px;
+        background-color: #1890ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+
+        &:hover {
+            background-color: #40a9ff;
+        }
+    }
+}
+
+.invoice-page {
+    max-width: 900px;
+    width: 100%;
+    padding: 40px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.invoice-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.info-section {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    font-size: 14px;
+
+    >div {
+        width: 48%;
+    }
+}
+
+.parcel-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 13px;
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 6px 10px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #f8f8f8;
+        font-weight: bold;
+    }
+
+    img {
+        object-fit: contain;
+    }
+}
+
+.summary {
+    margin-top: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.signature-section {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 60px;
+    font-size: 14px;
+
+    >div {
+        width: 30%;
+        text-align: center;
+        line-height: 2;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+    }
+}
+
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+
+    .invoice-page,
+    .invoice-page * {
+        visibility: visible !important;
+    }
+
+    .invoice-page {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+    }
+
+    .print-order-button {
+        display: none !important;
+    }
+}

@@ -1,5 +1,13 @@
 @use "../../styles/variables" as *;
 
+@mixin image-hover {
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
 .home {
   margin-top: 7%;
   width: 100%;
@@ -43,32 +51,40 @@
     display: flex;
     gap: 15px;
 
-    .btn-learn-more,
+    .btn-learn-more {
+      padding: 10px 20px;
+      font-size: 14px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      background-color: $primary-color;
+      color: #fff;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #0066cc3d;
+        color: $primary-color;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      }
+    }
+
     .our-policy {
       padding: 10px 20px;
       font-size: 14px;
       border: none;
       border-radius: 25px;
       cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .btn-learn-more,
-    .our-policy:hover {
       background-color: #0066cc3d;
       color: $primary-color;
-    }
+      transition: all 0.3s ease;
 
-    .our-policy,
-    .btn-learn-more:hover {
-      background-color: $primary-color;
-      color: #fff;
-    }
-
-    .btn-learn-more:hover,
-    .our-policy:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      &:hover {
+        background-color: $primary-color;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      }
     }
   }
 
@@ -80,11 +96,7 @@
       width: 100%;
       max-width: 500px;
       object-fit: contain;
-      transition: transform 0.2s ease;
-    }
-
-    img:hover {
-      transform: scale(1.05);
+      @include image-hover;
     }
   }
 }
@@ -187,7 +199,7 @@
       line-height: 1.5;
     }
   }
-  .home-feature-card:hover {
+  &:hover {
     transform: translateY(-5px);
   }
 }
@@ -207,11 +219,7 @@
       max-width: 500px;
       width: 100%;
       object-fit: contain;
-      transition: transform 0.2s ease;
-    }
-
-    img:hover {
-      transform: scale(1.05);
+      @include image-hover;
     }
   }
 
@@ -367,11 +375,7 @@
       max-width: 450px;
       width: 100%;
       height: auto;
-      transition: transform 0.2 ease;
-    }
-
-    img:hover {
-      transform: scale(1.05);
+      @include image-hover;
     }
   }
 
@@ -405,11 +409,91 @@
 
     img {
       height: 75px;
-      transition: transform 0.2s ease;
+      @include image-hover;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .home {
+    margin-top: 10%;
+    padding: 20px;
+  }
+
+  .home-section-1 {
+    .home-content-1 {
+      flex-direction: column;
     }
 
-    img:hover {
-      transform: scale(1.05);
+    .home-image-1 {
+      display: none;
+    }
+
+    .home-content {
+      max-width: 100%;
+      h2 {
+        font-size: 1.5rem;
+        text-align: center;
+      }
+    }
+
+    .home-btn {
+      flex-direction: row;
+      justify-content: center;
+
+      .btn-learn-more,
+      .our-policy {
+        width: 200px;
+      }
+    }
+  }
+
+  .home-btn {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .home-section-3 {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 0;
+
+    .home-feature-card {
+      max-width: 100%;
+    }
+  }
+
+  .home-section-4 {
+    padding: 0;
+  }
+
+  .home-section-5 {
+    padding: 30px 0;
+    .home-carousel {
+      padding: 0;
+    }
+  }
+
+  .home-section-6 {
+    padding: 30px 0;
+  }
+  .home-feature-card {
+    height: auto;
+    max-width: 100%;
+  }
+
+  .home-metro-container {
+    flex-direction: column;
+  }
+
+  .home-download-content {
+    flex-direction: column;
+  }
+
+  .home-section-7 {
+    padding: 20px 0;
+    .app-buttons {
+      justify-content: center;
     }
   }
 }

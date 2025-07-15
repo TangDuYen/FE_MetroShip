@@ -123,6 +123,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/test/:trackingCode",
+        element: (
+          <ProtectedRouteCustomer>
+            {lazyLoad(() => import("../pages/testMap/TestMap"))}
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
         path: PATH_NAME.ABOUT_US,
         element: (
           <ProtectedRouteCustomer>
@@ -179,46 +187,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: PATH_NAME.SERVICE,
+        path: `${PATH_NAME.TRACKING_ORDER}/:trackingCode`,
         element: (
           <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/services/Service"))}
+            {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
           </ProtectedRouteCustomer>
         ),
       },
       {
-        path: PATH_NAME.EXPRESS_DELIVERY,
+        path: PATH_NAME.PRINT_ORDER,
         element: (
           <ProtectedRouteCustomer>
-            {lazyLoad(() =>
-              import("../pages/services/expressDelivery/ExpressDelivery")
-            )}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.ADDITIONAL_SERVICE,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() =>
-              import("../pages/services/additionalService/Additional")
-            )}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.TRACKING,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/tracking/Tracking"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.SUPPORT,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/support/Support"))}
+            {lazyLoad(() => import("../pages/print_order/PrintOrder"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -244,33 +224,59 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: PATH_NAME.SERVICE,
+        element: lazyLoad(() => import("../pages/services/Service")),
+      },
+      {
+        path: PATH_NAME.EXPRESS_DELIVERY,
+        element: lazyLoad(() => import("../pages/services/expressDelivery/ExpressDelivery")),
+      },
+      {
+        path: PATH_NAME.ADDITIONAL_SERVICE,
+        element: lazyLoad(() => import("../pages/services/additionalService/Additional")),
+      },
+      {
+        path: PATH_NAME.PARCEL_RULES,
+        element: lazyLoad(() => import("../pages/services/parcelRules/ParcelRules")),
+      },
+      {
+        path: PATH_NAME.TRACKING,
+        element: lazyLoad(() => import("../pages/tracking/Tracking")),
+      },
+      {
+        path: PATH_NAME.SUPPORT,
+        element: lazyLoad(() => import("../pages/support/Support")),
+      },
+      {
+        path: PATH_NAME.LOGIN,
+        element: lazyLoad(() => import("../pages/login/Login")),
+      },
+      {
+        path: PATH_NAME.REGISTER,
+        element: lazyLoad(() => import("../pages/register/Register")),
+      },
+      {
+        path: PATH_NAME.PIN_CODE,
+        element: lazyLoad(() => import("../pages/pinCode/Pincode")),
+      },
+      {
+        path: PATH_NAME.RECOVERY_PASSWORD,
+        element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")),
+      },
+      {
+        path: PATH_NAME.VERIFY_MAIL,
+        element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")),
+      },
+      {
+        path: PATH_NAME.PAGE404,
+        element: lazyLoad(() => import("../pages/page404/Page404")),
+      },
     ],
   },
-  {
-    path: PATH_NAME.LOGIN,
-    element: lazyLoad(() => import("../pages/login/Login")),
-  },
-  {
-    path: PATH_NAME.REGISTER,
-    element: lazyLoad(() => import("../pages/register/Register")),
-  },
-  {
-    path: PATH_NAME.PIN_CODE,
-    element: lazyLoad(() => import("../pages/pinCode/Pincode")),
-  },
-  {
-    path: PATH_NAME.RECOVERY_PASSWORD,
-    element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")),
-  },
-  {
-    path: PATH_NAME.VERIFY_MAIL,
-    element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")),
-  },
-  {
-    path: PATH_NAME.PAGE404,
-    element: lazyLoad(() => import("../pages/page404/Page404")),
-  },
 
+
+  //DASHBOARD ROUTES
   {
     path: PATH_NAME.DASHBOARD,
     element: (
@@ -281,6 +287,8 @@ export const router = createBrowserRouter([
       </ProtectedDashboard>
     ),
     children: [
+
+      //STAFF ROUTES
       {
         path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
         element: (
@@ -304,6 +312,30 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-order-information/OrderInformationStaff"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_STAFF_HANDLED_ORDER,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-order-done/HandledOrderStaff"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>
@@ -316,15 +348,17 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: PATH_NAME.DASHBOARD_STAFF_ROUTE_MANAGEMENT,
+        path: PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION,
         element: (
           <ProtectedRouteStaff>
             {lazyLoad(() =>
-              import("../pages/dashboard/pages/staff/staff-route/RouteStaff")
+              import("../pages/dashboard/pages/staff/staff-train/TrainStaff")
             )}
           </ProtectedRouteStaff>
         ),
       },
+
+      //ADMIN ROUTES
       {
         path: PATH_NAME.DASHBOARD_ADMIN,
         element: (
@@ -332,6 +366,18 @@ export const router = createBrowserRouter([
             {lazyLoad(() =>
               import(
                 "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_ORDERS,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-orders/AdminOrders"
               )
             )}
           </ProtectedRouteAdmin>
