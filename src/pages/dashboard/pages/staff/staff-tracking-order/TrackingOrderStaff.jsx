@@ -1,13 +1,15 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
+import { Html5Qrcode } from "html5-qrcode";
 import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
+import { QrcodeOutlined } from '@ant-design/icons';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import moment from 'moment';
@@ -32,6 +34,50 @@ function TrackingOrderStaff() {
   const [timeSlots, setTimeSlots] = useState([]);
   const today = dayjs();
   const navigate = useNavigate();
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  // Mở camera
+  const handleCameraOpen = () => {
+    setIsScannerOpen(true);
+    setTimeout(() => startScanner(), 300); // Chờ modal mở
+  };
+
+  // Hàm khởi động scanner
+  const startScanner = () => {
+    const qrCodeRegionId = "qr-scanner";
+    const html5QrCode = new Html5Qrcode(qrCodeRegionId);
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const cameraId = devices[0].id;
+
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText, decodedResult) => {
+            html5QrCode.stop();
+            setIsScannerOpen(false);
+            // Xử lý mã QR tại đây
+            toast.success(`Đã quét mã: ${decodedText}`);
+            navigate(
+              PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+                ":trackingCode",
+                decodedText
+              )
+            );
+          },
+          (errorMessage) => {
+            // console.warn(`Scan error: ${errorMessage}`);
+          }
+        );
+      }
+    }).catch(err => {
+      toast.error("Không tìm thấy camera hoặc bị chặn");
+    });
+  };
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -205,6 +251,36 @@ function TrackingOrderStaff() {
         </ConfigProvider>
       ),
     },
+    {
+      title: 'QR Scanner',
+      key: 'action',
+      render: (_, record) => (
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+                defaultHoverBorderColor: "#FFC107",
+                defaultHoverColor: "black",
+                defaultHoverBg: "#FFC107",
+                defaultActiveBg: "#4CAF50",
+                defaultActiveBorderColor: "#4CAF50",
+                defaultActiveColor: "white",
+              }
+            }
+          }}>
+          <Button
+            type="primary"
+            icon={<QrcodeOutlined />}
+            onClick={handleCameraOpen}
+          >
+            Quét mã QR
+          </Button>
+        </ConfigProvider>
+      ),
+    },
   ];
 
   const onRowClick = (record) => {
@@ -217,7 +293,7 @@ function TrackingOrderStaff() {
       )
     );
   };
-  
+
   return (
     <>
       <div className="order-staff-container">
@@ -388,6 +464,14 @@ function TrackingOrderStaff() {
               style={{ cursor: 'pointer' }}
             />
           </Card>
+          <Modal
+            open={isScannerOpen}
+            onCancel={() => setIsScannerOpen(false)}
+            footer={null}
+            destroyOnClose
+          >
+            <div id="qr-scanner" style={{ width: "100%", height: "300px" }} />
+          </Modal>
         </div>
       </div>
     </>
