@@ -24,6 +24,7 @@ export const PATH_NAME = {
     PAYMENT_FAILED: "/payment-fail",
     BOOKING_ORDER: "/booking-order",
     TRACKING_ORDER: "/tracking-order",
+    PRINT_ORDER: "/print-order",
     POLICY: "/policy",
 
     //STAFF
