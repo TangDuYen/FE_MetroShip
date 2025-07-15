@@ -120,17 +120,28 @@ function ParcelInfo({
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
   };
 
-  const disabledDate = current => {
+  // const disabledDate = current => {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   // const threeDaysAhead = new Date();
+  //   // threeDaysAhead.setDate(today.getDate() + 2);
+  //   // threeDaysAhead.setHours(23, 59, 59, 999);
+  //   return (
+  //     current &&
+  //     (current.valueOf() < today.getTime())
+  //     // current &&
+  //     // (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
+  //   );
+  // };
+  const disabledDate = (current) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const threeDaysAhead = new Date();
-    threeDaysAhead.setDate(today.getDate() + 2);
-    threeDaysAhead.setHours(23, 59, 59, 999);
-    return (
-      current &&
-      (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-    );
+    today.setHours(0, 0, 0, 0); // reset to 00:00 of today
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // +1 day
+    return current && current.valueOf() < tomorrow.getTime();
   };
+
 
   useEffect(() => {
     const errors = parcelInfo.map((parcel) => {
@@ -500,11 +511,11 @@ function ParcelInfo({
               />
             </Modal>
           </div>
-          <div className="insurance-fee" style={{ marginBottom: "1em" }}>
+          {/* <div className="insurance-fee" style={{ marginBottom: "1em" }}>
             <Checkbox>
               Áp dụng bảo hiểm hàng hóa: {parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory)?.insuranceFeeVnd || 0} VND
             </Checkbox>
-          </div>
+          </div> */}
           <div
             className="solutions"
             style={{

@@ -203,8 +203,10 @@ function TrackingOrder() {
           </Card>
 
           <Card bordered={false}>
-            <Button type="primary" block onClick={() => navigate(PATH_NAME.BOOKING_ORDER)}>
-              Đặt lại đơn hàng
+            <Button type="primary" block onClick={() => navigate(PATH_NAME.PRINT_ORDER, {
+              state: { trackingCode: selectedShipment.trackingCode }
+            })}>
+              In đơn hàng
             </Button>
           </Card>
         </div>

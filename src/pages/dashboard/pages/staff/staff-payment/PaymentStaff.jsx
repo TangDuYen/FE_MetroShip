@@ -120,7 +120,7 @@ function PaymentStaff() {
       dataIndex: 'transactionType',
       key: 'transactionType',
       render: (status) => {
-        paymentTransactionTypeMap[status] || 'N/A';
+        return paymentTransactionTypeMap[status] || 'N/A';
       },
     },
     {
@@ -128,7 +128,7 @@ function PaymentStaff() {
       dataIndex: 'paymentStatus',
       key: 'paymentStatus',
       render: (payment) => {
-        paymentStatusMap[payment] || 'N/A';
+        return paymentStatusMap[payment] || 'N/A';
       },
     },
   ];

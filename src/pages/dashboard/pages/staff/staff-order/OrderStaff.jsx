@@ -45,29 +45,6 @@ function OrderStaff() {
   const formatCurrency = (value) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
-  // const parcelStatusMap = (status) => {
-  //   const statusMapping = {
-  //     0: "Đang xử lý", //AwaitingConfirmation
-  //     1: "Đợi thanh toán", //AwaitingPayment
-  //     2: "Đợi gửi hàng", //AwaitingDropOff
-  //     3: "Từ chối", //Rejected
-  //     4: "Chưa thanh toán", //Unpaid
-  //     5: "Đã hủy", //Cancelled
-  //     6: "Chờ hoàn tiền", //AwaitingRefund
-  //     7: "Đã hoàn tiền", //Refunded
-  //     8: "Không đến gửi hàng", //NoDropOff
-  //     9: "Đã nhận hàng tại trạm", //ReceivedAtStation
-  //     10: "Đang trên đường vận chuyển - Tuyến ", //InTransitLineXStationXC
-  //     11: "Chuyển sang tuyến ", //TransferringToLineYStationYD
-  //     12: "Đã nhận hàng ở trạm", //ReceivedAtStationB
-  //     13: "Đợi khách đến lấy hàng", //OutForDelivery
-  //     14: "Hết hạn", //Overdue
-  //     15: "Lưu kho lâu", //LongTermStorage
-  //     16: "Hoàn thành", //Delivered
-  //   };
-  //   return statusMapping[status] || 'Không xác nhận';
-  // };
-
   //API ONE TIME
   useEffect(() => {
     Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getAllMetroTrains()]).then(
@@ -305,8 +282,8 @@ function OrderStaff() {
   };
 
   return (
-    <>
-      <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+    <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+      <>
         <div className="order-staff-container">
           <div className="metro-info" style={{ marginBottom: "1em" }}>
             <Card>
@@ -599,18 +576,20 @@ function OrderStaff() {
                 okText="Xác nhận"
                 cancelText="Huỷ"
               >
-                <textarea
-                  placeholder="Nhập lý do từ chối..."
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  style={{
-                    width: "100%",
-                    minHeight: "120px",
-                    resize: "vertical",
-                    padding: "0.5em",
-                    fontSize: "1em",
-                  }}
-                />
+                <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+                  <textarea
+                    placeholder="Nhập lý do từ chối..."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: "120px",
+                      resize: "vertical",
+                      padding: "0.5em",
+                      fontSize: "1em",
+                    }}
+                  />
+                </Spin>
               </Modal>
               <Modal
                 title={`Upload ảnh xác minh cho đơn hàng`}
@@ -662,28 +641,31 @@ function OrderStaff() {
                 okText="Xác nhận"
                 cancelText="Huỷ"
               >
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setVerifyImage(e.target.files[0])}
-                />
-                {verifyImage && (
-                  <div style={{ marginTop: 10 }}>
-                    <strong>Ảnh đã chọn:</strong>
-                    <br />
-                    <img
-                      src={URL.createObjectURL(verifyImage)}
-                      alt="preview"
-                      style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
-                    />
-                  </div>
-                )}
+                <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setVerifyImage(e.target.files[0])}
+                  />
+                  {verifyImage && (
+                    <div style={{ marginTop: 10 }}>
+                      <strong>Ảnh đã chọn:</strong>
+                      <br />
+                      <img
+                        src={URL.createObjectURL(verifyImage)}
+                        alt="preview"
+                        style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
+                      />
+                    </div>
+                  )}
+                </Spin>
               </Modal>
             </Card>
           </div>
         </div>
-      </Spin>
-    </>
+      </>
+    </Spin>
+
   );
 }
 
