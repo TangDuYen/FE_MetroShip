@@ -248,31 +248,32 @@ export const router = createBrowserRouter([
         path: PATH_NAME.SUPPORT,
         element: lazyLoad(() => import("../pages/support/Support")),
       },
-      {
-        path: PATH_NAME.LOGIN,
-        element: lazyLoad(() => import("../pages/login/Login")),
-      },
-      {
-        path: PATH_NAME.REGISTER,
-        element: lazyLoad(() => import("../pages/register/Register")),
-      },
-      {
-        path: PATH_NAME.PIN_CODE,
-        element: lazyLoad(() => import("../pages/pinCode/Pincode")),
-      },
-      {
-        path: PATH_NAME.RECOVERY_PASSWORD,
-        element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")),
-      },
-      {
-        path: PATH_NAME.VERIFY_MAIL,
-        element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")),
-      },
-      {
-        path: PATH_NAME.PAGE404,
-        element: lazyLoad(() => import("../pages/page404/Page404")),
-      },
+
     ],
+  },
+  {
+    path: PATH_NAME.LOGIN,
+    element: lazyLoad(() => import("../pages/login/Login")),
+  },
+  {
+    path: PATH_NAME.REGISTER,
+    element: lazyLoad(() => import("../pages/register/Register")),
+  },
+  {
+    path: PATH_NAME.PIN_CODE,
+    element: lazyLoad(() => import("../pages/pinCode/Pincode")),
+  },
+  {
+    path: PATH_NAME.RECOVERY_PASSWORD,
+    element: lazyLoad(() => import("../pages/resetPassword/ResetPassword")),
+  },
+  {
+    path: PATH_NAME.VERIFY_MAIL,
+    element: lazyLoad(() => import("../pages/resetPassword/VerifyMail")),
+  },
+  {
+    path: PATH_NAME.PAGE404,
+    element: lazyLoad(() => import("../pages/page404/Page404")),
   },
 
 
