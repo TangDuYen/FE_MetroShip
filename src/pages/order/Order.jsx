@@ -40,6 +40,7 @@ function Order() {
     heightCm: "",
     widthCm: "",
     description: "",
+    descriptionImageUrl: "",
   }]);
   const [userLocation, setUserLocation] = useState({
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
@@ -272,7 +273,8 @@ function Order() {
         p.weightKg &&
         p.lengthCm &&
         p.widthCm &&
-        p.heightCm
+        p.heightCm &&
+        p.descriptionImageUrl
       )
       .map((p, idx) => {
         const base = {
@@ -281,9 +283,10 @@ function Order() {
           lengthCm: Number(p.lengthCm),
           widthCm: Number(p.widthCm),
           heightCm: Number(p.heightCm),
+          descriptionImageUrl: p.descriptionImageUrl,
           isBulk: idx > 0,
         };
-
+        if (p.descriptionImageUrl) base.descriptionImageUrl = p.descriptionImageUrl;
         if (p.description) base.description = p.description;
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
         if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
@@ -320,8 +323,6 @@ function Order() {
 
     try {
       const payload = buildPayload();
-      console.log(payload);
-      console.log(typeof (payload.scheduledDateTime));
       const bookingResponse = await api.post('/shipments', payload);
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
@@ -329,6 +330,7 @@ function Order() {
         setLoading(false);
         return;
       }
+      console.log(payload);
 
       toast.success("Đặt giao thành công!");
       const paymentPayload = {

@@ -99,29 +99,47 @@ function ConfirmPage({
       </Row>
 
       <Divider orientation="left">Chi tiết kiện hàng ({totalParcels})</Divider>
-      {parcelInfo.map((parcel, i) => (
-        <Descriptions
-          key={i}
-          bordered
-          size="small"
-          column={1}
-          style={{ marginBottom: 16 }}
-          title={`Kiện ${i + 1}`}
-        >
-          <Descriptions.Item label="Loại">
+      {parcelInfo.map((parcel, i) => {
+        const items = [
+          <Descriptions.Item label="Loại" key="type">
             {parcelCategoriesMap[parcel.parcelCategory] || parcel.parcelCategory}
-          </Descriptions.Item>
-          <Descriptions.Item label="Trọng lượng">
+          </Descriptions.Item>,
+          <Descriptions.Item label="Trọng lượng" key="weight">
             {parcel.weightKg} kg
-          </Descriptions.Item>
-          <Descriptions.Item label="Kích thước">
+          </Descriptions.Item>,
+          <Descriptions.Item label="Kích thước" key="size">
             {parcel.lengthCm} × {parcel.widthCm} × {parcel.heightCm} cm
-          </Descriptions.Item>
-          {parcel.description && (
-            <Descriptions.Item label="Mô tả">{parcel.description}</Descriptions.Item>
-          )}
-        </Descriptions>
-      ))}
+          </Descriptions.Item>,
+          parcel.description && (
+            <Descriptions.Item label="Mô tả" key="desc">{parcel.description}</Descriptions.Item>
+          ),
+          parcel.descriptionImageUrl && (
+            <Descriptions.Item label="Ảnh hóa đơn" key="img">
+              <a href={parcel.descriptionImageUrl} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={parcel.descriptionImageUrl}
+                  alt={`invoice-${i}`}
+                  style={{ width: 120, height: 120, objectFit: "cover", border: "1px solid #ccc" }}
+                />
+              </a>
+            </Descriptions.Item>
+          )
+        ].filter(Boolean); // ⚠️ loại bỏ null/undefined
+
+        return (
+          <Descriptions
+            key={i}
+            bordered
+            size="small"
+            column={1}
+            style={{ marginBottom: 16 }}
+            title={`Kiện ${i + 1}`}
+          >
+            {items}
+          </Descriptions>
+        );
+      })}
+
 
       <Divider orientation="left">Thông tin vận chuyển</Divider>
       <Row gutter={24}>
@@ -150,10 +168,6 @@ function ConfirmPage({
         </Col>
       </Row>
       <Divider />
-
-      <Space direction="vertical">
-        <Checkbox>Người nhận trả tiền</Checkbox>
-      </Space>
     </div>
   );
 }
