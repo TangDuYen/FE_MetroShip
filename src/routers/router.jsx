@@ -397,6 +397,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_ADMIN_STAFF_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-staff-manage/AdminStaffManage"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
