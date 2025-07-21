@@ -576,7 +576,7 @@ function OrderStaff() {
                 okText="Xác nhận"
                 cancelText="Huỷ"
               >
-                <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+                <Spin spinning={loading} tip="Đang từ chối đơn hàng" size="large">
                   <textarea
                     placeholder="Nhập lý do từ chối..."
                     value={rejectReason}
