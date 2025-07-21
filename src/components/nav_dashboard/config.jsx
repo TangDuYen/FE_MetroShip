@@ -23,6 +23,11 @@ export const navDashboardConfig = [
     label: "Quản lý Người dùng",
   },
   {
+    key: "5",
+    icon: <TeamOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Nhân viên",
+  },
+  {
     key: "4",
     icon: <ProductOutlined  style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Metro",
@@ -103,9 +108,9 @@ export const navpath = {
   42: {
     path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
   },
-  // 5: {
-  //   path: "/dashboard/admin/users",
-  // },
+  5: {
+    path: PATH_NAME.DASHBOARD_ADMIN_STAFF_MANAGEMENT,
+  },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
   },
