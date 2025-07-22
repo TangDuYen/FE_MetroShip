@@ -22,6 +22,7 @@ function AdminStaffManage() {
   const [assignedRoleId, setAssignedRoleId] = useState(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningStaff, setAssigningStaff] = useState(null);
+  
   const onAssign = (staff) => {
     setAssigningStaff(staff);
     setIsAssignModalOpen(true);
@@ -36,6 +37,7 @@ function AdminStaffManage() {
         console.error("Lỗi khi lấy dữ liệu người dùng", error);
       });
   }, []);
+
   useEffect(() => {
     getAllStations().then(setStations);
     getMetroTimeSlots().then(setTimeSlots);
@@ -103,6 +105,17 @@ function AdminStaffManage() {
       title: 'Số điện thoại',
       dataIndex: 'phoneNumber',
       key: 'phoneNumber',
+      render: (text) => (
+        <span>{text || 'Chưa cập nhật'}</span>
+      )
+    },
+    {
+      title: 'Làm việc tại',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      render: (text) => (
+        <span>{text || 'Chưa cập nhật'}</span>
+      )
     },
     {
       title: "Hành động",

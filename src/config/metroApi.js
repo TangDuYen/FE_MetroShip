@@ -108,6 +108,15 @@ export const getAllAsignedStaffRole = async () => {
     const res = await api.get("/users/assignment-roles");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu người dùng");
+    toast.error("Không thể lấy dữ liệu vai trò của nhân viên");
+  }
+};
+
+export const getShipmentByStaffStation = async (stationId) => {
+  try {
+    const res = await api.get(`/shipments?PageSize=1000&DepartureStationId=${stationId}`);
+    return res.data.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu đơn hàng do bạn chưa được phân công trạm");
   }
 };
