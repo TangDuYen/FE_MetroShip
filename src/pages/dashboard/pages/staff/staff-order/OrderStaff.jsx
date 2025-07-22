@@ -1,17 +1,19 @@
 import './OrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
-import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
-import { useEffect, useState } from 'react';
+import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { use, useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
+import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 
 const { TabPane } = Tabs;
 
@@ -21,6 +23,7 @@ function OrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
+  const [shipmentsStaff, setShipmentsStaff] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
@@ -40,6 +43,23 @@ function OrderStaff() {
   const [shipmentBeingVerified, setShipmentBeingVerified] = useState(null);
   const [shipmentRejected, setShipmentRejected] = useState(null);
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
+  const decodedUser = token ? jwtDecode(token) : null;
+
+  if (!decodedUser?.StationId) {
+    return (
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '24px',
+        fontWeight: 600,
+      }}>
+        Bạn chưa được phân công vào trạm
+      </div>
+    );
+  }
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -57,6 +77,12 @@ function OrderStaff() {
         setMetroTrains(metroTrainData);
       }
     );
+  }, []);
+
+  useEffect(() => {
+    getShipmentByStaffStation(decodedUser.StationId).then((data) => {
+      setShipmentsStaff(data);
+    });
   }, []);
 
   useEffect(() => {
@@ -445,7 +471,7 @@ function OrderStaff() {
               </div>
               <Table
                 columns={columns}
-                dataSource={filteredShipments}
+                dataSource={shipmentsStaff}
                 rowKey="trackingCode"
                 pagination={{ pageSize: 10 }}
                 bordered
