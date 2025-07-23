@@ -13,7 +13,6 @@ import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
 
 const { TabPane } = Tabs;
 
@@ -120,7 +119,7 @@ function OrderStaff() {
     const end = now.clone().add(48, 'hours');
 
     // Bước 1: lọc các đơn đã thanh toán, tạo trong vòng 48h
-    let filtered = shipments.filter(order =>
+    let filtered = shipmentsStaff.filter(order =>
       order.shipmentStatus === 7 &&
       moment(order.bookedAt).isBetween(start, end)
     );
@@ -131,15 +130,6 @@ function OrderStaff() {
         moment(order.bookedAt).isSame(dateFilter, 'day')
       );
     }
-
-    if (stationFilter) {
-      filtered = filtered.filter(order => order.departureStationName === stationFilter);
-    }
-
-    if (routeFilter) {
-      filtered = filtered.filter(order => order.route === routeFilter);
-    }
-
     setFilteredShipments(filtered);
   };
 
@@ -471,7 +461,7 @@ function OrderStaff() {
               </div>
               <Table
                 columns={columns}
-                dataSource={shipmentsStaff}
+                dataSource={filteredShipments}
                 rowKey="trackingCode"
                 pagination={{ pageSize: 10 }}
                 bordered
