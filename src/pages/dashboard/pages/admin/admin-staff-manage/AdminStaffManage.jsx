@@ -4,8 +4,10 @@ import { Button, DatePicker, Form, Input, Modal, Select, Space, Table } from 'an
 import { getAllAsignedStaffRole, getAllStaff, getAllStations, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
+import { PATH_NAME } from '../../../../../constants/pathname';
 import api from '../../../../../config/axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function AdminStaffManage() {
   const [users, setUsers] = useState([]);
@@ -22,7 +24,8 @@ function AdminStaffManage() {
   const [assignedRoleId, setAssignedRoleId] = useState(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningStaff, setAssigningStaff] = useState(null);
-  
+  const nav = useNavigate();
+
   const onAssign = (staff) => {
     setAssigningStaff(staff);
     setIsAssignModalOpen(true);
@@ -31,7 +34,15 @@ function AdminStaffManage() {
   useEffect(() => {
     getAllStaff()
       .then((data) => {
-        setUsers(data);
+        const mapped = data.map((staff) => {
+          const currentAssignment = staff.staffAssignments?.find(a => a.isActive === true);
+          return {
+            ...staff,
+            assignedStation: currentAssignment?.stationName || 'Chưa phân công',
+            currentRole: currentAssignment?.assignedRole || null,
+          };
+        });
+        setUsers(mapped);
       })
       .catch((error) => {
         console.error("Lỗi khi lấy dữ liệu người dùng", error);
@@ -65,6 +76,18 @@ function AdminStaffManage() {
       toast.success("Phân công thành công!");
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
+
+      // ✅ Cập nhật state tạm (trong frontend) để gắn station
+      const station = stations.find(s => s.id === selectedStation);
+
+      setUsers((prevUsers) =>
+        prevUsers.map(user =>
+          user.id === assigningStaff.id
+            ? { ...user, assignedStation: station?.stationNameVi || 'Đã phân công' }
+            : user
+        )
+      );
+
     } catch (err) {
       console.error(err);
       toast.error("Có lỗi xảy ra khi phân công.");
@@ -110,16 +133,20 @@ function AdminStaffManage() {
       )
     },
     {
-      title: 'Làm việc tại',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
-      render: (text) => (
-        <span>{text || 'Chưa cập nhật'}</span>
-      )
+      title: 'Công việc hiện tại',
+      dataIndex: 'currentRole',
+      key: 'currentRole',
+      render: (text) => text || 'Chưa phân công'
     },
     {
-      title: "Hành động",
-      key: "actions",
+      title: 'Trạm hiện tại',
+      dataIndex: 'assignedStation',
+      key: 'assignedStation',
+      render: (text) => text || 'Chưa phân công'
+    },
+    {
+      title: "Giao việc",
+      key: "assign",
       render: (_, record) => (
         <Button
           className='assign-staff-button' onClick={() => {
@@ -129,8 +156,18 @@ function AdminStaffManage() {
       )
     },
     {
-      title: "Hành động",
-      key: "actions",
+      title: "Xem chi tiết",
+      key: "view",
+      render: (_, record) => (
+        <Button
+          className='view-staff-button' onClick={() => {
+            nav(PATH_NAME.DASHBOARD_ADMIN_STAFF_DETAILS.replace(':staffId', record.id));
+          }}>Xem chi tiết</Button>
+      )
+    },
+    {
+      title: "Cấm",
+      key: "ban",
       render: (_, record) => (
         <Button
           className='ban-staff-button' onClick={() => onDisable(record)}>Cấm</Button>
@@ -145,6 +182,8 @@ function AdminStaffManage() {
     fullName: user.fullName,
     email: user.email,
     phoneNumber: user.phoneNumber,
+    assignedStation: user.assignedStation || 'Chưa phân công',
+    currentRole: user.currentRole || 'Chưa phân công',
   }));
 
   return (
