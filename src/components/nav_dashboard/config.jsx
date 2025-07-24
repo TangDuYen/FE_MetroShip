@@ -95,6 +95,11 @@ export const navDashboardConfigStaff = [
     key: "9",
     icon: <CarOutlined />,
     label: "Tàu Metro",
+  },
+  {
+    key: "10",
+    icon: <ProfileOutlined />,
+    label: "Hồ sơ",
   },  
 ];
   
@@ -135,6 +140,9 @@ export const navpath = {
   },
   9: {
     path: PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION,
+  },
+  10: {
+    path: PATH_NAME.DASHBOARD_STAFF_PROFILE,
   },
 };
 

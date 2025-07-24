@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./StaffProfile.scss";
 import {
   Form,
   Input,
@@ -10,14 +11,12 @@ import {
   Upload,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import "./AdminProfile.scss";
+import api from "../../../../../config/axios";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../../../redux/features/counterSlice";
-import api from "../../../../../config/axios";
 
 const { Title } = Typography;
-
-function AdminProfile() {
+function StaffProfile() {
   const user = useSelector(selectUser);
   const [form] = Form.useForm();
   const [userData, setUserData] = useState({
@@ -27,49 +26,47 @@ function AdminProfile() {
     avatar: "",
   });
 
- useEffect(() => {
-  const fetchUserData = async () => {
-    if (!user?.id || !user?.token) return;
-    try {
-      const response = await api.get(`users/${user.id}`, {
-        headers: {
-          accept: "*/*",
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id || !user?.token) return;
+      try {
+        const response = await api.get(`users/${user.id}`, {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
 
-      const data = response.data.data;
-      const newUser = {
-        userName: data.userName || "",
-        fullName: data.fullName || "",
-        email: data.email || "",
-        avatar: data.avatar || "",
-      };
+        const data = response.data.data;
+        const newUser = {
+          userName: data.userName || "",
+          fullName: data.fullName || "",
+          email: data.email || "",
+          avatar: data.avatar || "",
+        };
 
-      setUserData(newUser);
-      form.setFieldsValue(newUser);
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu người dùng:", error);
-    }
-  };
+        setUserData(newUser);
+        form.setFieldsValue(newUser);
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+      }
+    };
 
-  fetchUserData();
-}, [user, form]);
+    fetchUserData();
+  }, [user, form]);
 
   const handleSaveInformationUser = (values) => {
     console.log("Dữ liệu submit:", values);
-    
   };
 
   const handleUpload = (info) => {
-    
     const newAvatar = URL.createObjectURL(info.file);
     setUserData({ ...userData, avatar: newAvatar });
   };
   return (
-    <div className="admin-profile-container">
-      <div className="admin-profile">
-      <Title level={2}>Thông tin tài khoản</Title>
+    <div className="staff-profile-container">
+      <div className="staff-profile">
+        <Title level={2}>Thông tin tài khoản</Title>
         <Row gutter={24}>
           {/* Cột trái - Avatar */}
           <Col span={8} style={{ textAlign: "center" }}>
@@ -130,4 +127,4 @@ function AdminProfile() {
   );
 }
 
-export default AdminProfile;
+export default StaffProfile;

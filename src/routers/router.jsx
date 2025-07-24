@@ -358,6 +358,16 @@ export const router = createBrowserRouter([
           </ProtectedRouteStaff>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_STAFF_PROFILE,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/staff/staff-profile/StaffProfile")
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
 
       //ADMIN ROUTES
       {
