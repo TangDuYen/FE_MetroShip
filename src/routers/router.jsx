@@ -444,6 +444,18 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_METRO_STATIONS_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-station-manage/AdminStationManage"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);

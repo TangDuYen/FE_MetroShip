@@ -273,8 +273,7 @@ function Order() {
         p.weightKg &&
         p.lengthCm &&
         p.widthCm &&
-        p.heightCm &&
-        p.descriptionImageUrl
+        p.heightCm
       )
       .map((p, idx) => {
         const base = {
