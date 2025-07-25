@@ -51,8 +51,8 @@ function AdminStaffDetails() {
         <Descriptions column={2} bordered>
           <Descriptions.Item label="Trạm hiện tại">{current?.stationName || 'Chưa phân công'}</Descriptions.Item>
           <Descriptions.Item label="Công việc hiện tại">{current?.assignedRole || 'Chưa phân công'}</Descriptions.Item>
-          <Descriptions.Item label="Từ ngày">{current ? dayjs(current.fromTime).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>
-          <Descriptions.Item label="Đến ngày">{current ? dayjs(current.toTime).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>
+          <Descriptions.Item label="Từ ngày">{current ? dayjs(current.fromTime).format('YYYY-MM-DD') : '-'}</Descriptions.Item>
+          <Descriptions.Item label="Đến ngày">{current ? dayjs(current.toTime).format('YYYY-MM-DD') : '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -63,8 +63,8 @@ function AdminStaffDetails() {
               <Descriptions column={2} bordered>
                 <Descriptions.Item label="Trạm">{a.stationName}</Descriptions.Item>
                 <Descriptions.Item label="Vai trò">{a.assignedRole}</Descriptions.Item>
-                <Descriptions.Item label="Từ">{dayjs(a.fromTime).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
-                <Descriptions.Item label="Đến">{dayjs(a.toTime).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
+                <Descriptions.Item label="Từ">{dayjs(a.fromTime).format('YYYY-MM-DD')}</Descriptions.Item>
+                <Descriptions.Item label="Đến">{dayjs(a.toTime).format('YYYY-MM-DD')}</Descriptions.Item>
                 <Descriptions.Item label="Trạng thái">
                   {a.isActive ? 'Đang làm' : 'Đã kết thúc'}
                 </Descriptions.Item>

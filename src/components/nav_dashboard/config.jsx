@@ -42,7 +42,10 @@ export const navDashboardConfig = [
         key: "42",
         label: "Danh sách tàu Metro",
       },
-     
+      {
+        key: "43",
+        label: "Danh sách trạm Metro",
+      },
     ],
   },
   {
@@ -125,6 +128,9 @@ export const navpath = {
   },
   42: {
     path: PATH_NAME.DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT,
+  },
+  43: {
+    path: PATH_NAME.DASHBOARD_ADMIN_METRO_STATIONS_MANAGEMENT,
   },
   5: {
     path: PATH_NAME.DASHBOARD_ADMIN_STAFF_MANAGEMENT,
