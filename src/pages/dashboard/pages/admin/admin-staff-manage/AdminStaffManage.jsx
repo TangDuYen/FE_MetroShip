@@ -1,6 +1,6 @@
 import './AdminStaffManage.scss';
 
-import { Button, DatePicker, Form, Input, Modal, Select, Space, Table } from 'antd';
+import { Button, DatePicker, Form, Input, message, Modal, Select, Space, Table } from 'antd';
 import { getAllAsignedStaffRole, getAllStaff, getAllStations, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
@@ -275,6 +275,7 @@ function AdminStaffManage() {
               ...values,
               birthDate: values.birthDate.toISOString()
             };
+            
 
             await api.post("/users", payload);
             message.success("Thêm nhân viên thành công!");

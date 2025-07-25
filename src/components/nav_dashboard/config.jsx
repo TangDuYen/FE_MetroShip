@@ -7,7 +7,8 @@ import {
   TransactionOutlined,
   UnorderedListOutlined,
   UserOutlined,
-  ProfileOutlined
+  ProfileOutlined,
+  CodeSandboxOutlined
 } from "@ant-design/icons";
 
 import { PATH_NAME } from "../../constants/pathname";
@@ -48,6 +49,11 @@ export const navDashboardConfig = [
     key: "3",
     icon: <OrderedListOutlined  style={{ fontSize: "1.4em" }} />,
     label: "Đơn hàng",
+  },
+  {
+    key: "11",
+    icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Loại bưu kiện",
   },
   {
     key: "6",
@@ -125,6 +131,9 @@ export const navpath = {
   },
   6: {
     path: PATH_NAME.DASHBOARD_ADMIN_PROFILE,
+  },
+  11: {
+    path: PATH_NAME.DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,

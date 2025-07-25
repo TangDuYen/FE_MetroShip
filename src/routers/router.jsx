@@ -466,7 +466,18 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
-      
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-parcel-category-manage/ParcelCategoryManage"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);

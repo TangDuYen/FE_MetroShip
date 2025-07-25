@@ -46,4 +46,5 @@ export const PATH_NAME = {
     DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT: "/dashboard/admin/metroline-management",
     DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT: "/dashboard/admin/metrotrain-management",
     DASHBOARD_ADMIN_PROFILE: "/dashboard/admin/profile",
+    DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT: "/dashboard/admin/parcel-category-manage",
 }
