@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
 import api from '../../../../../config/axios';
+import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,23 +14,46 @@ function AdminStaffManage() {
   const [users, setUsers] = useState([]);
   const [modalAssign, setModalAssign] = useState(false);
   const [stations, setStations] = useState([]); // fetch stations
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
-  const [timeSlotId, setTimeSlotId] = useState(null);
+  // const [selectedStation, setSelectedStation] = useState(null);
+  // const [fromDate, setFromDate] = useState(null);
+  // const [toDate, setToDate] = useState(null);
+  // const [timeSlotId, setTimeSlotId] = useState(null);
   const [timeSlots, setTimeSlots] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [formAdd] = Form.useForm();
   const [assignRole, setAssignRole] = useState([]);
-  const [assignedRoleId, setAssignedRoleId] = useState(null);
+  // const [assignedRoleId, setAssignedRoleId] = useState(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningStaff, setAssigningStaff] = useState(null);
+  const [formAssign] = Form.useForm();
+
   const nav = useNavigate();
 
   const onAssign = (staff) => {
     setAssigningStaff(staff);
     setIsAssignModalOpen(true);
   };
+
+  useEffect(() => {
+    if (!assigningStaff) return;
+
+    const currentAssignment = assigningStaff.staffAssignments?.find(a => a.isActive === true);
+    console.log('Current assignment:', currentAssignment);
+    
+    if (currentAssignment) {
+      formAssign.setFieldsValue({
+        role: currentAssignment.assignedRole,
+        stationId: currentAssignment.stationId,
+        timeSlotId: currentAssignment.timeSlotId,
+        fromDate: currentAssignment.fromTime ? dayjs(currentAssignment.fromTime) : null,
+        toDate: currentAssignment.toTime ? dayjs(currentAssignment.toTime) : null,
+      });
+    } else {
+      formAssign.resetFields();
+    }
+  }, [assigningStaff]);
+
+
 
   useEffect(() => {
     getAllStaff()
@@ -56,32 +80,26 @@ function AdminStaffManage() {
   }, []);
 
   const handleAssign = async () => {
-    if (!selectedStation || !fromDate || !toDate || !timeSlotId || !assigningStaff || !assignedRoleId) {
-      toast.error("Vui lòng chọn đầy đủ thông tin");
-      return;
-    }
-
-    const payload = {
-      staffId: assigningStaff.id,
-      stationId: selectedStation,
-      fromTime: fromDate.toISOString(),
-      toTime: toDate.toISOString(),
-      assignedRole: assignedRoleId,
-      description: `Phân công vào trạm ${selectedStation}`,
-      timeSlotId
-    };
-
     try {
+      const values = await formAssign.validateFields(); // ✅ get all form values
+      const payload = {
+        staffId: assigningStaff.id,
+        stationId: values.stationId,
+        fromTime: values.fromDate.toISOString(),
+        toTime: values.toDate.toISOString(),
+        assignedRole: values.role,
+        description: `Phân công vào trạm ${values.stationId}`,
+        timeSlotId: values.timeSlotId
+      };
+
       await api.post("/users/admin/assign-role", payload);
       toast.success("Phân công thành công!");
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
 
-      // ✅ Cập nhật state tạm (trong frontend) để gắn station
-      const station = stations.find(s => s.id === selectedStation);
-
-      setUsers((prevUsers) =>
-        prevUsers.map(user =>
+      const station = stations.find(s => s.id === values.stationId);
+      setUsers(prev =>
+        prev.map(user =>
           user.id === assigningStaff.id
             ? { ...user, assignedStation: station?.stationNameVi || 'Đã phân công' }
             : user
@@ -93,6 +111,7 @@ function AdminStaffManage() {
       toast.error("Có lỗi xảy ra khi phân công.");
     }
   };
+
 
 
   const disabledDate = (current) => {
@@ -144,6 +163,12 @@ function AdminStaffManage() {
       key: 'assignedStation',
       render: (text) => text || 'Chưa phân công'
     },
+    // {
+    //   title: 'Ca làm việc',
+    //   dataIndex: 'timeSlot',
+    //   key: 'timeSlot',
+    //   render: (text) => text || 'Chưa phân công'
+    // },
     {
       title: "Giao việc",
       key: "assign",
@@ -175,16 +200,8 @@ function AdminStaffManage() {
     }
   ];
 
-  const data = users.map((user, index) => ({
-    key: index,
-    id: user.id,
-    userName: user.userName,
-    fullName: user.fullName,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-    assignedStation: user.assignedStation || 'Chưa phân công',
-    currentRole: user.currentRole || 'Chưa phân công',
-  }));
+  const data = users.map((u, index) => ({ ...u, key: index }));
+
 
   return (
     <div className="staff-management-container">
@@ -209,45 +226,43 @@ function AdminStaffManage() {
         okText="Giao việc"
         onOk={handleAssign}
       >
-        <Form layout="vertical">
-          <Form.Item label="Trạm">
+        <Form form={formAssign} layout="vertical">
+          <Form.Item label="Trạm" name="stationId">
             <Select
               placeholder="Chọn trạm"
               options={stations.map(s => ({
                 label: s.stationNameVi,
                 value: s.id
               }))}
-              onChange={setSelectedStation}
             />
           </Form.Item>
 
-          <Form.Item label="Từ ngày">
+          <Form.Item label="Từ ngày" name="fromDate">
             <DatePicker
               disabledDate={disabledDate}
               style={{ width: '100%' }}
               placeholder='Chọn ngày bắt đầu'
-              onChange={setFromDate} />
-          </Form.Item>
-
-          <Form.Item label="Đến ngày">
-            <DatePicker
-              disabledDate={disabledDate}
-              style={{ width: '100%' }}
-              onChange={setToDate}
-              placeholder="Chọn ngày kết thúc"
             />
           </Form.Item>
 
-          <Form.Item label="Ca trực">
+          <Form.Item label="Đến ngày" name="toDate">
+            <DatePicker
+              disabledDate={disabledDate}
+              style={{ width: '100%' }}
+              placeholder='Chọn ngày kết thúc'
+            />
+          </Form.Item>
+
+          <Form.Item label="Ca trực" name="timeSlotId">
             <Select
               placeholder="Chọn ca làm việc"
               options={timeSlots.map(slot => ({
                 label: `Ca ${slot.shift}: ${slot.openTime} - ${slot.closeTime}`,
                 value: slot.id
               }))}
-              onChange={setTimeSlotId}
             />
           </Form.Item>
+
           <Form.Item label="Công việc" name="role" rules={[{ required: true }]}>
             <Select
               placeholder="Chọn công việc"
@@ -255,7 +270,6 @@ function AdminStaffManage() {
                 label: role.value,
                 value: role.id
               }))}
-              onChange={setAssignedRoleId}
             />
           </Form.Item>
 
@@ -273,17 +287,18 @@ function AdminStaffManage() {
             const values = await formAdd.validateFields();
             const payload = {
               ...values,
+              role: 2,
               birthDate: values.birthDate.toISOString()
             };
 
             await api.post("/users", payload);
-            message.success("Thêm nhân viên thành công!");
+            toast.success("Thêm nhân viên thành công!");
             setShowAdd(false);
             formAdd.resetFields();
             await getAllStaff();
           } catch (err) {
             console.error("Add staff error:", err);
-            message.error("Thêm nhân viên thất bại!");
+            toast.error("Thêm nhân viên thất bại! Nhân viên đã tồn tại trong hệ thống");
           }
         }}
       >
@@ -316,15 +331,6 @@ function AdminStaffManage() {
           </Form.Item>
           <Form.Item label="Ngày sinh" name="birthDate" rules={[{ required: true }]}>
             <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} placeholder='Chọn ngày' />
-          </Form.Item>
-          <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
-            <Select
-              placeholder="Chọn vai trò"
-              options={(assignRole || []).map(role => ({
-                label: role.value,
-                value: role.id
-              }))}
-            />
           </Form.Item>
         </Form>
       </Modal>

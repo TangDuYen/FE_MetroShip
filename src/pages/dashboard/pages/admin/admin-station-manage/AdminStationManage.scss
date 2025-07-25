@@ -1,0 +1,12 @@
+@use "../../../../../styles/variables.scss" as *;
+
+.admin-station-manage-container {
+    padding: 2.5em 2em 0 3em;
+    font-family: $font-primary;
+}
+
+.close-station-button {
+    background-color: red;
+    color: white;
+    font-weight: bold;
+}
