@@ -7,6 +7,8 @@ import {
   TransactionOutlined,
   UnorderedListOutlined,
   UserOutlined,
+  ProfileOutlined,
+  CodeSandboxOutlined
 } from "@ant-design/icons";
 
 import { PATH_NAME } from "../../constants/pathname";
@@ -51,6 +53,17 @@ export const navDashboardConfig = [
     icon: <OrderedListOutlined  style={{ fontSize: "1.4em" }} />,
     label: "Đơn hàng",
   },
+  {
+    key: "11",
+    icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Loại bưu kiện",
+  },
+  {
+    key: "6",
+    icon: <ProfileOutlined  style={{ fontSize: "1.4em" }} />,
+    label: "Hồ sơ",
+  },
+
   // {
   //   key: "5",
   //   icon: <UserOutlined  style={{ fontSize: "1.4em" }} />,
@@ -91,6 +104,11 @@ export const navDashboardConfigStaff = [
     key: "9",
     icon: <CarOutlined />,
     label: "Tàu Metro",
+  },
+  {
+    key: "10",
+    icon: <ProfileOutlined />,
+    label: "Hồ sơ",
   },  
 ];
   
@@ -117,6 +135,12 @@ export const navpath = {
   5: {
     path: PATH_NAME.DASHBOARD_ADMIN_STAFF_MANAGEMENT,
   },
+  6: {
+    path: PATH_NAME.DASHBOARD_ADMIN_PROFILE,
+  },
+  11: {
+    path: PATH_NAME.DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT,
+  },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
   },
@@ -131,6 +155,9 @@ export const navpath = {
   },
   9: {
     path: PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION,
+  },
+  10: {
+    path: PATH_NAME.DASHBOARD_STAFF_PROFILE,
   },
 };
 

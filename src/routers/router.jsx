@@ -230,15 +230,21 @@ export const router = createBrowserRouter([
       },
       {
         path: PATH_NAME.EXPRESS_DELIVERY,
-        element: lazyLoad(() => import("../pages/services/expressDelivery/ExpressDelivery")),
+        element: lazyLoad(() =>
+          import("../pages/services/expressDelivery/ExpressDelivery")
+        ),
       },
       {
         path: PATH_NAME.ADDITIONAL_SERVICE,
-        element: lazyLoad(() => import("../pages/services/additionalService/Additional")),
+        element: lazyLoad(() =>
+          import("../pages/services/additionalService/Additional")
+        ),
       },
       {
         path: PATH_NAME.PARCEL_RULES,
-        element: lazyLoad(() => import("../pages/services/parcelRules/ParcelRules")),
+        element: lazyLoad(() =>
+          import("../pages/services/parcelRules/ParcelRules")
+        ),
       },
       {
         path: PATH_NAME.TRACKING,
@@ -248,7 +254,6 @@ export const router = createBrowserRouter([
         path: PATH_NAME.SUPPORT,
         element: lazyLoad(() => import("../pages/support/Support")),
       },
-
     ],
   },
   {
@@ -276,7 +281,6 @@ export const router = createBrowserRouter([
     element: lazyLoad(() => import("../pages/page404/Page404")),
   },
 
-
   //DASHBOARD ROUTES
   {
     path: PATH_NAME.DASHBOARD,
@@ -288,7 +292,6 @@ export const router = createBrowserRouter([
       </ProtectedDashboard>
     ),
     children: [
-
       //STAFF ROUTES
       {
         path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
@@ -358,6 +361,18 @@ export const router = createBrowserRouter([
           </ProtectedRouteStaff>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_STAFF_PROFILE,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-profile/StaffProfile"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
 
       //ADMIN ROUTES
       {
@@ -377,9 +392,7 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteAdmin>
             {lazyLoad(() =>
-              import(
-                "../pages/dashboard/pages/admin/admin-orders/AdminOrders"
-              )
+              import("../pages/dashboard/pages/admin/admin-orders/AdminOrders")
             )}
           </ProtectedRouteAdmin>
         ),
@@ -445,12 +458,37 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_ADMIN_PROFILE,
+
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-profile/AdminProfile"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_ADMIN_METRO_STATIONS_MANAGEMENT,
         element: (
           <ProtectedRouteAdmin>
             {lazyLoad(() =>
               import(
                 "../pages/dashboard/pages/admin/admin-station-manage/AdminStationManage"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-parcel-category-manage/ParcelCategoryManage"
               )
             )}
           </ProtectedRouteAdmin>
