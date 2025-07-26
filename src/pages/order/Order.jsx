@@ -325,15 +325,12 @@ function Order() {
       const bookingResponse = await api.post('/shipments', payload);
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
-        console.log(payload);
         setLoading(false);
         return;
       }
-      console.log(payload);
-
       toast.success("Đặt giao thành công!");
       const paymentPayload = {
-        shipmentId: bookingResponse.data.data.item1,
+        shipmentId: bookingResponse.data.data.shipmentId,
         returnUrl: "http://localhost:5173/payment-success",
         cancelUrl: "http://localhost:5173/payment-fail",
       };
