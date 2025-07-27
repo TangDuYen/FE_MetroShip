@@ -26,7 +26,12 @@
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
-  padding-bottom: 20px;
+}
+
+.avatar{
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .account-form {

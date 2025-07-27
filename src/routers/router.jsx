@@ -211,6 +211,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.CHANGE_PASSWORD,
+        element: (
+          <ProtectedRouteCustomer>
+            {lazyLoad(() => import("../pages/change_password/ChangePassword"))}
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
         path: PATH_NAME.BOOKING_ORDER,
         element: <NoFooterLayout />,
         children: [
