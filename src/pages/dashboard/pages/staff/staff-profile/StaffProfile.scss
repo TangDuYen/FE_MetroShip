@@ -1,12 +1,17 @@
 @use "../../../../../styles/variables.scss" as *;
 
 .staff-profile-container {
-    padding: 2.5em 2em 0 3em;
-    font-family: $font-primary;
+  padding: 2.5em 2em 0 3em;
+  font-family: $font-primary;
 
-    .staff-profile{
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
+  .staff-profile,
+  .staff-reset-password {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .staff-reset-password {
+    border-top: 1px solid #ccc;
+  }
 }

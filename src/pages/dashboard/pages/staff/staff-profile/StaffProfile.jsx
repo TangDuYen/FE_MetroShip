@@ -14,6 +14,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../../../redux/features/counterSlice";
+import { toast } from "react-toastify";
 
 const { Title } = Typography;
 function StaffProfile() {
@@ -63,6 +64,31 @@ function StaffProfile() {
     const newAvatar = URL.createObjectURL(info.file);
     setUserData({ ...userData, avatar: newAvatar });
   };
+
+  const changePassword = async (values) => {
+    try {
+      await api.post(
+        "auth/password/change",
+        {
+          oldPassword: values.oldPassword,
+          password: values.newPassword,
+          confirmPassword: values.confirmPassword,
+          userName: userData.userName,
+        },
+        {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      toast.success("Đổi mật khẩu thành công!");
+    } catch (error) {
+      console.error("Lỗi đổi mật khẩu:", error);
+      toast.error("Đổi mật khẩu thất bại!");
+    }
+  };
+
   return (
     <div className="staff-profile-container">
       <div className="staff-profile">
@@ -122,6 +148,53 @@ function StaffProfile() {
             </Form>
           </Col>
         </Row>
+      </div>
+      <div className="staff-reset-password">
+        <Title level={2}>Đổi mật khẩu</Title>
+        <Form layout="vertical" onFinish={changePassword}>
+          <Form.Item
+            label="Mật khẩu cũ"
+            name="oldPassword"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+
+          <Form.Item
+            label="Mật khẩu mới"
+            name="newPassword"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+
+          <Form.Item
+            label="Xác nhận mật khẩu mới"
+            name="confirmPassword"
+            dependencies={["newPassword"]}
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("newPassword") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Mật khẩu xác nhận không khớp")
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Đổi mật khẩu
+            </Button>
+          </Form.Item>
+        </Form>
       </div>
     </div>
   );
