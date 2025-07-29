@@ -124,19 +124,6 @@ function ParcelInfo({
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
   };
 
-  // const disabledDate = current => {
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-  //   // const threeDaysAhead = new Date();
-  //   // threeDaysAhead.setDate(today.getDate() + 2);
-  //   // threeDaysAhead.setHours(23, 59, 59, 999);
-  //   return (
-  //     current &&
-  //     (current.valueOf() < today.getTime())
-  //     // current &&
-  //     // (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-  //   );
-  // };
   const disabledDate = (current) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // reset to 00:00 of today
@@ -465,7 +452,7 @@ function ParcelInfo({
             <label>Ngày gửi:</label>
             <DatePicker
               style={{ width: '100%', marginTop: '0.5em', marginBottom: '1em' }}
-              disabledDate={disabledDate}
+              // disabledDate={disabledDate}
               placeholder="Chọn ngày gửi"
               value={pickedDate ? dayjs(pickedDate) : null}
               onChange={(date) => {
