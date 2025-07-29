@@ -5,19 +5,14 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/features/counterSlice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
+import { Card, DatePicker, Form, Input, Button, Upload, Avatar } from "antd";
+import moment from "moment";
+import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 
 function Profile() {
   const user = useSelector(selectUser);
-  const [userData, setUserData] = useState({
-    id: "",
-    userName: "",
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    birthDate: "",
-    bankId: "",
-    address: "",
-  });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,45 +28,56 @@ function Profile() {
 
         const data = response.data.data;
 
-        setUserData({
+        form.setFieldsValue({
           id: data.id || "",
           userName: data.userName || "",
           fullName: data.fullName || "",
           email: data.email || "",
           phoneNumber: data.phoneNumber || "",
-          birthDate: data.birthDate || "",
+          birthDate: data.birthDate ? moment(data.birthDate) : null,
           bankId: data.bankId || "",
           address: data.address || "",
+          accountNo: data.accountNo || "",
+          accountName: data.accountName || "",
+          avatar: data.avatar || "",
         });
+
+        setAvatarPreview(data.avatar || null);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
       }
     };
 
     fetchUserData();
-  }, [user]);
+  }, [user, form]);
 
-  const handleSaveInfomationUser = async (e) => {
-    e.preventDefault();
+  const handleAvatarChange = ({ file }) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setAvatarPreview(e.target.result);
+      form.setFieldsValue({ avatar: e.target.result });
+    };
+    reader.readAsDataURL(file);
+  };
 
-    // if (!userData.id) {
-    //   alert("Không tìm thấy ID người dùng. Vui lòng tải lại trang.");
-    //   return;
-    // }
-
-    const patchUserData = {
-      userName: userData.userName,
-      fullName: userData.fullName,
-      email: userData.email,
-      birthDate: userData.birthDate,
-      bankId: userData.bankId,
-      address: userData.address,
+  const handleSaveInfomationUser = async (values) => {
+    const payload = {
+      // id: user.id,
+      userName: values.userName,
+      fullName: values.fullName,
+      email: values.email,
+      birthDate: values.birthDate ? values.birthDate.toISOString() : null,
+      bankId: values.bankId,
+      address: values.address,
+      accountNo: values.accountNo,
+      accountName: values.accountName,
+      avatar: values.avatar,
     };
 
-     console.log("Payload gửi đi:", patchUserData);
+    console.log("Payload gửi đi:", payload);
 
     try {
-      await api.put("/users", patchUserData, {
+      await api.put("/users", payload, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
@@ -93,75 +99,78 @@ function Profile() {
             <Sidebar />
           </div>
           <div className="profile-right">
-            <div className="account-form">
-              <h2>THÔNG TIN TÀI KHOẢN</h2>
-              <form onSubmit={handleSaveInfomationUser}>
-                <label>Tên đăng nhập</label>
-                <input
-                  type="text"
-                  value={userData.userName}
-                  onChange={(e) =>
-                    setUserData({ ...userData, userName: e.target.value })
-                  }
-                />
-                <label>Tên khách hàng</label>
-                <input
-                  type="text"
-                  value={userData.fullName}
-                  onChange={(e) =>
-                    setUserData({ ...userData, fullName: e.target.value })
-                  }
-                />
+            <Card title="THÔNG TIN TÀI KHOẢN" bordered={false}>
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSaveInfomationUser}
+              >
+                <Form.Item name="avatar" label="Ảnh đại diện">
+                  <div className="avatar">
+                    <Avatar
+                      size={64}
+                      src={avatarPreview}
+                      icon={<UserOutlined />}
+                    />
+                    <Upload
+                      showUploadList={false}
+                      beforeUpload={() => false}
+                      onChange={handleAvatarChange}
+                    >
+                      <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+                    </Upload>
+                  </div>
+                </Form.Item>
+                <Form.Item name="userName" label="Tên đăng nhập">
+                  <Input />
+                </Form.Item>
 
-                <label>Email</label>
-                <div className="input-group">
-                  <input
-                    type="email"
-                    value={userData.email}
-                    onChange={(e) =>
-                      setUserData({ ...userData, email: e.target.value })
-                    }
+                <Form.Item name="fullName" label="Tên khách hàng">
+                  <Input />
+                </Form.Item>
+
+                <Form.Item name="email" label="Email">
+                  <Input type="email" />
+                </Form.Item>
+
+                <Form.Item label="Số điện thoại" name="phoneNumber">
+                  <Input readOnly />
+                </Form.Item>
+
+                <Form.Item name="birthDate" label="Ngày sinh">
+                  <DatePicker
+                    format="DD/MM/YYYY"
+                    style={{ width: "100%" }}
+                    placeholder="Chọn ngày sinh"
                   />
-                </div>
+                </Form.Item>
 
-                <label>Số điện thoại</label>
-                <div className="input-group">
-                  <input type="text" value={userData.phoneNumber} readOnly />
-                </div>
+                <Form.Item name="bankId" label="Chứng minh thư/ Mã số thuế">
+                  <Input />
+                </Form.Item>
 
-                <label>Ngày sinh</label>
-                <input
-                  type="date"
-                  value={userData.birthDate?.split("T")[0] || ""}
-                  onChange={(e) =>
-                    setUserData({ ...userData, birthDate: e.target.value })
-                  }
-                />
+                <Form.Item
+                  name="address"
+                  label="Địa chỉ thường trú/ Địa chỉ xuất hóa đơn"
+                >
+                  <Input placeholder="Nhập địa chỉ" />
+                </Form.Item>
 
-                <label>Chứng minh thư/ Mã số thuế</label>
-                <input
-                  type="text"
-                  value={userData.bankId || ""}
-                  onChange={(e) =>
-                    setUserData({ ...userData, bankId: e.target.value })
-                  }
-                />
+                <Form.Item name="accountNo" label="Số tài khoản">
+                  <Input placeholder="Nhập số tài khoản" />
+                </Form.Item>
 
-                <label>Địa chỉ thường trú/ Địa chỉ xuất hóa đơn</label>
-                <input
-                  type="text"
-                  placeholder="123 ABC"
-                  value={userData.address || ""}
-                  onChange={(e) =>
-                    setUserData({ ...userData, address: e.target.value })
-                  }
-                />
+                <Form.Item name="accountName" label="Tên chủ tài khoản">
+                  <Input placeholder="Nhập tên chủ tài khoản" />
+                </Form.Item>
 
-                <button type="submit" className="btn-save">
-                  Lưu
-                </button>
-              </form>
-            </div>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    Lưu thay đổi
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Card>
           </div>
         </div>
       </section>

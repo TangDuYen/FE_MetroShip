@@ -26,6 +26,7 @@ export const PATH_NAME = {
     TRACKING_ORDER: "/tracking-order",
     PRINT_ORDER: "/print-order",
     POLICY: "/policy",
+    CHANGE_PASSWORD: "/change-password",
 
     //STAFF
     DASHBOARD: "/dashboard",

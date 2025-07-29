@@ -4,9 +4,13 @@
     padding: 2.5em 2em 0 3em;
     font-family: $font-primary;
 
-    .admin-profile{
+    .admin-profile, .admin-reset-password{
         max-width: 900px;
         margin: 0 auto;
         padding: 20px;
+    }
+
+    .admin-reset-password{
+        border-top: 1px solid #ccc;
     }
 }
