@@ -20,6 +20,28 @@ export const shipmentStatusMap = {
     18: 'Delayed'
 };
 
+export const shipmentStatusColorMap = {
+    0: "orange", // Đợi thanh toán
+    1: "red", // Từ chối
+    2: "volcano", // Không thanh toán
+    3: "magenta", // Đã hủy
+    4: "gold", // Đợi hoàn tiền
+    5: "green", // Đã hoàn tiền
+    6: "purple", // Không xuất hiện
+    7: "blue", // Đợi gửi hàng
+    8: "cyan", // Đã lấy hàng
+    9: "processing", // Đang vận chuyển
+    10: "lime", // Đợi lấy hàng
+    11: "geekblue", // Thu phí tồn kho
+    12: "red", // Quá hạn
+    13: "volcano", // Hoàn đơn
+    14: "orange", // Đang hoàn đơn
+    15: "green", // Đã hoàn đơn
+    16: "purple", // Đợi phản hồi
+    17: "success", // Đã hoàn thành
+    18: "warning", // Delayed
+  };
+
 export const paymentStatusMap = {
     1: 'Đợi thanh toán',
     2: 'Đã thanh toán',
