@@ -1,5 +1,6 @@
 import "./HistoryOrders.scss";
 
+import { Input, Modal, Rate } from "antd";
 import React, { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
@@ -22,6 +23,10 @@ function HistoryOrders() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
 
   // const shipmentStatusMap = {
   //   0: "Đang xử lý",
@@ -177,6 +182,21 @@ function HistoryOrders() {
   //   }
   // };
 
+  const handleFeedback = async (shipmentId) => {
+    setFeedbackShipmentId(shipmentId);
+    setIsFeedbackModalOpen(true);
+  };
+  const handleSubmitFeedback = async () => {
+    console.log("Đánh giá:", { shipmentId: feedbackShipmentId, rating, comment });
+
+    // TODO: gọi API thật ở đây nếu bạn có endpoint
+
+    toast.success("Đánh giá đã được gửi!");
+    setIsFeedbackModalOpen(false);
+    setRating(0);
+    setComment('');
+  };
+
 
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
@@ -202,6 +222,7 @@ function HistoryOrders() {
   );
 
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
+  const completedShipment = displayedGoods.some((item) => item.shipmentStatus === 17);
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -311,7 +332,7 @@ function HistoryOrders() {
                     <th>Ngày gửi hàng</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
-                    {/* {hasPayment && <th>Hành động</th>} */}
+                    {completedShipment && <th>Hành động</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -341,6 +362,19 @@ function HistoryOrders() {
                           </span>
                         </td>
 
+
+                        {item.shipmentStatus === 17 ? (
+                          <td>
+                            <button
+                              className="feedback-button"
+                              onClick={() => handleFeedback(item.shipmentId)}
+                            >
+                              Đánh giá
+                            </button>
+                          </td>
+                        ) : completedShipment ? (
+                          <td>-</td>
+                        ) : null}
 
                         {/* {item.shipmentStatus === 3 ? (
                           <td>
@@ -386,6 +420,27 @@ function HistoryOrders() {
           </div>
         </div>
       </section>
+      <Modal
+        title="Đánh giá đơn hàng"
+        open={isFeedbackModalOpen}
+        onOk={handleSubmitFeedback}
+        onCancel={() => setIsFeedbackModalOpen(false)}
+        okText="Gửi đánh giá"
+        cancelText="Hủy"
+      >
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <Rate value={rating} onChange={setRating} style={{ fontSize: 36 }} />
+        </div>
+        <div>
+          <Input.TextArea
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Nhập nhận xét của bạn về đơn hàng..."
+          />
+        </div>
+      </Modal>
+
     </div>
   );
 }
