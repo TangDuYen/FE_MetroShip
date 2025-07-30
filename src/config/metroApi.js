@@ -80,17 +80,43 @@ export const getAllMetroTrains = async () => {
   try {
     const res = await api.get("/metro-trains?PageSize=1000");
     return res.data;
-    console.log(res.data.data.items);
   } catch (error) {
     toast.error("Không thể lấy dữ liệu các tàu metro");
   }
 };
 
-export const getAllUsers = async () => {
+export const getAllCustomer = async () => {
   try {
-    const res = await api.get("/users?PageSize=1000");
+    const res = await api.get("/users?PageSize=1000&role=3");
     return res.data.data.items;
   } catch (error) {
     toast.error("Không thể lấy dữ liệu người dùng");
+  }
+};
+
+export const getAllStaff = async () => {
+  try {
+    const res = await api.get("/users?PageSize=1000&role=2");
+    return res.data.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu người dùng");
+  }
+};
+
+export const getAllAsignedStaffRole = async () => {
+  try {
+    const res = await api.get("/users/assignment-roles");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu vai trò của nhân viên");
+  }
+};
+
+export const getShipmentByStaffStation = async (stationId) => {
+  try {
+    const res = await api.get(`/shipments?PageSize=1000&DepartureStationId=${stationId}`);
+    return res.data.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu đơn hàng do bạn chưa được phân công trạm");
   }
 };

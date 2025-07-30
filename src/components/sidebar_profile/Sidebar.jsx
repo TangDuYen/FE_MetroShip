@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PATH_NAME } from "../../constants/pathname";
 import "./Sidebar.scss";
 import { NavLink } from "react-router-dom";
-import { MdAccountCircle, MdPayments } from "react-icons/md";
+import { MdAccountCircle, MdChangeCircle, MdPayments } from "react-icons/md";
 import { BsFillBoxSeamFill } from "react-icons/bs";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/features/counterSlice";
@@ -12,6 +12,7 @@ function Sidebar() {
   const user = useSelector(selectUser);
   const [userData, setUserData] = useState({
     fullName: "",
+    avatar: "",
   });
 
   useEffect(() => {
@@ -31,6 +32,7 @@ function Sidebar() {
         setUserData({
         
           fullName: data.fullName || "",
+          avatar: data.avatar || "",
           
         });
       } catch (error) {
@@ -47,7 +49,7 @@ function Sidebar() {
         <div className="profile-sidebar-top">
           <div className="profile-sidebar-avatar">
             <img
-              src="https://as1.ftcdn.net/v2/jpg/07/03/86/10/1000_F_703861066_gNOwqrKENcaNU2eDH2El2fyhja6Nz6hv.jpg"
+              src={userData.avatar}
               alt="Avatar"
             />
           </div>
@@ -80,6 +82,15 @@ function Sidebar() {
             >
               <NavLink to={PATH_NAME.HISTORY_PAYMENT}>
                 <MdPayments className="icon" /> Lịch sử giao dịch
+              </NavLink>
+            </li>
+            <li
+              className={
+                location.pathname === PATH_NAME.CHANGE_PASSWORD ? "active" : ""
+              }
+            >
+              <NavLink to={PATH_NAME.CHANGE_PASSWORD}>
+                <MdChangeCircle className="icon" /> Đổi mật khẩu
               </NavLink>
             </li>
           </ul>

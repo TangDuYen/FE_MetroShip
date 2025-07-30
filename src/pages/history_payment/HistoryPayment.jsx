@@ -1,10 +1,12 @@
 import "./HistoryPayment.scss";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
+import { paymentStatusMap, paymentTransactionTypeMap } from "../../constants/statusMap";
 
 import { MdSearch } from "react-icons/md";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
+import { getAllCustomerShipments } from "../../config/metroApi";
 
 function HistoryPayment() {
   // const allPayments = Array.from({ length: 30 }).map((_, i) => ({
@@ -25,42 +27,54 @@ function HistoryPayment() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-
   const [allPayments, setAllPayments] = useState([]);
 
+  const [shipmentsMap, setShipmentsMap] = useState({});
+
   useEffect(() => {
+    async function fetchShipments() {
+      try {
+        const data = await getAllCustomerShipments();
+        const map = {};
+        data.forEach(item => {
+          map[item.id] = item.trackingCode;
+        });
+        setShipmentsMap(map);
+      } catch (err) {
+        console.error("Error fetching shipments:", err);
+      }
+    }
+    fetchShipments();
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(shipmentsMap).length === 0) return; // chờ map có data
+
     const fetchPayments = async () => {
       try {
         const res = await api.get("/transactions?PageSize=1000");
         const items = res.data?.data?.items || [];
 
-        const formatted = items.map((item, index) => {
-          const methodMap = {
-            1: "Tiền mặt",
-            2: "VNPay",
-            3: "MoMo",
-          };
+        const methodMap = {
+          1: "Tiền mặt",
+          2: "VNPay",
+          3: "MoMo",
+        };
 
-          const statusMap = {
-            1: "Đang xử lý",
-            2: "Đã thanh toán",
-            3: "Thất bại",
-          };
-
-          return {
-            id: index + 1,
-            shipmentId: item.shipmentId,
-            method: methodMap[item.paymentMethod] || "Không rõ",
-            status: statusMap[item.paymentStatus] || "Không rõ",
-            statusEnum: item.paymentStatus,
-            amount: item.paymentAmount || 0,
-            date:
-              item.paymentTime && item.paymentTime !== "0001-01-01T00:00:00+00:00"
-                ? new Date(item.paymentTime).toLocaleDateString("vi-VN")
-                : "Chưa xác định",
-            rawDate: item.paymentTime, // để sort nếu cần
-          };
-        });
+        const formatted = items.map((item, index) => ({
+          id: index + 1,
+          trackingCode: shipmentsMap[item.shipmentId] || "Chưa rõ",
+          method: methodMap[item.paymentMethod] || "Không rõ",
+          status: paymentStatusMap[item.paymentStatus] || "Không rõ",
+          statusEnum: item.paymentStatus,
+          amount: item.paymentAmount || 0,
+          date:
+            item.paymentTime && item.paymentTime !== "0001-01-01T00:00:00+00:00"
+              ? new Date(item.paymentTime).toLocaleDateString("vi-VN")
+              : "Chưa xác định",
+          rawDate: item.paymentTime,
+          type: paymentTransactionTypeMap[item.transactionType] || "Không rõ",
+        }));
 
         setAllPayments(formatted);
       } catch (error) {
@@ -69,7 +83,7 @@ function HistoryPayment() {
     };
 
     fetchPayments();
-  }, []);
+  }, [shipmentsMap]); 
 
   const filteredPayments = allPayments.filter((item) => {
     const matchSearch =
@@ -77,11 +91,7 @@ function HistoryPayment() {
       (item.method?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchStatus =
-      filterStatus === "all" ||
-      (filterStatus === "completed" && item.statusEnum === 2) ||
-      (filterStatus === "pending" && item.statusEnum !== 2);
-
-
+      filterStatus === "all" || item.statusEnum === Number(filterStatus);
     const matchDateRange =
       (!startDate || item.date >= startDate) &&
       (!endDate || item.date <= endDate);
@@ -169,8 +179,10 @@ function HistoryPayment() {
                   }}
                 >
                   <option value="all">Tất cả trạng thái</option>
-                  <option value="completed">Đã thanh toán</option>
-                  <option value="pending">Chưa thanh toán</option>
+                  <option value="1">Đợi thanh toán</option>
+                  <option value="2">Đã thanh toán</option>
+                  <option value="3">Đã hủy</option>
+                  <option value="4">Thất bại</option>
                 </select>
 
                 <input
@@ -197,12 +209,12 @@ function HistoryPayment() {
                   <tr>
                     <th>STT</th>
                     <th>Mã đơn hàng</th>
+                    <th>Loại giao dịch</th>
                     <th>Phương thức</th>
                     <th>Số tiền</th>
                     <th>Ngày giao dịch</th>
                     <th>Chi tiết</th>
                     <th>Trạng thái</th>
-
                   </tr>
                 </thead>
                 <tbody>
@@ -216,20 +228,18 @@ function HistoryPayment() {
                     displayedPayments.map((item, index) => (
                       <tr key={item.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.shipmentId || "Chưa có"}</td>
-
+                        <td>{item.trackingCode}</td>
+                        <td>{item.type}</td>
                         <td>{item.method}</td>
-                        <td>{item.amount.toLocaleString()}đ</td>
+                        <td>{item.amount.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}đ</td>
                         <td>{item.date}</td>
                         <td>
                           <span className="detail-link">Chi tiết</span>
                         </td>
                         <td>
-                          {item.statusEnum === 2 ? (
-                            <span className="status-completed">Đã thanh toán</span>
-                          ) : (
-                            <span className="status-pending">Chưa thanh toán</span>
-                          )}
+                          <span className={`status status-${item.statusEnum}`}>
+                            {item.status}
+                          </span>
                         </td>
 
 

@@ -1,0 +1,32 @@
+@use "../../../../../styles/variables.scss" as *;
+
+.staff-management-container {
+    padding: 2.5em 2em 0 3em;
+    font-family: $font-primary;
+}
+
+.assign-staff-button {
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    transition: all 0.25s ease-out;
+
+    &:hover {
+        transform: scale(1.2);
+    }
+}
+.ban-staff-button {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    transition: all 0.25s ease-out;
+
+    &:hover {
+        transform: scale(1.2);
+    }
+}
+
+.admin-staff-details-container {
+    padding: 2.5em 2em 0 3em;
+    font-family: $font-primary;
+}

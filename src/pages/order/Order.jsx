@@ -4,14 +4,18 @@ import { Button, Col, ConfigProvider, Modal, Row, Spin, Steps, message } from 'a
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
+import { Circle } from 'react-leaflet';
 import ConfirmPage from './ConfirmPage';
+import L from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
+import customerIcon from '../../assets/placeholder.webp'
 import dayjs from 'dayjs';
-import metroMarker from '../../assets/subway.png'
+import metroMarker from '../../assets/metro-station.webp';
 import { selectUser } from '../../redux/features/counterSlice';
+import startStation from '../../assets/train.webp';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -40,6 +44,7 @@ function Order() {
     heightCm: "",
     widthCm: "",
     description: "",
+    descriptionImageUrl: "",
   }]);
   const [userLocation, setUserLocation] = useState({
     latitude: parseFloat(localStorage.getItem('userLatitude')) || 0,
@@ -56,8 +61,24 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // chứa giải pháp từ API
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // đang chọn giải pháp nào
   const [priceVnd, setPriceVnd] = useState(null); // giá
+  const [stationDistances, setStationDistances] = useState(0);
+
   const customIcon = L.icon({
     iconUrl: metroMarker,
+    iconSize: [40, 40],       // size icon (pixel)
+    iconAnchor: [20, 40],     // tâm điểm icon nằm dưới
+    popupAnchor: [0, -40],    // vị trí popup
+  });
+
+  const cusIcon = L.icon({
+    iconUrl: customerIcon,
+    iconSize: [40, 40],       // size icon (pixel)
+    iconAnchor: [20, 40],     // tâm điểm icon nằm dưới
+    popupAnchor: [0, -40],    // vị trí popup
+  });
+
+  const startMetro = L.icon({
+    iconUrl: startStation,
     iconSize: [40, 40],       // size icon (pixel)
     iconAnchor: [20, 40],     // tâm điểm icon nằm dưới
     popupAnchor: [0, -40],    // vị trí popup
@@ -281,9 +302,10 @@ function Order() {
           lengthCm: Number(p.lengthCm),
           widthCm: Number(p.widthCm),
           heightCm: Number(p.heightCm),
+          descriptionImageUrl: p.descriptionImageUrl,
           isBulk: idx > 0,
         };
-
+        if (p.descriptionImageUrl) base.descriptionImageUrl = p.descriptionImageUrl;
         if (p.description) base.description = p.description;
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
         if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
@@ -320,22 +342,24 @@ function Order() {
 
     try {
       const payload = buildPayload();
-      console.log(payload);
-      console.log(typeof (payload.scheduledDateTime));
       const bookingResponse = await api.post('/shipments', payload);
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
-        console.log(payload);
         setLoading(false);
         return;
       }
-
       toast.success("Đặt giao thành công!");
+      const currentDomain = window.location.origin;
       const paymentPayload = {
-        shipmentId: bookingResponse.data.data.item1,
-        returnUrl: "http://localhost:5173/payment-success",
-        cancelUrl: "http://localhost:5173/payment-fail",
+        shipmentId: bookingResponse.data.data.shipmentId,
+        returnUrl: `${currentDomain}/payment-success`,
+        cancelUrl: `${currentDomain}/payment-fail`,
       };
+      // const paymentPayload = {
+      //   shipmentId: bookingResponse.data.data.shipmentId,
+      //   returnUrl: "http://localhost:5173/payment-success",
+      //   cancelUrl: "http://localhost:5173/payment-fail",
+      // };
 
       const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
@@ -367,6 +391,27 @@ function Order() {
                 attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+              {userLocation.latitude !== 0 && userLocation.longitude !== 0 && (
+                <>
+                  <Marker
+                    position={[userLocation.latitude, userLocation.longitude]}
+                    icon={cusIcon}>
+                    <Popup>Vị trí của bạn</Popup>
+                  </Marker>
+
+                  {/* <Circle
+                    center={[userLocation.latitude, userLocation.longitude]}
+                    radius={5000} // 5km
+                    pathOptions={{
+                      color: 'none',          // Viền
+                      weight: 2,              // Độ dày viền
+                      fillColor: '#2890ffff',   // Màu fill bên trong
+                      fillOpacity: 0.2,       // Độ mờ vùng phủ
+                      dashArray: '4',         // Đường viền dạng đứt 
+                    }}
+                  /> */}
+                </>
+              )}
 
               {routeSolutions.length > 0 &&
                 routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
@@ -389,11 +434,11 @@ function Order() {
                 })}
 
               {routeSolutions.length > 0 &&
-                routeSolutions[selectedSolutionIndex]?.data?.stations.map((station) => (
+                routeSolutions[selectedSolutionIndex]?.data?.stations.map((station, index) => (
                   <Marker
                     key={station.stationId}
                     position={[station.latitude, station.longitude]}
-                    icon={customIcon}
+                    icon={index === 0 ? startMetro : customIcon}
                   >
                     <Popup>{station.stationNameVi}</Popup>
                   </Marker>

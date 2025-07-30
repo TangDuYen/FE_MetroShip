@@ -1,6 +1,7 @@
 .banner {
   position: relative;
-  background: url('https://www.aljazeera.com/wp-content/uploads/2024/12/AFP__20241222__36R84CL__v1__HighRes__VietnamTransportMetro-1734867803.jpg?fit=1170%2C780&quality=80') center bottom / cover no-repeat;
+  background: url("https://www.aljazeera.com/wp-content/uploads/2024/12/AFP__20241222__36R84CL__v1__HighRes__VietnamTransportMetro-1734867803.jpg?fit=1170%2C780&quality=80")
+    center bottom / cover no-repeat;
   height: 400px;
   color: white;
   display: flex;
@@ -25,5 +26,16 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner {
+    height: 300px;
+    .banner-content {
+      h1 {
+        font-size: 36px;
+      }
+    }
   }
 }

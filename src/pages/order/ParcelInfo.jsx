@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 
-import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Table } from 'antd';
+import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Spin, Table } from 'antd';
 import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
 import { useEffect, useState } from 'react';
 
@@ -53,7 +53,11 @@ function ParcelInfo({
   const [parcelCategory, setParcelCategory] = useState([]);
   const [timeSlot, setTimeSlot] = useState([]);
   const [dimensionError, setDimensionError] = useState([]);
-
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [verifyImages, setVerifyImages] = useState(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [currentParcelIndex, setCurrentParcelIndex] = useState(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -120,19 +124,6 @@ function ParcelInfo({
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
   };
 
-  // const disabledDate = current => {
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-  //   // const threeDaysAhead = new Date();
-  //   // threeDaysAhead.setDate(today.getDate() + 2);
-  //   // threeDaysAhead.setHours(23, 59, 59, 999);
-  //   return (
-  //     current &&
-  //     (current.valueOf() < today.getTime())
-  //     // current &&
-  //     // (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-  //   );
-  // };
   const disabledDate = (current) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // reset to 00:00 of today
@@ -191,6 +182,7 @@ function ParcelInfo({
         heightCm: "",
         widthCm: "",
         description: "",
+        descriptionImageUrl: "",
       },
     ]);
   };
@@ -208,6 +200,7 @@ function ParcelInfo({
         widthCm: Number(p.widthCm) || 0,
         heightCm: Number(p.heightCm) || 0,
         ...p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {},
+        descriptionImageUrl: p.descriptionImageUrl || '',
       })),
       userLatitude,
       userLongitude,
@@ -342,6 +335,26 @@ function ParcelInfo({
                     <div style={{ marginTop: '0.5em', color: '#888' }}>
                       Phí bảo hiểm: {Math.round((parcel.valueVnd || 0) * (parcelCategory.find(cat => cat.id === parcel.parcelCategory)?.insuranceRate)).toLocaleString()} VND
                     </div>
+                    {parcel.descriptionImageUrl && (
+                      <div style={{ marginTop: 10 }}>
+                        <strong>Ảnh hóa đơn:</strong>
+                        <div style={{ marginTop: 10 }}>
+                          <img
+                            src={parcel.descriptionImageUrl}
+                            alt="invoice"
+                            style={{ width: 120, height: 120, objectFit: "cover", border: "1px solid #ccc" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <Button
+                      style={{ marginTop: '0.5em' }}
+                      onClick={() => {
+                        setCurrentParcelIndex(index); // 👈 index của kiện hàng
+                        setVerifyModalOpen(true);
+                      }}>Upload hóa đơn</Button>
+
                   </Form.Item>
                 )}
 
@@ -403,6 +416,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm gửi:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để gửi hàng"
               value={displayedDepartureStationId}
@@ -422,6 +440,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm nhận:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để nhận hàng"
               value={metroSelector.destinationStationId}
@@ -580,21 +603,98 @@ function ParcelInfo({
                     {solution.label}
                   </h3>
                   <p style={{ opacity: 0.85, fontSize: '0.95rem' }}>
-                    {solution.type === 'shortest'
-                      ? 'Tiết kiệm chi phí'
-                      : solution.type === 'nearest'
-                        ? 'Trạm gần hơn • Phí cao hơn'
-                        : 'Giao hàng thông thường'}
+                    {
+                      solution.type === 'shortest'
+                        ? 'Giá tối ưu'
+                        : solution.type === 'nearest'
+                          ? 'Gần bạn nhất '
+                          : 'Do bạn chọn'
+                    }
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
                     {solution.data?.totalCostVnd
-                      ? Number(solution.data?.totalCostVnd).toLocaleString() + ' VND'
+                      ? Number(solution.data?.totalCostVnd).toLocaleString('vi-VN', {
+                        maximumFractionDigits: 0
+                      }) + ' VND'
+
                       : 'Đang tính...'}
                   </p>
                 </div>
               );
             })}
           </div>
+          <Modal
+            title={`Upload ảnh xác minh cho giá trị hàng hóa`}
+            open={verifyModalOpen}
+            onCancel={() => {
+              setVerifyModalOpen(false);
+              setVerifyImages(null);
+              setUploadedImageUrls(null);
+            }}
+            onOk={async () => {
+              if (verifyImages.length === 0) {
+                toast.error("Vui lòng chọn 1 ảnh!");
+                return;
+              }
+
+              const formData = new FormData();
+              formData.append("file", verifyImages); // 👈 chỉ lấy ảnh đầu tiên
+
+              setLoading(true);
+              try {
+                const uploadRes = await api.post("/media/image", formData, {
+                  headers: { "Content-Type": "multipart/form-data" },
+                });
+
+                const imageUrl = uploadRes.data?.data || uploadRes.data?.secure_url;
+                if (!imageUrl) {
+                  toast.error("Không lấy được ảnh sau khi upload.");
+                  return;
+                }
+
+                // 🔥 Ghi đè ảnh duy nhất cho parcel tương ứng
+                setParcelInfo(prev => {
+                  const copy = [...prev];
+                  copy[currentParcelIndex].descriptionImageUrl = imageUrl;
+                  return copy;
+                });
+                toast.success("Upload ảnh thành công!");
+                setVerifyModalOpen(false);
+                setVerifyImages(null);
+              } catch (error) {
+                console.error("Upload thất bại:", error);
+                toast.error("Lỗi khi upload. Vui lòng thử lại!");
+              } finally {
+                setLoading(false);
+              }
+            }}
+
+            okText="Xác nhận"
+            cancelText="Huỷ"
+          >
+            <Spin spinning={loading} tip="Đang xác nhận hóa đơn" size="large">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setVerifyImages(file); // 👈 chỉ 1 file
+                }}
+              />
+
+              {verifyImages && (
+                <div style={{ marginTop: 10 }}>
+                  <strong>Ảnh đã chọn:</strong>
+                  <br />
+                  <img
+                    src={URL.createObjectURL(verifyImages)}
+                    alt="preview"
+                    style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
+                  />
+                </div>
+              )}
+            </Spin>
+          </Modal>
         </div>
       </div>
     </>

@@ -1,14 +1,15 @@
 import './OrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
-import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
-import { useEffect, useState } from 'react';
+import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { use, useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
+import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
@@ -21,6 +22,7 @@ function OrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
+  const [shipmentsStaff, setShipmentsStaff] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
@@ -40,6 +42,23 @@ function OrderStaff() {
   const [shipmentBeingVerified, setShipmentBeingVerified] = useState(null);
   const [shipmentRejected, setShipmentRejected] = useState(null);
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
+  const decodedUser = token ? jwtDecode(token) : null;
+
+  if (!decodedUser?.StationId) {
+    return (
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '24px',
+        fontWeight: 600,
+      }}>
+        Bạn chưa được phân công vào trạm
+      </div>
+    );
+  }
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -57,6 +76,12 @@ function OrderStaff() {
         setMetroTrains(metroTrainData);
       }
     );
+  }, []);
+
+  useEffect(() => {
+    getShipmentByStaffStation(decodedUser.StationId).then((data) => {
+      setShipmentsStaff(data);
+    });
   }, []);
 
   useEffect(() => {
@@ -94,7 +119,7 @@ function OrderStaff() {
     const end = now.clone().add(48, 'hours');
 
     // Bước 1: lọc các đơn đã thanh toán, tạo trong vòng 48h
-    let filtered = shipments.filter(order =>
+    let filtered = shipmentsStaff.filter(order =>
       order.shipmentStatus === 7 &&
       moment(order.bookedAt).isBetween(start, end)
     );
@@ -105,15 +130,6 @@ function OrderStaff() {
         moment(order.bookedAt).isSame(dateFilter, 'day')
       );
     }
-
-    if (stationFilter) {
-      filtered = filtered.filter(order => order.departureStationName === stationFilter);
-    }
-
-    if (routeFilter) {
-      filtered = filtered.filter(order => order.route === routeFilter);
-    }
-
     setFilteredShipments(filtered);
   };
 
@@ -576,7 +592,7 @@ function OrderStaff() {
                 okText="Xác nhận"
                 cancelText="Huỷ"
               >
-                <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+                <Spin spinning={loading} tip="Đang từ chối đơn hàng" size="large">
                   <textarea
                     placeholder="Nhập lý do từ chối..."
                     value={rejectReason}

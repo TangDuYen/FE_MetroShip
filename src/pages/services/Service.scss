@@ -58,3 +58,14 @@
     }
   }
 }
+
+@media (max-width: 768px){
+  .service{
+    h3{
+      font-size: 16px;
+    }
+    p{
+      line-height: 1.4;
+    }
+  }
+}

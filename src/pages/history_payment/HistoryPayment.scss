@@ -81,6 +81,17 @@
         display: inline-block;
       }
 
+      .status-1,
+      .status-2,
+      .status-3,
+      .status-4 {
+        font-weight: bold;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-block;
+        width: 100px;
+      }
+
       .status-completed {
         background-color: #d4edda;
         color: $secondary-text-color;
@@ -90,6 +101,31 @@
         background-color: #edebd4;
         color: $secondary-color;
       }
+
+      //Đợi thanh toán
+      .status-1 {
+        background-color: #edebd4;
+        color: $secondary-color;
+      }
+
+      // Đã thanh toán
+      .status-2 {
+        background-color: #d4edda;
+        color: $secondary-text-color;
+      }
+
+      // Đã hủy
+      .status-3 {
+        background-color: #f1e0c7;
+        color: red;
+      }
+
+      // Đã thất bại
+      .status-4 {
+        background-color: #f1c0c0;
+        color: red;
+      }
+
     }
   }
 }

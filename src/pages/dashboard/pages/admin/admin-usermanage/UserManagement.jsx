@@ -3,13 +3,13 @@ import './UserManagement.scss';
 import { useEffect, useState } from 'react';
 
 import { Table } from 'antd';
-import { getAllUsers } from '../../../../../config/metroApi';
+import { getAllCustomer } from '../../../../../config/metroApi';
 
 function UserManagement() {
     const [users, setUsers] = useState([]); 
 
     useEffect(() => {
-        getAllUsers() 
+        getAllCustomer() 
             .then((data) => {
                 setUsers(data); 
             })

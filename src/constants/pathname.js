@@ -26,6 +26,7 @@ export const PATH_NAME = {
     TRACKING_ORDER: "/tracking-order",
     PRINT_ORDER: "/print-order",
     POLICY: "/policy",
+    CHANGE_PASSWORD: "/change-password",
 
     //STAFF
     DASHBOARD: "/dashboard",
@@ -35,11 +36,18 @@ export const PATH_NAME = {
     DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
     DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
     DASHBOARD_STAFF_ORDER_INFORMATION: "/dashboard/staff/order-information/:trackingCode",
+    DASHBOARD_STAFF_PROFILE: "/dashboard/staff/profile",
 
     //ADMIN
     DASHBOARD_ADMIN: "/dashboard/admin",
     DASHBOARD_ADMIN_ORDERS: "/dashboard/admin/orders",
     DASHBOARD_ADMIN_USER_MANAGEMENT: "/dashboard/admin/user-management",
+    DASHBOARD_ADMIN_STAFF_MANAGEMENT: "/dashboard/admin/staff-management",
+    DASHBOARD_ADMIN_STAFF_DETAILS: "/dashboard/admin/staff-details/:staffId",
     DASHBOARD_ADMIN_METRO_LINES_MANAGEMENT: "/dashboard/admin/metroline-management",
     DASHBOARD_ADMIN_METRO_TRAINS_MANAGEMENT: "/dashboard/admin/metrotrain-management",
+    DASHBOARD_ADMIN_PROFILE: "/dashboard/admin/profile",
+    DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT: "/dashboard/admin/parcel-category-manage",
+    DASHBOARD_ADMIN_METRO_STATIONS_MANAGEMENT: "/dashboard/admin/metrostation-management",
+
 }
