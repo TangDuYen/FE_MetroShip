@@ -219,7 +219,7 @@ function HistoryPayment() {
                         <td>{item.shipmentId || "Chưa có"}</td>
 
                         <td>{item.method}</td>
-                        <td>{item.amount.toLocaleString()}đ</td>
+                        <td>{item.amount.toLocaleString('vi-Vn', { maximumFractionDigits: 0})}đ</td>
                         <td>{item.date}</td>
                         <td>
                           <span className="detail-link">Chi tiết</span>
