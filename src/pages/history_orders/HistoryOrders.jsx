@@ -327,7 +327,7 @@ function HistoryOrders() {
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{item.code}</td>
                         <td>{item.weight}</td>
-                        <td>{item.price.toLocaleString()}</td>
+                        <td>{item.price.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}</td>
                         <td>{item.volume}</td>
                         <td>{item.deliveryDate}</td>
                         <td>

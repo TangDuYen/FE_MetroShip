@@ -416,6 +416,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm gửi:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để gửi hàng"
               value={displayedDepartureStationId}
@@ -435,6 +440,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm nhận:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để nhận hàng"
               value={metroSelector.destinationStationId}
@@ -452,7 +462,7 @@ function ParcelInfo({
             <label>Ngày gửi:</label>
             <DatePicker
               style={{ width: '100%', marginTop: '0.5em', marginBottom: '1em' }}
-              // disabledDate={disabledDate}
+              disabledDate={disabledDate}
               placeholder="Chọn ngày gửi"
               value={pickedDate ? dayjs(pickedDate) : null}
               onChange={(date) => {
@@ -593,15 +603,20 @@ function ParcelInfo({
                     {solution.label}
                   </h3>
                   <p style={{ opacity: 0.85, fontSize: '0.95rem' }}>
-                    {solution.type === 'shortest'
-                      ? 'Tiết kiệm chi phí'
-                      : solution.type === 'nearest'
-                        ? 'Trạm gần hơn • Phí cao hơn'
-                        : 'Giao hàng thông thường'}
+                    {
+                      solution.type === 'shortest'
+                        ? 'Giá tối ưu'
+                        : solution.type === 'nearest'
+                          ? 'Gần bạn nhất '
+                          : 'Do bạn chọn'
+                    }
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
                     {solution.data?.totalCostVnd
-                      ? Number(solution.data?.totalCostVnd).toLocaleString() + ' VND'
+                      ? Number(solution.data?.totalCostVnd).toLocaleString('vi-VN', {
+                        maximumFractionDigits: 0
+                      }) + ' VND'
+
                       : 'Đang tính...'}
                   </p>
                 </div>
