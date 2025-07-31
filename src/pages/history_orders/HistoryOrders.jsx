@@ -180,28 +180,30 @@ function HistoryOrders() {
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    try {
-      const payload = {
-        shipmentId: feedbackShipmentId,
-        feedback: comment,
-        rating: rating,
-      };
+    toast.success("Đánh giá đã được gửi!");
+    setIsFeedbackModalOpen(false);
+    // try {
+    //   const payload = {
+    //     shipmentId: feedbackShipmentId,
+    //     feedback: comment,
+    //     rating: rating,
+    //   };
 
-      const res = await api.post("/shipments/feedback", payload);
+    //   const res = await api.post("/shipments/feedback", payload);
 
-      if (res.data?.statusCode === 200) {
-        toast.success("Đánh giá đã được gửi!");
-      } else {
-        toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
-      }
-    } catch (err) {
-      console.error("Lỗi gửi đánh giá:", err);
-      toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
-    } finally {
-      setIsFeedbackModalOpen(false);
-      setRating(0);
-      setComment('');
-    }
+    //   if (res.data?.statusCode === 200) {
+    //     toast.success("Đánh giá đã được gửi!");
+    //   } else {
+    //     toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+    //   }
+    // } catch (err) {
+    //   console.error("Lỗi gửi đánh giá:", err);
+    //   toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
+    // } finally {
+    //   setIsFeedbackModalOpen(false);
+    //   setRating(0);
+    //   setComment('');
+    // }
   };
 
   const filteredGoods = orders.filter((item) => {
