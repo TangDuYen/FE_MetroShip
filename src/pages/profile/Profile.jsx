@@ -51,14 +51,34 @@ function Profile() {
     fetchUserData();
   }, [user, form]);
 
-  const handleAvatarChange = ({ file }) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setAvatarPreview(e.target.result);
-      form.setFieldsValue({ avatar: e.target.result });
-    };
-    reader.readAsDataURL(file);
-  };
+  const handleAvatarChange = async ({ file }) => {
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const uploadRes = await api.post("/media/image", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    const imageUrl = uploadRes.data?.data || uploadRes.data?.secure_url;
+    if (!imageUrl) {
+      toast.error("Không lấy được link ảnh sau khi upload.");
+      return;
+    }
+
+    // Cập nhật preview + giá trị form
+    setAvatarPreview(imageUrl);
+    form.setFieldsValue({ avatar: imageUrl });
+
+    toast.success("Upload ảnh thành công!");
+  } catch (error) {
+    console.error("Lỗi upload ảnh:", error);
+    toast.error("Lỗi khi upload ảnh!");
+  }
+};
+
 
   const handleSaveInfomationUser = async (values) => {
     const payload = {
@@ -115,7 +135,7 @@ function Profile() {
                     <Upload
                       showUploadList={false}
                       beforeUpload={() => false}
-                      onChange={handleAvatarChange}
+                      onChange={({ file }) => handleAvatarChange({ file })}
                     >
                       <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
                     </Upload>
