@@ -124,19 +124,6 @@ function ParcelInfo({
     setMetroSelector(prev => ({ ...prev, destinationStationId: value }));
   };
 
-  // const disabledDate = current => {
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-  //   // const threeDaysAhead = new Date();
-  //   // threeDaysAhead.setDate(today.getDate() + 2);
-  //   // threeDaysAhead.setHours(23, 59, 59, 999);
-  //   return (
-  //     current &&
-  //     (current.valueOf() < today.getTime())
-  //     // current &&
-  //     // (current.valueOf() < today.getTime() || current.valueOf() <= threeDaysAhead.getTime())
-  //   );
-  // };
   const disabledDate = (current) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // reset to 00:00 of today
@@ -429,6 +416,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm gửi:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để gửi hàng"
               value={displayedDepartureStationId}
@@ -448,6 +440,11 @@ function ParcelInfo({
           <div className="selector-group">
             <label>Trạm nhận:</label>
             <Select
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option?.children?.toLowerCase().includes(input.toLowerCase())
+              }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để nhận hàng"
               value={metroSelector.destinationStationId}
@@ -606,15 +603,20 @@ function ParcelInfo({
                     {solution.label}
                   </h3>
                   <p style={{ opacity: 0.85, fontSize: '0.95rem' }}>
-                    {solution.type === 'shortest'
-                      ? 'Tiết kiệm chi phí'
-                      : solution.type === 'nearest'
-                        ? 'Trạm gần hơn • Phí cao hơn'
-                        : 'Giao hàng thông thường'}
+                    {
+                      solution.type === 'shortest'
+                        ? 'Giá tối ưu'
+                        : solution.type === 'nearest'
+                          ? 'Gần bạn nhất '
+                          : 'Do bạn chọn'
+                    }
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
                     {solution.data?.totalCostVnd
-                      ? Number(solution.data?.totalCostVnd).toLocaleString() + ' VND'
+                      ? Number(solution.data?.totalCostVnd).toLocaleString('vi-VN', {
+                        maximumFractionDigits: 0
+                      }) + ' VND'
+
                       : 'Đang tính...'}
                   </p>
                 </div>

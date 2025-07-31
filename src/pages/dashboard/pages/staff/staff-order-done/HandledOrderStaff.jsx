@@ -1,14 +1,16 @@
 import './HandledOrderStaff.scss';
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Row, Select, Table } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Row, Select, Space, Table, Tabs } from 'antd';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
+import TabPane from 'antd/es/tabs/TabPane';
 import Title from 'antd/es/skeleton/Title';
 import dayjs from 'dayjs';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
+import { toast } from 'react-toastify';
 
 function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -23,6 +25,16 @@ function HandledOrderStaff() {
     const [parcelMap, setParcelMap] = useState(new Map());
     const [metroLines, setMetroLine] = useState([]);
     const [timeSlots, setTimeSlots] = useState([]);
+    const [expiredShipment, setExpiredShipment] = useState(false);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+
+    const onConfirmReturn = (record) => {
+        const relatedParcels = getParcelsByShipmentId(record.id);
+        setSelectedOrder({ ...record, relatedParcels });
+        setConfirmModalOpen(true);
+    };
+
+
     const today = dayjs();
 
     //FORMAT TIỀN
@@ -81,6 +93,9 @@ function HandledOrderStaff() {
             || order.shipmentStatus === 12
             || order.shipmentStatus === 17
         );
+        const hasExpired = shipments.some((item) => item.shipmentStatus === 12);
+        setExpiredShipment(hasExpired);
+
 
         // CHỈNH SỬA FILTER
         if (dateFilter) {
@@ -106,11 +121,9 @@ function HandledOrderStaff() {
             handleFilterChange();
         }
     }, [shipments, dateFilter, stationFilter, routeFilter]);
-    const columns = [
+    const baseColumns = [
         {
             title: 'STT',
-            dataIndex: 'stt',
-            key: 'stt',
             render: (_, __, index) => index + 1,
             width: 60,
         },
@@ -156,9 +169,7 @@ function HandledOrderStaff() {
             title: 'Trạng thái',
             dataIndex: 'shipmentStatus',
             key: 'shipmentStatus',
-            render: (status) => {
-                return shipmentStatusMap[status] || 'Không xác nhận';
-            },
+            render: (status) => shipmentStatusMap[status] || 'Không xác nhận',
         },
         {
             title: 'Xem chi tiết',
@@ -171,9 +182,9 @@ function HandledOrderStaff() {
                                 defaultColor: "white",
                                 defaultBg: "#0066CC",
                                 defaultBorderColor: "#0066CC",
-                                defaultHoverBorderColor: "#FFC107",
-                                defaultHoverColor: "black",
-                                defaultHoverBg: "#FFC107",
+                                defaultHoverBorderColor: "#0759acff",
+                                defaultHoverColor: "white",
+                                defaultHoverBg: "#0759acff",
                                 defaultActiveBg: "#4CAF50",
                                 defaultActiveBorderColor: "#4CAF50",
                                 defaultActiveColor: "white",
@@ -187,6 +198,41 @@ function HandledOrderStaff() {
             ),
         },
     ];
+
+    const actionColumn = {
+        title: 'Hành động',
+        key: 'action',
+        render: (_, record) =>
+            record.shipmentStatus === 12 && (
+                <ConfigProvider
+                    theme={{
+                        components: {
+                            Button: {
+                                defaultColor: "black",
+                                defaultBg: "#FFC107",
+                                defaultBorderColor: "#FFC107",
+                                defaultHoverBorderColor: "#ffcb31ff",
+                                defaultHoverColor: "black",
+                                defaultHoverBg: "#ffcb31ff",
+                                defaultActiveBg: "#4CAF50",
+                                defaultActiveBorderColor: "#4CAF50",
+                                defaultActiveColor: "white",
+                            }
+                        }
+                    }}>
+                    <Button className='booking-table-staff_button' onClick={() => onConfirmReturn(record)}>
+                        Hoàn đơn
+                    </Button>
+                </ConfigProvider>
+
+            ),
+    };
+
+    // Merge lại:
+    const columns = expiredShipment
+        ? [...baseColumns, actionColumn]
+        : baseColumns;
+
 
     const onRowClick = (record) => {
         const relatedParcels = getParcelsByShipmentId(record.id);
@@ -372,7 +418,62 @@ function HandledOrderStaff() {
                                 </Tabs>
                             )}
                         </Modal>
+                        <Modal
+                            title="Xác nhận hoàn đơn"
+                            open={confirmModalOpen}
+                            onCancel={() => setConfirmModalOpen(false)}
+                            onOk={() => {
+                                // Giả sử sau này sẽ gọi API ở đây
+                                toast.success('Tạo đơn hàng hoàn thành công!');
+                                setConfirmModalOpen(false);
+                            }}
+                            okText="Xác nhận hoàn đơn"
+                            cancelText="Hủy"
+                            width={700}
+                        >
+                            {selectedOrder && (
+                                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                                    <p><strong>Mã đơn hàng:</strong> {selectedOrder.trackingCode}</p>
+                                    <p><strong>Trạm gửi:</strong> {selectedOrder.destinationStationName}</p>
+                                    <p><strong>Trạm nhận:</strong> {selectedOrder.departureStationName}</p>
+                                    <p><strong>Ngày gửi:</strong> {dayjs(selectedOrder.scheduledDateTime).format('DD/MM/YYYY')}</p>
+                                    <p><strong>Giờ gửi:</strong> {dayjs(selectedOrder.scheduledDateTime).format('HH:mm')}</p>
+                                    <p><strong>Tổng chi phí:</strong> {formatCurrency(selectedOrder.totalCostVnd)}</p>
 
+                                    <h4>Danh sách kiện hàng:</h4>
+                                    <Table
+                                        dataSource={selectedOrder.relatedParcels}
+                                        rowKey={(record, index) => record.parcelCode + index}
+                                        columns={[
+                                            {
+                                                title: 'Mã kiện hàng',
+                                                dataIndex: 'parcelCode',
+                                                key: 'parcelCode',
+                                            },
+                                            {
+                                                title: 'Loại hàng',
+                                                dataIndex: ['parcelCategory', 'categoryName'],
+                                                key: 'parcelCategory',
+                                                render: (_, record) => record.parcelCategory?.categoryName || 'N/A'
+                                            },
+                                            {
+                                                title: 'Trọng lượng quy đổi (kg)',
+                                                dataIndex: 'chargeableWeightKg',
+                                                key: 'chargeableWeightKg',
+                                            },
+                                            {
+                                                title: 'Thể tích (cm³)',
+                                                dataIndex: 'volumeCm3',
+                                                key: 'volumeCm3',
+                                            },
+                                        ]}
+                                        pagination={false}
+                                        bordered
+                                        size="small"
+                                    />
+                                </Space>
+                            )}
+                        </Modal>
                     </Card>
                 </div>
             </div>

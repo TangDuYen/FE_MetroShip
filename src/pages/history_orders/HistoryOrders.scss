@@ -29,6 +29,69 @@
         display: flex;
         justify-content: flex-end;
         margin-top: 16px;
+
+        h3 {
+          margin-bottom: 20px;
+          font-size: 20px;
+          font-weight: bold;
+        }
+      }
+      .goods-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+
+        th,
+        td {
+          border: 1px solid #ddd;
+          padding: 10px;
+          text-align: center;
+          font-size: 14px;
+        }
+
+        th {
+          background-color: #f9f9f9;
+          font-weight: bold;
+          font-size: 16px;
+        }
+      }
+      .pay-button {
+        background-color: $secondary-text-color;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+      .feedback-button {
+        background-color: $secondary-text-color;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .pay-button:hover {
+        background-color: #218838;
+      }
+      .feedback-button:hover {
+        background-color: #218838;
+      }
+
+      .detail-link {
+        color: $primary-color;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .detail-link:hover {
+        text-decoration: underline;
+
       }
     }
   }

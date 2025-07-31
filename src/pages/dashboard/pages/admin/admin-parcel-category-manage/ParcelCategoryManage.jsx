@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from "react";
 import "./ParcelCategoryManage.scss";
+
 import {
   Button,
   Checkbox,
   Form,
+  Input,
   InputNumber,
-  message,
   Modal,
   Popconfirm,
   Space,
   Spin,
   Switch,
   Table,
-  Input,
+  message,
 } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { getAllParcelCategories } from "../../../../../config/metroApi";
+import React, { useEffect, useState } from "react";
+
 import api from "../../../../../config/axios";
+import { getAllParcelCategories } from "../../../../../config/metroApi";
 
 function ParcelCategoryManage() {
   const [parcelCategories, setParcelCategories] = useState([]);
@@ -181,6 +183,7 @@ function ParcelCategoryManage() {
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSubmit}
         okText={editingCategory ? "Lưu" : "Thêm"}
+        cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
           <Form.Item

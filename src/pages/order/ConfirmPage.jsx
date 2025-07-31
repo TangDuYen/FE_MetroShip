@@ -162,7 +162,7 @@ function ConfirmPage({
               {totalWeight} kg
             </Descriptions.Item>
             <Descriptions.Item label="Giá ước tính">
-              {priceVnd ? `${Number(priceVnd).toLocaleString()} VND` : '—'}
+              {priceVnd ? `${Number(priceVnd).toLocaleString('vi-Vn', { maximumFractionDigits: 0})} VND` : '—'}
             </Descriptions.Item>
           </Descriptions>
         </Col>
