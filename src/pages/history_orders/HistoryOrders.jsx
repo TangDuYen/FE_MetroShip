@@ -1,30 +1,34 @@
 import "./HistoryOrders.scss";
-import { Input, Modal, Rate } from "antd";
-import React, { useEffect, useState } from "react";
+
 import {
-  Table,
-  Input,
-  Select,
-  DatePicker,
   Button,
-  Space,
-  Pagination,
   Card,
-  Tag,
+  DatePicker,
+  Input,
+  Modal,
+  Pagination,
+  Rate,
+  Select,
+  Space,
+  Table,
+  Tag
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import { Link } from "react-router-dom";
-import { PATH_NAME } from "../../constants/pathname";
-import Sidebar from "../../components/sidebar_profile/Sidebar";
-import api from "../../config/axios";
+import React, { useEffect, useState } from "react";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
-import { toast } from "react-toastify";
+
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
+import { SearchOutlined } from "@ant-design/icons";
+import Sidebar from "../../components/sidebar_profile/Sidebar";
+import api from "../../config/axios";
+import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { max } from "moment/moment";
+import { toast } from "react-toastify";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -176,16 +180,29 @@ function HistoryOrders() {
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    console.log("Đánh giá:", { shipmentId: feedbackShipmentId, rating, comment });
+    try {
+      const payload = {
+        shipmentId: feedbackShipmentId,
+        feedback: comment,
+        rating: rating,
+      };
 
-    // TODO: gọi API thật ở đây nếu bạn có endpoint
+      const res = await api.post("/shipments/feedback", payload);
 
-    toast.success("Đánh giá đã được gửi!");
-    setIsFeedbackModalOpen(false);
-    setRating(0);
-    setComment('');
+      if (res.data?.statusCode === 200) {
+        toast.success("Đánh giá đã được gửi!");
+      } else {
+        toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+      }
+    } catch (err) {
+      console.error("Lỗi gửi đánh giá:", err);
+      toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
+    } finally {
+      setIsFeedbackModalOpen(false);
+      setRating(0);
+      setComment('');
+    }
   };
-
 
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
@@ -231,7 +248,7 @@ function HistoryOrders() {
       title: "Tổng chi phí (VND)",
       dataIndex: "price",
       key: "price",
-      render: (price) => price.toLocaleString(),
+      render: (price) => price.toLocaleString("vi-VN", {maximumFractionDigits: 0}),
     },
     {
       title: "Tổng thể tích (cm³)",
@@ -286,9 +303,29 @@ function HistoryOrders() {
       );
     },
   });
+  columns.push({
+    title: "Hành động",
+    key: "action",
+    render: (_, item) => {
+      const isRated = item.shipmentStatus === 18;
+      return item.shipmentStatus === 17 ? (
+        <Button
+          type="primary"
+          className="feedback-button"
+          onClick={() => handleFeedback(item.shipmentId)}
+        >
+          {isRated
+            ? "Xem lại đánh giá"
+            : "Đánh giá"}
+        </Button>
+      ) : (
+        "-"
+      );
+    },
+  });
 
+  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
-  const completedShipment = displayedGoods.some((item) => item.shipmentStatus === 17);
 
   const handlePageClick = (page) => {
     setCurrentPage(page);
@@ -372,100 +409,25 @@ function HistoryOrders() {
 
             </Card>
 
-              <table className="goods-table">
-                <thead>
-                  <tr>
-                    <th>STT</th>
-                    <th>Mã vận đơn</th>
-                    <th>Tổng trọng lượng (kilogram)</th>
-                    <th>Tổng chi phí (vnd)</th>
-                    <th>Tổng thể tích (cm³)</th>
-                    <th>Ngày gửi hàng</th>
-                    <th>Chi tiết</th>
-                    <th>Trạng thái</th>
-                    {completedShipment && <th>Hành động</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedGoods.length === 0 ? (
-                    <tr>
-                      <td colSpan="10" className="no-data">
-                        Không có bản ghi nào
-                      </td>
-                    </tr>
-                  ) : (
-                    displayedGoods.map((item, index) => (
-                      <tr key={item.id}>
-                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.code}</td>
-                        <td>{item.weight}</td>
-                        <td>{item.price.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}</td>
-                        <td>{item.volume}</td>
-                        <td>{item.deliveryDate}</td>
-                        <td>
-                          <Link to={PATH_NAME.TRACKING_ORDER}>
-                            <span className="detail-link">Chi tiết</span>
-                          </Link>
-                        </td>
-                        <td>
-                          <span className={`status-${item.shipmentStatus}`}>
-                            {shipmentStatusMap[item.shipmentStatus] || "Không rõ"}
-                          </span>
-                        </td>
-                        {item.shipmentStatus === 17 ? (
-                          <td>
-                            <button
-                              className="feedback-button"
-                              onClick={() => handleFeedback(item.shipmentId)}
-                            >
-                              Đánh giá
-                            </button>
-                          </td>
-                        ) : completedShipment ? (
-                          <td>-</td>
-                        ) : null}
-
-                        {/* {item.shipmentStatus === 3 ? (
-                          <td>
-                            <button
-                              className="pay-button"
-                              onClick={() => handlePayment(item.shipmentId)}
-                            >
-                              Thanh toán
-                            </button>
-                          </td>
-                        ) : hasPayment ? (
-                          <td>-</td>
-                        ) : null}
-
-                         <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td>  */}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* PHÂN TRANG */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    onClick={handlePrevWindow}
-                    disabled={pageWindowStart === 1}
-                  >
-                    «
-                  </button>
-                  {paginationButtons}
-                  <button
-                    onClick={handleNextWindow}
-                    disabled={
-                      pageWindowStart + pageWindowSize - 1 >= totalPages
-                    }
-                  >
-                    »
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* PHÂN TRANG */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={handlePrevWindow}
+                  disabled={pageWindowStart === 1}
+                >
+                  «
+                </button>
+                {paginationButtons}
+                <button
+                  onClick={handleNextWindow}
+                  disabled={
+                    pageWindowStart + pageWindowSize - 1 >= totalPages
+                  }
+                >
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -502,6 +502,30 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-insurance/AdminInsurance"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/admin/admin-details-insurance/AdminInsuranceDetails"
+              )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);
