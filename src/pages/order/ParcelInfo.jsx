@@ -154,11 +154,39 @@ function ParcelInfo({
   }, [parcelInfo, parcelCategory]);
 
 
-  const updateParcel = (index, field, value) => {
+  const fetchChargeableWeight = async ({ weightKg, lengthCm, widthCm, heightCm }) => {
+    try {
+      const res = await api.post("parcels/chargeable-weight", {
+        weightKg, lengthCm, widthCm, heightCm
+      });
+      return res.data?.data || 0;
+    } catch (err) {
+      console.error("Lỗi khi tính chargeable weight", err);
+      return 0;
+    }
+  };
+
+  const updateParcel = async (index, field, value) => {
     const updatedList = [...parcelInfo];
     updatedList[index][field] = value;
+    const affectedFields = ['weightKg', 'lengthCm', 'widthCm', 'heightCm'];
+    const currentParcel = updatedList[index];
 
+    if (affectedFields.includes(field)) {
+      const { weightKg, lengthCm, widthCm, heightCm } = currentParcel;
+
+      if (weightKg && lengthCm && widthCm && heightCm) {
+        const calculatedWeight = await fetchChargeableWeight({
+          weightKg: Number(weightKg),
+          lengthCm: Number(lengthCm),
+          widthCm: Number(widthCm),
+          heightCm: Number(heightCm),
+        });
+        updatedList[index].chargeableWeight = calculatedWeight;
+      }
+    }
     if (field === 'parcelCategory') {
+
       const selectedCat = parcelCategory.find(cat => cat.id === value);
       updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
 
@@ -307,64 +335,94 @@ function ParcelInfo({
             <Form.Item label="Loại hàng hóa">
               <Select
                 value={parcel.parcelCategory}
-                onChange={value => updateParcel(index, 'parcelCategory', value)}
+                onChange={async (value) => await updateParcel(index, 'parcelCategory', value)}
               >
                 {parcelCategory.map(cat => (
                   <Option key={cat.id} value={cat.id}>{cat.categoryName}</Option>
                 ))}
               </Select>
-              {parcelCategory.find(c => c.id === parcel.parcelCategory)?.isInsuranceRequired && (
-                <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
-                  ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {parcelCategory.find(c => c.id === parcel.parcelCategory)?.insuranceRate?.toLocaleString() || 0}% trên giá trị món hàng.
-                  <div>
-                    ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
-                  </div>
-                </div>
-              )}
+
+              {/* INSURANCEFEEVND */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                return selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate > 0;
-              })() && (
-                  <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
-                    <InputNumber
-                      min={0}
-                      style={{ width: '100%' }}
-                      value={parcel.valueVnd}
-                      onChange={value => updateParcel(index, 'valueVnd', value)}
-                    />
-                    <div style={{ marginTop: '0.5em', color: '#888' }}>
-                      Phí bảo hiểm: {Math.round((parcel.valueVnd || 0) * (parcelCategory.find(cat => cat.id === parcel.parcelCategory)?.insuranceRate)).toLocaleString()} VND
+                if (selectedCat?.insuranceFeeVnd && !selectedCat?.insuranceRate) {
+                  return (
+                    <div style={{ marginTop: '0.5em', color: '#444' }}>
+                      Bảo hiểm cố định: <strong>{selectedCat.insuranceFeeVnd.toLocaleString('vi-VN')} VND</strong>
                     </div>
-                    {parcel.descriptionImageUrl && (
-                      <div style={{ marginTop: 10 }}>
-                        <strong>Ảnh hóa đơn:</strong>
-                        <div style={{ marginTop: 10 }}>
-                          <img
-                            src={parcel.descriptionImageUrl}
-                            alt="invoice"
-                            style={{ width: 120, height: 120, objectFit: "cover", border: "1px solid #ccc" }}
-                          />
-                        </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* ISINSURANCEREQUIRED */}
+              {(() => {
+                const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
+                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate) {
+                  return (
+                    <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
+                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {selectedCat.insuranceRate * 100}% trên giá trị món hàng.
+                      <div>
+                        ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
                       </div>
-                    )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
-                    <Button
-                      style={{ marginTop: '0.5em' }}
-                      onClick={() => {
-                        setCurrentParcelIndex(index); // 👈 index của kiện hàng
-                        setVerifyModalOpen(true);
-                      }}>Upload hóa đơn</Button>
+              {/* UPLOAD BILL */}
+              {(() => {
+                const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
+                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate > 0) {
+                  const insuranceCost = Math.round((parcel.valueVnd || 0) * selectedCat.insuranceRate);
+                  return (
+                    <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
+                      <InputNumber
+                        min={0}
+                        style={{ width: '100%' }}
+                        value={parcel.valueVnd}
+                        onChange={(value) => updateParcel(index, 'valueVnd', value)}
+                      />
+                      <div style={{ marginTop: '0.5em', color: '#888' }}>
+                        Phí bảo hiểm: {insuranceCost.toLocaleString('vi-VN')} VND
+                      </div>
 
-                  </Form.Item>
-                )}
+                      {parcel.descriptionImageUrl && (
+                        <div style={{ marginTop: 10 }}>
+                          <strong>Ảnh hóa đơn:</strong>
+                          <div style={{ marginTop: 10 }}>
+                            <img
+                              src={parcel.descriptionImageUrl}
+                              alt="invoice"
+                              style={{ width: 120, height: 120, objectFit: "cover", border: "1px solid #ccc" }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
+                      <Button
+                        style={{ marginTop: '0.5em' }}
+                        onClick={() => {
+                          setCurrentParcelIndex(index);
+                          setVerifyModalOpen(true);
+                        }}
+                      >
+                        Upload hóa đơn
+                      </Button>
+                    </Form.Item>
+                  );
+                }
+                return null;
+              })()}
             </Form.Item>
+
             <Form.Item label="Trọng lượng (kg)">
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
                 value={parcel.weightKg}
-                onChange={value => updateParcel(index, 'weightKg', value)}
+                onChange={async (value) => updateParcel(index, 'weightKg', value)}
               />
             </Form.Item>
             <Form.Item label="Kích thước (cm)">
@@ -374,21 +432,21 @@ function ParcelInfo({
                   placeholder="Dài"
                   style={{ width: '33%' }}
                   value={parcel.lengthCm}
-                  onChange={value => updateParcel(index, 'lengthCm', value)}
+                  onChange={async (value) => updateParcel(index, 'lengthCm', value)}
                 />
                 <InputNumber
                   min={0}
                   placeholder="Rộng"
                   style={{ width: '33%' }}
                   value={parcel.widthCm}
-                  onChange={value => updateParcel(index, 'widthCm', value)}
+                  onChange={async (value) => updateParcel(index, 'widthCm', value)}
                 />
                 <InputNumber
                   min={0}
                   placeholder="Cao"
                   style={{ width: '33%' }}
                   value={parcel.heightCm}
-                  onChange={value => updateParcel(index, 'heightCm', value)}
+                  onChange={async (value) => updateParcel(index, 'heightCm', value)}
                 />
               </Input.Group>
               {dimensionError[index] && (
@@ -396,6 +454,13 @@ function ParcelInfo({
                   {dimensionError[index]}
                 </div>
               )}
+            </Form.Item>
+            <Form.Item label="Trọng lượng quy đổi (kg)">
+              <InputNumber
+                style={{ width: '100%' }}
+                value={parcel.chargeableWeight}
+                disabled
+              />
             </Form.Item>
 
             <Form.Item label="Mô tả">
