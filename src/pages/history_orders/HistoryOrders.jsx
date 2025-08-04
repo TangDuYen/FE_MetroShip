@@ -8,9 +8,9 @@ import {
   Modal,
   Pagination,
   Rate,
-  Spin,
   Select,
   Space,
+  Spin,
   Table,
   Tag
 } from "antd";
@@ -48,10 +48,11 @@ function HistoryOrders() {
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         const [parcelsRes, shipmentsRes] = await Promise.all([
           api.get("parcels?PageSize=1000"),
@@ -122,8 +123,6 @@ function HistoryOrders() {
         );
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -386,6 +385,7 @@ function HistoryOrders() {
                   style={{ width: 300 }}
                 />
               </Space>
+
               <Spin spinning={loading} tip="Đang tải dữ liệu...">
                 <Table
                   columns={columns}
@@ -397,9 +397,8 @@ function HistoryOrders() {
                   }}
                 />
               </Spin>
-            </Card>
 
-              <div className="history-pagination">
+              {/* <div className="history-pagination">
                 <Pagination
                   total={filteredGoods.length}
                   pageSize={itemsPerPage}
@@ -407,12 +406,12 @@ function HistoryOrders() {
                   onChange={(page) => setCurrentPage(page)}
                   showSizeChanger={false}
                 />
-              </div>
+              </div> */}
 
             </Card>
 
             {/* PHÂN TRANG */}
-            {totalPages > 1 && (
+            {/* {totalPages > 1 && (
               <div className="pagination">
                 <button
                   onClick={handlePrevWindow}
@@ -429,7 +428,7 @@ function HistoryOrders() {
                 >
                 </button>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </section>
