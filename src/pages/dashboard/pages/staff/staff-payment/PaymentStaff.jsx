@@ -5,15 +5,11 @@ import { getAllShipments, getAllTransactions } from '../../../../../config/metro
 import { paymentStatusMap, paymentTransactionTypeMap } from '../../../../../constants/statusMap';
 import { useEffect, useState } from 'react';
 
-import api from '../../../../../config/axios';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 
 function PaymentStaff() {
   const [allPayments, setAllPayments] = useState([]);
-
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN').format(value);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,7 +104,7 @@ function PaymentStaff() {
       title: 'Tổng chi phí',
       dataIndex: 'paymentAmount',
       key: 'paymentAmount',
-      render: (value) => formatCurrency(value),
+      render: (value) => value.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND',
     },
     {
       title: 'Đơn vị tiền tệ',
