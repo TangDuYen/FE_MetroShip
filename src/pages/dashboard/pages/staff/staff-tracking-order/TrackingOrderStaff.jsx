@@ -34,50 +34,9 @@ function TrackingOrderStaff() {
   const [timeSlots, setTimeSlots] = useState([]);
   const today = dayjs();
   const navigate = useNavigate();
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-
-  // Mở camera
-  const handleCameraOpen = () => {
-    setIsScannerOpen(true);
-    setTimeout(() => startScanner(), 300); // Chờ modal mở
-  };
-
-  // Hàm khởi động scanner
-  const startScanner = () => {
-    const qrCodeRegionId = "qr-scanner";
-    const html5QrCode = new Html5Qrcode(qrCodeRegionId);
-
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        const cameraId = devices[0].id;
-
-        html5QrCode.start(
-          cameraId,
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText, decodedResult) => {
-            html5QrCode.stop();
-            setIsScannerOpen(false);
-            // Xử lý mã QR tại đây
-            toast.success(`Đã quét mã: ${decodedText}`);
-            navigate(
-              PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
-                ":trackingCode",
-                decodedText
-              )
-            );
-          },
-          (errorMessage) => {
-            // console.warn(`Scan error: ${errorMessage}`);
-          }
-        );
-      }
-    }).catch(err => {
-      toast.error("Không tìm thấy camera hoặc bị chặn");
-    });
-  };
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [cccdImage, setCccdImage] = useState(null);
+  const [confirmImage, setConfirmImage] = useState(null);
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -163,6 +122,34 @@ function TrackingOrderStaff() {
       handleFilterChange();
     }
   }, [shipments, dateFilter, stationFilter, routeFilter]);
+  const uploadImages = async () => {
+    if (!cccdImage || !confirmImage) {
+      toast.error("Vui lòng chọn cả hai ảnh.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("files", cccdImage);
+    formData.append("files", confirmImage);
+
+    try {
+      const res = await api.post("/media/images", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      if (res.status === 200) {
+        toast.success("Tải ảnh lên thành công!");
+        setIsUploadModalOpen(false);
+        setCccdImage(null);
+        setConfirmImage(null);
+      }
+    } catch (err) {
+      toast.error("Lỗi khi tải ảnh lên!");
+      console.error(err);
+    }
+  };
 
   const columns = [
     {
@@ -252,7 +239,7 @@ function TrackingOrderStaff() {
       ),
     },
     {
-      title: 'QR Scanner',
+      title: 'Xác nhận',
       key: 'action',
       render: (_, record) => (
         <ConfigProvider
@@ -273,10 +260,10 @@ function TrackingOrderStaff() {
           }}>
           <Button
             type="primary"
-            icon={<QrcodeOutlined />}
-            onClick={handleCameraOpen}
+            onClick={() => setIsUploadModalOpen(true)}
+
           >
-            Quét mã QR
+            Hoàn thành
           </Button>
         </ConfigProvider>
       ),
@@ -465,12 +452,35 @@ function TrackingOrderStaff() {
             />
           </Card>
           <Modal
-            open={isScannerOpen}
-            onCancel={() => setIsScannerOpen(false)}
-            footer={null}
+            open={isUploadModalOpen}
+            onCancel={() => setIsUploadModalOpen(false)}
+            onOk={uploadImages}
+            okText="Xác nhận"
+            cancelText="Hủy"
             destroyOnClose
           >
-            <div id="qr-scanner" style={{ width: "100%", height: "300px" }} />
+            <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCccdImage(e.target.files[0])}
+                />
+                {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
+              </Col>
+              <Col span={12}>
+                <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setConfirmImage(e.target.files[0])}
+                />
+                {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
+              </Col>
+            </Row>
           </Modal>
         </div>
       </div>

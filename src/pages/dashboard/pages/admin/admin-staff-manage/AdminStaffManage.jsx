@@ -1,6 +1,6 @@
 import './AdminStaffManage.scss';
 
-import { Button, DatePicker, Form, Input, message, Modal, Select, Space, Table } from 'antd';
+import { Button, DatePicker, Form, Input, Modal, Select, Space, Table, message } from 'antd';
 import { getAllAsignedStaffRole, getAllStaff, getAllStations, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
@@ -39,7 +39,7 @@ function AdminStaffManage() {
 
     const currentAssignment = assigningStaff.staffAssignments?.find(a => a.isActive === true);
     console.log('Current assignment:', currentAssignment);
-    
+
     if (currentAssignment) {
       formAssign.setFieldsValue({
         role: currentAssignment.assignedRole,
@@ -229,6 +229,11 @@ function AdminStaffManage() {
         <Form form={formAssign} layout="vertical">
           <Form.Item label="Trạm" name="stationId">
             <Select
+              showSearch
+              optionFilterProp="label"
+              filterOption={(input, option) =>
+                option.label.toLowerCase().includes(input.toLowerCase())
+              }
               placeholder="Chọn trạm"
               options={stations.map(s => ({
                 label: s.stationNameVi,
@@ -290,7 +295,7 @@ function AdminStaffManage() {
               role: 2,
               birthDate: values.birthDate.toISOString()
             };
-            
+
 
             await api.post("/users", payload);
             toast.success("Thêm nhân viên thành công!");
