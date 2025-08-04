@@ -1,4 +1,5 @@
 import "./HistoryOrders.scss";
+
 import {
   Button,
   Card,
@@ -45,8 +46,7 @@ function HistoryOrders() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -180,40 +180,28 @@ function HistoryOrders() {
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    console.log("Đánh giá:", {
-      shipmentId: feedbackShipmentId,
-      rating,
-      comment,
-    });
+    try {
+      const payload = {
+        shipmentId: feedbackShipmentId,
+        feedback: comment,
+        rating: rating,
+      };
 
-    // TODO: gọi API thật ở đây nếu bạn có endpoint
-    // try {
-    //   const payload = {
-    //     shipmentId: feedbackShipmentId,
-    //     feedback: comment,
-    //     rating: rating,
-    //   };
+      const res = await api.post("/shipments/feedback", payload);
 
-    //   const res = await api.post("/shipments/feedback", payload);
-
-    //   if (res.data?.statusCode === 200) {
-    //     toast.success("Đánh giá đã được gửi!");
-    //   } else {
-    //     toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
-    //   }
-    // } catch (err) {
-    //   console.error("Lỗi gửi đánh giá:", err);
-    //   toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
-    // } finally {
-    //   setIsFeedbackModalOpen(false);
-    //   setRating(0);
-    //   setComment('');
-    // }
-
-    toast.success("Đánh giá đã được gửi!");
-    setIsFeedbackModalOpen(false);
-    setRating(0);
-    setComment("");
+      if (res.data?.statusCode === 200) {
+        toast.success("Đánh giá đã được gửi!");
+      } else {
+        toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+      }
+    } catch (err) {
+      console.error("Lỗi gửi đánh giá:", err);
+      toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
+    } finally {
+      setIsFeedbackModalOpen(false);
+      setRating(0);
+      setComment('');
+    }
   };
 
   const filteredGoods = orders.filter((item) => {
@@ -260,7 +248,7 @@ function HistoryOrders() {
       title: "Tổng chi phí (VND)",
       dataIndex: "price",
       key: "price",
-      render: (price) => price.toLocaleString("vi-VN", {maximumFractionDigits: 0}),
+      render: (price) => price.toLocaleString("vi-VN", { maximumFractionDigits: 0 }),
     },
     {
       title: "Tổng thể tích (cm³)",
@@ -339,14 +327,6 @@ function HistoryOrders() {
   const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
-  const completedShipment = displayedGoods.some(
-    (item) => item.shipmentStatus === 17
-  );
-
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
-
   const handleNextWindow = () => {
     const newStart = Math.min(
       pageWindowStart + 1,
@@ -404,17 +384,26 @@ function HistoryOrders() {
               </Space>
 
               <Table
-                loading={loading}
                 columns={columns}
-                dataSource={filteredGoods}
-                pagination={{ pageSize: 10 }}
-                bordered
+                dataSource={displayedGoods}
+                rowKey="id"
+                pagination={false}
                 locale={{
                   emptyText: "Không có bản ghi nào",
                 }}
               />
-            </Card>
 
+              <div className="history-pagination">
+                <Pagination
+                  total={filteredGoods.length}
+                  pageSize={itemsPerPage}
+                  current={currentPage}
+                  onChange={(page) => setCurrentPage(page)}
+                  showSizeChanger={false}
+                />
+              </div>
+
+            </Card>
 
             {/* PHÂN TRANG */}
             {totalPages > 1 && (
@@ -438,32 +427,26 @@ function HistoryOrders() {
           </div>
         </div>
       </section>
-      <div>
-        <Modal
-          title="Đánh giá đơn hàng"
-          open={isFeedbackModalOpen}
-          onOk={handleSubmitFeedback}
-          onCancel={() => setIsFeedbackModalOpen(false)}
-          okText="Gửi đánh giá"
-          cancelText="Hủy"
-        >
-          <div style={{ textAlign: "center", marginBottom: "1rem" }}>
-            <Rate
-              value={rating}
-              onChange={setRating}
-              style={{ fontSize: 36 }}
-            />
-          </div>
-          <div>
-            <Input.TextArea
-              rows={4}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Nhập nhận xét của bạn về đơn hàng..."
-            />
-          </div>
-        </Modal>
-      </div>
+      <Modal
+        title="Đánh giá đơn hàng"
+        open={isFeedbackModalOpen}
+        onOk={handleSubmitFeedback}
+        onCancel={() => setIsFeedbackModalOpen(false)}
+        okText="Gửi đánh giá"
+        cancelText="Hủy"
+      >
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <Rate value={rating} onChange={setRating} style={{ fontSize: 36 }} />
+        </div>
+        <div>
+          <Input.TextArea
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Nhập nhận xét của bạn về đơn hàng..."
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
