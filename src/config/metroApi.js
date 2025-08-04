@@ -125,9 +125,7 @@ export const getAllRegions = async () => {
   try {
     const res = await api.get("/regions?PageSize=1000");
     return res.data.data.items;
-
   } catch (error) {
     toast.error("Không thể lấy dữ liệu khu vực");
-
   }
 }
