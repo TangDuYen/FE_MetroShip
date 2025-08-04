@@ -44,6 +44,7 @@ function HistoryOrders() {
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -296,25 +297,6 @@ function HistoryOrders() {
     (item) => item.shipmentStatus === 17
   );
 
-  // const handlePageClick = (page) => {
-  //   setCurrentPage(page);
-  // };
-
-  // const handleNextWindow = () => {
-  //   const newStart = Math.min(
-  //     pageWindowStart + 1,
-  //     totalPages - pageWindowSize + 1
-  //   );
-  //   setPageWindowStart(newStart);
-  //   setCurrentPage(newStart);
-  // };
-
-  // const handlePrevWindow = () => {
-  //   const newStart = Math.max(pageWindowStart - 1, 1);
-  //   setPageWindowStart(newStart);
-  //   setCurrentPage(newStart);
-  // };
-
   return (
     <div className="history-order">
       <section className="history-order-wrapper">
@@ -356,24 +338,15 @@ function HistoryOrders() {
               </Space>
 
               <Table
+                loading={loading}
                 columns={columns}
-                dataSource={displayedGoods}
-                rowKey="id"
-                pagination={false}
+                dataSource={filteredGoods}
+                pagination={{ pageSize: 10 }}
+                bordered
                 locale={{
                   emptyText: "Không có bản ghi nào",
                 }}
               />
-
-              <div className="history-pagination">
-                <Pagination
-                  total={filteredGoods.length}
-                  pageSize={itemsPerPage}
-                  current={currentPage}
-                  onChange={(page) => setCurrentPage(page)}
-                  showSizeChanger={false}
-                />
-              </div>
             </Card>
           </div>
         </div>
