@@ -244,7 +244,7 @@ function AdminStaffManage() {
 
           <Form.Item label="Từ ngày" name="fromDate">
             <DatePicker
-              disabledDate={disabledDate}
+              // disabledDate={disabledDate}
               style={{ width: '100%' }}
               placeholder='Chọn ngày bắt đầu'
             />

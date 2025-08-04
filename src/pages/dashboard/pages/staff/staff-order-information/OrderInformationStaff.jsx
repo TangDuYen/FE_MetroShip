@@ -2,12 +2,13 @@ import './OrderInformationStaff.scss';
 
 import { Card, Col, Descriptions, Divider, Image, Row, Typography } from "antd";
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
+import { PATH_NAME } from '../../../../../constants/pathname';
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllParcels } from "../../../../../config/metroApi";
 import { shipmentStatusMap } from "../../../../../constants/statusMap";
-import { useParams } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -17,6 +18,7 @@ function OrderInformationStaff() {
     const [parcels, setParcels] = useState([]);
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState(null);
+    const nav = useNavigate();
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -45,7 +47,13 @@ function OrderInformationStaff() {
     return (
         <div className="order-info-staff-container">
             <Title level={2}>Chi tiết đơn hàng: {shipment.trackingCode}</Title>
-            <Title level={3} style={{ marginBottom: 10}}>Vị trí đơn hàng hiện tại: Trạm {shipment.currentStationName}</Title>
+            <Typography.Link
+                style={{ fontSize: 18, marginBottom: 20, display: 'inline-block', fontWeight: 'bold' }}
+                onClick={() => nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION)}
+            >
+                <span style={{color: 'black'}}>Vị trí hiện tại:</span> Trạm {shipment.currentStationName}
+            </Typography.Link>
+
 
             <Card title="Thông tin đơn hàng" style={{ marginBottom: 20 }}>
                 <Descriptions column={2} bordered>
