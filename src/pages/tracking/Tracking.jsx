@@ -128,7 +128,7 @@ function Tracking() {
               {new Date(result.scheduledDateTime).toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item>
-              <Link to={`/test/${result.trackingCode}`}>
+              <Link to={`${PATH_NAME.TRACKING_ORDER}/${result.trackingCode}`}>
                 <Button type="primary">Xem chi tiết</Button>
               </Link>
             </Descriptions.Item>

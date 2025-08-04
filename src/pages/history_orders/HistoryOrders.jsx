@@ -1,5 +1,4 @@
 import "./HistoryOrders.scss";
-
 import {
   Button,
   Card,
@@ -46,7 +45,8 @@ function HistoryOrders() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -180,8 +180,13 @@ function HistoryOrders() {
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    toast.success("Đánh giá đã được gửi!");
-    setIsFeedbackModalOpen(false);
+    console.log("Đánh giá:", {
+      shipmentId: feedbackShipmentId,
+      rating,
+      comment,
+    });
+
+    // TODO: gọi API thật ở đây nếu bạn có endpoint
     // try {
     //   const payload = {
     //     shipmentId: feedbackShipmentId,
@@ -204,6 +209,11 @@ function HistoryOrders() {
     //   setRating(0);
     //   setComment('');
     // }
+
+    toast.success("Đánh giá đã được gửi!");
+    setIsFeedbackModalOpen(false);
+    setRating(0);
+    setComment("");
   };
 
   const filteredGoods = orders.filter((item) => {
@@ -329,6 +339,10 @@ function HistoryOrders() {
   const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
+  const completedShipment = displayedGoods.some(
+    (item) => item.shipmentStatus === 17
+  );
+
   const handlePageClick = (page) => {
     setCurrentPage(page);
   };
@@ -390,26 +404,17 @@ function HistoryOrders() {
               </Space>
 
               <Table
+                loading={loading}
                 columns={columns}
-                dataSource={displayedGoods}
-                rowKey="id"
-                pagination={false}
+                dataSource={filteredGoods}
+                pagination={{ pageSize: 10 }}
+                bordered
                 locale={{
                   emptyText: "Không có bản ghi nào",
                 }}
               />
-
-              <div className="history-pagination">
-                <Pagination
-                  total={filteredGoods.length}
-                  pageSize={itemsPerPage}
-                  current={currentPage}
-                  onChange={(page) => setCurrentPage(page)}
-                  showSizeChanger={false}
-                />
-              </div>
-
             </Card>
+
 
             {/* PHÂN TRANG */}
             {totalPages > 1 && (
@@ -433,26 +438,32 @@ function HistoryOrders() {
           </div>
         </div>
       </section>
-      <Modal
-        title="Đánh giá đơn hàng"
-        open={isFeedbackModalOpen}
-        onOk={handleSubmitFeedback}
-        onCancel={() => setIsFeedbackModalOpen(false)}
-        okText="Gửi đánh giá"
-        cancelText="Hủy"
-      >
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <Rate value={rating} onChange={setRating} style={{ fontSize: 36 }} />
-        </div>
-        <div>
-          <Input.TextArea
-            rows={4}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Nhập nhận xét của bạn về đơn hàng..."
-          />
-        </div>
-      </Modal>
+      <div>
+        <Modal
+          title="Đánh giá đơn hàng"
+          open={isFeedbackModalOpen}
+          onOk={handleSubmitFeedback}
+          onCancel={() => setIsFeedbackModalOpen(false)}
+          okText="Gửi đánh giá"
+          cancelText="Hủy"
+        >
+          <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+            <Rate
+              value={rating}
+              onChange={setRating}
+              style={{ fontSize: 36 }}
+            />
+          </div>
+          <div>
+            <Input.TextArea
+              rows={4}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Nhập nhận xét của bạn về đơn hàng..."
+            />
+          </div>
+        </Modal>
+      </div>
     </div>
   );
 }
