@@ -1,11 +1,25 @@
 import "./HistoryPayment.scss";
 import React, { useEffect, useState } from "react";
-import { paymentStatusMap, paymentTransactionTypeMap } from "../../constants/statusMap";
+import {
+  paymentStatusMap,
+  paymentTransactionTypeMap,
+} from "../../constants/statusMap";
 import { MdSearch } from "react-icons/md";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import { getAllCustomerShipments } from "../../config/metroApi";
-import { Button, Card, DatePicker, Input, Select, Space, Table, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  DatePicker,
+  Input,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
 
@@ -14,8 +28,6 @@ const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
 function HistoryPayment() {
-  
-
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -28,14 +40,17 @@ function HistoryPayment() {
   useEffect(() => {
     async function fetchShipments() {
       try {
+        setLoading(true);
         const data = await getAllCustomerShipments();
         const map = {};
-        data.forEach(item => {
+        data.forEach((item) => {
           map[item.id] = item.trackingCode;
         });
         setShipmentsMap(map);
       } catch (err) {
         console.error("Error fetching shipments:", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchShipments();
@@ -46,6 +61,7 @@ function HistoryPayment() {
 
     const fetchPayments = async () => {
       try {
+        setLoading(true);
         const res = await api.get("/transactions?PageSize=1000");
         const items = res.data?.data?.items || [];
 
@@ -73,15 +89,19 @@ function HistoryPayment() {
         setAllPayments(formatted);
       } catch (error) {
         console.error("Lỗi khi lấy lịch sử thanh toán:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPayments();
-  }, [shipmentsMap]); 
+  }, [shipmentsMap]);
 
   const filteredPayments = allPayments.filter((item) => {
     const matchSearch =
-      (item.trackingCode?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (item.trackingCode?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
       (item.method?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchStatus =
@@ -96,7 +116,7 @@ function HistoryPayment() {
     return matchSearch && matchStatus && matchDateRange;
   });
 
-const columns = [
+  const columns = [
     {
       title: "STT",
       dataIndex: "index",
@@ -122,11 +142,13 @@ const columns = [
       dataIndex: "status",
       render: (text, record) => {
         const colorMap = { 1: "orange", 2: "green", 3: "default", 4: "red" };
-        return <Tag color={colorMap[record.statusEnum] || "default"}>{text}</Tag>;
+        return (
+          <Tag color={colorMap[record.statusEnum] || "default"}>{text}</Tag>
+        );
       },
     },
   ];
-  
+
   return (
     <div className="history-payment">
       <section className="history-payment-wrapper">
@@ -135,8 +157,6 @@ const columns = [
             <Sidebar />
           </div>
           <div className="history-payment-right">
-            
-
             <Card title="DANH SÁCH GIAO DỊCH CỦA BẠN" bordered={false}>
               <Space style={{ marginBottom: 16 }}>
                 <Input
@@ -164,14 +184,14 @@ const columns = [
                   style={{ width: 300 }}
                 />
               </Space>
-
-              <Table
-                loading={loading}
-                columns={columns}
-                dataSource={filteredPayments}
-                pagination={{ pageSize: 10 }}
-                bordered
-              />
+              <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                <Table
+                  columns={columns}
+                  dataSource={filteredPayments}
+                  pagination={{ pageSize: 10 }}
+                  bordered
+                />
+              </Spin>
             </Card>
           </div>
         </div>

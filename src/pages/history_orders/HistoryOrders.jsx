@@ -12,6 +12,7 @@ import {
   Tag,
   Modal,
   Rate,
+  Spin,
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -48,6 +49,7 @@ function HistoryOrders() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [parcelsRes, shipmentsRes] = await Promise.all([
           api.get("parcels?PageSize=1000"),
@@ -118,6 +120,8 @@ function HistoryOrders() {
         );
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -336,17 +340,17 @@ function HistoryOrders() {
                   style={{ width: 300 }}
                 />
               </Space>
-
-              <Table
-                loading={loading}
-                columns={columns}
-                dataSource={filteredGoods}
-                pagination={{ pageSize: 10 }}
-                bordered
-                locale={{
-                  emptyText: "Không có bản ghi nào",
-                }}
-              />
+              <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                <Table
+                  columns={columns}
+                  dataSource={filteredGoods}
+                  pagination={{ pageSize: 10 }}
+                  bordered
+                  locale={{
+                    emptyText: "Không có bản ghi nào",
+                  }}
+                />
+              </Spin>
             </Card>
           </div>
         </div>
