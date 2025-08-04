@@ -298,7 +298,7 @@ function OrderStaff() {
   };
 
   return (
-    <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
+    // <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
       <>
         <div className="order-staff-container">
           <div className="metro-info" style={{ marginBottom: "1em" }}>
@@ -680,7 +680,7 @@ function OrderStaff() {
           </div>
         </div>
       </>
-    </Spin>
+    // </Spin>
 
   );
 }
