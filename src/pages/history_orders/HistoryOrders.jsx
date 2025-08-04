@@ -1,5 +1,4 @@
 import "./HistoryOrders.scss";
-import { Input, Modal, Rate } from "antd";
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -11,6 +10,8 @@ import {
   Pagination,
   Card,
   Tag,
+  Modal,
+  Rate,
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -42,7 +43,7 @@ function HistoryOrders() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,16 +177,19 @@ function HistoryOrders() {
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    console.log("Đánh giá:", { shipmentId: feedbackShipmentId, rating, comment });
+    console.log("Đánh giá:", {
+      shipmentId: feedbackShipmentId,
+      rating,
+      comment,
+    });
 
     // TODO: gọi API thật ở đây nếu bạn có endpoint
 
     toast.success("Đánh giá đã được gửi!");
     setIsFeedbackModalOpen(false);
     setRating(0);
-    setComment('');
+    setComment("");
   };
-
 
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
@@ -288,27 +292,28 @@ function HistoryOrders() {
   });
 
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
-  const completedShipment = displayedGoods.some((item) => item.shipmentStatus === 17);
+  const completedShipment = displayedGoods.some(
+    (item) => item.shipmentStatus === 17
+  );
 
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
+  // const handlePageClick = (page) => {
+  //   setCurrentPage(page);
+  // };
 
-  const handleNextWindow = () => {
-    const newStart = Math.min(
-      pageWindowStart + 1,
-      totalPages - pageWindowSize + 1
-    );
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
+  // const handleNextWindow = () => {
+  //   const newStart = Math.min(
+  //     pageWindowStart + 1,
+  //     totalPages - pageWindowSize + 1
+  //   );
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
-  const handlePrevWindow = () => {
-    const newStart = Math.max(pageWindowStart - 1, 1);
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
-
+  // const handlePrevWindow = () => {
+  //   const newStart = Math.max(pageWindowStart - 1, 1);
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
   return (
     <div className="history-order">
@@ -369,126 +374,36 @@ function HistoryOrders() {
                   showSizeChanger={false}
                 />
               </div>
-
             </Card>
-
-              <table className="goods-table">
-                <thead>
-                  <tr>
-                    <th>STT</th>
-                    <th>Mã vận đơn</th>
-                    <th>Tổng trọng lượng (kilogram)</th>
-                    <th>Tổng chi phí (vnd)</th>
-                    <th>Tổng thể tích (cm³)</th>
-                    <th>Ngày gửi hàng</th>
-                    <th>Chi tiết</th>
-                    <th>Trạng thái</th>
-                    {completedShipment && <th>Hành động</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedGoods.length === 0 ? (
-                    <tr>
-                      <td colSpan="10" className="no-data">
-                        Không có bản ghi nào
-                      </td>
-                    </tr>
-                  ) : (
-                    displayedGoods.map((item, index) => (
-                      <tr key={item.id}>
-                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.code}</td>
-                        <td>{item.weight}</td>
-                        <td>{item.price.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}</td>
-                        <td>{item.volume}</td>
-                        <td>{item.deliveryDate}</td>
-                        <td>
-                          <Link to={PATH_NAME.TRACKING_ORDER}>
-                            <span className="detail-link">Chi tiết</span>
-                          </Link>
-                        </td>
-                        <td>
-                          <span className={`status-${item.shipmentStatus}`}>
-                            {shipmentStatusMap[item.shipmentStatus] || "Không rõ"}
-                          </span>
-                        </td>
-                        {item.shipmentStatus === 17 ? (
-                          <td>
-                            <button
-                              className="feedback-button"
-                              onClick={() => handleFeedback(item.shipmentId)}
-                            >
-                              Đánh giá
-                            </button>
-                          </td>
-                        ) : completedShipment ? (
-                          <td>-</td>
-                        ) : null}
-
-                        {/* {item.shipmentStatus === 3 ? (
-                          <td>
-                            <button
-                              className="pay-button"
-                              onClick={() => handlePayment(item.shipmentId)}
-                            >
-                              Thanh toán
-                            </button>
-                          </td>
-                        ) : hasPayment ? (
-                          <td>-</td>
-                        ) : null}
-
-                         <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td>  */}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* PHÂN TRANG */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    onClick={handlePrevWindow}
-                    disabled={pageWindowStart === 1}
-                  >
-                    «
-                  </button>
-                  {paginationButtons}
-                  <button
-                    onClick={handleNextWindow}
-                    disabled={
-                      pageWindowStart + pageWindowSize - 1 >= totalPages
-                    }
-                  >
-                    »
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </section>
-      <Modal
-        title="Đánh giá đơn hàng"
-        open={isFeedbackModalOpen}
-        onOk={handleSubmitFeedback}
-        onCancel={() => setIsFeedbackModalOpen(false)}
-        okText="Gửi đánh giá"
-        cancelText="Hủy"
-      >
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <Rate value={rating} onChange={setRating} style={{ fontSize: 36 }} />
-        </div>
-        <div>
-          <Input.TextArea
-            rows={4}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Nhập nhận xét của bạn về đơn hàng..."
-          />
-        </div>
-      </Modal>
+      <div>
+        <Modal
+          title="Đánh giá đơn hàng"
+          open={isFeedbackModalOpen}
+          onOk={handleSubmitFeedback}
+          onCancel={() => setIsFeedbackModalOpen(false)}
+          okText="Gửi đánh giá"
+          cancelText="Hủy"
+        >
+          <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+            <Rate
+              value={rating}
+              onChange={setRating}
+              style={{ fontSize: 36 }}
+            />
+          </div>
+          <div>
+            <Input.TextArea
+              rows={4}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Nhập nhận xét của bạn về đơn hàng..."
+            />
+          </div>
+        </Modal>
+      </div>
     </div>
   );
 }
