@@ -82,17 +82,33 @@ function ParcelInfo({
     );
   }, []);
 
-  const getSingleTimeOptions = () => {
-    return timeSlot.map((slot) => {
-      const [h, m] = slot.openTime.split(':').map(Number);
-      const date = new Date();
-      date.setHours(h, m - 30, 0, 0);
+  const filterValidTimeSlots = (timeSlots, selectedDate) => {
+    const now = dayjs();
+    const isToday = selectedDate && dayjs(selectedDate).isSame(now, 'day');
 
-      const padded = (n) => n.toString().padStart(2, '0');
-      const labelTime = `${padded(date.getHours())}:${padded(date.getMinutes())}`;
+    return timeSlots.filter(slot => {
+      if (!isToday) return true;
+
+      const [h, m] = slot.openTime.split(':').map(Number);
+      const slotTime = dayjs().hour(h).minute(m).second(0)
+        .subtract(slot.scheduleBeforeShiftMinutes || 0, 'minute');
+
+      return now.isBefore(slotTime);
+    });
+  };
+
+  const getSingleTimeOptions = () => {
+    const validSlots = filterValidTimeSlots(timeSlot, selectedDate);
+
+    return validSlots.map((slot) => {
+      const [h, m] = slot.openTime.split(':').map(Number);
+      const baseTime = dayjs().hour(h).minute(m).second(0);
+
+      const latestDrop = baseTime.subtract(slot.scheduleBeforeShiftMinutes || 30, 'minute');
+      const earliestDrop = baseTime.subtract(slot.maxScheduleBeforeShiftMinutes || 120, 'minute');
 
       return {
-        label: labelTime,
+        label: `${earliestDrop.format('HH:mm')} - ${latestDrop.format('HH:mm')}`,
         value: slot.id,
       };
     });
@@ -125,13 +141,34 @@ function ParcelInfo({
   };
 
   const disabledDate = (current) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset to 00:00 of today
+    const now = dayjs();
+    const today = now.startOf('day');
+    const selected = dayjs(current).startOf('day');
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1); // +1 day
-    return current && current.valueOf() < tomorrow.getTime();
+    if (selected.isBefore(today)) return true;
+
+    // 🕐 Dựa vào shift cao nhất (ca cuối)
+    const caLast = timeSlot.reduce((latest, cur) =>
+      cur.shift > latest.shift ? cur : latest, timeSlot[0]
+    );
+
+    const [h, m] = caLast.openTime.split(':').map(Number);
+    const buffer = caLast.scheduleBeforeShiftMinutes || 0;
+
+    const deadline = dayjs(today).hour(h).minute(m).subtract(buffer, 'minute');
+
+    // ❌ Nếu hôm nay đã quá deadline của ca cuối → disable hôm nay
+    if (selected.isSame(today, 'day') && now.isAfter(deadline)) {
+      return true;
+    }
+
+    return false;
   };
+
+
+
+
+
 
 
   useEffect(() => {
@@ -553,6 +590,7 @@ function ParcelInfo({
                       </Option>
                     ))}
                   </Select>
+
                   <Button onClick={showModal} style={{ marginBottom: '1em' }}>
                     Giờ hoạt động
                   </Button>
@@ -599,11 +637,6 @@ function ParcelInfo({
               />
             </Modal>
           </div>
-          {/* <div className="insurance-fee" style={{ marginBottom: "1em" }}>
-            <Checkbox>
-              Áp dụng bảo hiểm hàng hóa: {parcelCategory.find(cat => cat.id === parcelInfo.parcelCategory)?.insuranceFeeVnd || 0} VND
-            </Checkbox>
-          </div> */}
           <div
             className="solutions"
             style={{
