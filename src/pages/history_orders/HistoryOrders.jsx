@@ -1,31 +1,33 @@
 import "./HistoryOrders.scss";
-import React, { useEffect, useState } from "react";
 import {
-  Table,
-  Input,
-  Select,
-  DatePicker,
   Button,
-  Space,
-  Pagination,
   Card,
-  Tag,
+  DatePicker,
+  Input,
   Modal,
+  Pagination,
   Rate,
+  Select,
+  Space,
+  Table,
+  Tag
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import { Link } from "react-router-dom";
-import { PATH_NAME } from "../../constants/pathname";
-import Sidebar from "../../components/sidebar_profile/Sidebar";
-import api from "../../config/axios";
+import React, { useEffect, useState } from "react";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
-import { toast } from "react-toastify";
+
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
+import { SearchOutlined } from "@ant-design/icons";
+import Sidebar from "../../components/sidebar_profile/Sidebar";
+import api from "../../config/axios";
+import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { max } from "moment/moment";
+import { toast } from "react-toastify";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -185,6 +187,28 @@ function HistoryOrders() {
     });
 
     // TODO: gọi API thật ở đây nếu bạn có endpoint
+    // try {
+    //   const payload = {
+    //     shipmentId: feedbackShipmentId,
+    //     feedback: comment,
+    //     rating: rating,
+    //   };
+
+    //   const res = await api.post("/shipments/feedback", payload);
+
+    //   if (res.data?.statusCode === 200) {
+    //     toast.success("Đánh giá đã được gửi!");
+    //   } else {
+    //     toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+    //   }
+    // } catch (err) {
+    //   console.error("Lỗi gửi đánh giá:", err);
+    //   toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
+    // } finally {
+    //   setIsFeedbackModalOpen(false);
+    //   setRating(0);
+    //   setComment('');
+    // }
 
     toast.success("Đánh giá đã được gửi!");
     setIsFeedbackModalOpen(false);
@@ -236,7 +260,7 @@ function HistoryOrders() {
       title: "Tổng chi phí (VND)",
       dataIndex: "price",
       key: "price",
-      render: (price) => price.toLocaleString(),
+      render: (price) => price.toLocaleString("vi-VN", {maximumFractionDigits: 0}),
     },
     {
       title: "Tổng thể tích (cm³)",
@@ -291,11 +315,53 @@ function HistoryOrders() {
       );
     },
   });
+  columns.push({
+    title: "Hành động",
+    key: "action",
+    render: (_, item) => {
+      const isRated = item.shipmentStatus === 18;
+      return item.shipmentStatus === 17 ? (
+        <Button
+          type="primary"
+          className="feedback-button"
+          onClick={() => handleFeedback(item.shipmentId)}
+        >
+          {isRated
+            ? "Xem lại đánh giá"
+            : "Đánh giá"}
+        </Button>
+      ) : (
+        "-"
+      );
+    },
+  });
 
+  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
+
   const completedShipment = displayedGoods.some(
     (item) => item.shipmentStatus === 17
   );
+
+  const handlePageClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNextWindow = () => {
+    const newStart = Math.min(
+      pageWindowStart + 1,
+      totalPages - pageWindowSize + 1
+    );
+    setPageWindowStart(newStart);
+    setCurrentPage(newStart);
+  };
+
+  const handlePrevWindow = () => {
+    const newStart = Math.max(pageWindowStart - 1, 1);
+    setPageWindowStart(newStart);
+    setCurrentPage(newStart);
+  };
+
 
   return (
     <div className="history-order">
@@ -348,6 +414,27 @@ function HistoryOrders() {
                 }}
               />
             </Card>
+
+
+            {/* PHÂN TRANG */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={handlePrevWindow}
+                  disabled={pageWindowStart === 1}
+                >
+                  «
+                </button>
+                {paginationButtons}
+                <button
+                  onClick={handleNextWindow}
+                  disabled={
+                    pageWindowStart + pageWindowSize - 1 >= totalPages
+                  }
+                >
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
