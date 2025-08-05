@@ -1,11 +1,12 @@
 import './PrintOrder.scss';
 
 import { getAllCustomerShipments, getAllParcels } from './../../config/metroApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from 'antd';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import html2pdf from 'html2pdf.js';
 import { shipmentStatusMap } from '../../constants/statusMap';
 import { useLocation } from 'react-router-dom';
 
@@ -15,7 +16,7 @@ function PrintOrder() {
   const [parcels, setParcels] = useState([]);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [qrUrl, setQrUrl] = useState(null);
-
+  const invoiceRef = useRef();
   useEffect(() => {
     Promise.all([getAllCustomerShipments(), getAllParcels()]).then(
       ([shipmentsData, parcelsData]) => {
@@ -27,6 +28,32 @@ function PrintOrder() {
       }
     );
   }, [location]);
+const handleDownloadPDF = () => {
+  if (!invoiceRef.current) return;
+
+  // Set kích thước A4 = 297mm x 210mm (chiều cao x chiều rộng)
+  // => bạn cần scale nhỏ nội dung lại nếu vượt quá chiều cao
+
+  // Gắn class tạm thời để scale nội dung
+  invoiceRef.current.classList.add('pdf-scale');
+
+  const opt = {
+    margin: 0,
+    filename: `${shipment.trackingCode || 'invoice'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // đơn vị mm cho chuẩn
+  };
+
+  html2pdf()
+    .set(opt)
+    .from(invoiceRef.current)
+    .save()
+    .then(() => {
+      // Xoá class scale sau khi xuất xong
+      invoiceRef.current.classList.remove('pdf-scale');
+    });
+};
 
   useEffect(() => {
     const map = new Map();
@@ -64,7 +91,7 @@ function PrintOrder() {
 
   return (
     <div className="invoice-container">
-      <div className="invoice-page">
+      <div className="invoice-page" ref={invoiceRef}>
         <h1 className="invoice-title">HÓA ĐƠN VẬN CHUYỂN</h1>
         <div className="invoice-header">
           <div>
@@ -162,9 +189,14 @@ function PrintOrder() {
         </div>
       </div>
 
-      <Button className="print-order-button" onClick={() => window.print()}>
-        In hóa đơn
-      </Button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button className="print-order-button" onClick={() => window.print()}>
+          In hóa đơn
+        </Button>
+        <Button className='download-order-button' type="primary" onClick={handleDownloadPDF}>
+          Tải về PDF
+        </Button>
+      </div>
     </div>
   );
 }
