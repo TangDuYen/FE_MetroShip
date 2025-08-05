@@ -1,47 +1,56 @@
 import "./HistoryPayment.scss";
-
-import React, { use, useEffect, useState } from "react";
-import { paymentStatusMap, paymentTransactionTypeMap } from "../../constants/statusMap";
-
+import React, { useEffect, useState } from "react";
+import {
+  paymentStatusMap,
+  paymentTransactionTypeMap,
+} from "../../constants/statusMap";
 import { MdSearch } from "react-icons/md";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import { getAllCustomerShipments } from "../../config/metroApi";
+import {
+  Button,
+  Card,
+  DatePicker,
+  Input,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
+import dayjs from "dayjs";
+import { SearchOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const { Title } = Typography;
 
 function HistoryPayment() {
-  // const allPayments = Array.from({ length: 30 }).map((_, i) => ({
-  //   id: i + 1,
-  //   transactionCode: `GD00${i + 1}`,
-  //   method: i % 2 === 0 ? "Ví điện tử" : "COD",
-  //   amount: 50000 + i * 10000,
-  //   status: i % 2 === 0 ? "completed" : "pending",
-  //   date: `${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}/05/2025`,
-  // }));
-
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageWindowStart, setPageWindowStart] = useState(1);
   const itemsPerPage = 10;
-  const pageWindowSize = 3;
+  const [dateRange, setDateRange] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
   const [allPayments, setAllPayments] = useState([]);
-
   const [shipmentsMap, setShipmentsMap] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchShipments() {
       try {
+        setLoading(true);
         const data = await getAllCustomerShipments();
         const map = {};
-        data.forEach(item => {
+        data.forEach((item) => {
           map[item.id] = item.trackingCode;
         });
         setShipmentsMap(map);
       } catch (err) {
         console.error("Error fetching shipments:", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchShipments();
@@ -52,6 +61,7 @@ function HistoryPayment() {
 
     const fetchPayments = async () => {
       try {
+        setLoading(true);
         const res = await api.get("/transactions?PageSize=1000");
         const items = res.data?.data?.items || [];
 
@@ -79,69 +89,66 @@ function HistoryPayment() {
         setAllPayments(formatted);
       } catch (error) {
         console.error("Lỗi khi lấy lịch sử thanh toán:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPayments();
-  }, [shipmentsMap]); 
+  }, [shipmentsMap]);
 
   const filteredPayments = allPayments.filter((item) => {
     const matchSearch =
-      (item.paymentTrackingId?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (item.trackingCode?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
       (item.method?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchStatus =
       filterStatus === "all" || item.statusEnum === Number(filterStatus);
+
     const matchDateRange =
-      (!startDate || item.date >= startDate) &&
-      (!endDate || item.date <= endDate);
+      dateRange.length === 0 ||
+      (item.rawDate &&
+        dayjs(item.rawDate).isAfter(dayjs(dateRange[0]).startOf("day")) &&
+        dayjs(item.rawDate).isBefore(dayjs(dateRange[1]).endOf("day")));
 
     return matchSearch && matchStatus && matchDateRange;
   });
 
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const columns = [
+    {
+      title: "STT",
+      dataIndex: "index",
+      key: "index",
+      render: (_, __, index) => (currentPage - 1) * itemsPerPage + index + 1,
+      width: 60,
+    },
+    { title: "Mã đơn hàng", dataIndex: "trackingCode" },
+    { title: "Loại giao dịch", dataIndex: "type" },
+    { title: "Phương thức", dataIndex: "method" },
+    {
+      title: "Số tiền",
+      dataIndex: "amount",
+      render: (val) => `${val.toLocaleString("vi-VN")}đ`,
+    },
+    { title: "Ngày giao dịch", dataIndex: "date" },
+    {
+      title: "Chi tiết",
+      render: () => <Button type="link">Chi tiết</Button>,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (text, record) => {
+        const colorMap = { 1: "orange", 2: "green", 3: "default", 4: "red" };
+        return (
+          <Tag color={colorMap[record.statusEnum] || "default"}>{text}</Tag>
+        );
+      },
+    },
+  ];
 
-  const displayedPayments = filteredPayments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleNextWindow = () => {
-    const newStart = Math.min(
-      pageWindowStart + 1,
-      totalPages - pageWindowSize + 1
-    );
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
-
-  const handlePrevWindow = () => {
-    const newStart = Math.max(pageWindowStart - 1, 1);
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
-
-  const paginationButtons = [];
-  for (
-    let i = pageWindowStart;
-    i < pageWindowStart + pageWindowSize && i <= totalPages;
-    i++
-  ) {
-    paginationButtons.push(
-      <button
-        key={i}
-        className={currentPage === i ? "active" : ""}
-        onClick={() => handlePageClick(i)}
-      >
-        {i}
-      </button>
-    );
-  }
   return (
     <div className="history-payment">
       <section className="history-payment-wrapper">
@@ -150,126 +157,42 @@ function HistoryPayment() {
             <Sidebar />
           </div>
           <div className="history-payment-right">
-            <div className="history-payment-container">
-              <div className="history-payment-header">
-                <h3>DANH SÁCH GIAO DỊCH CỦA BẠN</h3>
-              </div>
-
-              <div className="search-bar">
-                <input
-                  type="text"
+            <Card title="DANH SÁCH GIAO DỊCH CỦA BẠN" bordered={false}>
+              <Space style={{ marginBottom: 16 }}>
+                <Input
                   placeholder="Nhập mã giao dịch, phương thức"
+                  prefix={<SearchOutlined />}
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1); // reset về trang 1 khi tìm
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: 300 }}
                 />
-                <button className="btn-search">
-                  <MdSearch className="icon-search" />
-                </button>
-              </div>
-
-              <div className="filter-bar">
-                <select
+                <Select
+                  style={{ width: 200 }}
                   value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(val) => setFilterStatus(val)}
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="1">Đợi thanh toán</option>
-                  <option value="2">Đã thanh toán</option>
-                  <option value="3">Đã hủy</option>
-                  <option value="4">Thất bại</option>
-                </select>
-
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  <Option value="all">Tất cả trạng thái</Option>
+                  <Option value="1">Đợi thanh toán</Option>
+                  <Option value="2">Đã thanh toán</Option>
+                  <Option value="3">Đã hủy</Option>
+                  <Option value="4">Thất bại</Option>
+                </Select>
+                <RangePicker
+                  format="DD/MM/YYYY"
+                  placeholder={["Từ ngày", "Đến ngày"]}
+                  onChange={(values) => setDateRange(values || [])}
+                  style={{ width: 300 }}
                 />
-                <span>đến</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
+              </Space>
+              <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                <Table
+                  columns={columns}
+                  dataSource={filteredPayments}
+                  pagination={{ pageSize: 10 }}
+                  bordered
                 />
-              </div>
-
-              <table className="history-payment-table">
-                <thead>
-                  <tr>
-                    <th>STT</th>
-                    <th>Mã đơn hàng</th>
-                    <th>Loại giao dịch</th>
-                    <th>Phương thức</th>
-                    <th>Số tiền</th>
-                    <th>Ngày giao dịch</th>
-                    <th>Chi tiết</th>
-                    <th>Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedPayments.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="no-data">
-                        Không có bản ghi nào
-                      </td>
-                    </tr>
-                  ) : (
-                    displayedPayments.map((item, index) => (
-                      <tr key={item.id}>
-                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.trackingCode}</td>
-                        <td>{item.type}</td>
-                        <td>{item.method}</td>
-                        <td>{item.amount.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}đ</td>
-                        <td>{item.date}</td>
-                        <td>
-                          <span className="detail-link">Chi tiết</span>
-                        </td>
-                        <td>
-                          <span className={`status status-${item.statusEnum}`}>
-                            {item.status}
-                          </span>
-                        </td>
-
-
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* PHÂN TRANG */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    onClick={handlePrevWindow}
-                    disabled={pageWindowStart === 1}
-                  >
-                    «
-                  </button>
-                  {paginationButtons}
-                  <button
-                    onClick={handleNextWindow}
-                    disabled={
-                      pageWindowStart + pageWindowSize - 1 >= totalPages
-                    }
-                  >
-                    »
-                  </button>
-                </div>
-              )}
-            </div>
+              </Spin>
+            </Card>
           </div>
         </div>
       </section>

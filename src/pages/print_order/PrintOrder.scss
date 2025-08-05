@@ -8,7 +8,7 @@
     flex-direction: column;
     align-items: center;
 
-    .print-order-button {
+    .print-order-button, .download-order-button {
         margin-top: 30px;
         display: block;
         font-size: 16px;
@@ -24,6 +24,10 @@
             background-color: #40a9ff;
         }
     }
+}
+.pdf-scale {
+  width: fit-content;
+  height: fit-content
 }
 
 .invoice-page {

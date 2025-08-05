@@ -1,25 +1,46 @@
 import "./HistoryOrders.scss";
 
-import { Input, Modal, Rate } from "antd";
+import {
+  Button,
+  Card,
+  DatePicker,
+  Input,
+  Modal,
+  Pagination,
+  Rate,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag
+} from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import {
+  shipmentStatusColorMap,
+  shipmentStatusMap,
+} from "../../constants/statusMap";
 
-import { Link } from "react-router-dom";
-import { MdSearch } from "react-icons/md";
 import { PATH_NAME } from "../../constants/pathname";
+import { SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
-import { shipmentStatusMap } from "../../constants/statusMap";
+import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { max } from "moment/moment";
 import { toast } from "react-toastify";
 
-function HistoryOrders() {
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
+const { RangePicker } = DatePicker;
+const { Option } = Select;
+function HistoryOrders() {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageWindowStart, setPageWindowStart] = useState(1);
   const itemsPerPage = 10;
-  const pageWindowSize = 3;
-
   const [filterStatus, setFilterStatus] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -27,58 +48,10 @@ function HistoryOrders() {
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const navigate = useNavigate();
 
-  // const shipmentStatusMap = {
-  //   0: "Đang xử lý",
-  //   1: "Đã từ chối",
-  //   2: "Xác nhận một phần",
-  //   3: "Đã xác nhận",
-  //   4: "Chưa thanh toán",
-  //   5: "Đã hủy",
-  //   6: "Chờ hoàn tiền",
-  //   7: "Đã hoàn tiền",
-  //   8: "Không có điểm gửi hàng",
-  //   9: "Đã thanh toán",
-  //   10: "Đã lấy hàng",
-  //   11: "Đang vận chuyển",
-  //   12: "Chờ giao hàng",
-  //   13: "Đang áp dụng phụ phí",
-  //   14: "Hết hạn",
-  //   15: "Chờ phản hồi",
-  //   16: "Hoàn thành",
-  // };
-  const statusOptions = Object.entries(shipmentStatusMap).map(([value, label]) => ({
-    value,
-    label,
-  }));
-
-
-  // useEffect(() => {
-  //   const fetchParcels = async () => {
-  //     try {
-  //       const res = await api.get("parcels");
-  //       const items = res.data?.data?.items || [];
-
-  //       // Chuyển đổi dữ liệu API sang định dạng mong muốn
-  //       const convertedGoods = items.map((item, index) => ({
-  //         id: index + 1,
-  //         shipmentId: item.shipmentId,
-  //         code: item.parcelCode || "N/A",
-  //         name: item.parcelCategory?.categoryName || "Chưa rõ",
-  //         weight: item.chargeableWeightKg || 0,
-  //         price: parseFloat(item.priceVnd || "0"),
-  //         size: item.volumeCm3,
-  //         status: item.parcelTrackings?.[0]?.status || "Unknown",
-  //       }));
-
-  //       setGoods(convertedGoods);
-  //     } catch (error) {
-  //       console.error("Error fetching parcels:", error);
-  //     }
-  //   };
-
-  //   fetchParcels();
-  // }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,14 +64,14 @@ function HistoryOrders() {
         const parcelItems = parcelsRes.data?.data?.items || [];
         const shipmentItems = shipmentsRes.data?.data?.items || [];
 
-
         const shipmentMap = new Map(
           shipmentItems.map((item) => [
             item.id,
             {
-              date: item.scheduledDateTime
-                ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
-                : "",
+              // date: item.scheduledDateTime
+              //   ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
+              //   : "",
+              date: item.scheduledDateTime || null,
               status: item.shipmentStatus,
               bookedAt: item.bookedAt,
               totalCost: item.totalCostVnd || 0,
@@ -133,12 +106,12 @@ function HistoryOrders() {
             return {
               id: index + 1,
               shipmentId,
-              code: shipmentInfo.trackingCode || "N/A",
+              trackingCode: shipmentInfo.trackingCode || "N/A",
               name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
               weight: totalWeight,
               volume: totalVolume,
               price: shipmentInfo.totalCost || 0,
-              deliveryDate: shipmentInfo.date || "N/A",
+              deliveryDate: shipmentInfo.date || null,
               shipmentStatus: shipmentInfo.status,
               bookedAt: shipmentInfo.bookedAt,
             };
@@ -150,7 +123,6 @@ function HistoryOrders() {
             (a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)
           )
         );
-
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }
@@ -159,44 +131,83 @@ function HistoryOrders() {
     fetchData();
   }, []);
 
-  // const handlePayment = async (shipmentId) => {
-  //   try {
-  //     const payload = {
-  //       shipmentId,
-  //       returnUrl: "http://localhost:5173/payment-success",
-  //       cancelUrl: "http://localhost:5173/payment-fail",
-  //     };
+  const [countdowns, setCountdowns] = useState({});
 
-  //     const res = await api.post("/shipments/vnpay/payment-url", payload);
-  //     console.log(res.data);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newCountdowns = {};
+      orders.forEach((order) => {
+        if (order.shipmentStatus === 0 && order.bookedAt) {
+          const expireTime =
+            new Date(order.bookedAt).getTime() + 15 * 60 * 1000;
+          const diff = expireTime - Date.now();
+          if (diff > 0) {
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+            newCountdowns[order.shipmentId] = `${minutes}:${seconds
+              .toString()
+              .padStart(2, "0")}`;
+          } else {
+            newCountdowns[order.shipmentId] = "Hết hạn";
+          }
+        }
+      });
+      setCountdowns(newCountdowns);
+    }, 1000);
 
-  //     // statusCode nằm trực tiếp trong res.data
-  //     if (res.data?.statusCode === 200 && res.data.data) {
-  //       window.location.href = res.data.data; // Redirect to VNPay
-  //     } else {
-  //       toast.error("Không lấy được link thanh toán!");
-  //     }
-  //   } catch (err) {
-  //     console.error("Lỗi khi thanh toán:", err);
-  //     toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán.");
-  //   }
-  // };
+    return () => clearInterval(interval);
+  }, [orders]);
 
+  const handlePayment = async (shipmentId) => {
+    try {
+      const payload = {
+        shipmentId,
+        returnUrl: "http://localhost:5173/payment-success",
+        cancelUrl: "http://localhost:5173/payment-fail",
+      };
+
+      const res = await api.post("/shipments/vnpay/payment-url", payload);
+      console.log(res.data);
+
+      // statusCode nằm trực tiếp trong res.data
+      if (res.data?.statusCode === 200 && res.data.data) {
+        window.location.href = res.data.data; // Redirect to VNPay
+      } else {
+        toast.error("Không lấy được link thanh toán!");
+      }
+    } catch (err) {
+      console.error("Lỗi khi thanh toán:", err);
+      toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán.");
+    }
+  };
   const handleFeedback = async (shipmentId) => {
     setFeedbackShipmentId(shipmentId);
     setIsFeedbackModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
-    console.log("Đánh giá:", { shipmentId: feedbackShipmentId, rating, comment });
+    try {
+      const payload = {
+        shipmentId: feedbackShipmentId,
+        feedback: comment,
+        rating: rating,
+      };
 
-    // TODO: gọi API thật ở đây nếu bạn có endpoint
+      const res = await api.post("/shipments/feedback", payload);
 
-    toast.success("Đánh giá đã được gửi!");
-    setIsFeedbackModalOpen(false);
-    setRating(0);
-    setComment('');
+      if (res.data?.statusCode === 200) {
+        toast.success("Đánh giá đã được gửi!");
+      } else {
+        toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+      }
+    } catch (err) {
+      console.error("Lỗi gửi đánh giá:", err);
+      toast.error("Đã xảy ra lỗi khi gửi đánh giá.");
+    } finally {
+      setIsFeedbackModalOpen(false);
+      setRating(0);
+      setComment('');
+    }
   };
-
 
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
@@ -204,29 +215,151 @@ function HistoryOrders() {
       item.code.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchStatus =
-      filterStatus === "all" || item.shipmentStatus === parseInt(filterStatus, 10);
-
+      filterStatus === "all" ||
+      item.shipmentStatus === parseInt(filterStatus, 10);
 
     const matchDateRange =
-      (!startDate || item.deliveryDate >= startDate) &&
-      (!endDate || item.deliveryDate <= endDate);
+      (!startDate ||
+        dayjs(item.deliveryDate).isSameOrAfter(startDate, "day")) &&
+      (!endDate || dayjs(item.deliveryDate).isSameOrBefore(endDate, "day"));
 
     return matchSearch && matchStatus && matchDateRange;
   });
-
-  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
 
   const displayedGoods = filteredGoods.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // const hasPayment = displayedGoods.some((item) => item.status === 3);
-  const completedShipment = displayedGoods.some((item) => item.shipmentStatus === 17);
-
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
+  const getParcelsByShipmentId = (shipmentId) => {
+    return orders.filter(parcel => parcel.shipmentId === shipmentId);
   };
+  const onRowClick = (record) => {
+    const relatedParcels = getParcelsByShipmentId(record.id);
+    setSelectedOrder({ ...record, relatedParcels });
+    navigate(
+      PATH_NAME.TRACKING_ORDER.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
+  };
+
+  const columns = [
+    {
+      title: "STT",
+      dataIndex: "index",
+      key: "index",
+      render: (_, __, index) => (currentPage - 1) * itemsPerPage + index + 1,
+      width: 60,
+    },
+    {
+      title: "Mã vận đơn",
+      dataIndex: "trackingCode",
+      key: "trackingCode",
+    },
+    {
+      title: "Tổng trọng lượng (kg)",
+      dataIndex: "weight",
+      key: "weight",
+    },
+    {
+      title: "Tổng chi phí (VND)",
+      dataIndex: "price",
+      key: "price",
+      render: (price) => price.toLocaleString("vi-VN", { maximumFractionDigits: 0 }),
+    },
+    {
+      title: "Tổng thể tích (cm³)",
+      dataIndex: "volume",
+      key: "volume",
+    },
+    {
+      title: "Ngày gửi hàng",
+      dataIndex: "deliveryDate",
+      key: "deliveryDate",
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : "N/A"),
+    },
+    {
+      title: "Chi tiết",
+      key: "detail",
+      render: (_, record) => (
+        // <Link to={PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.code)}>
+        <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
+        // </Link>
+
+      ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "shipmentStatus",
+      key: "shipmentStatus",
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || "Không rõ"}
+        </Tag>
+      ),
+    },
+  ];
+
+  columns.push({
+    title: "Hành động",
+    key: "action",
+    render: (_, item) => {
+      const countdown = countdowns[item.shipmentId];
+      const isExpired = countdown === "Hết hạn";
+      return item.shipmentStatus === 0 ? (
+        <Button
+          type="primary"
+          disabled={isExpired}
+          onClick={() => handlePayment(item)}
+        >
+          {isExpired
+            ? "Hết hạn"
+            : `Thanh toán ${countdown ? `(${countdown})` : ""}`}
+        </Button>
+      ) : (
+        "-"
+      );
+    },
+  });
+  columns.push({
+    title: "Hành động",
+    key: "action",
+    render: (_, item) => {
+      const isCompleted = item.shipmentStatus === 20;
+      const isExpired = item.shipmentStatus === 15;
+      const hasRated = typeof item.rating === "number" && item.rating > 0;
+
+      if (isCompleted) {
+        return (
+          <Button
+            type="primary"
+            className="feedback-button"
+            onClick={() => handleFeedback(item.shipmentId)}
+          >
+            {hasRated ? "Đặt lại" : "Đánh giá"}
+          </Button>
+        );
+      }
+
+      if (isExpired) {
+        return (
+          <Button
+            danger
+            type="primary"
+            onClick={() => handleRequestReturn(item.shipmentId)}
+          >
+            Yêu cầu hoàn đơn
+          </Button>
+        );
+      }
+
+      return "-";
+    },
+  });
+
+  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
+  // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
   const handleNextWindow = () => {
     const newStart = Math.min(
@@ -243,22 +376,7 @@ function HistoryOrders() {
     setCurrentPage(newStart);
   };
 
-  const paginationButtons = [];
-  for (
-    let i = pageWindowStart;
-    i < pageWindowStart + pageWindowSize && i <= totalPages;
-    i++
-  ) {
-    paginationButtons.push(
-      <button
-        key={i}
-        className={currentPage === i ? "active" : ""}
-        onClick={() => handlePageClick(i)}
-      >
-        {i}
-      </button>
-    );
-  }
+
   return (
     <div className="history-order">
       <section className="history-order-wrapper">
@@ -267,156 +385,81 @@ function HistoryOrders() {
             <Sidebar />
           </div>
           <div className="history-order-right">
-            <div className="goods-container">
-              <div className="goods-header">
-                <h3>DANH SÁCH ĐƠN HÀNG CỦA BẠN</h3>
-              </div>
-
-              <div className="search-bar">
-                <input
-                  type="text"
+            <Card title="THÔNG TIN TÀI KHOẢN" bordered={false}>
+              <Space style={{ marginBottom: 16 }}>
+                <Input
                   placeholder="Nhập mã hàng hóa, tên hàng hóa"
+                  prefix={<SearchOutlined />}
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1); // reset về trang 1 khi tìm
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: 300 }}
+                />
+                <Select
+                  value={filterStatus}
+                  onChange={(value) => setFilterStatus(value)}
+                  style={{ width: 200 }}
+                >
+                  <Option value="all">Tất cả trạng thái</Option>
+                  {Object.entries(shipmentStatusMap).map(([value, label]) => (
+                    <Option key={value} value={value}>
+                      {label}
+                    </Option>
+                  ))}
+                </Select>
+                <RangePicker
+                  format="DD/MM/YYYY"
+                  placeholder={["Từ ngày", "Đến ngày"]}
+                  onChange={(dates) => {
+                    setStartDate(dates?.[0] || null);
+                    setEndDate(dates?.[1] || null);
+                  }}
+                  style={{ width: 300 }}
+                />
+              </Space>
+
+              <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                <Table
+                  columns={columns}
+                  dataSource={filteredGoods}
+                  pagination={{ pageSize: 10 }}
+                  bordered
+                  locale={{
+                    emptyText: "Không có bản ghi nào",
                   }}
                 />
-                <button className="btn-search">
-                  <MdSearch className="icon-search" />
+              </Spin>
+
+              {/* <div className="history-pagination">
+                <Pagination
+                  total={filteredGoods.length}
+                  pageSize={itemsPerPage}
+                  current={currentPage}
+                  onChange={(page) => setCurrentPage(page)}
+                  showSizeChanger={false}
+                />
+              </div> */}
+
+            </Card>
+
+            {/* PHÂN TRANG */}
+            {/* {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={handlePrevWindow}
+                  disabled={pageWindowStart === 1}
+                >
+                  «
+                </button>
+                {paginationButtons}
+                <button
+                  onClick={handleNextWindow}
+                  disabled={
+                    pageWindowStart + pageWindowSize - 1 >= totalPages
+                  }
+                >
                 </button>
               </div>
-
-              <div className="filter-bar">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-                <span>đến</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-              </div>
-
-              <table className="goods-table">
-                <thead>
-                  <tr>
-                    <th>STT</th>
-                    <th>Mã vận đơn</th>
-                    <th>Tổng trọng lượng (kilogram)</th>
-                    <th>Tổng chi phí (vnd)</th>
-                    <th>Tổng thể tích (cm³)</th>
-                    <th>Ngày gửi hàng</th>
-                    <th>Chi tiết</th>
-                    <th>Trạng thái</th>
-                    {completedShipment && <th>Hành động</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedGoods.length === 0 ? (
-                    <tr>
-                      <td colSpan="10" className="no-data">
-                        Không có bản ghi nào
-                      </td>
-                    </tr>
-                  ) : (
-                    displayedGoods.map((item, index) => (
-                      <tr key={item.id}>
-                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.code}</td>
-                        <td>{item.weight}</td>
-                        <td>{item.price.toLocaleString('vi-Vn', { maximumFractionDigits: 0 })}</td>
-                        <td>{item.volume}</td>
-                        <td>{item.deliveryDate}</td>
-                        <td>
-                          <Link to={PATH_NAME.TRACKING_ORDER}>
-                            <span className="detail-link">Chi tiết</span>
-                          </Link>
-                        </td>
-                        <td>
-                          <span className={`status-${item.shipmentStatus}`}>
-                            {shipmentStatusMap[item.shipmentStatus] || "Không rõ"}
-                          </span>
-                        </td>
-
-
-                        {item.shipmentStatus === 17 ? (
-                          <td>
-                            <button
-                              className="feedback-button"
-                              onClick={() => handleFeedback(item.shipmentId)}
-                            >
-                              Đánh giá
-                            </button>
-                          </td>
-                        ) : completedShipment ? (
-                          <td>-</td>
-                        ) : null}
-
-                        {/* {item.shipmentStatus === 3 ? (
-                          <td>
-                            <button
-                              className="pay-button"
-                              onClick={() => handlePayment(item.shipmentId)}
-                            >
-                              Thanh toán
-                            </button>
-                          </td>
-                        ) : hasPayment ? (
-                          <td>-</td>
-                        ) : null}
-
-                         <td><button className="pay-button" onClick={() => handlePayment(item.shipmentId)}>Thanh toán</button></td>  */}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* PHÂN TRANG */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    onClick={handlePrevWindow}
-                    disabled={pageWindowStart === 1}
-                  >
-                    «
-                  </button>
-                  {paginationButtons}
-                  <button
-                    onClick={handleNextWindow}
-                    disabled={
-                      pageWindowStart + pageWindowSize - 1 >= totalPages
-                    }
-                  >
-                    »
-                  </button>
-                </div>
-              )}
-            </div>
+            )} */}
           </div>
         </div>
       </section>
@@ -440,7 +483,6 @@ function HistoryOrders() {
           />
         </div>
       </Modal>
-
     </div>
   );
 }

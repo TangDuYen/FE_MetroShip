@@ -23,7 +23,7 @@ export const PATH_NAME = {
     PAYMENT_SUCCESS: "/payment-success",
     PAYMENT_FAILED: "/payment-fail",
     BOOKING_ORDER: "/booking-order",
-    TRACKING_ORDER: "/tracking-order",
+    TRACKING_ORDER: "/tracking-order/:trackingCode",
     PRINT_ORDER: "/print-order",
     POLICY: "/policy",
     CHANGE_PASSWORD: "/change-password",
@@ -49,5 +49,6 @@ export const PATH_NAME = {
     DASHBOARD_ADMIN_PROFILE: "/dashboard/admin/profile",
     DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT: "/dashboard/admin/parcel-category-manage",
     DASHBOARD_ADMIN_METRO_STATIONS_MANAGEMENT: "/dashboard/admin/metrostation-management",
-
+    DASHBOARD_ADMIN_METRO_INSURANCE: "/dashboard/admin/metro-insurance",
+    DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS: "/dashboard/admin/metro-insurance-details/:insuranceId",
 }

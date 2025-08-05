@@ -1,14 +1,15 @@
 import {
   CarOutlined,
+  CodeSandboxOutlined,
   DashboardOutlined,
+  InsuranceOutlined,
   OrderedListOutlined,
   ProductOutlined,
+  ProfileOutlined,
   TeamOutlined,
   TransactionOutlined,
   UnorderedListOutlined,
-  UserOutlined,
-  ProfileOutlined,
-  CodeSandboxOutlined
+  UserOutlined
 } from "@ant-design/icons";
 
 import { PATH_NAME } from "../../constants/pathname";
@@ -57,6 +58,11 @@ export const navDashboardConfig = [
     key: "11",
     icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Loại bưu kiện",
+  },
+  {
+    key: "12",
+    icon: <InsuranceOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Chính sách bảo hiểm",
   },
   {
     key: "6",
@@ -140,6 +146,9 @@ export const navpath = {
   },
   11: {
     path: PATH_NAME.DASHBOARD_ADMIN_PARCEL_CATEGORY_MANAGEMENT,
+  },
+  12: {
+    path: PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
