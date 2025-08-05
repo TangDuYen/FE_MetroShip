@@ -14,13 +14,13 @@ import {
   Table,
   Tag
 } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
 
-import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
 import { SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
@@ -49,6 +49,8 @@ function HistoryOrders() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -104,7 +106,7 @@ function HistoryOrders() {
             return {
               id: index + 1,
               shipmentId,
-              code: shipmentInfo.trackingCode || "N/A",
+              trackingCode: shipmentInfo.trackingCode || "N/A",
               name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
               weight: totalWeight,
               volume: totalVolume,
@@ -228,6 +230,19 @@ function HistoryOrders() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const getParcelsByShipmentId = (shipmentId) => {
+    return orders.filter(parcel => parcel.shipmentId === shipmentId);
+  };
+  const onRowClick = (record) => {
+    const relatedParcels = getParcelsByShipmentId(record.id);
+    setSelectedOrder({ ...record, relatedParcels });
+    navigate(
+      PATH_NAME.TRACKING_ORDER.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
+  };
 
   const columns = [
     {
@@ -239,8 +254,8 @@ function HistoryOrders() {
     },
     {
       title: "Mã vận đơn",
-      dataIndex: "code",
-      key: "code",
+      dataIndex: "trackingCode",
+      key: "trackingCode",
     },
     {
       title: "Tổng trọng lượng (kg)",
@@ -267,10 +282,11 @@ function HistoryOrders() {
     {
       title: "Chi tiết",
       key: "detail",
-      render: () => (
-        <Link to="/tracking-order">
-          <Button type="link">Chi tiết</Button>
-        </Link>
+      render: (_, record) => (
+        // <Link to={PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.code)}>
+        <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
+        // </Link>
+
       ),
     },
     {
@@ -310,20 +326,35 @@ function HistoryOrders() {
     title: "Hành động",
     key: "action",
     render: (_, item) => {
-      const isRated = item.shipmentStatus === 18;
-      return item.shipmentStatus === 17 ? (
-        <Button
-          type="primary"
-          className="feedback-button"
-          onClick={() => handleFeedback(item.shipmentId)}
-        >
-          {isRated
-            ? "Xem lại đánh giá"
-            : "Đánh giá"}
-        </Button>
-      ) : (
-        "-"
-      );
+      const isCompleted = item.shipmentStatus === 20;
+      const isExpired = item.shipmentStatus === 15;
+      const hasRated = typeof item.rating === "number" && item.rating > 0;
+
+      if (isCompleted) {
+        return (
+          <Button
+            type="primary"
+            className="feedback-button"
+            onClick={() => handleFeedback(item.shipmentId)}
+          >
+            {hasRated ? "Đặt lại" : "Đánh giá"}
+          </Button>
+        );
+      }
+
+      if (isExpired) {
+        return (
+          <Button
+            danger
+            type="primary"
+            onClick={() => handleRequestReturn(item.shipmentId)}
+          >
+            Yêu cầu hoàn đơn
+          </Button>
+        );
+      }
+
+      return "-";
     },
   });
 
