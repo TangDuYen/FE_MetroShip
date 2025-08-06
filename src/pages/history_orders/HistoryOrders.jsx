@@ -76,6 +76,7 @@ function HistoryOrders() {
               bookedAt: item.bookedAt,
               totalCost: item.totalCostVnd || 0,
               trackingCode: item.trackingCode,
+              rating: item.rating || 0,
             },
           ])
         );
@@ -114,13 +115,14 @@ function HistoryOrders() {
               deliveryDate: shipmentInfo.date || null,
               shipmentStatus: shipmentInfo.status,
               bookedAt: shipmentInfo.bookedAt,
+              rating: shipmentInfo.rating || 0,
             };
           }
         );
 
         setOrders(
           convertedOrders.sort(
-            (a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)
+            (a, b) => new Date(b.scheduledDateTime) - new Date(a.scheduledDateTime)
           )
         );
       } catch (error) {

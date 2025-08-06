@@ -31,10 +31,6 @@ function PrintOrder() {
 const handleDownloadPDF = () => {
   if (!invoiceRef.current) return;
 
-  // Set kích thước A4 = 297mm x 210mm (chiều cao x chiều rộng)
-  // => bạn cần scale nhỏ nội dung lại nếu vượt quá chiều cao
-
-  // Gắn class tạm thời để scale nội dung
   invoiceRef.current.classList.add('pdf-scale');
 
   const opt = {
@@ -42,7 +38,7 @@ const handleDownloadPDF = () => {
     filename: `${shipment.trackingCode || 'invoice'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // đơn vị mm cho chuẩn
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
   };
 
   html2pdf()
@@ -50,7 +46,6 @@ const handleDownloadPDF = () => {
     .from(invoiceRef.current)
     .save()
     .then(() => {
-      // Xoá class scale sau khi xuất xong
       invoiceRef.current.classList.remove('pdf-scale');
     });
 };
@@ -70,7 +65,7 @@ const handleDownloadPDF = () => {
     const fetchQrForShipment = async () => {
       try {
         const res = await api.get(`/parcels/qrcode/${shipment.trackingCode}`);
-        setQrUrl(res.data); // response is direct URL
+        setQrUrl(res.data); 
       } catch (err) {
         console.error('Lỗi QR đơn hàng:', err);
       }
@@ -154,7 +149,7 @@ const handleDownloadPDF = () => {
           </tbody>
         </table>
 
-        {/* ✅ QR Code đơn hàng */}
+        {/* QR CODE */}
         {qrUrl && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <img src={qrUrl} alt={`QR-${shipment.trackingCode}`} width={120} height={120} />
