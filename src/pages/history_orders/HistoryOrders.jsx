@@ -122,9 +122,10 @@ function HistoryOrders() {
 
         setOrders(
           convertedOrders.sort(
-            (a, b) => new Date(b.scheduledDateTime) - new Date(a.scheduledDateTime)
+            (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
           )
         );
+
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }
@@ -162,13 +163,20 @@ function HistoryOrders() {
 
   const handlePayment = async (shipmentId) => {
     try {
-      const payload = {
-        shipmentId,
-        returnUrl: "http://localhost:5173/payment-success",
-        cancelUrl: "http://localhost:5173/payment-fail",
+      const currentDomain = window.location.origin;
+      const paymentPayload = {
+        shipmentId: shipmentId,
+        returnUrl: `${currentDomain}/payment-success`,
+        cancelUrl: `${currentDomain}/payment-fail`,
       };
 
-      const res = await api.post("/shipments/vnpay/payment-url", payload);
+      // const payload = {
+      //   shipmentId,
+      //   returnUrl: "http://localhost:5173/payment-success",
+      //   cancelUrl: "http://localhost:5173/payment-fail",
+      // };
+
+      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
 
       // statusCode nằm trực tiếp trong res.data
