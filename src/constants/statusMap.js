@@ -41,7 +41,8 @@ export const shipmentStatusColorMap = {
   14: "orange", // Đang hoàn đơn
   15: "green", // Đã hoàn đơn
   16: "purple", // Đợi phản hồi
-  17: "success", // Đã hoàn thành
+  17: "returning", // Đã hoàn thành
+  20: "success", // Đã nhận hàng
   18: "warning", // Delayed
 };
 
