@@ -321,7 +321,7 @@ function HistoryOrders() {
         <Button
           type="primary"
           disabled={isExpired}
-          onClick={() => handlePayment(item)}
+          onClick={() => handlePayment(item.shipmentId)}
         >
           {isExpired
             ? "Hết hạn"
@@ -368,23 +368,23 @@ function HistoryOrders() {
     },
   });
 
-  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
+  // const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
-  const handleNextWindow = () => {
-    const newStart = Math.min(
-      pageWindowStart + 1,
-      totalPages - pageWindowSize + 1
-    );
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
+  // const handleNextWindow = () => {
+  //   const newStart = Math.min(
+  //     pageWindowStart + 1,
+  //     totalPages - pageWindowSize + 1
+  //   );
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
-  const handlePrevWindow = () => {
-    const newStart = Math.max(pageWindowStart - 1, 1);
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
+  // const handlePrevWindow = () => {
+  //   const newStart = Math.max(pageWindowStart - 1, 1);
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
 
   return (

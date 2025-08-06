@@ -92,6 +92,7 @@ function HandledOrderStaff() {
             || order.shipmentStatus === 6
             || order.shipmentStatus === 12
             || order.shipmentStatus === 17
+            || order.shipmentStatus === 20
         );
         const hasExpired = shipments.some((item) => item.shipmentStatus === 12);
         setExpiredShipment(hasExpired);
