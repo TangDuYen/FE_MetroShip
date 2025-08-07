@@ -219,6 +219,12 @@ function HistoryOrders() {
     }
   };
 
+  const handleReorder = (shipmentId) => {
+    toast.success("Đặt lại đơn hàng thành công!");
+    console.log("Reorder shipment", shipmentId);
+  };
+
+
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -293,10 +299,7 @@ function HistoryOrders() {
       title: "Chi tiết",
       key: "detail",
       render: (_, record) => (
-        // <Link to={PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.code)}>
         <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
-        // </Link>
-
       ),
     },
     {
@@ -345,7 +348,11 @@ function HistoryOrders() {
           <Button
             type="primary"
             className="feedback-button"
-            onClick={() => handleFeedback(item.shipmentId)}
+            onClick={() =>
+              hasRated
+                ? handleReorder(item.shipmentId)
+                : handleFeedback(item.shipmentId)
+            }
           >
             {hasRated ? "Đặt lại" : "Đánh giá"}
           </Button>
@@ -367,6 +374,7 @@ function HistoryOrders() {
       return "-";
     },
   });
+
 
   // const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);

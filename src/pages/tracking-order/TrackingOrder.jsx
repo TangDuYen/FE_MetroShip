@@ -76,7 +76,7 @@ function TrackingOrder() {
                 return (
                   <div key={step.id} className="progress-step">
                     <div className={`dot ${isCompleted ? 'completed' : ''}`}>
-                      {isLast && isCompleted ? '✔️' : ''}
+                      {isLast && isCompleted ? '' : ''}
                     </div>
                     {!isLast && <div className={`line ${currentStatus >= arr[idx + 1].id ? 'completed' : ''}`} />}
                     <div className={`label ${isCompleted ? 'active' : ''}`}>{step.label}</div>
@@ -86,45 +86,24 @@ function TrackingOrder() {
             </div>
           </Card>
 
-          <Card bordered={false}>
-            <Timeline>
-              {shipmentStatusSteps
-                .filter((step) => currentStatus >= step.id)
-                .reverse()
-                .map((step, idx) => {
-                  let timestamp = '';
-
-                  switch (step.id) {
-                    case 0: // Đơn tạo
-                      timestamp = selectedShipment.bookedAt
-                        ? dayjs(selectedShipment.bookedAt).format('DD/MM HH:mm')
-                        : '';
-                      break;
-                    case 8: // Đã lấy hàng
-                      timestamp = selectedShipment.pickedUpAt
-                        ? dayjs(selectedShipment.pickedUpAt).format('DD/MM HH:mm')
-                        : '';
-                      break;
-                    default:
-                      // Tạm thời giả lập giờ giảm dần
-                      timestamp = dayjs().subtract(idx, 'hour').format('DD/MM HH:mm');
-                  }
-
-                  return (
-                    <Timeline.Item key={step.id} color={idx === 0 ? 'green' : 'gray'}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div className="timeline-date" style={{ color: '#999' }}>{timestamp}</div>
-                        <div className={`timeline-description ${idx === 0 ? 'highlight' : ''}`}>
-                          {step.label}
-                        </div>
-                      </div>
-                    </Timeline.Item>
-                  );
-                })}
-            </Timeline>
-
-          </Card>
-
+          <Card title="Lịch sử đơn hàng" bordered={false}>
+  <Timeline>
+    {selectedShipment.shipmentTrackings
+      .sort((a, b) => new Date(b.eventTime) - new Date(a.eventTime)) // mới nhất lên đầu
+      .map((track, idx) => (
+        <Timeline.Item key={track.id} color={idx === 0 ? 'green' : 'gray'}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ color: '#999' }}>
+              {dayjs(track.eventTime).format('DD/MM HH:mm')}
+            </div>
+            <div className={idx === 0 ? 'timeline-description highlight' : 'timeline-description'}>
+              {track.status}
+            </div>
+          </div>
+        </Timeline.Item>
+      ))}
+  </Timeline>
+</Card>
 
         </div>
 
@@ -142,6 +121,14 @@ function TrackingOrder() {
               <div className="detail-item">
                 <span className="detail-label">Người nhận</span>
                 <span className="detail-value">{selectedShipment.recipientName} – {selectedShipment.recipientPhone}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Trạm gửi</span>
+                <span className="detail-value">Trạm {selectedShipment.departureStationName}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Trạm nhận</span>
+                <span className="detail-value">Trạm {selectedShipment.destinationStationName}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Tổng phí</span>
