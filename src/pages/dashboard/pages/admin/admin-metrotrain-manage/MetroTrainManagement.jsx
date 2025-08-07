@@ -1,11 +1,12 @@
 import './MetroTrainManagement.scss';
 
-import { Button, Form, Input, Modal, Popconfirm, Space, Spin, Table, message } from 'antd';
+import { Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Spin, Table } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { getAllMetroTrains, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import api from '../../../../../config/axios';
-import { getAllMetroTrains } from '../../../../../config/metroApi';
+import { toast } from 'react-toastify';
 
 function MetroTrainManagement() {
   const [metroTrains, setMetroTrains] = useState([]);
@@ -15,17 +16,34 @@ function MetroTrainManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrain, setEditingTrain] = useState(null);
   const [form] = Form.useForm();
+  const [allTrains, setAllTrains] = useState([]);
+  const [filteredTrains, setFilteredTrains] = useState([]);
+  const [metroLines, setMetroLines] = useState([]);
+  const [selectedLineId, setSelectedLineId] = useState(null);
+  const [lineMap, setLineMap] = useState({});
+  const [timeSlots, setTimeSlots] = useState([]);
 
   useEffect(() => {
-    fetchTrains();
-  }, []);
+    const fetchInitialData = async () => {
+      const lines = await getMetroLines();
+      const map = {};
+      lines.forEach(line => {
+        map[line.id] = { lineNameVi: line.lineNameVi };
+      });
+      setMetroLines(lines);
+      setLineMap(map);
 
-  const fetchTrains = async () => {
-    try {
-      setLoading(true);
+      const slotData = await getMetroTimeSlots(); // 👈 fetch time slots
+      setTimeSlots(slotData);
+
       const data = await getAllMetroTrains();
-
-      setMetroTrains(data.data.items);
+      const trains = data.data.items;
+      const trainsWithLine = trains.map(train => ({
+        ...train,
+        lineNameVi: map[train.lineId]?.lineNameVi || "Không xác định",
+      }));
+      setAllTrains(trainsWithLine);
+      setFilteredTrains(trainsWithLine);
 
       const additionalData = data.additionalData[0];
       const capacity = additionalData.find(item => item.configKey === 'MAX_CAPACITY_PER_LINE_KG');
@@ -33,11 +51,20 @@ function MetroTrainManagement() {
 
       setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
       setMaxVolume(volume ? volume.configValue : "Không xác định");
-    } catch (err) {
-      message.error("Không thể tải dữ liệu tàu");
-    } finally {
       setLoading(false);
+    };
+
+    fetchInitialData();
+  }, []);
+
+  const handleFilterByLine = (lineId) => {
+    setSelectedLineId(lineId);
+    if (!lineId) {
+      setFilteredTrains(allTrains);
+      return;
     }
+    const filtered = allTrains.filter(train => train.lineId === lineId);
+    setFilteredTrains(filtered);
   };
 
   const openAddModal = () => {
@@ -52,40 +79,25 @@ function MetroTrainManagement() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleSubmit = async () => {
     try {
-      await api.delete(`/api/metro-trains/${id}`);
-      message.success('Đã xoá tàu thành công!');
-      fetchTrains();
-    } catch {
-      message.error('Xoá tàu thất bại!');
+      const values = await form.validateFields();
+      const payload = {
+        trainId: editingTrain.id,
+        timeSlotId: values.timeSlotId,
+        date: values.date.format('YYYY-MM-DD'),
+        direction: values.direction,
+      };
+      await api.post('/metro-trains/itineraries', payload);
+      toast.success('Đã phân tàu vào ca thành công!');
+      setIsModalOpen(false);
+      form.resetFields();
+    } catch (err) {
+      console.error(err);
+      toast.error('Phân tàu thất bại!');
     }
   };
 
-  const handleSubmit = () => {
-    form
-      .validateFields()
-      .then(async (values) => {
-        try {
-          if (editingTrain) {
-            await api.put(`/api/metro-trains/${editingTrain.id}`, values);
-            message.success('Cập nhật tàu thành công!');
-          } else {
-            await api.post('/api/metro-trains', values);
-            message.success('Thêm tàu thành công!');
-          }
-
-          setIsModalOpen(false);
-          form.resetFields();
-          fetchTrains();
-        } catch (err) {
-          message.error('Gửi dữ liệu thất bại!');
-        }
-      })
-      .catch((info) => {
-        console.error('Validate Failed:', info);
-      });
-  };
 
   const columns = [
     {
@@ -102,6 +114,10 @@ function MetroTrainManagement() {
       dataIndex: 'modelName',
     },
     {
+      title: 'Tuyến metro',
+      dataIndex: 'lineNameVi',
+    },
+    {
       title: 'Trọng tải tàu (kg)',
       render: () => maxCapacity,
     },
@@ -113,15 +129,10 @@ function MetroTrainManagement() {
       title: 'Hành động',
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
-          <Popconfirm
-            title="Xác nhận xoá tàu này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Xoá"
-            cancelText="Hủy"
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          <Button className='assign-train-button'
+            style={{ backgroundColor: '#0066CC', color: 'white', border: '#0066CC' }}
+            onClick={() => openEditModal(record)}> Phân tàu </Button>
+          <Button className='edit-train-button' onClick={() => openEditModal(record)}> Cập nhật </Button>
         </Space>
       ),
     },
@@ -129,27 +140,47 @@ function MetroTrainManagement() {
 
   return (
     <div className="metro-train-management-container">
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
+      <div style={{ marginBottom: 16, marginRight: 16 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal} style={{ marginRight: 16 }}>
           Thêm tàu
         </Button>
+        <Select
+          showSearch
+          optionFilterProp="children"
+          filterOption={(input, option) =>
+            option?.children?.toLowerCase().includes(input.toLowerCase())
+          }
+          placeholder="Lọc theo tuyến"
+          allowClear
+          style={{ width: 400 }}
+          value={selectedLineId}
+          onChange={handleFilterByLine}
+        >
+          {metroLines.map(line => (
+            <Option key={line.id} value={line.id}>
+              {line.lineNameVi}
+            </Option>
+          ))}
+        </Select>
       </div>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
         <Table
           columns={columns}
-          dataSource={metroTrains}
+          dataSource={filteredTrains}
           rowKey="id"
           pagination={{ pageSize: 10 }}
         />
+
       </Spin>
 
       <Modal
-        title={editingTrain ? "Cập nhật tàu" : "Thêm tàu mới"}
+        title={editingTrain ? "Phân tàu" : "Cập nhật tàu"}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSubmit}
-        okText={editingTrain ? "Lưu" : "Thêm"}
+        okText={editingTrain ? "Phân tàu" : "Thêm"}
+        cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -157,17 +188,53 @@ function MetroTrainManagement() {
             label="Mã tàu"
             rules={[{ required: true, message: 'Vui lòng nhập mã tàu' }]}
           >
-            <Input />
+            <Input disabled />
           </Form.Item>
+
           <Form.Item
             name="modelName"
             label="Model tàu"
             rules={[{ required: true, message: 'Vui lòng nhập model tàu' }]}
           >
-            <Input />
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item
+            name="timeSlotId"
+            label="Ca hoạt động"
+            rules={[{ required: true, message: 'Vui lòng chọn ca hoạt động' }]}
+          >
+            <Select placeholder="Chọn ca chạy">
+              {timeSlots.map(slot => (
+                <Select.Option key={slot.id} value={slot.id}>
+                  {slot.openTime} - {slot.closeTime}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="date"
+            label="Ngày"
+            rules={[{ required: true, message: 'Vui lòng chọn ngày' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }} format="YYYY-MM-DD" />
+          </Form.Item>
+
+          <Form.Item
+            name="direction"
+            label="Chiều chạy"
+            rules={[{ required: true, message: 'Vui lòng chọn chiều chạy' }]}
+          >
+            <Select placeholder="Chiều chạy">
+              <Select.Option value={0}>Chiều đi</Select.Option>
+              <Select.Option value={1}>Chiều về</Select.Option>
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
+
     </div>
   );
 }
