@@ -14,11 +14,10 @@ import {
   Typography,
 } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllMetroTrains } from "../../../../../config/metroApi";
+import { getAllMetroTrains, getAllRegions, getMetroLines } from "../../../../../config/metroApi";
 import moment from "moment";
 import api from "../../../../../config/axios";
 import metro from "../../../../../assets/metro_station.png";
-import moment from "moment";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { PATH_NAME } from "../../../../../constants/pathname";
@@ -39,12 +38,7 @@ function TrainStaff() {
 
 
   const navigate = useNavigate();
-  const [selectedTrain, setSelectedTrain] = useState(null);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [position, setPosition] = useState([0, 0]);
-  const [trainPath, setTrainPath] = useState([]);
-  const [fromStation, setFromStation] = useState("");
-  const [toStation, setToStation] = useState("");
+  
   const [regions, setRegions] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
