@@ -187,7 +187,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: `${PATH_NAME.TRACKING_ORDER}/:trackingCode`,
+        path: `${PATH_NAME.TRACKING_ORDER}`,
         element: (
           <ProtectedRouteCustomer>
             {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
@@ -202,14 +202,14 @@ export const router = createBrowserRouter([
           </ProtectedRouteCustomer>
         ),
       },
-      {
-        path: PATH_NAME.TRACKING_ORDER,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
+      // {
+      //   path: PATH_NAME.TRACKING_ORDER,
+      //   element: (
+      //     <ProtectedRouteCustomer>
+      //       {lazyLoad(() => import("../pages/tracking-order/TrackingOrder"))}
+      //     </ProtectedRouteCustomer>
+      //   ),
+      // },
       {
         path: PATH_NAME.CHANGE_PASSWORD,
         element: (
