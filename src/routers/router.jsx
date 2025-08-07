@@ -381,6 +381,18 @@ export const router = createBrowserRouter([
           </ProtectedRouteStaff>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-map/StaffMap"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
 
       //ADMIN ROUTES
       {
