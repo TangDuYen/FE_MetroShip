@@ -8,19 +8,19 @@ import {
   Modal,
   Pagination,
   Rate,
-  Spin,
   Select,
   Space,
+  Spin,
   Table,
   Tag
 } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
 
-import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
 import { SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
@@ -48,10 +48,13 @@ function HistoryOrders() {
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         const [parcelsRes, shipmentsRes] = await Promise.all([
           api.get("parcels?PageSize=1000"),
@@ -73,6 +76,7 @@ function HistoryOrders() {
               bookedAt: item.bookedAt,
               totalCost: item.totalCostVnd || 0,
               trackingCode: item.trackingCode,
+              rating: item.rating || 0,
             },
           ])
         );
@@ -103,7 +107,7 @@ function HistoryOrders() {
             return {
               id: index + 1,
               shipmentId,
-              code: shipmentInfo.trackingCode || "N/A",
+              trackingCode: shipmentInfo.trackingCode || "N/A",
               name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
               weight: totalWeight,
               volume: totalVolume,
@@ -111,19 +115,19 @@ function HistoryOrders() {
               deliveryDate: shipmentInfo.date || null,
               shipmentStatus: shipmentInfo.status,
               bookedAt: shipmentInfo.bookedAt,
+              rating: shipmentInfo.rating || 0,
             };
           }
         );
 
         setOrders(
           convertedOrders.sort(
-            (a, b) => new Date(b.bookedAt) - new Date(a.bookedAt)
+            (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
           )
         );
+
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -159,13 +163,20 @@ function HistoryOrders() {
 
   const handlePayment = async (shipmentId) => {
     try {
-      const payload = {
-        shipmentId,
-        returnUrl: "http://localhost:5173/payment-success",
-        cancelUrl: "http://localhost:5173/payment-fail",
+      const currentDomain = window.location.origin;
+      const paymentPayload = {
+        shipmentId: shipmentId,
+        returnUrl: `${currentDomain}/payment-success`,
+        cancelUrl: `${currentDomain}/payment-fail`,
       };
 
-      const res = await api.post("/shipments/vnpay/payment-url", payload);
+      // const payload = {
+      //   shipmentId,
+      //   returnUrl: "http://localhost:5173/payment-success",
+      //   cancelUrl: "http://localhost:5173/payment-fail",
+      // };
+
+      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
 
       // statusCode nằm trực tiếp trong res.data
@@ -229,6 +240,19 @@ function HistoryOrders() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const getParcelsByShipmentId = (shipmentId) => {
+    return orders.filter(parcel => parcel.shipmentId === shipmentId);
+  };
+  const onRowClick = (record) => {
+    const relatedParcels = getParcelsByShipmentId(record.id);
+    setSelectedOrder({ ...record, relatedParcels });
+    navigate(
+      PATH_NAME.TRACKING_ORDER.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
+  };
 
   const columns = [
     {
@@ -240,8 +264,8 @@ function HistoryOrders() {
     },
     {
       title: "Mã vận đơn",
-      dataIndex: "code",
-      key: "code",
+      dataIndex: "trackingCode",
+      key: "trackingCode",
     },
     {
       title: "Tổng trọng lượng (kg)",
@@ -268,10 +292,11 @@ function HistoryOrders() {
     {
       title: "Chi tiết",
       key: "detail",
-      render: () => (
-        <Link to="/tracking-order">
-          <Button type="link">Chi tiết</Button>
-        </Link>
+      render: (_, record) => (
+        // <Link to={PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.code)}>
+        <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
+        // </Link>
+
       ),
     },
     {
@@ -296,7 +321,7 @@ function HistoryOrders() {
         <Button
           type="primary"
           disabled={isExpired}
-          onClick={() => handlePayment(item)}
+          onClick={() => handlePayment(item.shipmentId)}
         >
           {isExpired
             ? "Hết hạn"
@@ -311,40 +336,55 @@ function HistoryOrders() {
     title: "Hành động",
     key: "action",
     render: (_, item) => {
-      const isRated = item.shipmentStatus === 18;
-      return item.shipmentStatus === 17 ? (
-        <Button
-          type="primary"
-          className="feedback-button"
-          onClick={() => handleFeedback(item.shipmentId)}
-        >
-          {isRated
-            ? "Xem lại đánh giá"
-            : "Đánh giá"}
-        </Button>
-      ) : (
-        "-"
-      );
+      const isCompleted = item.shipmentStatus === 20;
+      const isExpired = item.shipmentStatus === 15;
+      const hasRated = typeof item.rating === "number" && item.rating > 0;
+
+      if (isCompleted) {
+        return (
+          <Button
+            type="primary"
+            className="feedback-button"
+            onClick={() => handleFeedback(item.shipmentId)}
+          >
+            {hasRated ? "Đặt lại" : "Đánh giá"}
+          </Button>
+        );
+      }
+
+      if (isExpired) {
+        return (
+          <Button
+            danger
+            type="primary"
+            onClick={() => handleRequestReturn(item.shipmentId)}
+          >
+            Yêu cầu hoàn đơn
+          </Button>
+        );
+      }
+
+      return "-";
     },
   });
 
-  const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
+  // const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);
 
-  const handleNextWindow = () => {
-    const newStart = Math.min(
-      pageWindowStart + 1,
-      totalPages - pageWindowSize + 1
-    );
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
+  // const handleNextWindow = () => {
+  //   const newStart = Math.min(
+  //     pageWindowStart + 1,
+  //     totalPages - pageWindowSize + 1
+  //   );
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
-  const handlePrevWindow = () => {
-    const newStart = Math.max(pageWindowStart - 1, 1);
-    setPageWindowStart(newStart);
-    setCurrentPage(newStart);
-  };
+  // const handlePrevWindow = () => {
+  //   const newStart = Math.max(pageWindowStart - 1, 1);
+  //   setPageWindowStart(newStart);
+  //   setCurrentPage(newStart);
+  // };
 
 
   return (
@@ -386,6 +426,7 @@ function HistoryOrders() {
                   style={{ width: 300 }}
                 />
               </Space>
+
               <Spin spinning={loading} tip="Đang tải dữ liệu...">
                 <Table
                   columns={columns}
@@ -397,9 +438,8 @@ function HistoryOrders() {
                   }}
                 />
               </Spin>
-            </Card>
 
-              <div className="history-pagination">
+              {/* <div className="history-pagination">
                 <Pagination
                   total={filteredGoods.length}
                   pageSize={itemsPerPage}
@@ -407,12 +447,12 @@ function HistoryOrders() {
                   onChange={(page) => setCurrentPage(page)}
                   showSizeChanger={false}
                 />
-              </div>
+              </div> */}
 
             </Card>
 
             {/* PHÂN TRANG */}
-            {totalPages > 1 && (
+            {/* {totalPages > 1 && (
               <div className="pagination">
                 <button
                   onClick={handlePrevWindow}
@@ -429,7 +469,7 @@ function HistoryOrders() {
                 >
                 </button>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </section>

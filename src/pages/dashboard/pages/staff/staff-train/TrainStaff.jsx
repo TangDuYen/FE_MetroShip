@@ -1,6 +1,8 @@
 import "./TrainStaff.scss";
+import "leaflet/dist/leaflet.css";
 
 import {
+  Button,
   Col,
   DatePicker,
   Input,
@@ -10,15 +12,7 @@ import {
   Spin,
   Table,
   Typography,
-  Button,
 } from "antd";
-import React, { useEffect, useRef, useState } from "react";
-import metro from "../../../../../assets/metro_station.png";
-import { getAllMetroTrains } from "../../../../../config/metroApi";
-import moment from "moment";
-import L from "leaflet";
-
-import "leaflet/dist/leaflet.css";
 import {
   MapContainer,
   Marker,
@@ -27,7 +21,13 @@ import {
   TileLayer,
   useMap,
 } from "react-leaflet";
+import React, { useEffect, useRef, useState } from "react";
+import { getAllMetroTrains, getAllRegions, getMetroLines } from "../../../../../config/metroApi";
+
+import L from "leaflet";
 import api from "../../../../../config/axios";
+import metro from "../../../../../assets/metro_station.png";
+import moment from "moment";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { PATH_NAME } from "../../../../../constants/pathname";
@@ -41,12 +41,27 @@ function TrainStaff() {
   const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
   const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
 
+
   const navigate = useNavigate();
+  const [selectedTrain, setSelectedTrain] = useState(null);
+  const [isMapVisible, setIsMapVisible] = useState(false);
+  const [position, setPosition] = useState([0, 0]);
+  const [trainPath, setTrainPath] = useState([]);
+  const [fromStation, setFromStation] = useState("");
+  const [toStation, setToStation] = useState("");
+  const [regions, setRegions] = useState([]);
+  const [metroLines, setMetroLines] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedLine, setSelectedLine] = useState(null);
 
   const intervalRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
+    Promise.all([getAllRegions(), getMetroLines()]).then(([regionsData, metroLinesData]) => {
+      setRegions(regionsData);
+      setMetroLines(metroLinesData);
+    })
     getAllMetroTrains()
       .then((data) => {
         // Set the metro trains data
@@ -142,21 +157,88 @@ function TrainStaff() {
       ),
     },
   ];
+  // Hàm lấy danh sách lineId thuộc khu vực
+  const getLineIdsByRegion = (regionId) => {
+    return metroLines
+      ?.filter((line) => line.regionId === regionId)
+      .map((line) => line.id);
+  };
+
+  const filteredTrains = metroTrains.filter((train) => {
+    const matchLine = selectedLine ? train.lineId === selectedLine : true;
+    const matchRegion = selectedRegion
+      ? getLineIdsByRegion(selectedRegion)?.includes(train.lineId)
+      : true;
+    return matchLine && matchRegion;
+  });
+
 
   // Map the metroTrains data to fit the table format
-  const data = metroTrains.map((train, index) => ({
-    key: index, // Ensure each row has a unique `key` field
+  const data = filteredTrains.map((train, index) => ({
+    key: index,
     stt: index + 1,
     id: train.id,
     trainCode: train.trainCode,
     modelName: train.modelName,
-    maxCapacity: maxCapacity, // Adding max capacity for each train
-    maxVolume: maxVolume, // Adding max volume for each train
+    maxCapacity,
+    maxVolume,
   }));
+
+//   const getNearestIndex = (position, path) => {
+//     if (!path.length) return 0;
+//     let minIndex = 0;
+//     let minDist = Infinity;
+//     path.forEach((p, i) => {
+//       const dist = Math.sqrt(
+//         Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
+//       );
+//       if (dist < minDist) {
+//         minDist = dist;
+//         minIndex = i;
+//       }
+//     });
+//     return minIndex;
+//   };
+
+//   const currentIndex = getNearestIndex(position, trainPath);
 
   return (
     <div className="staff-train-container">
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <div style={{ marginBottom: 16, display: "flex", gap: 12 }}>
+          <Select
+            showSearch
+            optionFilterProp="children"
+            placeholder="Chọn khu vực"
+            allowClear
+            style={{ width: 300 }}
+            value={selectedRegion}
+            onChange={(value) => setSelectedRegion(value)}
+          >
+            {regions?.map((region) => (
+              <Option key={region.id} value={region.id}>
+                {region.regionName}
+              </Option>
+            ))}
+          </Select>
+
+          <Select
+            showSearch
+            optionFilterProp="children"
+            placeholder="Chọn tuyến metro"
+            allowClear
+            style={{ width: 500 }}
+            value={selectedLine}
+            onChange={(value) => setSelectedLine(value)}
+          >
+            {metroLines?.map((line) => (
+              <Option key={line.id} value={line.id}>
+                {line.lineNameVi}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
         <Table
           columns={columns}
           dataSource={data} // Pass the correctly mapped data to `dataSource`

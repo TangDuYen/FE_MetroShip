@@ -122,34 +122,58 @@ function TrackingOrderStaff() {
       handleFilterChange();
     }
   }, [shipments, dateFilter, stationFilter, routeFilter]);
-  const uploadImages = async () => {
+
+  const handleOpenModal = (shipment) => {
+    setSelectedOrder(shipment);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleConfirmUpload = async () => {
     if (!cccdImage || !confirmImage) {
       toast.error("Vui lòng chọn cả hai ảnh.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("files", cccdImage);
-    formData.append("files", confirmImage);
-
     try {
+      
+      //UPLOAD IMAGES
+      const formData = new FormData();
+      formData.append("files", cccdImage);
+      formData.append("files", confirmImage);
       const res = await api.post("/media/images", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const urls = res.data?.data;
+      if (!urls?.length || urls.length < 2) {
+        toast.error("Không nhận được đủ URL ảnh từ server.");
+        return;
+      }
 
-      if (res.status === 200) {
-        toast.success("Tải ảnh lên thành công!");
+      //CONFIRM SHIPMENT
+      const payload = {
+        shipmentId: selectedOrder.id,
+        pickedUpMedias: [
+          { mediaUrl: urls[0], description: "CCCD" },
+          { mediaUrl: urls[1], description: "Ảnh nhận hàng" },
+        ],
+      };
+      const confirmRes = await api.post("/shipments/complete", payload);
+      if (confirmRes.data?.statusCode === 200) {
+        toast.success("Xác nhận hoàn thành đơn hàng thành công!");
         setIsUploadModalOpen(false);
         setCccdImage(null);
         setConfirmImage(null);
+        setSelectedOrder(null);
+      } else {
+        toast.error("Xác nhận thất bại!");
       }
     } catch (err) {
-      toast.error("Lỗi khi tải ảnh lên!");
+      toast.error("Lỗi khi tải ảnh hoặc gửi xác nhận!");
       console.error(err);
     }
   };
+
+
 
   const columns = [
     {
@@ -258,13 +282,10 @@ function TrackingOrderStaff() {
               }
             }
           }}>
-          <Button
-            type="primary"
-            onClick={() => setIsUploadModalOpen(true)}
-
-          >
+          <Button type="primary" onClick={() => handleOpenModal(record)}>
             Hoàn thành
           </Button>
+
         </ConfigProvider>
       ),
     },
@@ -453,14 +474,18 @@ function TrackingOrderStaff() {
           </Card>
           <Modal
             open={isUploadModalOpen}
-            onCancel={() => setIsUploadModalOpen(false)}
-            onOk={uploadImages}
+            onCancel={() => {
+              setIsUploadModalOpen(false);
+              setSelectedOrder(null);
+              setCccdImage(null);
+              setConfirmImage(null);
+            }}
+            onOk={handleConfirmUpload}
             okText="Xác nhận"
             cancelText="Hủy"
             destroyOnClose
           >
             <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
-
             <Row gutter={16}>
               <Col span={12}>
                 <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
