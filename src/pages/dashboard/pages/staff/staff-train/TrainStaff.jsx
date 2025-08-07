@@ -13,29 +13,24 @@ import {
   Table,
   Typography,
 } from "antd";
-import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getAllMetroTrains, getAllRegions, getMetroLines } from "../../../../../config/metroApi";
-
-import L from "leaflet";
+import moment from "moment";
 import api from "../../../../../config/axios";
 import metro from "../../../../../assets/metro_station.png";
-import moment from "moment";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { PATH_NAME } from "../../../../../constants/pathname";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../../../../redux/features/counterSlice";
 
 const { Title } = Typography;
 const { Option } = Select;
 
 function TrainStaff() {
+  const user = useSelector(selectUser);
+  console.log("User data:", user);
+
   const [metroTrains, setMetroTrains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
@@ -43,18 +38,11 @@ function TrainStaff() {
 
 
   const navigate = useNavigate();
-  const [selectedTrain, setSelectedTrain] = useState(null);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [position, setPosition] = useState([0, 0]);
-  const [trainPath, setTrainPath] = useState([]);
-  const [fromStation, setFromStation] = useState("");
-  const [toStation, setToStation] = useState("");
+  
   const [regions, setRegions] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
-
-  const intervalRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -93,6 +81,26 @@ function TrainStaff() {
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
       toast.error(`Không thể khởi động tàu ${train.trainCode}`);
+    }
+  };
+
+  const handleConfirmArrival = async (train) => {
+    try {
+      const stationId = user?.StationId;
+
+      if (!stationId) {
+        toast.error("Không tìm thấy stationId của nhân viên.");
+        return;
+      }
+
+      await api.post(`/train/${train.id}/confirm-arrival`, null, {
+        params: { stationId },
+      });
+
+      toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
+    } catch (error) {
+      console.error("Lỗi xác nhận tàu đến trạm:", error);
+      toast.error("Xác nhận tàu thất bại.");
     }
   };
 
@@ -144,15 +152,18 @@ function TrainStaff() {
         <div className="action-buttons">
           <Button
             type="primary"
-            icon="🚆"
             onClick={() => handleStartTrain(record)}
             style={{ marginRight: 8 }}
           >
             Bắt đầu
           </Button>
-          <Button onClick={() => handleViewMapTrain(record)} icon="🗺️">
-            Xem bản đồ
+          <Button
+            className="btn-arrival"
+            onClick={() => handleConfirmArrival(record)}
+          >
+            Đến trạm
           </Button>
+          <Button onClick={() => handleViewMapTrain(record)}>Xem bản đồ</Button>
         </div>
       ),
     },
