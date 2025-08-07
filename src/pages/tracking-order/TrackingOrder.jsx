@@ -1,61 +1,46 @@
 import './TrackingOrder.scss';
 
-import { Badge, Button, Card, Divider, Timeline } from 'antd';
+import { Badge, Button, Card, Col, Divider, Row, Timeline } from 'antd';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import React, { useEffect, useState } from 'react';
-import { getAllCustomerShipments, getAllParcels, getAllStations } from '../../config/metroApi';
 import { shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
 
 import { Icon } from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
+import api from '../../config/axios';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 function TrackingOrder() {
-  const [shipments, setShipments] = useState([]);
-  const [parcels, setParcels] = useState([]);
-  const [parcelMap, setParcelMap] = useState(new Map());
+
   const [selectedShipment, setSelectedShipment] = useState(null);
+  const { trackingCode } = useParams();
 
   const navigate = useNavigate();
 
-  const formatCurrency = (v) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
+  const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
 
   useEffect(() => {
-    Promise.all([getAllCustomerShipments(), getAllParcels(), getAllStations()])
-      .then(([shipmentsData, parcelsData, stations]) => {
-        setShipments(shipmentsData);
-        setParcels(parcelsData);
-        if (shipmentsData.length > 0) {
-          setSelectedShipment(shipmentsData[0]);
-        }
-      })
-      .catch(console.error);
-  }, []);
+    if (!trackingCode) return;
 
-  useEffect(() => {
-    const m = new Map();
-    parcels.forEach(p => {
-      if (!m.has(p.shipmentId)) m.set(p.shipmentId, []);
-      m.get(p.shipmentId).push(p);
-    });
-    setParcelMap(m);
-  }, [parcels]);
+    const fetchShipmentDetails = async () => {
+      try {
+        const res = await api.get(`/shipments/${trackingCode}`);
+        setSelectedShipment(res.data.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin đơn hàng:", error);
+      }
+    };
+
+    fetchShipmentDetails();
+  }, [trackingCode]);
 
   if (!selectedShipment) return <div>Đang tải đơn...</div>;
 
   const currentStatus = selectedShipment.shipmentStatus;
-  const shipmentParcels = parcelMap.get(selectedShipment.id) || [];
+  const shipmentParcels = selectedShipment.parcels || [];
 
-  const orderStatuses = [
-    { id: 8, label: 'PickedUp' },
-    { id: 9, label: 'InTransit' },
-    { id: 10, label: 'AwaitingDelivery' },
-    { id: 17, label: 'Completed' },
-  ];
-
-  const shipmentTimeline = selectedShipment.histories || [];
 
   return (
     <div className="tracking-order-container">
@@ -72,7 +57,14 @@ function TrackingOrder() {
             </MapContainer>
           </Card>
 
-          <Card title={`Giao vào ${dayjs(selectedShipment.scheduledDateTime).format('DD [Th]MM')}`} bordered={false}>
+          <Card
+            title=
+            {
+              <Badge className={`status-badge ${currentStatus >= 20 ? 'delivered' : 'in-transit'}`}>
+                {shipmentStatusMap[selectedShipment.shipmentStatus] || 'Không rõ trạng thái'}
+              </Badge>
+            }
+            bordered={false}>
             <div className="custom-progress">
               {[
                 { id: 8, label: 'Đã lấy hàng' },
@@ -100,10 +92,23 @@ function TrackingOrder() {
                 .filter((step) => currentStatus >= step.id)
                 .reverse()
                 .map((step, idx) => {
-                  // Giả lập thời gian cho mỗi bước, chỉ bước đầu dùng bookedAt
-                  const timestamp = idx === shipmentStatusSteps.length - 1
-                    ? dayjs(selectedShipment.bookedAt).format('DD/MM HH:mm')
-                    : dayjs().subtract(idx, 'hour').format('DD/MM HH:mm');
+                  let timestamp = '';
+
+                  switch (step.id) {
+                    case 0: // Đơn tạo
+                      timestamp = selectedShipment.bookedAt
+                        ? dayjs(selectedShipment.bookedAt).format('DD/MM HH:mm')
+                        : '';
+                      break;
+                    case 8: // Đã lấy hàng
+                      timestamp = selectedShipment.pickedUpAt
+                        ? dayjs(selectedShipment.pickedUpAt).format('DD/MM HH:mm')
+                        : '';
+                      break;
+                    default:
+                      // Tạm thời giả lập giờ giảm dần
+                      timestamp = dayjs().subtract(idx, 'hour').format('DD/MM HH:mm');
+                  }
 
                   return (
                     <Timeline.Item key={step.id} color={idx === 0 ? 'green' : 'gray'}>
@@ -117,6 +122,7 @@ function TrackingOrder() {
                   );
                 })}
             </Timeline>
+
           </Card>
 
 
@@ -146,7 +152,7 @@ function TrackingOrder() {
                 <span className="detail-value">{dayjs(selectedShipment.bookedAt).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Dự kiến giao</span>
+                <span className="detail-label">Thời gian giao</span>
                 <span className="detail-value">{dayjs(selectedShipment.scheduledDateTime).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               {shipmentParcels.map((p, i) => (
@@ -196,18 +202,36 @@ function TrackingOrder() {
               ))}
             </div>
           </Card>
-          <Card title="Trạng thái" bordered={false}>
-            <Badge className={`status-badge ${currentStatus >= 17 ? 'delivered' : 'in-transit'}`}>
-              {shipmentStatusMap[selectedShipment.shipmentStatus] || 'Không rõ trạng thái'}
-            </Badge>
-          </Card>
 
           <Card bordered={false}>
-            <Button type="primary" block onClick={() => navigate(PATH_NAME.PRINT_ORDER, {
-              state: { trackingCode: selectedShipment.trackingCode }
-            })}>
-              In đơn hàng
-            </Button>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Button
+                  type="primary"
+                  block
+                  onClick={() =>
+                    navigate(PATH_NAME.PRINT_ORDER, {
+                      state: { trackingCode: selectedShipment.trackingCode },
+                    })
+                  }
+                >
+                  In đơn hàng
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button
+                  type="default"
+                  block
+                  onClick={() =>
+                    navigate(PATH_NAME.PRINT_ORDER, {
+                      state: { trackingCode: selectedShipment.trackingCode },
+                    })
+                  }
+                >
+                  Tải đơn hàng
+                </Button>
+              </Col>
+            </Row>
           </Card>
         </div>
       </div>
