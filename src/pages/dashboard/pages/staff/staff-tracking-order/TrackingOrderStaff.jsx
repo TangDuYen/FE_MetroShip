@@ -96,6 +96,7 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 15
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
+      || order.shipmentStatus == 22
     );
 
     // CHỈNH SỬA FILTER
