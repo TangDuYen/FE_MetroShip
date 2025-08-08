@@ -87,23 +87,23 @@ function TrackingOrder() {
           </Card>
 
           <Card title="Lịch sử đơn hàng" bordered={false}>
-  <Timeline>
-    {selectedShipment.shipmentTrackings
-      .sort((a, b) => new Date(b.eventTime) - new Date(a.eventTime)) // mới nhất lên đầu
-      .map((track, idx) => (
-        <Timeline.Item key={track.id} color={idx === 0 ? 'green' : 'gray'}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ color: '#999' }}>
-              {dayjs(track.eventTime).format('DD/MM HH:mm')}
-            </div>
-            <div className={idx === 0 ? 'timeline-description highlight' : 'timeline-description'}>
-              {track.status}
-            </div>
-          </div>
-        </Timeline.Item>
-      ))}
-  </Timeline>
-</Card>
+            <Timeline>
+              {selectedShipment.shipmentTrackings
+                .sort((a, b) => new Date(b.eventTime) - new Date(a.eventTime))
+                .map((track, idx) => (
+                  <Timeline.Item key={track.id} color={idx === 0 ? 'green' : 'gray'}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ color: '#999' }}>
+                        {dayjs(track.eventTime).format('DD/MM HH:mm')}
+                      </div>
+                      <div className={idx === 0 ? 'timeline-description highlight' : 'timeline-description'}>
+                        {track.status}
+                      </div>
+                    </div>
+                  </Timeline.Item>
+                ))}
+            </Timeline>
+          </Card>
 
         </div>
 
