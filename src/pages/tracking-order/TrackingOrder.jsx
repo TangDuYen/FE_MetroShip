@@ -262,7 +262,7 @@ function TrackingOrder() {
             </div>
           </Card>
 
-          <Card bordered={false}>
+          <Card title="Lịch sử đơn hàng" bordered={false}>
             <Timeline>
               {shipmentStatusSteps
                 .filter((step) => currentStatus >= step.id)
@@ -315,9 +315,12 @@ function TrackingOrder() {
                           {step.label}
                         </div>
                       </div>
-                    </Timeline.Item>
-                  );
-                })}
+                      <div className={idx === 0 ? 'timeline-description highlight' : 'timeline-description'}>
+                        {track.status}
+                      </div>
+                    </div>
+                  </Timeline.Item>
+                ))}
             </Timeline>
           </Card>
         </div>
@@ -343,6 +346,14 @@ function TrackingOrder() {
                   {selectedShipment.recipientName} –{" "}
                   {selectedShipment.recipientPhone}
                 </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Trạm gửi</span>
+                <span className="detail-value">Trạm {selectedShipment.departureStationName}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Trạm nhận</span>
+                <span className="detail-value">Trạm {selectedShipment.destinationStationName}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Tổng phí</span>

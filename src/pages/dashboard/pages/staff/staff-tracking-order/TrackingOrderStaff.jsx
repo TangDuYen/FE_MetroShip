@@ -96,6 +96,7 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 15
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
+      || order.shipmentStatus == 22
     );
 
     // CHỈNH SỬA FILTER
@@ -135,7 +136,7 @@ function TrackingOrderStaff() {
     }
 
     try {
-      
+
       //UPLOAD IMAGES
       const formData = new FormData();
       formData.append("files", cccdImage);
@@ -212,9 +213,14 @@ function TrackingOrderStaff() {
     },
     {
       title: 'Thời điểm tạo yêu cầu',
-      dataIndex: 'bookedAt',
-      key: 'bookedAt',
-      render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+      key: 'createdAt',
+      render: (_, record) => {
+        const relatedParcels = getParcelsByShipmentId(record.id);
+        if (relatedParcels.length > 0) {
+          return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+        }
+        return 'N/A';
+      }
     },
     {
       title: 'Tổng chi phí',
@@ -227,14 +233,14 @@ function TrackingOrderStaff() {
       key: 'shipmentStatus',
       render: (status) => { return shipmentStatusMap[status] || 'Không xác nhận'; },
     },
-    {
-      title: 'Vị trí hiện tại',
-      dataIndex: 'departureStationName',
-      key: 'departureStation',
-      render: (_, record) => {
-        return `Trạm ${record.currentStationName}` || 'Không xác định';
-      }
-    },
+    // {
+    //   title: 'Vị trí hiện tại',
+    //   dataIndex: 'departureStationName',
+    //   key: 'departureStation',
+    //   render: (_, record) => {
+    //     return `Trạm ${record.currentStationName}` || 'Không xác định';
+    //   }
+    // },
     {
       title: 'Xem chi tiết',
       key: 'action',
