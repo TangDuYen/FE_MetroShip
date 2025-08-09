@@ -1,7 +1,7 @@
 export const shipmentStatusMap = {
   0: 'Chờ thanh toán',
   1: 'Từ chối',
-  2: 'Chưa thanh toán',
+  2: 'Không thanh toán',
   3: 'Đã hủy',
   4: 'Chờ hoàn tiền',
   5: 'Đã hoàn tiền',
@@ -24,28 +24,30 @@ export const shipmentStatusMap = {
   22: 'Đang lưu kho',
 };
 
-
 export const shipmentStatusColorMap = {
-  0: "orange", // Đợi thanh toán
-  1: "red", // Từ chối
-  2: "volcano", // Không thanh toán
-  3: "magenta", // Đã hủy
-  4: "gold", // Đợi hoàn tiền
-  5: "green", // Đã hoàn tiền
-  6: "purple", // Không xuất hiện
-  7: "blue", // Đợi gửi hàng
-  8: "cyan", // Đã lấy hàng
-  9: "processing", // Đang vận chuyển
-  10: "lime", // Đợi lấy hàng
-  11: "geekblue", // Thu phí tồn kho
-  12: "red", // Quá hạn
-  13: "volcano", // Hoàn đơn
-  14: "orange", // Đang hoàn đơn
-  15: "green", // Đã hoàn đơn
-  16: "purple", // Đợi phản hồi
-  17: "returning", // Đã hoàn thành
-  20: "success", // Đã nhận hàng
-  18: "warning", // Delayed
+  0: "orange",       // Chờ thanh toán
+  1: "red",          // Từ chối
+  2: "volcano",      // Không thanh toán
+  3: "magenta",      // Đã hủy
+  4: "gold",         // Chờ hoàn tiền
+  5: "green",        // Đã hoàn tiền
+  6: "purple",       // Không đến gửi hàng
+  7: "blue",         // Chờ gửi hàng
+  8: "cyan",         // Đã lấy hàng
+  9: "processing",   // Đang vận chuyển
+  10: "lime",        // Chờ nhận hàng
+  11: "geekblue",    // Thu phí tồn kho
+  12: "red",         // Xuống hàng tại trạm
+  13: "volcano",     // Chờ chuyển tàu
+  14: "orange",      // Chuyển tàu tiếp theo
+  15: "red",         // Đã quá hạn
+  16: "purple",      // Trả đơn
+  17: "volcano",     // Đang trả đơn
+  18: "blue",        // Đã trả đơn
+  19: "success",     // Đã giao hàng
+  20: "green",       // Hoàn tất
+  21: "warning",     // Bị chậm trễ
+  22: "magenta",     // Đang lưu kho
 };
 
 export const paymentStatusMap = {

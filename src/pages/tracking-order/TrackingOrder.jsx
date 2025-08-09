@@ -161,10 +161,12 @@ function TrackingOrder() {
                     <span className="detail-label">Phí vận chuyển</span>
                     <span className="detail-value">{formatCurrency(p.shippingFeeVnd)}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Phí bảo hiểm</span>
-                    <span className="detail-value">{formatCurrency(p.insuranceFeeVnd)}</span>
-                  </div>
+                  {p.priceVnd !== p.shippingFeeVnd && (
+                    <div className="detail-item">
+                      <span className="detail-label">Phí bảo hiểm</span>
+                      <span className="detail-value">{formatCurrency(p.insuranceFeeVnd)}</span>
+                    </div>
+                  )}
                   <div className="detail-item">
                     <span className="detail-label">Tổng phí</span>
                     <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
@@ -178,10 +180,6 @@ function TrackingOrder() {
                       <div className="detail-item">
                         <span className="detail-label">Mô tả</span>
                         <span className="detail-value">{p.parcelCategory.description}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Bắt buộc bảo hiểm</span>
-                        <span className="detail-value">{p.parcelCategory.isInsuranceRequired ? 'Có' : 'Không'}</span>
                       </div>
                     </>
                   )}
