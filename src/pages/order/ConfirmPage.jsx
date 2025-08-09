@@ -21,6 +21,10 @@ function ConfirmPage({
   const [parcelCategoriesMap, setCategoriesMap] = useState({});
   const [selectedTimeLabel, setSelectedTimeLabel] = useState('');
   const selectedSolution = routeSolutions[selectedSolutionIndex] || {};
+  const optionalInsuranceFee = selectedSolution?.data?.parcels
+    ?.filter((p, idx) => parcelInfo[idx]?.includeOptionalInsurance)
+    .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0) || 0;
+  const finalDisplayPrice = (selectedSolution?.data?.totalCostVnd || 0) + optionalInsuranceFee;
 
   // Fetch station names
   useEffect(() => {
@@ -124,7 +128,7 @@ function ConfirmPage({
               </a>
             </Descriptions.Item>
           )
-        ].filter(Boolean); // ⚠️ loại bỏ null/undefined
+        ].filter(Boolean);
 
         return (
           <Descriptions
@@ -162,8 +166,11 @@ function ConfirmPage({
               {totalWeight} kg
             </Descriptions.Item>
             <Descriptions.Item label="Giá ước tính">
-              {priceVnd ? `${Number(priceVnd).toLocaleString('vi-Vn', { maximumFractionDigits: 0})} VND` : '—'}
+              {finalDisplayPrice
+                ? `${Number(finalDisplayPrice).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VND`
+                : '—'}
             </Descriptions.Item>
+
           </Descriptions>
         </Col>
       </Row>

@@ -58,6 +58,7 @@ function ParcelInfo({
   const [uploadedImageUrls, setUploadedImageUrls] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentParcelIndex, setCurrentParcelIndex] = useState(null);
+  const [includeOptionalInsurance, setIncludeOptionalInsurance] = useState(false);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -147,7 +148,7 @@ function ParcelInfo({
 
     if (selected.isBefore(today)) return true;
 
-    // 🕐 Dựa vào shift cao nhất (ca cuối)
+    //FIND LAST SHIFT
     const caLast = timeSlot.reduce((latest, cur) =>
       cur.shift > latest.shift ? cur : latest, timeSlot[0]
     );
@@ -157,19 +158,12 @@ function ParcelInfo({
 
     const deadline = dayjs(today).hour(h).minute(m).subtract(buffer, 'minute');
 
-    // ❌ Nếu hôm nay đã quá deadline của ca cuối → disable hôm nay
+    //DISABLE TODAY IF LAST SHIFT 
     if (selected.isSame(today, 'day') && now.isAfter(deadline)) {
       return true;
     }
-
     return false;
   };
-
-
-
-
-
-
 
   useEffect(() => {
     const errors = parcelInfo.map((parcel) => {
@@ -222,10 +216,11 @@ function ParcelInfo({
         updatedList[index].chargeableWeight = calculatedWeight;
       }
     }
-    if (field === 'parcelCategory') {
 
+    if (field === 'parcelCategory') {
       const selectedCat = parcelCategory.find(cat => cat.id === value);
       updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
+      updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
 
       if (selectedCat?.insuranceRate) {
         updatedList[index].valueVnd = updatedList[index].valueVnd || 0;
@@ -233,7 +228,6 @@ function ParcelInfo({
         delete updatedList[index].valueVnd;
       }
     }
-
     setParcelInfo(updatedList);
   };
 
@@ -248,6 +242,8 @@ function ParcelInfo({
         widthCm: "",
         description: "",
         descriptionImageUrl: "",
+        isInsuranceIncluded: false,
+        insuranceFeeVnd: "",
       },
     ]);
   };
@@ -357,6 +353,7 @@ function ParcelInfo({
     <>
       <div>
         <Title level={4}>Điền thông tin kiện hàng</Title>
+        {/* PARCEL INFORMATION */}
         {parcelInfo.map((parcel, index) => (
           <div
             key={index}
@@ -379,20 +376,29 @@ function ParcelInfo({
                 ))}
               </Select>
 
-              {/* INSURANCEFEEVND */}
+              {/* OPTIONAL INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                if (selectedCat?.insuranceFeeVnd && !selectedCat?.insuranceRate) {
+                if (selectedCat && !selectedCat.isInsuranceRequired && parcel.insuranceFeeVnd) {
                   return (
-                    <div style={{ marginTop: '0.5em', color: '#444' }}>
-                      Bảo hiểm cố định: <strong>{selectedCat.insuranceFeeVnd.toLocaleString('vi-VN')} VND</strong>
-                    </div>
+                    <Checkbox
+                      style={{ marginTop: '0.5em', color: '#444' }}
+                      checked={parcel.includeOptionalInsurance || false}
+                      onChange={(e) => {
+                        const updated = [...parcelInfo];
+                        updated[index].includeOptionalInsurance = e.target.checked;
+                        setParcelInfo(updated);
+                      }}
+                    >
+                      Tính phí bảo hiểm cho hàng này ({parcel.insuranceFeeVnd.toLocaleString('vi-VN')} VND)
+                    </Checkbox>
                   );
                 }
                 return null;
               })()}
 
-              {/* ISINSURANCEREQUIRED */}
+
+              {/* REQUIRED INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
                 if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate) {
@@ -513,6 +519,7 @@ function ParcelInfo({
           +
         </Button>
 
+        {/* METRO DEPARTURE & DESTINATION */}
         <div className="metro-selector">
           <Title level={4}>Chọn trạm Metro</Title>
           <div className="selector-group">
@@ -539,6 +546,7 @@ function ParcelInfo({
             </Select>
           </div>
 
+
           <div className="selector-group">
             <label>Trạm nhận:</label>
             <Select
@@ -560,6 +568,7 @@ function ParcelInfo({
             </Select>
           </div>
 
+          {/* DATE - TIME PICKER */}
           <div className="selector-group">
             <label>Ngày gửi:</label>
             <DatePicker
@@ -598,10 +607,22 @@ function ParcelInfo({
                 <p
                   style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
                 >
-                  Lưu ý: Đơn hàng sẽ bị hủy nếu khách hàng đến gửi hàng trễ hơn thời gian đã chọn và sẽ không được hoàn phí
+                  Lưu ý:
+                </p>
+                <p
+                  style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
+                >
+                  Đơn hàng sẽ bị hủy nếu khách hàng đến gửi hàng trễ hơn thời gian đã chọn và sẽ không được hoàn phí.
+                </p>
+                <p
+                  style={{ fontWeight: 'bold', color: 'red', marginBottom: '1em' }}
+                >
+                  MetroShip chỉ hỗ trợ nhận hàng trong khoảng thời gian khách đã chọn.
                 </p>
               </>
             )}
+
+            {/* METRO TIME SLOT */}
             <Modal
               title="Giờ hoạt động của trạm"
               open={isModalOpen}
@@ -637,6 +658,8 @@ function ParcelInfo({
               />
             </Modal>
           </div>
+
+          {/* 3 SOLUTIONS RENDER */}
           <div
             className="solutions"
             style={{
@@ -662,6 +685,12 @@ function ParcelInfo({
 
               const bg = bgMap[solution.type] || '#ccc';
               const hover = hoverMap[solution.type] || '#aaa';
+
+              {/* OPTIONAL INSURANCE FEE */ }
+              const optionalFee = solution.data?.parcels
+                ?.filter((p, i) => parcelInfo[i]?.includeOptionalInsurance)
+                .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0) || 0;
+              const displayPrice = (solution.data?.totalCostVnd || 0) + optionalFee;
 
               return (
                 <div
@@ -710,12 +739,7 @@ function ParcelInfo({
                     }
                   </p>
                   <p style={{ marginTop: '1em', fontWeight: 'bold', fontSize: '1rem' }}>
-                    {solution.data?.totalCostVnd
-                      ? Number(solution.data?.totalCostVnd).toLocaleString('vi-VN', {
-                        maximumFractionDigits: 0
-                      }) + ' VND'
-
-                      : 'Đang tính...'}
+                    {displayPrice.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VND
                   </p>
                 </div>
               );
@@ -736,7 +760,7 @@ function ParcelInfo({
               }
 
               const formData = new FormData();
-              formData.append("file", verifyImages); // 👈 chỉ lấy ảnh đầu tiên
+              formData.append("file", verifyImages);
 
               setLoading(true);
               try {
@@ -749,8 +773,6 @@ function ParcelInfo({
                   toast.error("Không lấy được ảnh sau khi upload.");
                   return;
                 }
-
-                // 🔥 Ghi đè ảnh duy nhất cho parcel tương ứng
                 setParcelInfo(prev => {
                   const copy = [...prev];
                   copy[currentParcelIndex].descriptionImageUrl = imageUrl;
@@ -776,7 +798,7 @@ function ParcelInfo({
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) setVerifyImages(file); // 👈 chỉ 1 file
+                  if (file) setVerifyImages(file);
                 }}
               />
 
