@@ -88,7 +88,7 @@ function HistoryOrders() {
           acc[shipmentId].push(parcel);
           return acc;
         }, {});
-        
+
         const sortedShipmentItems = [...shipmentItems].sort(
           (a, b) => new Date(b.scheduledDateTime) - new Date(a.scheduledDateTime)
         );
@@ -113,7 +113,7 @@ function HistoryOrders() {
             rating: shipment.rating || 0,
           };
         });
-        
+
         // setOrders(
         //   convertedOrders.sort(
         //     (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
@@ -219,6 +219,15 @@ function HistoryOrders() {
     console.log("Reorder shipment", shipmentId);
   };
 
+  const handleCancelOrder = (shipmentId) => {
+    toast.success("Hủy đơn hàng thành công!");
+    console.log("Cancel shipment", shipmentId);
+  }
+
+  const handleRequestReturn = (shipmentId) => {
+    toast.success("Yêu cầu hoàn đơn thành công!");
+    console.log("Refund shipment", shipmentId);
+  }
 
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
@@ -237,10 +246,6 @@ function HistoryOrders() {
     return matchSearch && matchStatus && matchDateRange;
   });
 
-  const displayedGoods = filteredGoods.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
   const getParcelsByShipmentId = (shipmentId) => {
     return orders.filter(parcel => parcel.shipmentId === shipmentId);
   };
@@ -311,54 +316,75 @@ function HistoryOrders() {
 
   columns.push({
     title: "Hành động",
-    key: "action",
+    key: "actions",
     render: (_, item) => {
-      const countdown = countdowns[item.shipmentId];
-      const isExpired = countdown === "Hết hạn";
-      return item.shipmentStatus === 0 ? (
-        <Button
-          type="primary"
-          disabled={isExpired}
-          onClick={() => handlePayment(item.shipmentId)}
-        >
-          {isExpired
-            ? "Hết hạn"
-            : `Thanh toán ${countdown ? `(${countdown})` : ""}`}
-        </Button>
-      ) : (
-        "-"
-      );
-    },
-  });
-  columns.push({
-    title: "Hành động",
-    key: "action",
-    render: (_, item) => {
-      const isCompleted = item.shipmentStatus === 20;
-      const isExpired = item.shipmentStatus === 15;
+      const actions = [];
       const hasRated = typeof item.rating === "number" && item.rating > 0;
 
-      if (isCompleted) {
-        return (
+      //PAY SHIPMENT
+      if (item.shipmentStatus === 0) {
+        actions.push(
           <Button
             type="primary"
-            className="feedback-button"
-            onClick={() =>
-              hasRated
-                ? handleReorder(item.shipmentId)
-                : handleFeedback(item.shipmentId)
-            }
+            onClick={() => handlePayment(item.shipmentId)}
           >
-            {hasRated ? "Đặt lại" : "Đánh giá"}
+            Thanh toán
+          </Button>
+        );
+
+        //CANCEL SHIPMENT - NOT PAY YET
+        actions.push(
+          <Button
+            danger
+            onClick={() => handleCancelOrder(item.shipmentId)}
+          >
+            Hủy
           </Button>
         );
       }
 
-      if (isExpired) {
-        return (
+      //CANCEL SHIPMENT - HAS PAID
+      if (
+        [7].includes(item.shipmentStatus)
+      ) {
+        actions.push(
           <Button
             danger
+            onClick={() => handleCancelOrder(item.shipmentId)}
+          >
+            Hủy
+          </Button>
+        );
+      }
+
+      //FEEDBACK SHIPMENT
+      if (item.shipmentStatus === 20 && !hasRated) {
+        actions.push(
+          <Button
             type="primary"
+            onClick={() => handleFeedback(item.shipmentId)}
+          >
+            Đánh giá
+          </Button>
+        );
+      }
+
+      //RE-ORDER SHIPMENT
+      if (item.shipmentStatus === 20 && hasRated) {
+        actions.push(
+          <Button
+            onClick={() => handleReorder(item.shipmentId)}
+          >
+            Đặt lại
+          </Button>
+        );
+      }
+
+      //REFUND SHIPMENT
+      if (item.shipmentStatus === 15) {
+        actions.push(
+          <Button
+            danger
             onClick={() => handleRequestReturn(item.shipmentId)}
           >
             Yêu cầu hoàn đơn
@@ -366,29 +392,9 @@ function HistoryOrders() {
         );
       }
 
-      return "-";
+      return <Space>{actions}</Space>;
     },
   });
-
-
-  // const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
-  // const hasPayment = displayedGoods.some((item) => item.status === 3);
-
-  // const handleNextWindow = () => {
-  //   const newStart = Math.min(
-  //     pageWindowStart + 1,
-  //     totalPages - pageWindowSize + 1
-  //   );
-  //   setPageWindowStart(newStart);
-  //   setCurrentPage(newStart);
-  // };
-
-  // const handlePrevWindow = () => {
-  //   const newStart = Math.max(pageWindowStart - 1, 1);
-  //   setPageWindowStart(newStart);
-  //   setCurrentPage(newStart);
-  // };
-
 
   return (
     <div className="history-order">
