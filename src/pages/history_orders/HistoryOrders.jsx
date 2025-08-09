@@ -218,9 +218,15 @@ function HistoryOrders() {
     toast.success("Đặt lại đơn hàng thành công!");
     console.log("Reorder shipment", shipmentId);
   };
+
   const handleCancelOrder = (shipmentId) => {
     toast.success("Hủy đơn hàng thành công!");
     console.log("Cancel shipment", shipmentId);
+  }
+
+  const handleRequestReturn = (shipmentId) => {
+    toast.success("Yêu cầu hoàn đơn thành công!");
+    console.log("Refund shipment", shipmentId);
   }
 
   const filteredGoods = orders.filter((item) => {
@@ -240,10 +246,6 @@ function HistoryOrders() {
     return matchSearch && matchStatus && matchDateRange;
   });
 
-  const displayedGoods = filteredGoods.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
   const getParcelsByShipmentId = (shipmentId) => {
     return orders.filter(parcel => parcel.shipmentId === shipmentId);
   };
@@ -330,7 +332,7 @@ function HistoryOrders() {
           </Button>
         );
 
-        //CANCEL SHIPMENT 
+        //CANCEL SHIPMENT - NOT PAY YET
         actions.push(
           <Button
             danger
@@ -341,7 +343,7 @@ function HistoryOrders() {
         );
       }
 
-      //CANCEL SHIPMENT
+      //CANCEL SHIPMENT - HAS PAID
       if (
         [7].includes(item.shipmentStatus)
       ) {
