@@ -14,7 +14,6 @@ import {
     Tag
 } from 'antd';
 import {
-    getAllMetroTrains,
     getAllParcels,
     getAllShipments,
     getAllStations,
@@ -40,7 +39,6 @@ function AdminOrders() {
     const [stations, setStations] = useState([]);
     const [metroLines, setMetroLines] = useState([]);
     const [timeSlots, setTimeSlots] = useState([]);
-    const [metroTrains, setMetroTrains] = useState([]);
 
     //FILTER STATE
     const [statusFilter, setStatusFilter] = useState(null);
@@ -64,17 +62,15 @@ function AdminOrders() {
             getAllParcels(),
             getMetroTimeSlots(),
             getAllStations(),
-            getMetroLines(),
-            getAllMetroTrains()
+            getMetroLines()
         ])
-            .then(([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+            .then(([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
                 setShipments(shipmentsData.items || []);
                 setStatusOptions(shipmentsData.additionalData || []);
                 setParcels(parcelsData || []);
                 setTimeSlots(timeSlotsData || []);
                 setStations(stationData || []);
                 setMetroLines(metroLineData || []);
-                setMetroTrains(metroTrainData || []);
             })
             .catch((err) => console.error('Lỗi khi load dữ liệu:', err))
             .finally(() => setLoading(false));
@@ -100,7 +96,7 @@ function AdminOrders() {
             if (lineFilter && item.metroLineId !== lineFilter) match = false;
 
             //REGIONS FILTER
-            if (areaFilter && item.areaName !== areaFilter) match = false;
+            // if (areaFilter && item.areaName !== areaFilter) match = false;
 
             //DATERANGE FILTER
             if (dateRange.length === 2) {
