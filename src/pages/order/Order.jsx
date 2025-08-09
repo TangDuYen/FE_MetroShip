@@ -61,26 +61,26 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
   const [priceVnd, setPriceVnd] = useState(null);
- 
+
   const customIcon = L.icon({
     iconUrl: metroMarker,
-    iconSize: [40, 40],     
-    iconAnchor: [20, 40],    
-    popupAnchor: [0, -40],   
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   });
 
   const cusIcon = L.icon({
     iconUrl: customerIcon,
-    iconSize: [40, 40],       
-    iconAnchor: [20, 40],     
-    popupAnchor: [0, -40],    
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   });
 
   const startMetro = L.icon({
     iconUrl: startStation,
-    iconSize: [40, 40],       
-    iconAnchor: [20, 40],     
-    popupAnchor: [0, -40],   
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   });
 
   const showModal = () => {
@@ -254,7 +254,13 @@ function Order() {
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
         if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
         if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
-        if (p.priceVnd !== undefined) base.priceVnd = Number(p.priceVnd);
+        if (p.priceVnd !== undefined) {
+          let finalPrice = Number(p.priceVnd);
+          if (p.includeOptionalInsurance && p.insuranceFeeVnd) {
+            finalPrice += Number(p.insuranceFeeVnd);
+          }
+          base.priceVnd = finalPrice;
+        }
         if (p.valueVnd !== undefined) base.valueVnd = p.valueVnd;
         if (p.includeOptionalInsurance) {
           base.isInsuranceIncluded = true;
