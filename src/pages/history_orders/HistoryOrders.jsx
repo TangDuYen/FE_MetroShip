@@ -88,44 +88,39 @@ function HistoryOrders() {
           acc[shipmentId].push(parcel);
           return acc;
         }, {});
+        
+        const sortedShipmentItems = [...shipmentItems].sort(
+          (a, b) => new Date(b.scheduledDateTime) - new Date(a.scheduledDateTime)
+        );
 
         // Gộp thành danh sách đơn hàng
-        const convertedOrders = Object.entries(groupedByShipment).map(
-          ([shipmentId, parcels], index) => {
-            const shipmentInfo = shipmentMap.get(shipmentId) || {};
+        const convertedOrders = sortedShipmentItems.map((shipment, index) => {
+          const parcels = groupedByShipment[shipment.id] || [];
+          const totalWeight = parcels.reduce((sum, p) => sum + (p.chargeableWeightKg || 0), 0);
+          const totalVolume = parcels.reduce((sum, p) => sum + (p.volumeCm3 || 0), 0);
 
-            const totalWeight = parcels.reduce(
-              (sum, p) => sum + (p.chargeableWeightKg || 0),
-              0
-            );
+          return {
+            id: index + 1,
+            shipmentId: shipment.id,
+            trackingCode: shipment.trackingCode || "N/A",
+            name: parcels[0]?.parcelCategory?.categoryName || "Chưa rõ",
+            weight: totalWeight,
+            volume: totalVolume,
+            price: shipment.totalCostVnd || 0,
+            deliveryDate: shipment.scheduledDateTime || null,
+            shipmentStatus: shipment.shipmentStatus,
+            bookedAt: shipment.bookedAt,
+            rating: shipment.rating || 0,
+          };
+        });
+        
+        // setOrders(
+        //   convertedOrders.sort(
+        //     (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
+        //   )
+        // );
 
-            const totalVolume = parcels.reduce(
-              (sum, p) => sum + (p.volumeCm3 || 0),
-              0
-            );
-
-            return {
-              id: index + 1,
-              shipmentId,
-              trackingCode: shipmentInfo.trackingCode || "N/A",
-              name: parcels[0].parcelCategory?.categoryName || "Chưa rõ",
-              weight: totalWeight,
-              volume: totalVolume,
-              price: shipmentInfo.totalCost || 0,
-              deliveryDate: shipmentInfo.date || null,
-              shipmentStatus: shipmentInfo.status,
-              bookedAt: shipmentInfo.bookedAt,
-              rating: shipmentInfo.rating || 0,
-            };
-          }
-        );
-
-        setOrders(
-          convertedOrders.sort(
-            (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
-          )
-        );
-
+        setOrders(convertedOrders);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       }
@@ -219,6 +214,12 @@ function HistoryOrders() {
     }
   };
 
+  const handleReorder = (shipmentId) => {
+    toast.success("Đặt lại đơn hàng thành công!");
+    console.log("Reorder shipment", shipmentId);
+  };
+
+
   const filteredGoods = orders.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -293,10 +294,7 @@ function HistoryOrders() {
       title: "Chi tiết",
       key: "detail",
       render: (_, record) => (
-        // <Link to={PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.code)}>
         <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
-        // </Link>
-
       ),
     },
     {
@@ -345,7 +343,11 @@ function HistoryOrders() {
           <Button
             type="primary"
             className="feedback-button"
-            onClick={() => handleFeedback(item.shipmentId)}
+            onClick={() =>
+              hasRated
+                ? handleReorder(item.shipmentId)
+                : handleFeedback(item.shipmentId)
+            }
           >
             {hasRated ? "Đặt lại" : "Đánh giá"}
           </Button>
@@ -367,6 +369,7 @@ function HistoryOrders() {
       return "-";
     },
   });
+
 
   // const totalPages = Math.ceil(filteredGoods.length / itemsPerPage);
   // const hasPayment = displayedGoods.some((item) => item.status === 3);

@@ -13,71 +13,36 @@ import {
   Table,
   Typography,
 } from "antd";
-import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getAllMetroTrains, getAllRegions, getMetroLines } from "../../../../../config/metroApi";
-
-import L from "leaflet";
+import moment from "moment";
 import api from "../../../../../config/axios";
 import metro from "../../../../../assets/metro_station.png";
-import moment from "moment";
 import { toast } from "react-toastify";
-
-function ResizeMapOnShow() {
-  const map = useMap();
-
-  useEffect(() => {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100); // Đợi modal render xong
-  }, [map]);
-
-  return null;
-}
+import { useNavigate } from "react-router-dom";
+import { PATH_NAME } from "../../../../../constants/pathname";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../../../../redux/features/counterSlice";
 
 const { Title } = Typography;
 const { Option } = Select;
 
 function TrainStaff() {
+  const user = useSelector(selectUser);
+  console.log("User data:", user);
+
   const [metroTrains, setMetroTrains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
   const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
 
-  const [selectedTrain, setSelectedTrain] = useState(null);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [position, setPosition] = useState([0, 0]);
-  const [trainPath, setTrainPath] = useState([]);
-  const [fromStation, setFromStation] = useState("");
-  const [toStation, setToStation] = useState("");
+
+  const navigate = useNavigate();
+  
   const [regions, setRegions] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
-
-
-  const locationIcon = new L.Icon({
-    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    shadowSize: [41, 41],
-  });
-
-  const intervalRef = useRef(null);
-
-  const metroIcon = new L.Icon({
-    iconUrl: metro,
-    iconSize: [25, 25],
-  });
 
   useEffect(() => {
     setLoading(true);
@@ -109,29 +74,9 @@ function TrainStaff() {
       });
   }, []);
 
-  const fetchTrainLivePosition = async (trainId) => {
-    try {
-      const response = await api.get(`train/${trainId}/position`);
-      const { latitude, longitude, path, fromStation, toStation } =
-        response.data;
-      setPosition([latitude, longitude]);
-      setFromStation(fromStation);
-      setToStation(toStation);
-
-      if (path && Array.isArray(path)) {
-        const polylinePath = path.map((p) => [p.latitude, p.longitude]);
-        setTrainPath(polylinePath);
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy vị trí tàu", error);
-    }
-  };
-
   const handleStartTrain = async (train) => {
     try {
-      await api.post(`/train/${train.id}/status`, null, {
-        params: { direction: 0 },
-      });
+      await api.post(`/train/${train.id}/status`);
       toast.success(`Tàu ${train.trainCode} đã được khởi động`);
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
@@ -139,23 +84,36 @@ function TrainStaff() {
     }
   };
 
-  const handleViewMapTrain = (train) => {
-    console.log("Train clicked:", train);
-    setSelectedTrain(train);
-    setIsMapVisible(true);
+  const handleConfirmArrival = async (train) => {
+    try {
+      const stationId = user?.StationId;
+
+      if (!stationId) {
+        toast.error("Không tìm thấy stationId của nhân viên.");
+        return;
+      }
+
+      await api.post(`/train/${train.id}/confirm-arrival`, null, {
+        params: { stationId },
+      });
+
+      toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
+    } catch (error) {
+      console.error("Lỗi xác nhận tàu đến trạm:", error);
+      toast.error("Xác nhận tàu thất bại.");
+    }
   };
 
-  // Auto move the train when map modal is open
-  useEffect(() => {
-    if (isMapVisible && selectedTrain) {
-      fetchTrainLivePosition(selectedTrain.id); // lấy ngay lập tức
-      intervalRef.current = setInterval(() => {
-        fetchTrainLivePosition(selectedTrain.id);
-      }, 2000);
-    }
-
-    return () => clearInterval(intervalRef.current);
-  }, [isMapVisible, selectedTrain]);
+  const handleViewMapTrain = (train) => {
+    console.log("Train clicked:", train);
+    // setSelectedTrain(train);
+    // setIsMapVisible(true);
+    const mapPath = PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP.replace(
+      ":trainId",
+      train.id
+    );
+    navigate(mapPath);
+  };
 
   const columns = [
     {
@@ -194,15 +152,18 @@ function TrainStaff() {
         <div className="action-buttons">
           <Button
             type="primary"
-            icon="🚆"
             onClick={() => handleStartTrain(record)}
             style={{ marginRight: 8 }}
           >
             Bắt đầu
           </Button>
-          <Button onClick={() => handleViewMapTrain(record)} icon="🗺️">
-            Xem bản đồ
+          <Button
+            className="btn-arrival"
+            onClick={() => handleConfirmArrival(record)}
+          >
+            Đến trạm
           </Button>
+          <Button onClick={() => handleViewMapTrain(record)}>Xem bản đồ</Button>
         </div>
       ),
     },
@@ -234,24 +195,23 @@ function TrainStaff() {
     maxVolume,
   }));
 
+//   const getNearestIndex = (position, path) => {
+//     if (!path.length) return 0;
+//     let minIndex = 0;
+//     let minDist = Infinity;
+//     path.forEach((p, i) => {
+//       const dist = Math.sqrt(
+//         Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
+//       );
+//       if (dist < minDist) {
+//         minDist = dist;
+//         minIndex = i;
+//       }
+//     });
+//     return minIndex;
+//   };
 
-  const getNearestIndex = (position, path) => {
-    if (!path.length) return 0;
-    let minIndex = 0;
-    let minDist = Infinity;
-    path.forEach((p, i) => {
-      const dist = Math.sqrt(
-        Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
-      );
-      if (dist < minDist) {
-        minDist = dist;
-        minIndex = i;
-      }
-    });
-    return minIndex;
-  };
-
-  const currentIndex = getNearestIndex(position, trainPath);
+//   const currentIndex = getNearestIndex(position, trainPath);
 
   return (
     <div className="staff-train-container">
@@ -297,74 +257,6 @@ function TrainStaff() {
           pagination={{ pageSize: 10 }}
         />
       </Spin>
-
-      <Modal
-        title={false}
-        open={isMapVisible}
-        onCancel={() => setIsMapVisible(false)}
-        footer={null}
-        width={800}
-        style={{
-          top: 100,
-        }}
-        bodyStyle={{
-          height: 700,
-          padding: 0,
-        }}
-        closable={false}
-      >
-        <div
-          className="map-container"
-          style={{ height: "100%", width: "100%" }}
-        >
-          <MapContainer
-            center={position[0] !== 0 ? position : [10.76, 106.7]}
-            zoom={13}
-            scrollWheelZoom={true}
-            style={{ height: "100%", width: "100%" }}
-            className="map"
-          >
-            <ResizeMapOnShow />
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors"
-            />
-            {trainPath.length > 1 && (
-              <Polyline
-                positions={trainPath.slice(0, currentIndex + 1)}
-                color="gray" // đoạn đã đi
-              />
-            )}
-            {trainPath.length > 1 && (
-              <Polyline
-                positions={trainPath.slice(currentIndex)}
-                color="blue" // đoạn chưa đi
-              />
-            )}
-
-            {trainPath.length > 0 && (
-              <Marker position={trainPath[0]} icon={locationIcon}>
-                <Popup>{fromStation || "Ga xuất phát"}</Popup>
-              </Marker>
-            )}
-            {/* toStation */}
-            {trainPath.length > 0 && (
-              <Marker
-                position={trainPath[trainPath.length - 1]}
-                icon={locationIcon}
-              >
-                <Popup>{toStation || "Ga đến"}</Popup>
-              </Marker>
-            )}
-            {/* Hiển thị vị trí tàu */}
-            {position[0] !== 0 && (
-              <Marker position={position} icon={metroIcon}>
-                <Popup>{selectedTrain?.trainCode || "Tàu Metro"}</Popup>
-              </Marker>
-            )}
-          </MapContainer>
-        </div>
-      </Modal>
     </div>
   );
 }

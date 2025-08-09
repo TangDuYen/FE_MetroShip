@@ -90,8 +90,8 @@ function HandledOrderStaff() {
             || order.shipmentStatus === 3
             || order.shipmentStatus === 5
             || order.shipmentStatus === 6
-            || order.shipmentStatus === 12
-            || order.shipmentStatus === 17
+            || order.shipmentStatus === 15
+            || order.shipmentStatus === 18
             || order.shipmentStatus === 20
         );
         const hasExpired = shipments.some((item) => item.shipmentStatus === 12);
@@ -157,9 +157,14 @@ function HandledOrderStaff() {
         },
         {
             title: 'Thời điểm tạo yêu cầu',
-            dataIndex: 'bookedAt',
-            key: 'bookedAt',
-            render: (_, record) => dayjs(record.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+            key: 'createdAt',
+            render: (_, record) => {
+                const relatedParcels = getParcelsByShipmentId(record.id);
+                if (relatedParcels.length > 0) {
+                    return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+                }
+                return 'N/A';
+            }
         },
         {
             title: 'Tổng chi phí',
