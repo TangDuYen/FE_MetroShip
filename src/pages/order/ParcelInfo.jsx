@@ -68,10 +68,6 @@ function ParcelInfo({
     setIsModalOpen(false);
   };
 
-  const handleChange = (field, value) => {
-    setParcelInfo({ ...parcelInfo, [field]: value });
-  };
-
   //API ONE TIME
   useEffect(() => {
     Promise.all([getMetroTimeSlots(), getAllStations(), getAllParcelCategories()]).then(
@@ -147,6 +143,10 @@ function ParcelInfo({
     const selected = dayjs(current).startOf('day');
 
     if (selected.isBefore(today)) return true;
+
+    if (!timeSlot || timeSlot.length === 0) {
+      return false;
+    }
 
     //FIND LAST SHIFT
     const caLast = timeSlot.reduce((latest, cur) =>
@@ -348,6 +348,56 @@ function ParcelInfo({
     const updated = parcelInfo.filter((_, index) => index !== indexToRemove);
     setParcelInfo(updated);
   };
+
+  //RELOAD DATA WHEN BACK-WARD
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("parcelFormData");
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (parsed.parcelInfo) setParcelInfo(parsed.parcelInfo);
+        if (parsed.metroSelector) setMetroSelector(parsed.metroSelector);
+        if (parsed.pickedDate) {
+          setPickedDate(parsed.pickedDate);
+          setSelectedDate(parsed.pickedDate);
+        }
+        if (parsed.pickedTime) {
+          setPickedTime(parsed.pickedTime);
+          setSelectedTime(parsed.pickedTime); 
+        }
+        if (parsed.timeSlots) setTimeSlots(parsed.timeSlots);
+        if (parsed.selectedSolutionIndex !== undefined) setSelectedSolutionIndex(parsed.selectedSolutionIndex);
+        if (parsed.displayedDepartureStationId) setDisplayedDepartureStationId(parsed.displayedDepartureStationId);
+        if (parsed.realDepartureStationId) setRealDepartureStationId(parsed.realDepartureStationId);
+      } catch (e) {
+        console.error("Lỗi khi parse dữ liệu cache:", e);
+      }
+    }
+  }, []);
+
+  // SAVE DATA AFTER CHANGING
+  useEffect(() => {
+    const saveData = {
+      parcelInfo,
+      metroSelector,
+      pickedDate,
+      pickedTime,
+      timeSlots,
+      selectedSolutionIndex,
+      displayedDepartureStationId,
+      realDepartureStationId
+    };
+    sessionStorage.setItem("parcelFormData", JSON.stringify(saveData));
+  }, [
+    parcelInfo,
+    metroSelector,
+    pickedDate,
+    pickedTime,
+    timeSlots,
+    selectedSolutionIndex,
+    displayedDepartureStationId,
+    realDepartureStationId
+  ]);
 
   return (
     <>
