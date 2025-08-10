@@ -129,3 +129,12 @@ export const getAllRegions = async () => {
     toast.error("Không thể lấy dữ liệu khu vực");
   }
 }
+
+export const getAllTransactionTypes = async () => {
+  try {
+    const res = await api.get("/transactions/types");
+    return res.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu loại thanh toán");
+  }
+}

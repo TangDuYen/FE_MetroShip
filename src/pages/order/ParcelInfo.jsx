@@ -451,7 +451,7 @@ function ParcelInfo({
               {/* REQUIRED INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
-                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate) {
+                if (selectedCat?.isInsuranceRequired || selectedCat?.insuranceRate) {
                   return (
                     <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
                       ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {selectedCat.insuranceRate * 100}% trên giá trị món hàng.
@@ -467,7 +467,7 @@ function ParcelInfo({
               {/* UPLOAD BILL */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate > 0) {
+                if (selectedCat?.isInsuranceRequired) {
                   const insuranceCost = Math.round((parcel.valueVnd || 0) * selectedCat.insuranceRate);
                   return (
                     <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
