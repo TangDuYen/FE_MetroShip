@@ -215,10 +215,10 @@ function HistoryOrders() {
     }
   };
 
-  const handleReorder = (shipmentId) => {
-    toast.success("Đặt lại đơn hàng thành công!");
-    console.log("Reorder shipment", shipmentId);
-  };
+  // const handleReorder = (shipmentId) => {
+  //   toast.success("Đặt lại đơn hàng thành công!");
+  //   console.log("Reorder shipment", shipmentId);
+  // };
 
   const handleSubmitCancelShipment = async () => {
     try {
@@ -389,15 +389,15 @@ function HistoryOrders() {
       }
 
       //RE-ORDER SHIPMENT
-      if (item.shipmentStatus === 20 && hasRated) {
-        actions.push(
-          <Button
-            onClick={() => handleReorder(item.shipmentId)}
-          >
-            Đặt lại
-          </Button>
-        );
-      }
+      // if (item.shipmentStatus === 20 && hasRated) {
+      //   actions.push(
+      //     <Button
+      //       onClick={() => handleReorder(item.shipmentId)}
+      //     >
+      //       Đặt lại
+      //     </Button>
+      //   );
+      // }
 
       //REFUND SHIPMENT
       if (item.shipmentStatus === 15) {
@@ -454,7 +454,6 @@ function HistoryOrders() {
                   style={{ width: 300 }}
                 />
               </Space>
-
               <Spin spinning={loading} tip="Đang tải dữ liệu...">
                 <Table
                   columns={columns}
@@ -466,41 +465,12 @@ function HistoryOrders() {
                   }}
                 />
               </Spin>
-
-              {/* <div className="history-pagination">
-                <Pagination
-                  total={filteredGoods.length}
-                  pageSize={itemsPerPage}
-                  current={currentPage}
-                  onChange={(page) => setCurrentPage(page)}
-                  showSizeChanger={false}
-                />
-              </div> */}
-
             </Card>
-
-            {/* PHÂN TRANG */}
-            {/* {totalPages > 1 && (
-              <div className="pagination">
-                <button
-                  onClick={handlePrevWindow}
-                  disabled={pageWindowStart === 1}
-                >
-                  «
-                </button>
-                {paginationButtons}
-                <button
-                  onClick={handleNextWindow}
-                  disabled={
-                    pageWindowStart + pageWindowSize - 1 >= totalPages
-                  }
-                >
-                </button>
-              </div>
-            )} */}
           </div>
         </div>
       </section>
+
+      {/* FEEDBACK MODAL */}
       <Modal
         title="Đánh giá đơn hàng"
         open={isFeedbackModalOpen}
@@ -521,6 +491,8 @@ function HistoryOrders() {
           />
         </div>
       </Modal>
+
+      {/* CANCEL MODAL */}
       <Modal
         title="Lý do hủy đơn"
         open={isRejectModalOpen}
