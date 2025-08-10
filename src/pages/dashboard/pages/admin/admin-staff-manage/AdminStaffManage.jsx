@@ -9,6 +9,7 @@ import api from '../../../../../config/axios';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { ReloadOutlined } from '@ant-design/icons';
 
 function AdminStaffManage() {
   const [users, setUsers] = useState([]);
@@ -26,6 +27,10 @@ function AdminStaffManage() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningStaff, setAssigningStaff] = useState(null);
   const [formAssign] = Form.useForm();
+  const [searchText, setSearchText] = useState("");
+  const [filterStations, setFilterStations] = useState([]);
+  const [filterRoles, setFilterRoles] = useState([]);
+
 
   const nav = useNavigate();
 
@@ -64,6 +69,8 @@ function AdminStaffManage() {
             ...staff,
             assignedStation: currentAssignment?.stationName || 'Chưa phân công',
             currentRole: currentAssignment?.assignedRole || null,
+            assignedStationId: currentAssignment?.stationId || null,
+            currentRoleId: currentAssignment?.assignedRoleId || null,
           };
         });
         setUsers(mapped);
@@ -112,6 +119,12 @@ function AdminStaffManage() {
     }
   };
 
+
+  const filteredData = users.filter(u =>
+    u.fullName?.toLowerCase().includes(searchText.toLowerCase()) &&
+    (filterStations.length === 0 || filterStations.includes(u.assignedStationId)) &&
+    (filterRoles.length === 0 || filterRoles.includes(u.currentRole))
+  );
 
 
   const disabledDate = (current) => {
@@ -200,18 +213,54 @@ function AdminStaffManage() {
     }
   ];
 
-  const data = users.map((u, index) => ({ ...u, key: index }));
+  // const data = users.map((u, index) => ({ ...u, key: index }));
 
 
   return (
     <div className="staff-management-container">
-      <Button type="primary" style={{ marginBottom: '1em' }} onClick={() => setShowAdd(true)}>
+      {/* <Button type="primary" style={{ marginBottom: '1em' }} onClick={() => setShowAdd(true)}>
         Thêm nhân viên
-      </Button>
+      </Button> */}
+
+      <div className="staff-filter-bar">
+        <Space wrap size="middle">
+        <Button type="primary" onClick={() => setShowAdd(true)}>
+            + Thêm nhân viên
+          </Button>
+          <Input.Search
+            allowClear
+            placeholder="Tìm kiếm theo họ tên..."
+            
+            style={{ width: 250 }}
+            onChange={e => setSearchText(e.target.value)}
+          />
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="Lọc theo trạm"
+            style={{ width: 200 }}
+            value={filterStations}
+            onChange={setFilterStations}
+            options={stations.map(s => ({ label: s.stationNameVi, value: s.id }))}
+          />
+          <Button
+    className="clear-filter-button"
+    icon={<ReloadOutlined />}
+    onClick={() => {
+      setSearchText("");
+      setFilterStations(null);
+      
+    }}
+  >
+  </Button>
+          
+          
+        </Space>
+      </div>
 
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={filteredData}
         rowKey="id"
         pagination={{ pageSize: 10 }}
       />
