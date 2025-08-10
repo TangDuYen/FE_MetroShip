@@ -13,6 +13,7 @@ import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
 import customerIcon from '../../assets/placeholder.webp'
 import dayjs from 'dayjs';
+import { getAllTransactionTypes } from '../../config/metroApi';
 import metroMarker from '../../assets/metro-station.webp';
 import { selectUser } from '../../redux/features/counterSlice';
 import startStation from '../../assets/train.webp';
@@ -61,6 +62,8 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
   const [priceVnd, setPriceVnd] = useState(null);
+  const [transactionTypes, setTransactionTypes] = useState([]);
+  const [transactionTypeId, setTransactionTypeId] = useState(null);
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -105,7 +108,7 @@ function Order() {
           toast.success('Vị trí đã được lưu thành công!');
         },
         (error) => {
-          message.error('Không thể lấy vị trí của bạn. Bạn sẽ không thể nhận được gợi ý tuyến đường.');
+          toast.error('Không thể lấy vị trí của bạn. Bạn sẽ không thể nhận được gợi ý tuyến đường.');
         }
       );
     } else {
@@ -288,6 +291,20 @@ function Order() {
     };
   };
 
+  useEffect(() => {
+    async function fetchTransactionTypes() {
+      try {
+        const res = await getAllTransactionTypes();
+        if (res?.statusCode === 200) {
+          setTransactionTypes(res.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy transaction types:", error);
+      }
+    }
+    fetchTransactionTypes();
+  }, []);
+
   const handleSubmit = async () => {
     setLoading(true);
 
@@ -296,16 +313,24 @@ function Order() {
       const bookingResponse = await api.post('/shipments', payload);
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
+        console.log(payload);
+
         setLoading(false);
         return;
       }
       toast.success("Đặt giao thành công!");
+      sessionStorage.removeItem("parcelFormData");
       const currentDomain = window.location.origin;
+      const shipmentCostType = transactionTypes.find(t => t.value === "ShipmentCost");
+      setTransactionTypeId(shipmentCostType.id);
       const paymentPayload = {
         shipmentId: bookingResponse.data.data.shipmentId,
+        transactionType: transactionTypeId,
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
+      console.log(paymentPayload);
+
       const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
 

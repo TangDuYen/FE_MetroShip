@@ -26,6 +26,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import dayjs from "dayjs";
+import { getAllTransactionTypes } from "../../config/metroApi";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { max } from "moment/moment";
@@ -54,6 +55,8 @@ function HistoryOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
   const [rejectShipmentId, setRejectShipmentId] = useState(null);
+  const [transactionTypes, setTransactionTypes] = useState([]);
+  const [transactionTypeId, setTransactionTypeId] = useState(null);
 
 
   useEffect(() => {
@@ -158,12 +161,28 @@ function HistoryOrders() {
 
   //   return () => clearInterval(interval);
   // }, [orders]);
+  useEffect(() => {
+    async function fetchTransactionTypes() {
+      try {
+        const res = await getAllTransactionTypes();
+        if (res?.statusCode === 200) {
+          setTransactionTypes(res.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy transaction types:", error);
+      }
+    }
+    fetchTransactionTypes();
+  }, []);
 
   const handlePayment = async (shipmentId) => {
     try {
       const currentDomain = window.location.origin;
+      const shipmentCostType = transactionTypes.find(t => t.value === "ShipmentCost");
+      setTransactionTypeId(shipmentCostType.id);
       const paymentPayload = {
         shipmentId: shipmentId,
+        transactionType: shipmentCostType.id,
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
@@ -176,6 +195,8 @@ function HistoryOrders() {
         window.location.href = res.data.data; // Redirect to VNPay
       } else {
         toast.error("Không lấy được link thanh toán!");
+        console.log(paymentPayload);
+        
       }
     } catch (err) {
       console.error("Lỗi khi thanh toán:", err);
