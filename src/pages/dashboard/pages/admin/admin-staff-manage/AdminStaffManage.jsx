@@ -1,14 +1,30 @@
-import './AdminStaffManage.scss';
+import "./AdminStaffManage.scss";
 
-import { Button, DatePicker, Form, Input, Modal, Select, Space, Table, message } from 'antd';
-import { getAllAsignedStaffRole, getAllStaff, getAllStations, getMetroTimeSlots } from '../../../../../config/metroApi';
-import { useEffect, useState } from 'react';
+import {
+  Button,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  message,
+} from "antd";
+import {
+  getAllAsignedStaffRole,
+  getAllStaff,
+  getAllStations,
+  getMetroTimeSlots,
+} from "../../../../../config/metroApi";
+import { useEffect, useState } from "react";
 
-import { PATH_NAME } from '../../../../../constants/pathname';
-import api from '../../../../../config/axios';
-import dayjs from 'dayjs';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { PATH_NAME } from "../../../../../constants/pathname";
+import api from "../../../../../config/axios";
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { ReloadOutlined } from "@ant-design/icons";
 
 function AdminStaffManage() {
   const [users, setUsers] = useState([]);
@@ -26,6 +42,8 @@ function AdminStaffManage() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningStaff, setAssigningStaff] = useState(null);
   const [formAssign] = Form.useForm();
+  const [searchText, setSearchText] = useState("");
+  const [filterStations, setFilterStations] = useState([]);
 
   const nav = useNavigate();
 
@@ -37,33 +55,41 @@ function AdminStaffManage() {
   useEffect(() => {
     if (!assigningStaff) return;
 
-    const currentAssignment = assigningStaff.staffAssignments?.find(a => a.isActive === true);
-    console.log('Current assignment:', currentAssignment);
+    const currentAssignment = assigningStaff.staffAssignments?.find(
+      (a) => a.isActive === true
+    );
+    console.log("Current assignment:", currentAssignment);
 
     if (currentAssignment) {
       formAssign.setFieldsValue({
         role: currentAssignment.assignedRole,
         stationId: currentAssignment.stationId,
         timeSlotId: currentAssignment.timeSlotId,
-        fromDate: currentAssignment.fromTime ? dayjs(currentAssignment.fromTime) : null,
-        toDate: currentAssignment.toTime ? dayjs(currentAssignment.toTime) : null,
+        fromDate: currentAssignment.fromTime
+          ? dayjs(currentAssignment.fromTime)
+          : null,
+        toDate: currentAssignment.toTime
+          ? dayjs(currentAssignment.toTime)
+          : null,
       });
     } else {
       formAssign.resetFields();
     }
   }, [assigningStaff]);
 
-
-
   useEffect(() => {
     getAllStaff()
       .then((data) => {
         const mapped = data.map((staff) => {
-          const currentAssignment = staff.staffAssignments?.find(a => a.isActive === true);
+          const currentAssignment = staff.staffAssignments?.find(
+            (a) => a.isActive === true
+          );
           return {
             ...staff,
-            assignedStation: currentAssignment?.stationName || 'Chưa phân công',
+            assignedStation: currentAssignment?.stationName || "Chưa phân công",
             currentRole: currentAssignment?.assignedRole || null,
+            assignedStationId: currentAssignment?.stationId || null,
+            currentRoleId: currentAssignment?.assignedRoleId || null,
           };
         });
         setUsers(mapped);
@@ -89,7 +115,7 @@ function AdminStaffManage() {
         toTime: values.toDate.toISOString(),
         assignedRole: values.role,
         description: `Phân công vào trạm ${values.stationId}`,
-        timeSlotId: values.timeSlotId
+        timeSlotId: values.timeSlotId,
       };
 
       await api.post("/users/admin/assign-role", payload);
@@ -97,22 +123,29 @@ function AdminStaffManage() {
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
 
-      const station = stations.find(s => s.id === values.stationId);
-      setUsers(prev =>
-        prev.map(user =>
+      const station = stations.find((s) => s.id === values.stationId);
+      setUsers((prev) =>
+        prev.map((user) =>
           user.id === assigningStaff.id
-            ? { ...user, assignedStation: station?.stationNameVi || 'Đã phân công' }
+            ? {
+                ...user,
+                assignedStation: station?.stationNameVi || "Đã phân công",
+              }
             : user
         )
       );
-
     } catch (err) {
       console.error(err);
       toast.error("Có lỗi xảy ra khi phân công.");
     }
   };
 
-
+  const filteredData = users.filter(
+    (u) =>
+      u.fullName?.toLowerCase().includes(searchText.toLowerCase()) &&
+      (filterStations.length === 0 ||
+        filterStations.includes(u.assignedStationId))
+  );
 
   const disabledDate = (current) => {
     const today = new Date();
@@ -124,44 +157,42 @@ function AdminStaffManage() {
   };
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
     },
     {
-      title: 'Tên đăng nhập',
-      dataIndex: 'userName',
-      key: 'userName',
+      title: "Tên đăng nhập",
+      dataIndex: "userName",
+      key: "userName",
     },
     {
-      title: 'Họ tên',
-      dataIndex: 'fullName',
-      key: 'fullName',
+      title: "Họ tên",
+      dataIndex: "fullName",
+      key: "fullName",
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
     },
     {
-      title: 'Số điện thoại',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
-      render: (text) => (
-        <span>{text || 'Chưa cập nhật'}</span>
-      )
+      title: "Số điện thoại",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+      render: (text) => <span>{text || "Chưa cập nhật"}</span>,
     },
     {
-      title: 'Công việc hiện tại',
-      dataIndex: 'currentRole',
-      key: 'currentRole',
-      render: (text) => text || 'Chưa phân công'
+      title: "Công việc hiện tại",
+      dataIndex: "currentRole",
+      key: "currentRole",
+      render: (text) => text || "Chưa phân công",
     },
     {
-      title: 'Trạm hiện tại',
-      dataIndex: 'assignedStation',
-      key: 'assignedStation',
-      render: (text) => text || 'Chưa phân công'
+      title: "Trạm hiện tại",
+      dataIndex: "assignedStation",
+      key: "assignedStation",
+      render: (text) => text || "Chưa phân công",
     },
     // {
     //   title: 'Ca làm việc',
@@ -174,49 +205,96 @@ function AdminStaffManage() {
       key: "assign",
       render: (_, record) => (
         <Button
-          className='assign-staff-button' onClick={() => {
+          className="assign-staff-button"
+          onClick={() => {
             setModalAssign(true);
-            onAssign(record)
-          }}>Giao việc</Button>
-      )
+            onAssign(record);
+          }}
+        >
+          Giao việc
+        </Button>
+      ),
     },
     {
       title: "Xem chi tiết",
       key: "view",
       render: (_, record) => (
         <Button
-          className='view-staff-button' onClick={() => {
-            nav(PATH_NAME.DASHBOARD_ADMIN_STAFF_DETAILS.replace(':staffId', record.id));
-          }}>Xem chi tiết</Button>
-      )
+          className="view-staff-button"
+          onClick={() => {
+            nav(
+              PATH_NAME.DASHBOARD_ADMIN_STAFF_DETAILS.replace(
+                ":staffId",
+                record.id
+              )
+            );
+          }}
+        >
+          Xem chi tiết
+        </Button>
+      ),
     },
     {
       title: "Cấm",
       key: "ban",
       render: (_, record) => (
-        <Button
-          className='ban-staff-button' onClick={() => onDisable(record)}>Cấm</Button>
-      )
-    }
+        <Button className="ban-staff-button" onClick={() => onDisable(record)}>
+          Cấm
+        </Button>
+      ),
+    },
   ];
 
-  const data = users.map((u, index) => ({ ...u, key: index }));
-
+  // const data = users.map((u, index) => ({ ...u, key: index }));
 
   return (
     <div className="staff-management-container">
-      <Button type="primary" style={{ marginBottom: '1em' }} onClick={() => setShowAdd(true)}>
+      {/* <Button type="primary" style={{ marginBottom: '1em' }} onClick={() => setShowAdd(true)}>
         Thêm nhân viên
-      </Button>
+      </Button> */}
+
+      <div className="staff-filter-bar">
+        <Space wrap size="middle">
+          <Button type="primary" onClick={() => setShowAdd(true)}>
+            + Thêm nhân viên
+          </Button>
+          <Input.Search
+            allowClear
+            placeholder="Tìm kiếm theo họ tên..."
+            style={{ width: 250 }}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="Lọc theo trạm"
+            style={{ width: 200 }}
+            value={filterStations}
+            onChange={setFilterStations}
+            options={stations.map((s) => ({
+              label: s.stationNameVi,
+              value: s.id,
+            }))}
+          />
+          <Button
+            className="clear-filter-button"
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              setSearchText("");
+              setFilterStations([]);
+            }}
+          ></Button>
+        </Space>
+      </div>
 
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={filteredData}
         rowKey="id"
         pagination={{ pageSize: 10 }}
       />
       <Modal
-        title={`Giao việc cho ${assigningStaff?.fullName || ''}`}
+        title={`Giao việc cho ${assigningStaff?.fullName || ""}`}
         open={isAssignModalOpen}
         onCancel={() => {
           setIsAssignModalOpen(false);
@@ -235,9 +313,9 @@ function AdminStaffManage() {
                 option.label.toLowerCase().includes(input.toLowerCase())
               }
               placeholder="Chọn trạm"
-              options={stations.map(s => ({
+              options={stations.map((s) => ({
                 label: s.stationNameVi,
-                value: s.id
+                value: s.id,
               }))}
             />
           </Form.Item>
@@ -245,25 +323,25 @@ function AdminStaffManage() {
           <Form.Item label="Từ ngày" name="fromDate">
             <DatePicker
               // disabledDate={disabledDate}
-              style={{ width: '100%' }}
-              placeholder='Chọn ngày bắt đầu'
+              style={{ width: "100%" }}
+              placeholder="Chọn ngày bắt đầu"
             />
           </Form.Item>
 
           <Form.Item label="Đến ngày" name="toDate">
             <DatePicker
               disabledDate={disabledDate}
-              style={{ width: '100%' }}
-              placeholder='Chọn ngày kết thúc'
+              style={{ width: "100%" }}
+              placeholder="Chọn ngày kết thúc"
             />
           </Form.Item>
 
           <Form.Item label="Ca trực" name="timeSlotId">
             <Select
               placeholder="Chọn ca làm việc"
-              options={timeSlots.map(slot => ({
+              options={timeSlots.map((slot) => ({
                 label: `Ca ${slot.shift}: ${slot.openTime} - ${slot.closeTime}`,
-                value: slot.id
+                value: slot.id,
               }))}
             />
           </Form.Item>
@@ -271,13 +349,12 @@ function AdminStaffManage() {
           <Form.Item label="Công việc" name="role" rules={[{ required: true }]}>
             <Select
               placeholder="Chọn công việc"
-              options={assignRole.map(role => ({
+              options={assignRole.map((role) => ({
                 label: role.value,
-                value: role.id
+                value: role.id,
               }))}
             />
           </Form.Item>
-
         </Form>
       </Modal>
 
@@ -293,9 +370,8 @@ function AdminStaffManage() {
             const payload = {
               ...values,
               role: 2,
-              birthDate: values.birthDate.toISOString()
+              birthDate: values.birthDate.toISOString(),
             };
-
 
             await api.post("/users", payload);
             toast.success("Thêm nhân viên thành công!");
@@ -304,43 +380,78 @@ function AdminStaffManage() {
             await getAllStaff();
           } catch (err) {
             console.error("Add staff error:", err);
-            toast.error("Thêm nhân viên thất bại! Nhân viên đã tồn tại trong hệ thống");
+            toast.error(
+              "Thêm nhân viên thất bại! Nhân viên đã tồn tại trong hệ thống"
+            );
           }
         }}
       >
         <Form form={formAdd} layout="vertical">
-          <Form.Item label="Tên đăng nhập" name="userName" rules={[{ required: true, message: 'Bắt buộc' }]}>
+          <Form.Item
+            label="Tên đăng nhập"
+            name="userName"
+            rules={[{ required: true, message: "Bắt buộc" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item label="Họ tên" name="fullName" rules={[{ required: true, message: 'Bắt buộc' }]}>
+          <Form.Item
+            label="Họ tên"
+            name="fullName"
+            rules={[{ required: true, message: "Bắt buộc" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item label="Email" name="email" rules={[{ type: 'email', required: true }]}>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[{ type: "email", required: true }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item label="Số điện thoại" name="phoneNumber" rules={[{ required: true }]}>
+          <Form.Item
+            label="Số điện thoại"
+            name="phoneNumber"
+            rules={[{ required: true }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item label="Mật khẩu" name="password" rules={[{ required: true }]}>
+          <Form.Item
+            label="Mật khẩu"
+            name="password"
+            rules={[{ required: true }]}
+          >
             <Input.Password />
           </Form.Item>
-          <Form.Item label="Xác nhận mật khẩu" name="confirmPassword" dependencies={['password']} rules={[
-            { required: true, message: 'Bắt buộc' },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('password') === value) return Promise.resolve();
-                return Promise.reject(new Error('Mật khẩu không khớp!'));
-              }
-            })
-          ]}>
+          <Form.Item
+            label="Xác nhận mật khẩu"
+            name="confirmPassword"
+            dependencies={["password"]}
+            rules={[
+              { required: true, message: "Bắt buộc" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value)
+                    return Promise.resolve();
+                  return Promise.reject(new Error("Mật khẩu không khớp!"));
+                },
+              }),
+            ]}
+          >
             <Input.Password />
           </Form.Item>
-          <Form.Item label="Ngày sinh" name="birthDate" rules={[{ required: true }]}>
-            <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} placeholder='Chọn ngày' />
+          <Form.Item
+            label="Ngày sinh"
+            name="birthDate"
+            rules={[{ required: true }]}
+          >
+            <DatePicker
+              format="YYYY-MM-DD"
+              style={{ width: "100%" }}
+              placeholder="Chọn ngày"
+            />
           </Form.Item>
         </Form>
       </Modal>
-
     </div>
   );
 }
