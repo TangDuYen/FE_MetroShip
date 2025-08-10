@@ -45,12 +45,15 @@ function HistoryOrders() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
+  const [rejectReason, setRejectReason] = useState('');
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
+  const [rejectShipmentId, setRejectShipmentId] = useState(null);
 
 
   useEffect(() => {
@@ -129,32 +132,32 @@ function HistoryOrders() {
     fetchData();
   }, []);
 
-  const [countdowns, setCountdowns] = useState({});
+  // const [countdowns, setCountdowns] = useState({});
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newCountdowns = {};
-      orders.forEach((order) => {
-        if (order.shipmentStatus === 0 && order.bookedAt) {
-          const expireTime =
-            new Date(order.bookedAt).getTime() + 15 * 60 * 1000;
-          const diff = expireTime - Date.now();
-          if (diff > 0) {
-            const minutes = Math.floor((diff / 1000 / 60) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
-            newCountdowns[order.shipmentId] = `${minutes}:${seconds
-              .toString()
-              .padStart(2, "0")}`;
-          } else {
-            newCountdowns[order.shipmentId] = "Hết hạn";
-          }
-        }
-      });
-      setCountdowns(newCountdowns);
-    }, 1000);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     const newCountdowns = {};
+  //     orders.forEach((order) => {
+  //       if (order.shipmentStatus === 0 && order.bookedAt) {
+  //         const expireTime =
+  //           new Date(order.bookedAt).getTime() + 15 * 60 * 1000;
+  //         const diff = expireTime - Date.now();
+  //         if (diff > 0) {
+  //           const minutes = Math.floor((diff / 1000 / 60) % 60);
+  //           const seconds = Math.floor((diff / 1000) % 60);
+  //           newCountdowns[order.shipmentId] = `${minutes}:${seconds
+  //             .toString()
+  //             .padStart(2, "0")}`;
+  //         } else {
+  //           newCountdowns[order.shipmentId] = "Hết hạn";
+  //         }
+  //       }
+  //     });
+  //     setCountdowns(newCountdowns);
+  //   }, 1000);
 
-    return () => clearInterval(interval);
-  }, [orders]);
+  //   return () => clearInterval(interval);
+  // }, [orders]);
 
   const handlePayment = async (shipmentId) => {
     try {
@@ -164,12 +167,6 @@ function HistoryOrders() {
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
-
-      // const payload = {
-      //   shipmentId,
-      //   returnUrl: "http://localhost:5173/payment-success",
-      //   cancelUrl: "http://localhost:5173/payment-fail",
-      // };
 
       const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
@@ -188,6 +185,10 @@ function HistoryOrders() {
   const handleFeedback = async (shipmentId) => {
     setFeedbackShipmentId(shipmentId);
     setIsFeedbackModalOpen(true);
+  };
+  const handleCancelShipment = async (shipmentId) => {
+    setRejectShipmentId(shipmentId);
+    setIsRejectModalOpen(true);
   };
   const handleSubmitFeedback = async () => {
     try {
@@ -219,9 +220,27 @@ function HistoryOrders() {
     console.log("Reorder shipment", shipmentId);
   };
 
-  const handleCancelOrder = (shipmentId) => {
-    toast.success("Hủy đơn hàng thành công!");
-    console.log("Cancel shipment", shipmentId);
+  const handleSubmitCancelShipment = async () => {
+    try {
+      const payload = {
+        shipmentId: rejectShipmentId,
+        reason: rejectReason,
+      };
+
+      const res = await api.post("/shipments/cancel", payload);
+
+      if (res.data?.statusCode === 200) {
+        toast.success("Hủy đơn thành công!");
+      } else {
+        toast.error("Không thể hủy đơn. Vui lòng thử lại!");
+      }
+    } catch (err) {
+      console.error("Lỗi gửi yêu cầu hủy đơn:", err);
+      toast.error("Đã xảy ra lỗi khi hủy đơn.");
+    } finally {
+      setIsRejectModalOpen(false);
+      setRejectReason('');
+    }
   }
 
   const handleRequestReturn = (shipmentId) => {
@@ -336,7 +355,7 @@ function HistoryOrders() {
         actions.push(
           <Button
             danger
-            onClick={() => handleCancelOrder(item.shipmentId)}
+            onClick={() => handleCancelShipment(item.shipmentId)}
           >
             Hủy
           </Button>
@@ -350,7 +369,7 @@ function HistoryOrders() {
         actions.push(
           <Button
             danger
-            onClick={() => handleCancelOrder(item.shipmentId)}
+            onClick={() => handleCancelShipment(item.shipmentId)}
           >
             Hủy
           </Button>
@@ -499,6 +518,23 @@ function HistoryOrders() {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Nhập nhận xét của bạn về đơn hàng..."
+          />
+        </div>
+      </Modal>
+      <Modal
+        title="Lý do hủy đơn"
+        open={isRejectModalOpen}
+        onOk={handleSubmitCancelShipment}
+        onCancel={() => setIsRejectModalOpen(false)}
+        okText="Xác nhận"
+        cancelText="Hủy"
+      >
+        <div>
+          <Input.TextArea
+            rows={4}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Lý do hủy đơn hàng"
           />
         </div>
       </Modal>
