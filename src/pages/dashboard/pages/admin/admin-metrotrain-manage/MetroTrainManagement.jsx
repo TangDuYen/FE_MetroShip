@@ -93,29 +93,27 @@ function MetroTrainManagement() {
   // };
 
   const applyFilters = () => {
-  let filtered = [...allTrains];
+    let filtered = [...allTrains];
 
-  if (selectedLineId) {
-    filtered = filtered.filter(train => train.lineId === selectedLineId);
-  }
+    if (selectedLineId) {
+      filtered = filtered.filter((train) => train.lineId === selectedLineId);
+    }
 
-  if (searchTrainCode) {
-    const kw = searchTrainCode.toLowerCase();
-    filtered = filtered.filter(
-      train =>
-        train.trainCode?.toLowerCase().includes(kw) ||
-        train.modelName?.toLowerCase().includes(kw)
-    );
-  }
+    if (searchTrainCode) {
+      const kw = searchTrainCode.toLowerCase();
+      filtered = filtered.filter(
+        (train) =>
+          train.trainCode?.toLowerCase().includes(kw) ||
+          train.modelName?.toLowerCase().includes(kw)
+      );
+    }
 
-  setFilteredTrains(filtered);
-};
+    setFilteredTrains(filtered);
+  };
 
-useEffect(() => {
-  applyFilters();
-}, [selectedLineId, searchTrainCode]);
-
-
+  useEffect(() => {
+    applyFilters();
+  }, [selectedLineId, searchTrainCode]);
 
   const openAddModal = () => {
     form.resetFields();
@@ -205,12 +203,7 @@ useEffect(() => {
   return (
     <div className="metro-train-management-container">
       <Space style={{ marginBottom: 16, marginRight: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={openAddModal}
-          style={{ marginRight: 16 }}
-        >
+        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
           Thêm tàu
         </Button>
         <Select
@@ -232,11 +225,11 @@ useEffect(() => {
           ))}
         </Select>
         <Input.Search
-    placeholder="Tìm mã tàu"
-    style={{ width: 250 }}
-    value={searchTrainCode}
-    onChange={(e) => setSearchTrainCode(e.target.value)}
-  />
+          placeholder="Tìm mã tàu"
+          style={{ width: 250 }}
+          value={searchTrainCode}
+          onChange={(e) => setSearchTrainCode(e.target.value)}
+        />
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
