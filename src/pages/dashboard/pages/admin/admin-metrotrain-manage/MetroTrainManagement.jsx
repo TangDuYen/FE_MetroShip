@@ -39,7 +39,7 @@ function MetroTrainManagement() {
   const [allTrains, setAllTrains] = useState([]);
   const [filteredTrains, setFilteredTrains] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
-  const [selectedLineId, setSelectedLineId] = useState(null);
+  const [selectedLineId, setSelectedLineId] = useState([]);
   const [lineMap, setLineMap] = useState({});
   const [timeSlots, setTimeSlots] = useState([]);
   const [searchTrainCode, setSearchTrainCode] = useState("");
@@ -95,9 +95,11 @@ function MetroTrainManagement() {
   const applyFilters = () => {
     let filtered = [...allTrains];
 
-    if (selectedLineId) {
-      filtered = filtered.filter((train) => train.lineId === selectedLineId);
-    }
+    if (selectedLineId && selectedLineId.length > 0) {
+    filtered = filtered.filter((train) =>
+      selectedLineId.includes(train.lineId)
+    );
+  }
 
     if (searchTrainCode) {
       const kw = searchTrainCode.toLowerCase();
@@ -207,6 +209,7 @@ function MetroTrainManagement() {
           Thêm tàu
         </Button>
         <Select
+         mode="multiple"
           showSearch
           optionFilterProp="children"
           filterOption={(input, option) =>
@@ -235,7 +238,7 @@ function MetroTrainManagement() {
           icon={<ReloadOutlined />}
           onClick={() => {
             setSearchTrainCode("");
-            setSelectedLineId(null);
+            setSelectedLineId([]);
             setFilteredTrains(allTrains);
           }}
         ></Button>
