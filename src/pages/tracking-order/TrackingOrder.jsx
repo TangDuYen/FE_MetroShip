@@ -139,7 +139,7 @@ function TrackingOrder() {
                 <span className="detail-value">{dayjs(selectedShipment.bookedAt).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Thời gian giao</span>
+                <span className="detail-label">Hạn chót gửi hàng lúc</span>
                 <span className="detail-value">{dayjs(selectedShipment.scheduledDateTime).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               {shipmentParcels.map((p, i) => (
