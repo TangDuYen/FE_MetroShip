@@ -17,4 +17,10 @@
    font-family: $font-secondary;
    font-size: 1.1em;
   }
+
+  .header-dashboard__logo {
+  height: 40px;
+  filter: brightness(0) invert(1); //CHANGE LOGO COLOR
+}
+
 }

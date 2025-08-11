@@ -1,7 +1,7 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Pagination, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -10,8 +10,10 @@ import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
 import { QrcodeOutlined } from '@ant-design/icons';
+import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
+import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
@@ -37,6 +39,33 @@ function TrackingOrderStaff() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [cccdImage, setCccdImage] = useState(null);
   const [confirmImage, setConfirmImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
+  const decodedUser = token ? jwtDecode(token) : null;
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 2;
+  const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
+  const [metroTrains, setMetroTrains] = useState([]);
+  const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
+  const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
+
+  if (!decodedUser?.StationId) {
+    return (
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '24px',
+        fontWeight: 600,
+      }}>
+        Bạn chưa được phân công vào trạm
+      </div>
+    );
+  }
 
   //FORMAT TIỀN
   const formatCurrency = (value) =>
@@ -44,13 +73,22 @@ function TrackingOrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines()]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
+    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
+      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
+        setMetroTrains(metroTrainData.items);
+
+        //ADDITIONAL DATA TRAIN
+        const additional = metroTrainData.additionalData?.[0] || [];
+        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
+        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
+
+        setMaxCapacity(maxCapacityKg);
+        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
@@ -312,86 +350,102 @@ function TrackingOrderStaff() {
     <>
       <div className="order-staff-container">
         <div className="metro-info" style={{ marginBottom: "1em" }}>
-          <Card>
-            <Title level={3}>Thông tin tuyến Metro 1</Title>
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>Thông tin nhân viên</Title>
             <Row gutter={24}>
+              {/* AVATAR */}
               <Col span={6}>
                 <img
-                  src={MetroStation}
+                  src={StaffIcon}
                   alt="Metro_Subway"
-                  style={{
-                    width: "5em"
-                  }}
+                  style={{ width: "5em" }}
                 />
               </Col>
+
+              {/* STAFF ASSIGNMENT */}
               <Col span={18}>
-                <Flex justify="space-between" align="center">
+                <Flex justify="space-between" align="center" style={{ flexWrap: "wrap" }}>
+                  {/* Thông tin nhân viên */}
                   <div className="metro-line-description">
-                    Mã tuyến
+                    Vai trò
                     <div className="data">
-                      L1
+                      {decodedUser?.AssignmentRole || "N/A"}
                     </div>
                   </div>
                   <div className="metro-line-description">
-                    Số tàu hoạt động hiện tại
+                    Làm việc tại trạm
                     <div className="data">
-                      2
+                      {
+                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                      }
                     </div>
                   </div>
+
                   <div className="metro-line-description">
-                    Tổng sức chứa
+                    Thời gian bắt đầu
                     <div className="data">
-                      2000kg
+                      {staffAssignments?.[0]?.fromTime
+                        ? dayjs(staffAssignments[0].fromTime).format("DD/MM/YYYY")
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div className="metro-line-description">
+                    Thời gian kết thúc
+                    <div className="data">
+                      {staffAssignments?.[0]?.toTime
+                        ? dayjs(staffAssignments[0].toTime).format("DD/MM/YYYY")
+                        : "N/A"}
                     </div>
                   </div>
                 </Flex>
               </Col>
             </Row>
-            <Title level={3}>Thông tin tàu</Title>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">1</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">2</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
+          </Card>
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
+            <Row gutter={16}>
+              {currentData.map((train) => (
+                <Col span={24} key={train.id}>
+                  <Card className="metro-subway-info" style={{ marginBottom: '1em' }}>
+                    <Flex justify="space-between" align="center">
+                      <Flex align="center" gap="small">
+                        <img
+                          src={MetroStation}
+                          alt="Metro_Subway"
+                          style={{ width: "3em" }}
+                        />
+                        <div className="metro-subway-description" style={{ marginLeft: '0.5em' }}>
+                          Tàu
+                          <div className="subway-data">{train.trainCode}</div>
+                        </div>
+                      </Flex>
+                      <div className="metro-subway-description">
+                        Trọng tải tàu (kg)
+                        <div className="subway-data">
+                          {maxCapacity} kg
+                        </div>
+                      </div>
+                      <div className="metro-subway-description">
+                        Dung tích tàu (m³)
+                        <div className="subway-data">
+                          {maxVolume} m³
+                        </div>
+                      </div>
+                    </Flex>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            <Flex justify="center" style={{ marginTop: "1em" }}>
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={metroTrains.length}
+                onChange={(page) => setCurrentPage(page)}
+              />
+            </Flex>
           </Card>
         </div>
         <div className="filter-sort" style={{ marginBottom: "1em" }}>

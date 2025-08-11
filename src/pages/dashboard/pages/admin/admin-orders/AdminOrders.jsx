@@ -173,7 +173,7 @@ function AdminOrders() {
             render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY')
         },
         {
-            title: 'Giờ gửi',
+            title: 'Thời gian nhận hàng',
             render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm')
         },
         {
@@ -317,7 +317,7 @@ function AdminOrders() {
                                         { label: 'Trạm gửi', value: selectedOrder.departureStationName || 'N/A' },
                                         { label: 'Trạm nhận', value: selectedOrder.destinationStationName || 'N/A' },
                                         { label: 'Ngày gửi', value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') },
-                                        { label: 'Giờ gửi', value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') },
+                                        { label: 'Hạn chót nhận hàng tại trạm', value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') },
                                         { label: 'Tổng chi phí', value: formatCurrency(parcel.priceVnd || 0) },
                                         {
                                             label: 'Trạng thái kiện hàng',

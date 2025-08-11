@@ -9,7 +9,6 @@ function AdminAccount() {
 
     return (
         <div className="admin-account">
-            {/* Avatar and role will be placed in a horizontal row */}
             <Avatar
                 icon={<UserOutlined />}
                 className="admin-account_avatar"

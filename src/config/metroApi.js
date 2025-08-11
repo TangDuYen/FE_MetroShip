@@ -138,3 +138,15 @@ export const getAllTransactionTypes = async () => {
     toast.error("Không thể lấy dữ liệu loại thanh toán");
   }
 }
+
+export const getMetroTrainsByStation = async (stationId) => {
+  try {
+    const res = await api.get(`/metro-trains?StationId=${stationId}&PageSize=1000`);
+    return {
+      items: res.data.data.items,
+      additionalData: res.data.additionalData,
+    };
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu tàu");
+  }
+}
