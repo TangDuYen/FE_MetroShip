@@ -1,220 +1,344 @@
-import "./AdminOrders.scss";
+import './AdminOrders.scss';
 
+import {
+    Button,
+    ConfigProvider,
+    DatePicker,
+    Input,
+    Modal,
+    Select,
+    Space,
+    Spin,
+    Table,
+    Tabs,
+    Tag
+} from 'antd';
+import {
+    getAllParcels,
+    getAllRegions,
+    getAllShipments,
+    getAllStations,
+    getMetroLines,
+    getMetroTimeSlots
+} from '../../../../../config/metroApi';
+import { shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
+import { useEffect, useMemo, useState } from 'react';
 
-import { Button, DatePicker, Input, Select, Space, Spin, Table } from "antd";
-import { useEffect, useState } from "react";
-
-import { getAllShipments } from "../../../../../config/metroApi";
-import moment from "moment";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
 function AdminOrders() {
-  const [shipments, setShipments] = useState([]);
-  const [statusOptions, setStatusOptions] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const [shipments, setShipments] = useState([]);
+    const [statusOptions, setStatusOptions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [parcels, setParcels] = useState([]);
+    const [stations, setStations] = useState([]);
+    const [metroLines, setMetroLines] = useState([]);
+    const [timeSlots, setTimeSlots] = useState([]);
+    const [arena, setArrena] = useState([]);
 
-  // Filters
-  const [statusFilter, setStatusFilter] = useState([]);
-  const [stationFilter, setStationFilter] = useState([]);
-  const [dateRange, setDateRange] = useState([]);
-  const [searchCode, setSearchCode] = useState("");
+    //FILTER STATE
+    const [statusFilter, setStatusFilter] = useState(null);
+    const [stationFilter, setStationFilter] = useState(null);
+    const [lineFilter, setLineFilter] = useState(null);
+    const [areaFilter, setAreaFilter] = useState(null);
+    const [dateRange, setDateRange] = useState([]);
+    const [timeSlotFilter, setTimeSlotFilter] = useState(null);
+    const [searchCode, setSearchCode] = useState('');
 
-  useEffect(() => {
-    fetchShipments();
-  }, []);
+    const formatCurrency = (value) =>
+        new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(value);
 
-  const fetchShipments = async () => {
-    setLoading(true);
-    try {
-      const data = await getAllShipments();
-      setShipments(data.items || []);
-      setStatusOptions(data.additionalData || []);
-    } catch (err) {
-      console.error("Lỗi khi tải đơn hàng", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        setLoading(true);
+        Promise.all([
+            getAllShipments(),
+            getAllParcels(),
+            getMetroTimeSlots(),
+            getAllStations(),
+            getMetroLines(),
+            getAllRegions()
+        ])
+            .then(([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, regionsData]) => {
+                setShipments(shipmentsData.items || []);
+                setStatusOptions(shipmentsData.additionalData || []);
+                setParcels(parcelsData || []);
+                setTimeSlots(timeSlotsData || []);
+                setStations(stationData || []);
+                setMetroLines(metroLineData || []);
+                setArrena(regionsData || []);
+            })
+            .catch((err) => console.error('Lỗi khi load dữ liệu:', err))
+            .finally(() => setLoading(false));
+    }, []);
 
-  const filteredData = shipments.filter((item) => {
-    let match = true;
-    if (
-      statusFilter.length > 0 &&
-      !statusFilter.includes(item.shipmentStatus)
-    ) {
-      match = false;
-    }
-    if (
-      stationFilter.length > 0 &&
-      !stationFilter.includes(item.departureStationName)
-    ) {
-      match = false;
-    }
+    const uniqueStations = useMemo(
+        () => [...new Set(stations.map((s) => s.stationNameVi))],
+        [stations]
+    );
 
-    if (
-      searchCode &&
-      !item.trackingCode.toLowerCase().includes(searchCode.toLowerCase())
-    ) {
-      match = false;
-    }
+    //FILTER APPLY
+    const filteredData = useMemo(() => {
+        return shipments.filter((item) => {
+            let match = true;
 
-    return match;
-  });
+            //STATUS FILTER
+            if (statusFilter !== null && item.shipmentStatus !== statusFilter) match = false;
 
-  const statusMapping = {
-    0: "Đợi thanh toán",
-    1: "Từ chối",
-    2: "Không thanh toán",
-    3: "Đã hủy",
-    4: "Đợi hoàn tiền",
-    5: "Đã hoàn tiền",
-    6: "Không xuất hiện",
-    7: "Đợi gửi hàng",
-    8: "Đã lấy hàng",
-    9: "Đang vận chuyển",
-    10: "Đợi lấy hàng",
-    11: "Thu phí tồn kho",
-    12: "Quá hạn",
-    13: "Hoàn đơn",
-    14: "Đang hoàn đơn",
-    15: "Đã hoàn đơn",
-    16: "Đợi phản hồi",
-    17: "Đã hoàn thành",
-    18: "Delayed",
-  };
+            //STATION FILTER
+            if (stationFilter && item.departureStationName !== stationFilter) match = false;
 
-  const columns = [
-    {
-      title: "Mã đơn",
-      dataIndex: "trackingCode",
-      key: "trackingCode",
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "shipmentStatus",
-      key: "shipmentStatus",
-      render: (status) => {
-        return statusMapping[status] || "Không xác nhận";
-      },
-    },
-    {
-      title: "Người gửi",
-      dataIndex: "senderName",
-      key: "senderName",
-    },
-    {
-      title: "Người nhận",
-      dataIndex: "recipientName",
-      key: "recipientName",
-    },
-    {
-      title: "Trạm gửi",
-      dataIndex: "departureStationName",
-      key: "departureStationName",
-    },
-    {
-      title: "Trạm đích",
-      dataIndex: "destinationStationName",
-      key: "destinationStationName",
-    },
-    {
-      title: "Chi phí (₫)",
-      dataIndex: "totalCostVnd",
-      key: "totalCostVnd",
-      render: (value) => value.toLocaleString("vi-VN"),
-    },
-    {
-      title: "Ngày đặt",
-      dataIndex: "bookedAt",
-      key: "bookedAt",
-      render: (val) => moment(val).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Ngày giao dự kiến",
-      dataIndex: "scheduledDateTime",
-      key: "scheduledDateTime",
-      render: (val) => moment(val).format("DD/MM/YYYY HH:mm"),
-    },
-  ];
+            //METRO LINE FILTER
+            if (lineFilter && item.metroLineId !== lineFilter) match = false;
 
-  // Unique station names for filter
-  const uniqueStations = [
-    ...new Set(shipments.map((s) => s.departureStationName)),
-  ];
+            //REGIONS FILTER
+            if (areaFilter && item.regionId !== areaFilter) match = false;
 
-  return (
-    <div className="admin-orders-container">
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Input.Search
-          placeholder="Tìm theo mã đơn"
-          allowClear
-          value={searchCode}
-          onSearch={(val) => setSearchCode(val)}
-          onChange={(e) => setSearchCode(e.target.value)}
-          style={{ width: 200 }}
-        />
-        <Select
-          mode="multiple"
-          placeholder="Tất cả"
-          style={{ width: 200 }}
-          allowClear
-          value={statusFilter}
-          onChange={(val) => setStatusFilter(val)}
-        >
-          {Object.entries(statusMapping).map(([key, label]) => (
-            <Option key={key} value={Number(key)}>
-              {label}
-            </Option>
-          ))}
-        </Select>
+            //DATERANGE FILTER
+            if (dateRange.length === 2) {
+                const [start, end] = dateRange;
+                const orderDate = dayjs(item.scheduledDateTime);
+                if (!orderDate.isBetween(start.startOf('day'), end.endOf('day'), null, '[]')) {
+                    match = false;
+                }
+            }
 
-        <Select
-          mode="multiple"
-          placeholder="Chọn trạm gửi"
-          style={{ width: 200 }}
-          allowClear
-          value={stationFilter}
-          onChange={(val) => setStationFilter(val)}
-        >
-          {uniqueStations.map((s) => (
-            <Option key={s} value={s}>
-              {s}
-            </Option>
-          ))}
-        </Select>
+            //TIME SLOT FILTER
+            if (timeSlotFilter) {
+                const slot = timeSlots.find((ts) => ts.id === timeSlotFilter);
+                if (slot) {
+                    const orderTime = dayjs(item.scheduledDateTime);
+                    const open = dayjs(orderTime.format('YYYY-MM-DD') + ' ' + slot.openTime);
+                    let close = dayjs(orderTime.format('YYYY-MM-DD') + ' ' + slot.closeTime);
 
-        <DatePicker
-          value={dateRange}
-          onChange={(val) => setDateRange(val || [])}
-          placeholder="Chon ngày đặt"
-        />
-        <Button
-          className="clear-filter-button"
-          icon={<ReloadOutlined />}
-          onClick={() => {
-            setSearchCode("");
-            setStatusFilter([]);
-            setStationFilter([]);
-            setDateRange([]);
-          }}
-        ></Button>
-      </Space>
+                    //LAST SHIFT
+                    if (close.isBefore(open)) {
+                        close = close.add(1, 'day');
+                    }
 
-      <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          dataSource={filteredData}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
-      </Spin>
-    </div>
-  );
+                    if (!(orderTime.isSameOrAfter(open) && orderTime.isSameOrBefore(close))) {
+                        match = false;
+                    }
+                }
+            }
 
+            //TRACKING CODE FILTER
+            if (searchCode && !item.trackingCode.toLowerCase().includes(searchCode.toLowerCase())) {
+                match = false;
+            }
+
+            return match;
+        });
+    }, [
+        shipments,
+        statusFilter,
+        stationFilter,
+        lineFilter,
+        areaFilter,
+        dateRange,
+        timeSlotFilter,
+        searchCode,
+        timeSlots
+    ]);
+
+    const columns = [
+        {
+            title: 'STT',
+            render: (_, __, index) => index + 1,
+            width: 60
+        },
+        {
+            title: 'Mã đơn hàng',
+            dataIndex: 'trackingCode'
+        },
+        {
+            title: 'Trạm gửi',
+            dataIndex: 'departureStationName'
+        },
+        {
+            title: 'Trạm nhận',
+            dataIndex: 'destinationStationName'
+        },
+        {
+            title: 'Ngày gửi',
+            render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY')
+        },
+        {
+            title: 'Giờ gửi',
+            render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm')
+        },
+        {
+            title: 'Tổng chi phí',
+            render: (_, record) => formatCurrency(record.totalCostVnd)
+        },
+        {
+            title: "Trạng thái",
+            dataIndex: "shipmentStatus",
+            key: "shipmentStatus",
+            render: (status) => (
+                <Tag color={shipmentStatusColorMap[status] || "default"}>
+                    {shipmentStatusMap[status] || "Không rõ"}
+                </Tag>
+            ),
+        },
+        {
+            title: 'Xem chi tiết',
+            render: (_, record) => (
+                <ConfigProvider
+                    theme={{
+                        components: {
+                            Button: {
+                                defaultColor: 'white',
+                                defaultBg: '#0066CC',
+                                defaultBorderColor: '#0066CC'
+                            }
+                        }
+                    }}
+                >
+                    <Button onClick={() => onRowClick(record)}>Xem chi tiết</Button>
+                </ConfigProvider>
+            )
+        }
+    ];
+
+    const onRowClick = (record) => {
+        const relatedParcels = parcels.filter((p) => p.shipmentId === record.id);
+        setSelectedOrder({ ...record, relatedParcels });
+        setModalOpen(true);
+    };
+
+    return (
+        <div className="admin-orders-container">
+            <Space style={{ marginBottom: 16 }} wrap>
+                <Select placeholder="Trạng thái"
+                    style={{ width: 400 }}
+                    allowClear
+                    value={statusFilter}
+                    onChange={setStatusFilter}>
+                    {statusOptions.map((s) => (
+                        <Option key={s.id} value={s.id}>
+                            <Tag color={shipmentStatusColorMap[s.id]}>
+                                {shipmentStatusMap[s.id]}
+                            </Tag>
+                        </Option>
+                    ))}
+                </Select>
+
+                <Select placeholder="Tuyến metro"
+                    style={{ width: 400 }}
+                    allowClear
+                    onChange={setLineFilter}>
+                    {metroLines.map((line) => (
+                        <Option key={line.id} value={line.id}>
+                            {line.lineNameVi}
+                        </Option>
+                    ))}
+                </Select>
+
+                <Select placeholder="Trạm metro"
+                    style={{ width: 400 }}
+                    allowClear
+                    onChange={setStationFilter}>
+                    {uniqueStations.map((station) => (
+                        <Option key={station} value={station}>
+                            {station}
+                        </Option>
+                    ))}
+                </Select>
+
+                <Select placeholder="Chọn ca"
+                    style={{ width: 400 }}
+                    allowClear
+                    onChange={setTimeSlotFilter}>
+                    {timeSlots.map((slot) => (
+                        <Option key={slot.id} value={slot.id}>
+                            {`${slot.openTime} - ${slot.closeTime}`}
+                        </Option>
+                    ))}
+                </Select>
+
+                <RangePicker
+                    value={dateRange}
+                    onChange={setDateRange}
+                    style={{ width: 400 }} />
+
+                <Input.Search
+                    placeholder="Tìm theo mã đơn hàng"
+                    onSearch={setSearchCode}
+                    allowClear
+                    style={{ width: 400 }}
+                />
+                <Button
+                    className="clear-filter-button"
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                        setSearchCode("");
+                        setTimeSlotFilter(null);
+                        setStationFilter(null);
+                        setLineFilter(null);
+                        setStatusFilter(null);
+                        setAreaFilter(null);
+                        setDateRange([]);
+                    }}
+                >
+                </Button>
+
+            </Space>
+            <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                <Table dataSource={filteredData} columns={columns} rowKey="id" pagination={{ pageSize: 10 }} />
+            </Spin>
+
+            <Modal
+                title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
+                open={modalOpen}
+                onCancel={() => setModalOpen(false)}
+                footer={null}
+                width={700}
+            >
+                {selectedOrder && selectedOrder.relatedParcels && (
+                    <Tabs defaultActiveKey="0">
+                        {selectedOrder.relatedParcels.map((parcel, index) => (
+                            <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                                <Table
+                                    dataSource={[
+                                        { label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                                        { label: 'Loại hàng', value: parcel.parcelCategory?.categoryName || 'N/A' },
+                                        { label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg || 'N/A'} kg` },
+                                        { label: 'Thể tích', value: `${parcel.volumeCm3 || 'N/A'} cm³` },
+                                        { label: 'Trạm gửi', value: selectedOrder.departureStationName || 'N/A' },
+                                        { label: 'Trạm nhận', value: selectedOrder.destinationStationName || 'N/A' },
+                                        { label: 'Ngày gửi', value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') },
+                                        { label: 'Giờ gửi', value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') },
+                                        { label: 'Tổng chi phí', value: formatCurrency(parcel.priceVnd || 0) },
+                                        {
+                                            label: 'Trạng thái kiện hàng',
+                                            value: shipmentStatusMap[selectedOrder.shipmentStatus] || 'Không xác nhận'
+                                        }
+                                    ]}
+                                    columns={[
+                                        { title: 'Thông tin', dataIndex: 'label' },
+                                        { title: 'Chi tiết', dataIndex: 'value' }
+                                    ]}
+                                    pagination={false}
+                                    showHeader={false}
+                                    rowKey={(row) => row.label}
+                                />
+                            </TabPane>
+                        ))}
+                    </Tabs>
+                )}
+            </Modal>
+        </div>
+    );
 }
 
 export default AdminOrders;
