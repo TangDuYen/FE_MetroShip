@@ -8,14 +8,19 @@ import {
   InputNumber,
   Modal,
   Popconfirm,
+  Select,
   Space,
   Spin,
   Switch,
   Table,
   message,
 } from "antd";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import React, { useEffect, useState } from "react";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
 import { getAllParcelCategories } from "../../../../../config/metroApi";
@@ -26,6 +31,7 @@ function ParcelCategoryManage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [form] = Form.useForm();
+  const [filterCategory, setFilterCategory] = useState([]);
 
   useEffect(() => {
     fetchParcelCategories();
@@ -60,10 +66,10 @@ function ParcelCategoryManage() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/parcel-category/${id}`);
-      message.success('Đã xoá thành công!');
+      message.success("Đã xoá thành công!");
       fetchParcelCategories();
     } catch {
-      message.error('Xoá thất bại!');
+      message.error("Xoá thất bại!");
     }
   };
 
@@ -74,26 +80,32 @@ function ParcelCategoryManage() {
         try {
           if (editingCategory) {
             await api.put(`/parcel-category`, {
-            ...values,
-            id: editingCategory.id,
-          });
-            message.success('Cập nhật loại kiện hàng thành công!');
+              ...values,
+              id: editingCategory.id,
+            });
+            message.success("Cập nhật loại kiện hàng thành công!");
           } else {
-            await api.post('/parcel-category', values);
-            message.success('Thêm loại kiện hàng thành công!');
+            await api.post("/parcel-category", values);
+            message.success("Thêm loại kiện hàng thành công!");
           }
 
           setIsModalOpen(false);
           form.resetFields();
           fetchParcelCategories();
         } catch (err) {
-          message.error('Gửi dữ liệu thất bại!');
+          message.error("Gửi dữ liệu thất bại!");
         }
       })
       .catch((info) => {
-        console.error('Validate Failed:', info);
+        console.error("Validate Failed:", info);
       });
   };
+
+  const filteredData = parcelCategories.filter(
+    (item) =>
+      filterCategory.length === 0 || filterCategory.includes(item.categoryName)
+  );
+
   const columns = [
     {
       title: "STT",
@@ -161,15 +173,34 @@ function ParcelCategoryManage() {
   ];
   return (
     <div className="parcel-category-management-container">
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
-          Thêm loại bưu kiện
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={openAddModal}>
+          + Thêm loại bưu kiện
         </Button>
-      </div>
+        <Select
+          mode="multiple"
+          allowClear
+          placeholder="Lọc theo loại kiện hàng"
+          style={{ width: 250 }}
+          value={filterCategory}
+          onChange={(value) => setFilterCategory(value)}
+          options={parcelCategories.map((c) => ({
+            label: c.categoryName,
+            value: c.categoryName,
+          }))}
+        />
+        <Button
+          className="clear-filter-button"
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setFilterCategory([]);
+          }}
+        ></Button>
+      </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
         <Table
           columns={columns}
-          dataSource={parcelCategories}
+          dataSource={filteredData}
           rowKey="id"
           pagination={{ pageSize: 10 }}
         />
