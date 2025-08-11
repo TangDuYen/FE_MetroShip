@@ -1,5 +1,6 @@
 import "./AdminOrders.scss";
 
+
 import { Button, DatePicker, Input, Select, Space, Spin, Table } from "antd";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,7 @@ import { ReloadOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+const { TabPane } = Tabs;
 
 function AdminOrders() {
   const [shipments, setShipments] = useState([]);
@@ -212,6 +214,7 @@ function AdminOrders() {
       </Spin>
     </div>
   );
+
 }
 
 export default AdminOrders;
