@@ -1,6 +1,7 @@
 import './OrderInformationStaff.scss';
 
-import { Card, Col, Descriptions, Divider, Image, Row, Typography } from "antd";
+import { Button, Card, Col, Descriptions, Divider, Image, Row, Tag, Typography } from "antd";
+import { parcelStatusColorMap, shipmentStatusMap } from "../../../../../constants/statusMap";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -8,7 +9,7 @@ import { PATH_NAME } from '../../../../../constants/pathname';
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllParcels } from "../../../../../config/metroApi";
-import { shipmentStatusMap } from "../../../../../constants/statusMap";
+import { parcelStatusMap } from './../../../../../constants/statusMap';
 
 const { Title } = Typography;
 
@@ -51,7 +52,7 @@ function OrderInformationStaff() {
                 style={{ fontSize: 18, marginBottom: 20, display: 'inline-block', fontWeight: 'bold' }}
                 onClick={() => nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_INFORMATION)}
             >
-                <span style={{color: 'black'}}>Vị trí hiện tại:</span> Trạm {shipment.currentStationName}
+                <span style={{ color: 'black' }}>Vị trí hiện tại:</span> Trạm {shipment.currentStationName}
             </Typography.Link>
 
 
@@ -97,52 +98,29 @@ function OrderInformationStaff() {
                             <Descriptions.Item label="Phí vận chuyển">{parcel.shippingFeeVnd?.toLocaleString()} VND</Descriptions.Item>
                             <Descriptions.Item label="Phí bảo hiểm">{parcel.insuranceFeeVnd?.toLocaleString()} VND</Descriptions.Item>
                             <Descriptions.Item label="Tổng phí">{parcel.priceVnd?.toLocaleString()} VND</Descriptions.Item>
+                            <Descriptions.Item label="Tình trạng">
+                                <Tag color={parcelStatusColorMap[parcel.status]}>
+                                    {parcelStatusMap[parcel.status]}
+                                </Tag></Descriptions.Item>
                         </Descriptions>
-
+                        {/* <Button
+                            danger
+                            block
+                            onClick={async () => {
+                                try {
+                                    await api.post(`/parcels/staff/lost/${parcel.parcelCode}/${shipment.shipmentStatus}`);
+                                    alert("Đã gửi yêu cầu báo mất đơn hàng!");
+                                } catch (error) {
+                                    console.error("Lỗi báo mất đơn hàng:", error);
+                                    alert("Không thể báo mất. Vui lòng thử lại!");
+                                }
+                            }}
+                        >
+                            Mất kiện hàng
+                        </Button> */}
                     </Card>
                 ))}
             </Card>
-
-            {/* <Card title="Lộ trình vận chuyển">
-                <Row gutter={[16, 16]}>
-                    {shipment?.itineraryGraph?.routes?.map((route) => {
-                        const fromStation = shipment.itineraryGraph.stations.find(s => s.stationId === route.fromStationId);
-                        const toStation = shipment.itineraryGraph.stations.find(s => s.stationId === route.toStationId);
-                        const line = shipment.itineraryGraph.metroLines.find(l => l.id === route.lineId);
-
-                        const actualLeg = shipment.shipmentItineraries.find(i => i.legOrder === route.legOrder);
-
-                        return (
-                            <Col span={12} key={route.routeId}>
-                                <Card
-                                    title={
-                                        <span style={{ color: 'white' }}>
-                                            Chặng {route.legOrder}: {fromStation?.stationNameVi} → {toStation?.stationNameVi}
-                                        </span>
-                                    }
-                                    size="small"
-                                    headStyle={{ backgroundColor: line?.colorHex || '#fafafa', color: 'white' }}
-                                >
-                                    <Descriptions column={1} size="small" bordered>
-                                        <Descriptions.Item label="Tuyến metro">{line?.lineNameVi}</Descriptions.Item>
-                                        <Descriptions.Item label="Chiều dài">{route.lengthKm} km</Descriptions.Item>
-                                        <Descriptions.Item label="Thời gian di chuyển">{route.travelTimeMin} phút</Descriptions.Item>
-                                        <Descriptions.Item label="Ngày vận chuyển">
-                                            {actualLeg?.date ? dayjs(actualLeg.date).format("YYYY-MM-DD") : 'Chưa có'}
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Ca">
-                                            {actualLeg?.timeSlotId ? `Ca ${shipment.scheduledShift}` : 'Chưa xác định'}
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Trạng thái">
-                                            {actualLeg?.isCompleted ? 'Hoàn tất' : 'Đang chờ'}
-                                        </Descriptions.Item>
-                                    </Descriptions>
-                                </Card>
-                            </Col>
-                        );
-                    })}
-                </Row>
-            </Card> */}
         </div>
     );
 }
