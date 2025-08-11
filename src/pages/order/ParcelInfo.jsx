@@ -187,7 +187,7 @@ function ParcelInfo({
 
   const fetchChargeableWeight = async ({ weightKg, lengthCm, widthCm, heightCm }) => {
     try {
-      const res = await api.post("parcels/chargeable-weight", {
+      const res = await api.post("/parcels/chargeable-weight", {
         weightKg, lengthCm, widthCm, heightCm
       });
       return res.data?.data || 0;
@@ -219,10 +219,13 @@ function ParcelInfo({
 
     if (field === 'parcelCategory') {
       const selectedCat = parcelCategory.find(cat => cat.id === value);
+      console.log(selectedCat?.categoryInsurances?.[0]?.id);
+
+      updatedList[index].categoryInsuranceId = selectedCat?.categoryInsurances?.[0]?.id || "";
       updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
       updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
 
-      if (selectedCat?.insuranceRate) {
+      if (selectedCat?.isInsuranceRequired) {
         updatedList[index].valueVnd = updatedList[index].valueVnd || 0;
       } else {
         delete updatedList[index].valueVnd;
@@ -236,6 +239,7 @@ function ParcelInfo({
       ...parcelInfo,
       {
         parcelCategory: "",
+        categoryInsuranceId: "",
         weightKg: "",
         lengthCm: "",
         heightCm: "",
@@ -256,6 +260,7 @@ function ParcelInfo({
       timeSlotId: selectedTime || '',
       parcels: parcelInfo.map(p => ({
         parcelCategoryId: p.parcelCategory || '',
+        categoryInsuranceId: p.categoryInsuranceId || '',
         weightKg: Number(p.weightKg) || 0,
         lengthCm: Number(p.lengthCm) || 0,
         widthCm: Number(p.widthCm) || 0,
@@ -363,7 +368,7 @@ function ParcelInfo({
         }
         if (parsed.pickedTime) {
           setPickedTime(parsed.pickedTime);
-          setSelectedTime(parsed.pickedTime); 
+          setSelectedTime(parsed.pickedTime);
         }
         if (parsed.timeSlots) setTimeSlots(parsed.timeSlots);
         if (parsed.selectedSolutionIndex !== undefined) setSelectedSolutionIndex(parsed.selectedSolutionIndex);
@@ -429,6 +434,7 @@ function ParcelInfo({
               {/* OPTIONAL INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
+                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
                 if (selectedCat && !selectedCat.isInsuranceRequired && parcel.insuranceFeeVnd) {
                   return (
                     <Checkbox
@@ -440,7 +446,7 @@ function ParcelInfo({
                         setParcelInfo(updated);
                       }}
                     >
-                      Tính phí bảo hiểm cho hàng này ({parcel.insuranceFeeVnd.toLocaleString('vi-VN')} VND)
+                      Tính phí bảo hiểm cho hàng này ({policy.baseFeeVnd.toLocaleString('vi-VN')} VND)
                     </Checkbox>
                   );
                 }
@@ -451,10 +457,11 @@ function ParcelInfo({
               {/* REQUIRED INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
+                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
                 if (selectedCat?.isInsuranceRequired || selectedCat?.insuranceRate) {
                   return (
                     <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
-                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {selectedCat.insuranceRate * 100}% trên giá trị món hàng.
+                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {policy.insuranceFeeRateOnValue * 100}% trên giá trị món hàng.
                       <div>
                         ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
                       </div>
@@ -467,8 +474,9 @@ function ParcelInfo({
               {/* UPLOAD BILL */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
+                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
                 if (selectedCat?.isInsuranceRequired) {
-                  const insuranceCost = Math.round((parcel.valueVnd || 0) * selectedCat.insuranceRate);
+                  const insuranceCost = Math.round((parcel.valueVnd || 0) * policy.insuranceFeeRateOnValue);
                   return (
                     <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
                       <InputNumber

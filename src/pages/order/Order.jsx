@@ -40,6 +40,7 @@ function Order() {
   const [timeSlots, setTimeSlots] = useState(null);
   const [parcelInfo, setParcelInfo] = useState([{
     parcelCategory: "",
+    categoryInsuranceId: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
@@ -238,6 +239,7 @@ function Order() {
     const validParcels = parcelInfo
       .filter(p =>
         p.parcelCategory &&
+        p.categoryInsuranceId &&
         p.weightKg &&
         p.lengthCm &&
         p.widthCm &&
@@ -246,6 +248,7 @@ function Order() {
       .map((p, idx) => {
         const base = {
           parcelCategoryId: p.parcelCategory,
+          categoryInsuranceId: p.categoryInsuranceId,
           weightKg: Number(p.weightKg),
           lengthCm: Number(p.lengthCm),
           widthCm: Number(p.widthCm),
