@@ -1,19 +1,20 @@
 import './TrackingOrder.scss';
 
-import { Badge, Button, Card, Col, Divider, Row, Timeline } from 'antd';
+import { Badge, Button, Card, Col, Divider, Row, Tag, Timeline } from 'antd';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import React, { useEffect, useState } from 'react';
-import { shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
+import { parcelStatusColorMap, parcelStatusMap, shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
 
 import { Icon } from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import { getAllParcelCategories } from '../../config/metroApi';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 function TrackingOrder() {
-
+  const [parcelCategory, setParcelCategory] = useState([]);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const { trackingCode } = useParams();
 
@@ -24,17 +25,38 @@ function TrackingOrder() {
   useEffect(() => {
     if (!trackingCode) return;
 
-    const fetchShipmentDetails = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get(`/shipments/${trackingCode}`);
-        setSelectedShipment(res.data.data);
+        const [shipmentRes, categoryRes] = await Promise.all([
+          api.get(`/shipments/${trackingCode}`),
+          getAllParcelCategories()
+        ]);
+
+        const shipment = shipmentRes.data.data;
+        const categories = categoryRes;
+
+        // Gán category vào từng parcel
+        const parcelsWithCategory = (shipment.parcels || []).map((p) => {
+          const category = categories.find(c => c.id === p.parcelCategoryId);
+          return {
+            ...p,
+            parcelCategory: category || null
+          };
+        });
+
+        shipment.parcels = parcelsWithCategory;
+
+        setParcelCategory(categories);
+        setSelectedShipment(shipment);
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin đơn hàng:", error);
+        console.error("Lỗi khi tải dữ liệu:", error);
       }
     };
 
-    fetchShipmentDetails();
+    fetchData();
   }, [trackingCode]);
+
+
 
   if (!selectedShipment) return <div>Đang tải đơn...</div>;
 
@@ -171,6 +193,7 @@ function TrackingOrder() {
                     <span className="detail-label">Tổng phí</span>
                     <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
                   </div>
+
                   {p.parcelCategory && (
                     <>
                       <div className="detail-item">
@@ -183,6 +206,14 @@ function TrackingOrder() {
                       </div>
                     </>
                   )}
+                  <div className="detail-item">
+                    <span className="detail-label">Tình trạng</span>
+                    <span className="detail-value">
+                      <Tag color={parcelStatusColorMap[p.status]}>
+                        {parcelStatusMap[p.status]}
+                      </Tag>
+                    </span>
+                  </div>
                 </React.Fragment>
               ))}
             </div>

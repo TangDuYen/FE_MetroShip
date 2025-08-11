@@ -83,6 +83,16 @@ export const paymentTransactionTypeMap = {
 //     16: "Hoàn thành"
 // }
 
+export const parcelStatusMap = {
+    2: "Bình thường",
+    4: "Bị mất",
+}
+
+export const parcelStatusColorMap = {
+    2: "green",
+    4: "red",
+}
+
 export const shipmentStatusSteps = [
   { id: 0, label: 'Đơn hàng đã được đặt' },
   { id: 8, label: 'Đơn vị vận chuyển đã lấy hàng' },
