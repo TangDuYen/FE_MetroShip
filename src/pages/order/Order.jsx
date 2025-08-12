@@ -1,17 +1,15 @@
 import './Order.scss'
 
-import { Button, Col, ConfigProvider, Modal, Row, Spin, Steps, message } from 'antd';
+import { Button, ConfigProvider, Modal, Spin, Steps } from 'antd';
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
-import { Circle } from 'react-leaflet';
 import ConfirmPage from './ConfirmPage';
 import L from 'leaflet';
-import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
-import customerIcon from '../../assets/placeholder.webp'
+import customerIcon from '../../assets/placeholder.webp';
 import dayjs from 'dayjs';
 import { getAllTransactionTypes } from '../../config/metroApi';
 import metroMarker from '../../assets/metro-station.webp';
@@ -65,6 +63,9 @@ function Order() {
   const [priceVnd, setPriceVnd] = useState(null);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactionTypeId, setTransactionTypeId] = useState(null);
+  const uiFinal = Number(sessionStorage.getItem('uiFinalTotalCostVnd') || 0);
+  const optTotal = Number(sessionStorage.getItem('uiOptionalInsuranceTotalVnd') || 0);
+  const breakdown = JSON.parse(sessionStorage.getItem('uiOptionalInsuranceBreakdown') || '[]');
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -214,36 +215,30 @@ function Order() {
       recipientNationalId,
     } = personalInfo;
 
-    const {
-      departureStationId,
-      destinationStationId,
-      departureDateTime,
-    } = metroSelector;
+    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
 
     const itinerary = routeSolutions[selectedSolutionIndex];
 
-    const shipmentItineraries = itinerary?.data?.routes?.map(route => ({
-      routeId: route.routeId,
-      legOrder: route.legOrder,
-    })) || [];
+    const shipmentItineraries =
+      itinerary?.data?.routes?.map((route) => ({
+        routeId: route.routeId,
+        legOrder: route.legOrder,
+      })) || [];
 
-    const parcelsFromSolution = itinerary?.data?.parcels || [];
-
-    // INCLUDE OPTIONAL INSURANCE
-    const extraInsuranceFee = parcelsFromSolution
-      .filter((p, idx) => parcelInfo[idx]?.includeOptionalInsurance)
-      .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0);
-
-    const finalCostVnd = (itinerary?.data?.totalCostVnd || 0) + extraInsuranceFee;
+    //MAP PARCEL INDEX - OPTIONAL FEE
+    const optByIndex = new Map(
+      (breakdown || []).map((b) => [Number(b.parcelIndex), Number(b.optionalInsuranceFeeVnd || 0)])
+    );
 
     const validParcels = parcelInfo
-      .filter(p =>
-        p.parcelCategory &&
-        p.categoryInsuranceId &&
-        p.weightKg &&
-        p.lengthCm &&
-        p.widthCm &&
-        p.heightCm
+      .filter(
+        (p) =>
+          p.parcelCategory &&
+          p.categoryInsuranceId &&
+          p.weightKg &&
+          p.lengthCm &&
+          p.widthCm &&
+          p.heightCm
       )
       .map((p, idx) => {
         const base = {
@@ -255,24 +250,32 @@ function Order() {
           heightCm: Number(p.heightCm),
           isBulk: idx > 0,
         };
+
         if (p.descriptionImageUrl) base.descriptionImageUrl = p.descriptionImageUrl;
         if (p.description) base.description = p.description;
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
-        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
         if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
+
+        //INSURANCE: BASE(REQUIRED INSURANCE) + OPTIONAL(FROM BREAKDOWN)
+        const baseIns = Number(p.insuranceFeeVnd ?? 0);
+        const optIns = Number(optByIndex.get(idx) || 0);
+        const totalIns = baseIns + optIns;
+        if (totalIns > 0) base.insuranceFeeVnd = totalIns;
+
+        //PARCEL PRICE = TOTAL OPTIONALFEE
+        const basePrice = Number(p.priceVnd ?? 0);
         if (p.priceVnd !== undefined) {
-          let finalPrice = Number(p.priceVnd);
-          if (p.includeOptionalInsurance && p.insuranceFeeVnd) {
-            finalPrice += Number(p.insuranceFeeVnd);
-          }
-          base.priceVnd = finalPrice;
+          base.priceVnd = basePrice + optIns;
         }
-        if (p.valueVnd !== undefined) base.valueVnd = p.valueVnd;
-        if (p.includeOptionalInsurance) {
-          base.isInsuranceIncluded = true;
-        }
+
+        //NOT SEND VALUEVND FOR OPTIONAL INSURANCE
+        if (p.valueVnd !== undefined) base.valueVnd = Number(p.valueVnd);
+
+        if (p.includeOptionalInsurance) base.isInsuranceIncluded = true;
+
         return base;
       });
+
 
     return {
       ...(departureStationId && { departureStationId }),
@@ -285,9 +288,9 @@ function Order() {
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
-      totalCostVnd: finalCostVnd,
+      totalCostVnd: uiFinal,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,
-      totalInsuranceFeeVnd: itinerary?.data?.totalInsuranceFeeVnd || 0,
+      totalInsuranceFeeVnd: Number(itinerary?.data?.totalInsuranceFeeVnd || 0) + optTotal,
       ...(totalKm && { totalKm: Number(totalKm) }),
       ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
       parcels: validParcels,
