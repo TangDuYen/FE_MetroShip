@@ -1,19 +1,24 @@
 import './HandledOrderStaff.scss';
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Pagination, Progress, Row, Select, Space, Table, Tabs } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroStation from '../../../../../assets/metro_station.png';
+import { ReloadOutlined } from '@ant-design/icons';
 import StaffIcon from '../../../../../assets/profile.webp';
 import TabPane from 'antd/es/tabs/TabPane';
-import Title from 'antd/es/skeleton/Title';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
-import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import viVN from 'antd/lib/locale/vi_VN';
+
+const { RangePicker } = DatePicker;
+const { Option } = Select;
+const { Title } = Typography;
 
 function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -30,17 +35,23 @@ function HandledOrderStaff() {
     const [timeSlots, setTimeSlots] = useState([]);
     const [expiredShipment, setExpiredShipment] = useState(false);
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
     const token = localStorage.getItem("token");
     const decodedUser = token ? jwtDecode(token) : null;
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 2;
     const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
     const [metroTrains, setMetroTrains] = useState([]);
-    const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
-    const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
+    const [maxCapacity, setMaxCapacity] = useState(0);
+    const [maxVolume, setMaxVolume] = useState(0);
     const startIndex = (currentPage - 1) * pageSize;
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
+    const [statusOptions, setStatusOptions] = useState([]);
+    const [statusFilter, setStatusFilter] = useState(null);
+    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 26];
+    const [dateRange, setDateRange] = useState([]);
+    const [searchCode, setSearchCode] = useState('');
+    const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
+    const today = dayjs();
 
     if (!decodedUser?.StationId) {
         return (
@@ -56,18 +67,12 @@ function HandledOrderStaff() {
             </div>
         );
     }
+
     const onConfirmReturn = (record) => {
         const relatedParcels = getParcelsByShipmentId(record.id);
         setSelectedOrder({ ...record, relatedParcels });
         setConfirmModalOpen(true);
     };
-
-
-    const today = dayjs();
-
-    //FORMAT TIỀN
-    const formatCurrency = (value) =>
-        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
     //API ONE TIME
     useEffect(() => {
@@ -79,7 +84,7 @@ function HandledOrderStaff() {
                 setParcels(parcelsData);
                 setTimeSlots(timeSlotsData);
                 setMetroTrains(metroTrainData.items);
-                
+
                 //ADDITIONAL DATA TRAIN
                 const additional = metroTrainData.additionalData?.[0] || [];
                 const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
@@ -106,6 +111,16 @@ function HandledOrderStaff() {
         return parcels.filter(parcel => parcel.shipmentId === shipmentId);
     };
 
+
+
+    useEffect(() => {
+        // chỉ hiển thị đúng các trạng thái bạn muốn
+        const opts = ALLOWED_STATUSES.map(id => ({
+            id,
+            label: shipmentStatusMap[id] || `Trạng thái ${id}`,
+        }));
+        setStatusOptions(opts);
+    }, []);
     const getCurrentShift = (slots) => {
         const now = moment();
         return slots.find(slot => {
@@ -121,44 +136,43 @@ function HandledOrderStaff() {
     };
 
     const handleFilterChange = () => {
-        let filtered = shipments.filter(order =>
-            order.shipmentStatus === 1
-            || order.shipmentStatus === 2
-            || order.shipmentStatus === 3
-            || order.shipmentStatus === 5
-            || order.shipmentStatus === 6
-            || order.shipmentStatus === 15
-            || order.shipmentStatus === 18
-            || order.shipmentStatus === 20
-        );
-        const hasExpired = shipments.some((item) => item.shipmentStatus === 12);
+        // giới hạn vào các trạng thái cho phép
+        let filtered = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+
+        // lọc theo trạng thái chọn
+        if (statusFilter !== null && statusFilter !== undefined) {
+            filtered = filtered.filter(o => o.shipmentStatus === Number(statusFilter));
+        }
+
+        // lọc theo date range (ở phần filter dưới bảng)
+        if (dateRange && dateRange[0] && dateRange[1]) {
+            const [start, end] = dateRange;
+            filtered = filtered.filter(o => {
+                const d = getOrderDate(o);
+                return d.isSame(start, 'day') || d.isSame(end, 'day') || (d.isAfter(start, 'day') && d.isBefore(end, 'day'));
+            });
+        }
+
+        // lọc theo mã đơn hàng (trackingCode)
+        if (searchCode && searchCode.trim()) {
+            const q = searchCode.trim().toLowerCase();
+            filtered = filtered.filter(o => (o.trackingCode || '').toLowerCase().includes(q));
+        }
+
+        // flag “expired” (nếu cần hiển thị cột hành động)
+        const hasExpired = shipments.some((item) => item.shipmentStatus === 17);
         setExpiredShipment(hasExpired);
-
-
-        // CHỈNH SỬA FILTER
-        if (dateFilter) {
-            filtered = filtered.filter(order =>
-                dayjs(order.scheduledDateTime).isSame(dayjs(dateFilter), 'day')
-            );
-        }
-
-        if (stationFilter) {
-            filtered = filtered.filter(order => order.departureStationName === stationFilter);
-        }
-
-        if (routeFilter) {
-            filtered = filtered.filter(order => order.route === routeFilter);
-        }
 
         setFilteredShipments(filtered);
     };
-
 
     useEffect(() => {
         if (shipments.length > 0) {
             handleFilterChange();
         }
-    }, [shipments, dateFilter, stationFilter, routeFilter]);
+    }, [shipments, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
+
+
     const baseColumns = [
         {
             title: 'STT',
@@ -187,7 +201,7 @@ function HandledOrderStaff() {
             render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
         },
         {
-            title: 'Giờ gửi',
+            title: 'Hạn chót gửi hàng',
             dataIndex: 'scheduledDateTime',
             key: 'scheduledTime',
             render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
@@ -195,13 +209,14 @@ function HandledOrderStaff() {
         {
             title: 'Thời điểm tạo yêu cầu',
             key: 'createdAt',
-            render: (_, record) => {
-                const relatedParcels = getParcelsByShipmentId(record.id);
-                if (relatedParcels.length > 0) {
-                    return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-                }
-                return 'N/A';
-            }
+            // render: (_, record) => {
+            //     const relatedParcels = getParcelsByShipmentId(record.id);
+            //     if (relatedParcels.length > 0) {
+            //         return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+            //     }
+            //     return 'N/A';
+            // }
+            render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
         },
         {
             title: 'Tổng chi phí',
@@ -209,10 +224,14 @@ function HandledOrderStaff() {
             render: (_, record) => formatCurrency(record.totalCostVnd),
         },
         {
-            title: 'Trạng thái',
-            dataIndex: 'shipmentStatus',
-            key: 'shipmentStatus',
-            render: (status) => shipmentStatusMap[status] || 'Không xác nhận',
+            title: "Trạng thái",
+            dataIndex: "shipmentStatus",
+            key: "shipmentStatus",
+            render: (status) => (
+                <Tag color={shipmentStatusColorMap[status] || "default"}>
+                    {shipmentStatusMap[status] || "Không rõ"}
+                </Tag>
+            ),
         },
         {
             title: 'Xem chi tiết',
@@ -271,7 +290,6 @@ function HandledOrderStaff() {
             ),
     };
 
-    // Merge lại:
     const columns = expiredShipment
         ? [...baseColumns, actionColumn]
         : baseColumns;
@@ -282,6 +300,16 @@ function HandledOrderStaff() {
         setSelectedOrder({ ...record, relatedParcels });
         setModalOpen(true);
     };
+
+    const handleResetFilters = () => {
+        setDateRange(null);
+        setStatusFilter(null);
+        setSearchCode('');
+        // nếu muốn reset luôn kết quả về full allowed statuses ngay:
+        const base = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        setFilteredShipments(base);
+    };
+
     return (
         <>
             <div className="order-staff-container">
@@ -297,17 +325,16 @@ function HandledOrderStaff() {
                                     style={{ width: "5em" }}
                                 />
                             </Col>
-
                             {/* STAFF ASSIGNMENT */}
                             <Col span={18}>
                                 <Flex justify="space-between" align="center" style={{ flexWrap: "wrap" }}>
-                                    {/* Thông tin nhân viên */}
                                     <div className="metro-line-description">
                                         Vai trò
                                         <div className="data">
                                             {decodedUser?.AssignmentRole || "N/A"}
                                         </div>
                                     </div>
+
                                     <div className="metro-line-description">
                                         Làm việc tại trạm
                                         <div className="data">
@@ -339,7 +366,7 @@ function HandledOrderStaff() {
                         </Row>
                     </Card>
                     <Card style={{ marginBottom: '1em' }}>
-                        <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
+                        <Title level={3}> {metroTrains.length} tàu hoạt động hiện tại</Title>
                         <Row gutter={16}>
                             {currentData.map((train) => (
                                 <Col span={24} key={train.id}>
@@ -429,34 +456,48 @@ function HandledOrderStaff() {
                     <Card>
                         <Title level={3}>Đơn hàng</Title>
                         <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
-                            <Row>
-                                <Col span={6} style={{ marginRight: "1em" }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={6}>
+                                    <ConfigProvider locale={viVN}>
+                                        <RangePicker
+                                            value={dateRange}
+                                            onChange={(v) => setDateRange(v)}
+                                            allowClear
+                                            style={{ width: '100%' }}
+                                        />
+                                    </ConfigProvider>
+                                </Col>
+                                <Col span={6}>
                                     <Select
-                                        value={stationFilter}
-                                        onChange={(value) => { setStationFilter(value); handleFilterChange(); }}
-                                        placeholder="Chọn trạm"
+                                        placeholder="Trạng thái"
                                         style={{ width: '100%' }}
+                                        allowClear
+                                        value={statusFilter}
+                                        onChange={(v) => setStatusFilter(v)}
                                     >
-                                        {stations.map(station => (
-                                            <Option key={station.id} value={station.stationNameVi}>
-                                                {station.stationNameVi}
+                                        {statusOptions.map((s) => (
+                                            <Option key={s.id} value={s.id}>
+                                                <Tag color={shipmentStatusColorMap[s.id]}>
+                                                    {s.label}
+                                                </Tag>
                                             </Option>
                                         ))}
                                     </Select>
                                 </Col>
                                 <Col span={6}>
-                                    <Select
-                                        value={routeFilter}
-                                        onChange={(value) => { setRouteFilter(value); handleFilterChange(); }}
-                                        placeholder="Chọn tuyến"
-                                        style={{ width: '100%' }}
-                                    >
-                                        {metroLines.map(metros => (
-                                            <Option key={metros.id} value={metros.id}>
-                                                {metros.lineNameVi}
-                                            </Option>
-                                        ))}
-                                    </Select>
+                                    <Input.Search
+                                        placeholder="Tìm theo mã đơn hàng"
+                                        value={searchCode}
+                                        onChange={(e) => setSearchCode(e.target.value)}
+                                        onSearch={(v) => setSearchCode(v)}
+                                        allowClear
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        onClick={handleResetFilters}>
+                                    </Button>
                                 </Col>
                             </Row>
                         </div>
@@ -519,7 +560,7 @@ function HandledOrderStaff() {
                                                         },
                                                         {
                                                             key: 'departureTime',
-                                                            label: 'Giờ gửi',
+                                                            label: 'Hạn chót gửi hàng',
                                                             value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
                                                         },
                                                         {
@@ -580,7 +621,7 @@ function HandledOrderStaff() {
                                     <p><strong>Trạm gửi:</strong> {selectedOrder.destinationStationName}</p>
                                     <p><strong>Trạm nhận:</strong> {selectedOrder.departureStationName}</p>
                                     <p><strong>Ngày gửi:</strong> {dayjs(selectedOrder.scheduledDateTime).format('DD/MM/YYYY')}</p>
-                                    <p><strong>Giờ gửi:</strong> {dayjs(selectedOrder.scheduledDateTime).format('HH:mm')}</p>
+                                    <p><strong>Hạn chót gửi hàng:</strong> {dayjs(selectedOrder.scheduledDateTime).format('HH:mm')}</p>
                                     <p><strong>Tổng chi phí:</strong> {formatCurrency(selectedOrder.totalCostVnd)}</p>
 
                                     <h4>Danh sách kiện hàng:</h4>

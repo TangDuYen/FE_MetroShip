@@ -10,6 +10,7 @@ import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllParcels } from "../../../../../config/metroApi";
 import { parcelStatusMap } from './../../../../../constants/statusMap';
+import { toast } from 'react-toastify';
 
 const { Title } = Typography;
 
@@ -20,6 +21,8 @@ function OrderInformationStaff() {
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState(null);
     const nav = useNavigate();
+    const canClaim = (status) => status === 4;
+    const transactionType = 3;
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -43,6 +46,38 @@ function OrderInformationStaff() {
         fetchDetails();
     }, [trackingCode]);
 
+    const handleCompensation = async (parcel) => {
+        try {
+            await api.post('/parcels/compensation', { parcelId: parcel.id });
+            toast.success('Đã gửi yêu cầu bồi thường!');
+        } catch (e) {
+            console.error(e);
+            toast.error('Không thể gửi yêu cầu bồi thường');
+        }
+    };
+    const handleCreatePaymentUrl = async () => {
+        if (!shipment?.id) return;
+        try {
+            const currentDomain = window.location.origin;
+            const payload = {
+                shipmentId: shipment.id,
+                transactionType, // số nguyên, ví dụ 3
+                returnUrl: `${currentDomain}/payment-success`,
+                cancelUrl: `${currentDomain}/payment-fail`,
+            };
+
+            const res = await api.post('/shipments/vnpay/payment-url', payload);
+            const url = res?.data?.data;
+            if (res?.data?.statusCode === 200 && url) {
+                window.location.href = url; // redirect đến VNPay
+            } else {
+                toast.error('Không lấy được link thanh toán!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Lỗi tạo link thanh toán');
+        }
+    };
     if (!shipment) return <p>Đang tải dữ liệu đơn hàng...</p>;
 
     return (
@@ -64,7 +99,7 @@ function OrderInformationStaff() {
                     <Descriptions.Item label="Trạm nhận">{shipment.destinationStationName}</Descriptions.Item>
                     <Descriptions.Item label="Thời điểm đặt">{dayjs(shipment.bookedAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
                     <Descriptions.Item label="Thời điểm thanh toán">{dayjs(shipment.paidAt).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
-                    <Descriptions.Item label="Thời gian giao">{dayjs(shipment.scheduledDateTime).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
+                    <Descriptions.Item label="Hạn chót nhận hàng lúc">{dayjs(shipment.scheduledDateTime).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
                     <Descriptions.Item label="Tổng trọng lượng (kg)">{shipment.totalWeightKg}</Descriptions.Item>
                     <Descriptions.Item label="Tổng thể tích (M³)">{shipment.totalVolumeM3}</Descriptions.Item>
                     <Descriptions.Item label="Tổng chi phí">{shipment.totalCostVnd?.toLocaleString()} VND</Descriptions.Item>
@@ -101,7 +136,15 @@ function OrderInformationStaff() {
                             <Descriptions.Item label="Tình trạng">
                                 <Tag color={parcelStatusColorMap[parcel.status]}>
                                     {parcelStatusMap[parcel.status]}
-                                </Tag></Descriptions.Item>
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item>
+                                {canClaim(parcel.status) && (
+                                    <Button danger onClick={() => handleCreatePaymentUrl()}>
+                                        Bồi thường
+                                    </Button>
+                                )}
+                            </Descriptions.Item>
                         </Descriptions>
                         {/* <Button
                             danger

@@ -76,6 +76,15 @@ export const getAllTransactions = async () => {
   }
 };
 
+export const getAllTransactionsType = async () => {
+  try {
+    const res = await api.get("/transactions/types");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu giao dịch");
+  }
+};
+
 export const getAllMetroTrains = async () => {
   try {
     const res = await api.get("/metro-trains?PageSize=1000");

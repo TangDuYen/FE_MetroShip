@@ -13,6 +13,7 @@ import {
     Tabs,
     Tag
 } from 'antd';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import {
     getAllParcels,
     getAllRegions,
@@ -21,7 +22,6 @@ import {
     getMetroLines,
     getMetroTimeSlots
 } from '../../../../../config/metroApi';
-import { shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ReloadOutlined } from '@ant-design/icons';
@@ -51,12 +51,6 @@ function AdminOrders() {
     const [dateRange, setDateRange] = useState([]);
     const [timeSlotFilter, setTimeSlotFilter] = useState(null);
     const [searchCode, setSearchCode] = useState('');
-
-    const formatCurrency = (value) =>
-        new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(value);
 
     useEffect(() => {
         setLoading(true);
