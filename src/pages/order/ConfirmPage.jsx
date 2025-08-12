@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import { formatCurrency } from '../../constants/statusMap';
 import { getMetroTimeSlots } from '../../config/metroApi';
 
 const { Title } = Typography;
 
 function ConfirmPage({
   personalInfo,
-  parcelInfo,     // array of parcels
+  parcelInfo,   
   metroSelector,
   pickedDate,
   pickedTime,
@@ -25,6 +26,7 @@ function ConfirmPage({
     ?.filter((p, idx) => parcelInfo[idx]?.includeOptionalInsurance)
     .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0) || 0;
   const finalDisplayPrice = (selectedSolution?.data?.totalCostVnd || 0) + optionalInsuranceFee;
+  const uiFinal = Number(sessionStorage.getItem('uiFinalTotalCostVnd') || 0);
 
   // Fetch station names
   useEffect(() => {
@@ -114,6 +116,9 @@ function ConfirmPage({
           <Descriptions.Item label="Kích thước" key="size">
             {parcel.lengthCm} × {parcel.widthCm} × {parcel.heightCm} cm
           </Descriptions.Item>,
+          parcel.parcelCategory.insuranceFeeVnd && (
+            <Descriptions.Item label="Phí bảo hiểm">{parcel.insuranceFeeVnd}</Descriptions.Item>
+          ),
           parcel.description && (
             <Descriptions.Item label="Mô tả" key="desc">{parcel.description}</Descriptions.Item>
           ),
@@ -165,10 +170,11 @@ function ConfirmPage({
             <Descriptions.Item label="Tổng trọng lượng">
               {totalWeight} kg
             </Descriptions.Item>
-            <Descriptions.Item label="Giá ước tính">
-              {finalDisplayPrice
+            <Descriptions.Item label="Tổng chi phí">
+              {/* {finalDisplayPrice
                 ? `${Number(finalDisplayPrice).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VND`
-                : '—'}
+                : '—'} */}
+                {formatCurrency(uiFinal)}
             </Descriptions.Item>
 
           </Descriptions>
