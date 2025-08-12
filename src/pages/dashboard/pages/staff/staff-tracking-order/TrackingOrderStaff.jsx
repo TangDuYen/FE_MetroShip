@@ -1,6 +1,7 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Pagination, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Table, Tabs, Tag, Typography } from 'antd';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
@@ -15,9 +16,11 @@ import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
-import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import viVN from 'antd/lib/locale/vi_VN';
+
+const { RangePicker } = DatePicker;
 
 const { TabPane } = Tabs;
 
@@ -48,6 +51,12 @@ function TrackingOrderStaff() {
   const [metroTrains, setMetroTrains] = useState([]);
   const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
   const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
+  const [dateRange, setDateRange] = useState([]);
+  const [searchCode, setSearchCode] = useState('');
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const ALLOWED_STATUS = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26];
+
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
@@ -66,10 +75,6 @@ function TrackingOrderStaff() {
       </div>
     );
   }
-
-  //FORMAT TIỀN
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
   //API ONE TIME
   useEffect(() => {
@@ -121,6 +126,14 @@ function TrackingOrderStaff() {
       return now.isBetween(start, end);
     });
   };
+  useEffect(() => {
+    const opts = ALLOWED_STATUS.map(id => ({
+      id,
+      label: shipmentStatusMap[id] || `Trạng thái ${id}`,
+      color: shipmentStatusColorMap[id] || 'default',
+    }));
+    setStatusOptions(opts);
+  }, []);
 
   const handleFilterChange = () => {
     let filtered = shipments.filter(order =>
@@ -135,6 +148,7 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
       || order.shipmentStatus == 22
+      || order.shipmentStatus == 24
     );
 
     // CHỈNH SỬA FILTER
@@ -244,7 +258,7 @@ function TrackingOrderStaff() {
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
-      title: 'Giờ gửi',
+      title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',
       key: 'scheduledTime',
       render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
@@ -252,13 +266,14 @@ function TrackingOrderStaff() {
     {
       title: 'Thời điểm tạo yêu cầu',
       key: 'createdAt',
-      render: (_, record) => {
-        const relatedParcels = getParcelsByShipmentId(record.id);
-        if (relatedParcels.length > 0) {
-          return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-        }
-        return 'N/A';
-      }
+      // render: (_, record) => {
+      //   const relatedParcels = getParcelsByShipmentId(record.id);
+      //   if (relatedParcels.length > 0) {
+      //     return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+      //   }
+      //   return 'N/A';
+      // }
+      render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: 'Tổng chi phí',
@@ -266,10 +281,14 @@ function TrackingOrderStaff() {
       render: (_, record) => formatCurrency(record.totalCostVnd),
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'shipmentStatus',
-      key: 'shipmentStatus',
-      render: (status) => { return shipmentStatusMap[status] || 'Không xác nhận'; },
+      title: "Trạng thái",
+      dataIndex: "shipmentStatus",
+      key: "shipmentStatus",
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || "Không rõ"}
+        </Tag>
+      ),
     },
     // {
     //   title: 'Vị trí hiện tại',
@@ -494,33 +513,44 @@ function TrackingOrderStaff() {
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
               <Row>
                 <Col span={6} style={{ marginRight: "1em" }}>
-                  <Select
-                    value={stationFilter}
-                    onChange={(value) => { setStationFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn trạm"
-                    style={{ width: '100%' }}
-                  >
-                    {stations.map(station => (
-                      <Option key={station.id} value={station.stationNameVi}>
-                        {station.stationNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+                  <ConfigProvider locale={viVN}>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={setDateRange}
+                      style={{ width: '100%' }}
+                    />
+                  </ConfigProvider>
                 </Col>
-                <Col span={6}>
+                <Col span={6} style={{ marginRight: "1em" }}>
                   <Select
-                    value={routeFilter}
-                    onChange={(value) => { setRouteFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn tuyến"
-                    style={{ width: '100%' }}
-                  >
-                    {metroLines.map(metros => (
-                      <Option key={metros.id} value={metros.id}>
-                        {metros.lineNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+                    placeholder="Trạng thái"
+                    style={{ width: 350 }}
+                    allowClear
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={statusOptions.map(s => ({
+                      value: s.id,
+                      label: <Tag color={s.color}>{s.label}</Tag>,
+                    }))}
+                  />
+
                 </Col>
+                <Col span={6} style={{ marginRight: "1em" }}>
+                  <Input.Search
+                    placeholder="Tìm theo mã đơn hàng"
+                    onSearch={setSearchCode}
+                    allowClear
+                  />
+                </Col>
+                {/* <Col span={6}>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                      setDateRange([]);
+                      setSearchCode('');
+                    }}>
+                  </Button>
+                </Col> */}
               </Row>
             </div>
             <Table

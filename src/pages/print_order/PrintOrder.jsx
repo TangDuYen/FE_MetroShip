@@ -1,5 +1,6 @@
 import './PrintOrder.scss';
 
+import { formatCurrency, shipmentStatusMap } from '../../constants/statusMap';
 import { getAllCustomerShipments, getAllParcels } from './../../config/metroApi';
 import { useEffect, useRef, useState } from 'react';
 
@@ -7,7 +8,6 @@ import { Button } from 'antd';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
 import html2pdf from 'html2pdf.js';
-import { shipmentStatusMap } from '../../constants/statusMap';
 import { useLocation } from 'react-router-dom';
 
 function PrintOrder() {
@@ -76,11 +76,6 @@ const handleDownloadPDF = () => {
     }
   }, [shipment]);
 
-  const formatCurrency = (v) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(v);
 
   if (!shipment) return <div style={{ padding: 20 }}>Đang tải...</div>;
 

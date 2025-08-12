@@ -3,7 +3,7 @@ import './TrackingOrder.scss';
 import { Badge, Button, Card, Col, Divider, Row, Tag, Timeline } from 'antd';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import React, { useEffect, useState } from 'react';
-import { parcelStatusColorMap, parcelStatusMap, shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
+import { formatCurrency, parcelStatusColorMap, parcelStatusMap, shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
 
 import { Icon } from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
@@ -20,7 +20,7 @@ function TrackingOrder() {
 
   const navigate = useNavigate();
 
-  const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
+
 
   useEffect(() => {
     if (!trackingCode) return;
@@ -193,7 +193,6 @@ function TrackingOrder() {
                     <span className="detail-label">Tổng phí</span>
                     <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
                   </div>
-
                   {p.parcelCategory && (
                     <>
                       <div className="detail-item">

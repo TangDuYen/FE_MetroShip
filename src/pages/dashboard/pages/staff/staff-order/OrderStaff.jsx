@@ -1,20 +1,22 @@
 import './OrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { use, useEffect, useState } from 'react';
 
-import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroStation from '../../../../../assets/metro_station.png';
 import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
-import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import viVN from 'antd/lib/locale/vi_VN';
 
 const { TabPane } = Tabs;
+const { RangePicker } = DatePicker;
 
 const { Title } = Typography;
 
@@ -51,6 +53,11 @@ function OrderStaff() {
   const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
   const startIndex = (currentPage - 1) * pageSize;
   const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
+  const [dateRange, setDateRange] = useState([]);
+  const [searchCode, setSearchCode] = useState('');
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(null);
+
 
   if (!decodedUser?.StationId) {
     return (
@@ -67,10 +74,6 @@ function OrderStaff() {
     );
   }
 
-  //FORMAT TIỀN
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-
   //API ONE TIME
   useEffect(() => {
     Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
@@ -81,7 +84,8 @@ function OrderStaff() {
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
         setMetroTrains(metroTrainData.items);
-        
+        setStatusOptions(shipmentsData.additionalData || []);
+
         //ADDITIONAL TRAIN DATA
         const additional = metroTrainData.additionalData?.[0] || [];
         const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
@@ -129,31 +133,36 @@ function OrderStaff() {
   };
 
   const handleFilterChange = () => {
-    const now = moment();
-    const start = now.clone().subtract(48, 'hours');
-    const end = now.clone().add(48, 'hours');
+    let filtered = shipmentsStaff.filter(order => order.shipmentStatus === 7);
 
-    // Bước 1: lọc các đơn đã thanh toán, tạo trong vòng 48h
-    let filtered = shipmentsStaff.filter(order =>
-      order.shipmentStatus === 7 &&
-      moment(order.bookedAt).isBetween(start, end)
-    );
-
-    // Bước 2: nếu chọn ngày => lọc thêm theo ngày gửi (scheduleDateTime)
-    if (dateFilter) {
+    if (dateRange && dateRange.length === 2) {
+      const [startDate, endDate] = dateRange;
+      filtered = filtered.filter(order =>
+        moment(order.bookedAt).isBetween(startDate.startOf('day'), endDate.endOf('day'))
+      );
+    } else if (dateFilter) {
       filtered = filtered.filter(order =>
         moment(order.bookedAt).isSame(dateFilter, 'day')
       );
     }
+
+    if (searchCode && searchCode.trim() !== '') {
+      const searchLower = searchCode.trim().toLowerCase();
+      filtered = filtered.filter(order =>
+        order.trackingCode.toLowerCase().includes(searchLower)
+      );
+    }
+
     setFilteredShipments(filtered);
   };
+
 
 
   useEffect(() => {
     if (shipments.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateFilter, stationFilter, routeFilter]);
+  }, [shipments, dateFilter, dateRange, searchCode]);
 
   const columns = [
     {
@@ -185,7 +194,7 @@ function OrderStaff() {
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
-      title: 'Giờ gửi',
+      title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',
       key: 'scheduledTime',
       render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
@@ -193,13 +202,14 @@ function OrderStaff() {
     {
       title: 'Thời điểm tạo yêu cầu',
       key: 'createdAt',
-      render: (_, record) => {
-        const relatedParcels = getParcelsByShipmentId(record.id);
-        if (relatedParcels.length > 0) {
-          return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-        }
-        return 'N/A';
-      }
+      render: (_, record) =>
+        dayjs(record.createdAt).format("YYYY-MM-DD HH:mm:ss"),
+      // const relatedParcels = getParcelsByShipmentId(record.id);
+      // if (relatedParcels.length > 0) {
+      //   return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+      // }
+      // return 'N/A';
+
     },
 
     {
@@ -211,38 +221,40 @@ function OrderStaff() {
       title: 'Trạng thái',
       dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
-      render: (status) => {
-        return shipmentStatusMap[status] || 'Không xác nhận';
-      },
-    },
-    {
-      title: 'Xem chi tiết',
-      key: 'action',
-      render: (_, record) => (
-        <ConfigProvider
-          theme={{
-            components: {
-              Button: {
-                defaultColor: "white",
-                defaultBg: "#0066CC",
-                defaultBorderColor: "#0066CC",
-                defaultHoverBorderColor: "#0066CC",
-                defaultHoverColor: "white",
-                defaultHoverBg: "#0066CC",
-                defaultActiveBg: "#0066CC",
-                defaultActiveBorderColor: "#0066CC",
-                defaultActiveColor: "white",
-              }
-            }
-          }}>
-          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
-            Xem chi tiết
-          </Button>
-        </ConfigProvider>
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || 'Không xác nhận'};
+        </Tag>
       ),
     },
+    // {
+    //   title: 'Xem chi tiết',
+    //   key: 'action',
+    //   render: (_, record) => (
+    //     <ConfigProvider
+    //       theme={{
+    //         components: {
+    //           Button: {
+    //             defaultColor: "white",
+    //             defaultBg: "#0066CC",
+    //             defaultBorderColor: "#0066CC",
+    //             defaultHoverBorderColor: "#0066CC",
+    //             defaultHoverColor: "white",
+    //             defaultHoverBg: "#0066CC",
+    //             defaultActiveBg: "#0066CC",
+    //             defaultActiveBorderColor: "#0066CC",
+    //             defaultActiveColor: "white",
+    //           }
+    //         }
+    //       }}>
+    //       <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
+    //         Xem chi tiết
+    //       </Button>
+    //     </ConfigProvider>
+    //   ),
+    // },
     {
-      title: 'Hành động',
+      title: 'Xác nhận',
       key: 'confirm',
       render: (_, record) => {
         return (
@@ -277,7 +289,7 @@ function OrderStaff() {
       }
     },
     {
-      title: 'Hành động',
+      title: 'Từ chối',
       key: 'action',
       render: (_, record) => {
         return (
@@ -402,7 +414,6 @@ function OrderStaff() {
                         Dung tích tàu (m³)
                         <div className="subway-data">
                           {maxVolume} m³
-                          
                         </div>
                       </div>
                     </Flex>
@@ -462,39 +473,52 @@ function OrderStaff() {
             </Row>
           </Card>
         </div>
+
         <div className="table-data">
           <Card>
             <Title level={3}>Đơn hàng</Title>
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
               <Row>
                 <Col span={6} style={{ marginRight: "1em" }}>
-                  <Select
-                    value={stationFilter}
-                    onChange={(value) => { setStationFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn trạm"
-                    style={{ width: '100%' }}
-                  >
-                    {stations.map(station => (
-                      <Option key={station.id} value={station.stationNameVi}>
-                        {station.stationNameVi}
+                  <ConfigProvider locale={viVN}>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={setDateRange}
+                      style={{ width: '100%' }}
+                    />
+                  </ConfigProvider>
+                </Col>
+                <Col span={6} style={{ marginRight: "1em" }}>
+                  <Select placeholder="Trạng thái"
+                    style={{ width: 350 }}
+                    allowClear
+                    value={statusFilter}
+                    onChange={setStatusFilter}>
+                    {statusOptions.map((s) => (
+                      <Option key={s.id} value={s.id}>
+                        <Tag color={shipmentStatusColorMap[s.id]}>
+                          {shipmentStatusMap[s.id]}
+                        </Tag>
                       </Option>
                     ))}
                   </Select>
                 </Col>
-                <Col span={6}>
-                  <Select
-                    value={routeFilter}
-                    onChange={(value) => { setRouteFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn tuyến"
-                    style={{ width: '100%' }}
-                  >
-                    {metroLines.map(metros => (
-                      <Option key={metros.id} value={metros.id}>
-                        {metros.lineNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+                <Col span={6} style={{ marginRight: "1em" }}>
+                  <Input.Search
+                    placeholder="Tìm theo mã đơn hàng"
+                    onSearch={setSearchCode}
+                    allowClear
+                  />
                 </Col>
+                {/* <Col span={6}>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                      setDateRange([]);
+                      setSearchCode('');
+                    }}>
+                  </Button>
+                </Col> */}
               </Row>
             </div>
             <Table
@@ -504,6 +528,9 @@ function OrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
+              onRow={(record) => ({
+                onClick: () => onRowClick(record),
+              })}
             />
             <Modal
               title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
