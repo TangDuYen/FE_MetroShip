@@ -38,7 +38,6 @@ function OrderInformationStaff() {
                     const userRes = await api.get(`/users/${shipmentData.pickedUpBy}`);
                     setUser(userRes.data?.data);
                 }
-
             } catch (err) {
                 console.error("Lỗi lấy chi tiết đơn:", err);
             }
@@ -46,22 +45,23 @@ function OrderInformationStaff() {
         fetchDetails();
     }, [trackingCode]);
 
-    const handleCompensation = async (parcel) => {
-        try {
-            await api.post('/parcels/compensation', { parcelId: parcel.id });
-            toast.success('Đã gửi yêu cầu bồi thường!');
-        } catch (e) {
-            console.error(e);
-            toast.error('Không thể gửi yêu cầu bồi thường');
-        }
-    };
+    // const handleCompensation = async (parcel) => {
+    //     try {
+    //         await api.post('/parcels/compensation', { parcelId: parcel.id });
+    //         toast.success('Đã gửi yêu cầu bồi thường!');
+    //     } catch (e) {
+    //         console.error(e);
+    //         toast.error('Không thể gửi yêu cầu bồi thường');
+    //     }
+    // };
+
     const handleCreatePaymentUrl = async () => {
         if (!shipment?.id) return;
         try {
             const currentDomain = window.location.origin;
             const payload = {
                 shipmentId: shipment.id,
-                transactionType, // số nguyên, ví dụ 3
+                transactionType, 
                 returnUrl: `${currentDomain}/payment-success`,
                 cancelUrl: `${currentDomain}/payment-fail`,
             };

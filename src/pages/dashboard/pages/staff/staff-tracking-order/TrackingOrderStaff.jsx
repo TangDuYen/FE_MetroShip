@@ -1,6 +1,6 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
@@ -188,7 +188,6 @@ function TrackingOrderStaff() {
     }
 
     try {
-
       //UPLOAD IMAGES
       const formData = new FormData();
       formData.append("files", cccdImage);
@@ -211,22 +210,24 @@ function TrackingOrderStaff() {
         ],
       };
       const confirmRes = await api.post("/shipments/complete", payload);
+      setLoading(true);
       if (confirmRes.data?.statusCode === 200) {
         toast.success("Xác nhận hoàn thành đơn hàng thành công!");
         setIsUploadModalOpen(false);
         setCccdImage(null);
         setConfirmImage(null);
         setSelectedOrder(null);
+        setLoading(false);
       } else {
         toast.error("Xác nhận thất bại!");
+        setLoading(false);
       }
     } catch (err) {
       toast.error("Lỗi khi tải ảnh hoặc gửi xác nhận!");
+      setLoading(false);
       console.error(err);
     }
   };
-
-
 
   const columns = [
     {
@@ -575,27 +576,29 @@ function TrackingOrderStaff() {
             cancelText="Hủy"
             destroyOnClose
           >
-            <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCccdImage(e.target.files[0])}
-                />
-                {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setConfirmImage(e.target.files[0])}
-                />
-                {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
-              </Col>
-            </Row>
+            <Spin spinning={loading} tip="Đang xác nhận hoàn thành" size="large">
+              <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCccdImage(e.target.files[0])}
+                  />
+                  {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
+                </Col>
+                <Col span={12}>
+                  <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setConfirmImage(e.target.files[0])}
+                  />
+                  {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
+                </Col>
+              </Row>
+            </Spin>
           </Modal>
         </div>
       </div>
