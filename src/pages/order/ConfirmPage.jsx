@@ -171,7 +171,7 @@ function ConfirmPage({
         <Col span={12}>
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="Ngày gửi">{pickedDate || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Thời gian gửi">{selectedTimeLabel || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Hạn chót gửi hàng tại">{selectedTimeLabel || '—'}</Descriptions.Item>
             <Descriptions.Item label="Tổng trọng lượng">
               {totalWeight} kg
             </Descriptions.Item>
