@@ -97,7 +97,7 @@ function HistoryOrders() {
         }, {});
 
         const sortedShipmentItems = [...shipmentItems].sort(
-          (a, b) => new Date(b.scheduledDateTime) - new Date(a.scheduledDateTime)
+          (a, b) => new Date(b.lastUpdatedAt) - new Date(a.lastUpdatedAt)
         );
 
         // Gộp thành danh sách đơn hàng
@@ -400,7 +400,7 @@ function HistoryOrders() {
       }
 
       //FEEDBACK SHIPMENT
-      if (item.shipmentStatus === 20 && !hasRated) {
+      if (item.shipmentStatus === 22 && !hasRated) {
         actions.push(
           <Button
             type="primary"
