@@ -96,5 +96,16 @@ export const shipmentStatusSteps = [
   { id: 21, label: 'Đơn hàng đã giao thành công' },
 ];
 
-export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
+// export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
+export const formatCurrency = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return `${Math.floor(n).toLocaleString('vi-VN')} VND`;
+};
+
+export const formatCurrency1 = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return `${Math.floor(n).toLocaleString('vi-VN')}`;
+};
 
