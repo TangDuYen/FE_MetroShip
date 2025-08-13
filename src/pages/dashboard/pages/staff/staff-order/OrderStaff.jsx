@@ -3,7 +3,7 @@ import './OrderStaff.scss'
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { use, useEffect, useState } from 'react';
 
 import MetroStation from '../../../../../assets/metro_station.png';
@@ -57,7 +57,7 @@ function OrderStaff() {
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-
+  const [parcelCate, setParcelCate] = useState([]);
 
   if (!decodedUser?.StationId) {
     return (
@@ -76,8 +76,8 @@ function OrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId), getAllParcelCategories()]).then(
+      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData, parcelCateData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setShipments(shipmentsData.items);
@@ -85,6 +85,7 @@ function OrderStaff() {
         setTimeSlots(timeSlotsData);
         setMetroTrains(metroTrainData.items);
         setStatusOptions(shipmentsData.additionalData || []);
+        setParcelCate(parcelCateData);
 
         //ADDITIONAL TRAIN DATA
         const additional = metroTrainData.additionalData?.[0] || [];
@@ -156,8 +157,6 @@ function OrderStaff() {
     setFilteredShipments(filtered);
   };
 
-
-
   useEffect(() => {
     if (shipments.length > 0) {
       handleFilterChange();
@@ -204,14 +203,7 @@ function OrderStaff() {
       key: 'createdAt',
       render: (_, record) =>
         dayjs(record.createdAt).format("YYYY-MM-DD HH:mm:ss"),
-      // const relatedParcels = getParcelsByShipmentId(record.id);
-      // if (relatedParcels.length > 0) {
-      //   return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-      // }
-      // return 'N/A';
-
     },
-
     {
       title: 'Tổng chi phí',
       key: 'totalCost',
@@ -223,36 +215,36 @@ function OrderStaff() {
       key: 'shipmentStatus',
       render: (status) => (
         <Tag color={shipmentStatusColorMap[status] || "default"}>
-          {shipmentStatusMap[status] || 'Không xác nhận'};
+          {shipmentStatusMap[status] || 'Không xác nhận'}
         </Tag>
       ),
     },
-    // {
-    //   title: 'Xem chi tiết',
-    //   key: 'action',
-    //   render: (_, record) => (
-    //     <ConfigProvider
-    //       theme={{
-    //         components: {
-    //           Button: {
-    //             defaultColor: "white",
-    //             defaultBg: "#0066CC",
-    //             defaultBorderColor: "#0066CC",
-    //             defaultHoverBorderColor: "#0066CC",
-    //             defaultHoverColor: "white",
-    //             defaultHoverBg: "#0066CC",
-    //             defaultActiveBg: "#0066CC",
-    //             defaultActiveBorderColor: "#0066CC",
-    //             defaultActiveColor: "white",
-    //           }
-    //         }
-    //       }}>
-    //       <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
-    //         Xem chi tiết
-    //       </Button>
-    //     </ConfigProvider>
-    //   ),
-    // },
+    {
+      title: 'Xem chi tiết',
+      key: 'action',
+      render: (_, record) => (
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+                defaultHoverBorderColor: "#0066CC",
+                defaultHoverColor: "white",
+                defaultHoverBg: "#0066CC",
+                defaultActiveBg: "#0066CC",
+                defaultActiveBorderColor: "#0066CC",
+                defaultActiveColor: "white",
+              }
+            }
+          }}>
+          <Button className='booking-table-staff_button' onClick={() => onRowClick(record)}>
+            Xem chi tiết
+          </Button>
+        </ConfigProvider>
+      ),
+    },
     {
       title: 'Xác nhận',
       key: 'confirm',
@@ -528,9 +520,6 @@ function OrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
-              onRow={(record) => ({
-                onClick: () => onRowClick(record),
-              })}
             />
             <Modal
               title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
@@ -554,7 +543,10 @@ function OrderStaff() {
                             {
                               key: 'parcelCategory',
                               label: 'Loại hàng',
-                              value: parcel.parcelCategory?.categoryName || 'N/A',
+                              value:
+                                parcel.parcelCategory?.categoryName ||
+                                (parcelCate.find(c => c.id === parcel.parcelCategoryId)?.categoryName) ||
+                                'N/A',
                             },
                             {
                               key: 'chargeableWeightKg',
@@ -583,7 +575,7 @@ function OrderStaff() {
                             },
                             {
                               key: 'departureTime',
-                              label: 'Giờ gửi',
+                              label: 'Hạn chót nhận hàng lúc',
                               value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
                             },
                             {
@@ -594,7 +586,7 @@ function OrderStaff() {
                             {
                               key: 'totalCost',
                               label: 'Tổng chi phí',
-                              value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                              value: formatCurrency(parcel.priceVnd || 0),
                             },
                             {
                               key: 'parcelStatus',
