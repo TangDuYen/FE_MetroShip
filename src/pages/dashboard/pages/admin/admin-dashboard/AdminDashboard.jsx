@@ -10,46 +10,52 @@ import LineCharts from "./chart/lineChart/LineCharts";
 import ProgressChart from "./chart/progressChart/ProgressChart";
 import PieCharts from "./chart/pieChart/PieCharts";
 import BarCharts from "./chart/barChart/BarCharts";
+import api from "../../../../../config/axios";
 
 function AdminDashboard() {
+
   const [statsCards, setStatsCards] = useState([]);
-  const statsData = [
-    { value: "804,561 ", change: "+2.5%" },
-    { value: "1,204 đơn", change: "+3.1%" },
-    { value: "235 người", change: "+1.8%" },
-    { value: "982 đơn", change: "+4.6%" },
-  ];
-
-  const cards = [
-    {
-      title: "Doanh thu tháng này",
-      icon: <FaSackDollar />,
-      className: "card blue",
-    },
-    {
-      title: "Số đơn hàng",
-      icon: <FaBoxOpen />,
-      className: "card pink",
-    },
-    {
-      title: "Người dùng mới",
-      icon: <FaUsers />,
-      className: "card purple",
-    },
-    {
-      title: "Giao hàng thành công",
-      icon: <FaClipboardCheck />,
-      className: "card orange",
-    },
-  ];
-
   useEffect(() => {
-    const combined = cards.map((card, index) => ({
-      ...card,
-      ...statsData[index],
-    }));
-    setStatsCards(combined);
-  }, []);
+  const fetchStats = async () => {
+    try {
+      const [usersRes, shipmentsRes, transactionsRes] = await Promise.all([
+        api.get("/Report/users/stats"),
+        api.get("/Report/shipments/stats"),
+        api.get("/Report/transactions/stats"),
+      ]);
+
+      const { percentageNewUsers, totalUsersWithRoleUser } = usersRes.data.data;
+      const { totalShipments, percentageNewShipments, totalCompleteShipments, percentageNewCompleteShipments } = shipmentsRes.data.data;
+      const { growthPaidAmount, totalPaidAmount } = transactionsRes.data.data;
+
+      const statsData = [
+        { value: `${totalPaidAmount.toLocaleString()} VND`, change: `${growthPaidAmount}%` },
+        { value: `${totalShipments} đơn`, change: `${percentageNewShipments}%` },
+        { value: `${totalUsersWithRoleUser} người`, change: `${percentageNewUsers}%` },
+        { value: `${totalCompleteShipments} đơn`, change: `${percentageNewCompleteShipments}%` },
+      ];
+
+      const cards = [
+        { title: "Doanh thu tháng này", icon: <FaSackDollar />, className: "card blue" },
+        { title: "Số đơn hàng", icon: <FaBoxOpen />, className: "card pink" },
+        { title: "Người dùng mới", icon: <FaUsers />, className: "card purple" },
+        { title: "Giao hàng thành công", icon: <FaClipboardCheck />, className: "card orange" },
+      ];
+
+      const combined = cards.map((card, index) => ({
+        ...card,
+        ...statsData[index],
+      }));
+
+      setStatsCards(combined);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchStats();
+}, []);
+
   return (
     <div className="admin-dashboard">
       <div className="card-container">
