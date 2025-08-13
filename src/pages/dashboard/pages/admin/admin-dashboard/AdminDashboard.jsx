@@ -26,10 +26,10 @@ function AdminDashboard() {
 
       const { percentageNewUsers, totalUsersWithRoleUser } = usersRes.data.data;
       const { totalShipments, percentageNewShipments, totalCompleteShipments, percentageNewCompleteShipments } = shipmentsRes.data.data;
-      const { percentageNewPaidTransactions, totalPaidAmount } = transactionsRes.data.data;
+      const { growthPaidAmount, totalPaidAmount } = transactionsRes.data.data;
 
       const statsData = [
-        { value: `${totalPaidAmount.toLocaleString()} VND`, change: `${percentageNewPaidTransactions}%` },
+        { value: `${totalPaidAmount.toLocaleString()} VND`, change: `${growthPaidAmount}%` },
         { value: `${totalShipments} đơn`, change: `${percentageNewShipments}%` },
         { value: `${totalUsersWithRoleUser} người`, change: `${percentageNewUsers}%` },
         { value: `${totalCompleteShipments} đơn`, change: `${percentageNewCompleteShipments}%` },
