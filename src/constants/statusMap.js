@@ -85,7 +85,7 @@ export const parcelStatusColorMap = {
   2: "green",
   3: "purple",
   4: "red",
-  5: "yellow",
+  5: "#ff6600ff",
 }
 
 export const shipmentStatusSteps = [
