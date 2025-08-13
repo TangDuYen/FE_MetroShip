@@ -10,7 +10,7 @@ const { Title } = Typography;
 
 function ConfirmPage({
   personalInfo,
-  parcelInfo,   
+  parcelInfo,
   metroSelector,
   pickedDate,
   pickedTime,
@@ -22,11 +22,8 @@ function ConfirmPage({
   const [parcelCategoriesMap, setCategoriesMap] = useState({});
   const [selectedTimeLabel, setSelectedTimeLabel] = useState('');
   const selectedSolution = routeSolutions[selectedSolutionIndex] || {};
-  const optionalInsuranceFee = selectedSolution?.data?.parcels
-    ?.filter((p, idx) => parcelInfo[idx]?.includeOptionalInsurance)
-    .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0) || 0;
-  const finalDisplayPrice = (selectedSolution?.data?.totalCostVnd || 0) + optionalInsuranceFee;
-  const uiFinal = Number(sessionStorage.getItem('uiFinalTotalCostVnd') || 0);
+  const finalDisplayPrice = (selectedSolution?.data?.totalCostVnd || 0);
+
 
   // Fetch station names
   useEffect(() => {
@@ -116,8 +113,16 @@ function ConfirmPage({
           <Descriptions.Item label="Kích thước" key="size">
             {parcel.lengthCm} × {parcel.widthCm} × {parcel.heightCm} cm
           </Descriptions.Item>,
-          parcel.parcelCategory.insuranceFeeVnd && (
-            <Descriptions.Item label="Phí bảo hiểm">{parcel.insuranceFeeVnd}</Descriptions.Item>
+          parcel.isInsuranceIncluded && parcel.insuranceFeeVnd > 0 && (
+            <Descriptions.Item label="Phí bảo hiểm">
+              {formatCurrency(parcel.insuranceFeeVnd)}
+            </Descriptions.Item>
+          ),
+
+          !parcel.includeOptionalInsurance && parcel.insuranceFeeVnd > 0 && (
+            <Descriptions.Item label="Phí bảo hiểm">
+              {formatCurrency(parcel.insuranceFeeVnd)}
+            </Descriptions.Item>
           ),
           parcel.description && (
             <Descriptions.Item label="Mô tả" key="desc">{parcel.description}</Descriptions.Item>
@@ -171,10 +176,9 @@ function ConfirmPage({
               {totalWeight} kg
             </Descriptions.Item>
             <Descriptions.Item label="Tổng chi phí">
-              {/* {finalDisplayPrice
+              {finalDisplayPrice
                 ? `${Number(finalDisplayPrice).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VND`
-                : '—'} */}
-                {formatCurrency(uiFinal)}
+                : '—'}
             </Descriptions.Item>
 
           </Descriptions>

@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import {
+  formatCurrency1,
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
@@ -161,6 +162,7 @@ function HistoryOrders() {
 
   //   return () => clearInterval(interval);
   // }, [orders]);
+  
   useEffect(() => {
     async function fetchTransactionTypes() {
       try {
@@ -322,7 +324,7 @@ function HistoryOrders() {
       title: "Tổng chi phí (VND)",
       dataIndex: "price",
       key: "price",
-      render: (price) => price.toLocaleString("vi-VN", { maximumFractionDigits: 0 }),
+      render: (price) => formatCurrency1(price),
     },
     {
       title: "Tổng thể tích (cm³)",

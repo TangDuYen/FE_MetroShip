@@ -63,9 +63,6 @@ function Order() {
   const [priceVnd, setPriceVnd] = useState(null);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactionTypeId, setTransactionTypeId] = useState(null);
-  const uiFinal = Number(sessionStorage.getItem('uiFinalTotalCostVnd') || 0);
-  const optTotal = Number(sessionStorage.getItem('uiOptionalInsuranceTotalVnd') || 0);
-  const breakdown = JSON.parse(sessionStorage.getItem('uiOptionalInsuranceBreakdown') || '[]');
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -225,11 +222,6 @@ function Order() {
         legOrder: route.legOrder,
       })) || [];
 
-    //MAP PARCEL INDEX - OPTIONAL FEE
-    const optByIndex = new Map(
-      (breakdown || []).map((b) => [Number(b.parcelIndex), Number(b.optionalInsuranceFeeVnd || 0)])
-    );
-
     const validParcels = parcelInfo
       .filter(
         (p) =>
@@ -255,23 +247,12 @@ function Order() {
         if (p.description) base.description = p.description;
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
         if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
-
-        //INSURANCE: BASE(REQUIRED INSURANCE) + OPTIONAL(FROM BREAKDOWN)
-        const baseIns = Number(p.insuranceFeeVnd ?? 0);
-        const optIns = Number(optByIndex.get(idx) || 0);
-        const totalIns = baseIns + optIns;
-        if (totalIns > 0) base.insuranceFeeVnd = totalIns;
-
-        //PARCEL PRICE = TOTAL OPTIONALFEE
-        const basePrice = Number(p.priceVnd ?? 0);
-        if (p.priceVnd !== undefined) {
-          base.priceVnd = basePrice + optIns;
-        }
+        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
+        if (p.priceVnd !== undefined) base.priceVnd = Number(p.priceVnd);
+        if (p.includeOptionalInsurance) base.isInsuranceIncluded = true;
 
         //NOT SEND VALUEVND FOR OPTIONAL INSURANCE
         if (p.valueVnd !== undefined) base.valueVnd = Number(p.valueVnd);
-
-        if (p.includeOptionalInsurance) base.isInsuranceIncluded = true;
 
         return base;
       });
@@ -288,9 +269,9 @@ function Order() {
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
-      totalCostVnd: uiFinal,
+      totalCostVnd: itinerary?.data?.totalCostVnd,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,
-      totalInsuranceFeeVnd: Number(itinerary?.data?.totalInsuranceFeeVnd || 0) + optTotal,
+      totalInsuranceFeeVnd: Number(itinerary?.data?.totalInsuranceFeeVnd || 0),
       ...(totalKm && { totalKm: Number(totalKm) }),
       ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
       parcels: validParcels,

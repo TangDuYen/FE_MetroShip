@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Spin, Table } from 'antd';
 import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PATH_NAME } from '../../constants/pathname';
 import Title from 'antd/es/skeleton/Title';
@@ -58,7 +58,7 @@ function ParcelInfo({
   const [uploadedImageUrls, setUploadedImageUrls] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentParcelIndex, setCurrentParcelIndex] = useState(null);
-  const [includeOptionalInsurance, setIncludeOptionalInsurance] = useState(false);
+  const debounceTimeoutRef = useRef(null);
 
   //MODAL OPERATION
   const showModal = () => {
@@ -310,9 +310,28 @@ function ParcelInfo({
         lengthCm: Number(p.lengthCm) || 0,
         widthCm: Number(p.widthCm) || 0,
         heightCm: Number(p.heightCm) || 0,
+        ...p.isInsuranceIncluded ? { isInsuranceIncluded: true } : {},
+        ...p.insuranceFeeVnd ? { insuranceFeeVnd: Number(p.insuranceFeeVnd) } : {},
         ...p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {},
         descriptionImageUrl: p.descriptionImageUrl || '',
       })),
+      // parcels: parcelInfo.map(p => {
+      //   return {
+      //     parcelCategoryId: p.parcelCategory || '',
+      //     categoryInsuranceId: p.categoryInsuranceId || '',
+      //     weightKg: Number(p.weightKg) || 0,
+      //     lengthCm: Number(p.lengthCm) || 0,
+      //     widthCm: Number(p.widthCm) || 0,
+      //     heightCm: Number(p.heightCm) || 0,
+      //     ...(p.includeOptionalInsurance ? {
+      //       isInsuranceIncluded: true,
+      //       insuranceFeeVnd: Number(p.insuranceFeeVnd || 0)
+      //     } : {}),
+      //     ...(p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {}),
+      //     descriptionImageUrl: p.descriptionImageUrl || '',
+      //   };
+      // })
+
       userLatitude,
       userLongitude,
     };
@@ -331,19 +350,30 @@ function ParcelInfo({
 
     if (!ready) return;
 
-    const handler = setTimeout(() => {
-      fetchTotalPriceItinerary();
-    }, 800); //800MS AFTER CHANGING
+    //CLEAR TIME OUT
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
 
-    return () => clearTimeout(handler);
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchTotalPriceItinerary();
+    }, 600); //DEBOUNCE 600MS
   }, [
     realDepartureStationId,
     metroSelector.destinationStationId,
     metroSelector.departureDateTime,
     selectedDate,
     selectedTime,
-    JSON.stringify(parcelInfo)
+    JSON.stringify(parcelInfo.map(p => ({
+      parcelCategory: p.parcelCategory,
+      weightKg: p.weightKg,
+      lengthCm: p.lengthCm,
+      widthCm: p.widthCm,
+      heightCm: p.heightCm,
+      includeOptionalInsurance: p.includeOptionalInsurance
+    })))
   ]);
+
 
   const fetchTotalPriceItinerary = async () => {
     const payload = buildPriceItineraryPayload();
@@ -453,24 +483,6 @@ function ParcelInfo({
     realDepartureStationId
   ]);
 
-  //JUST UI CHANGE - NOT TRIGGER API
-  const persistUiTotals = (solution) => {
-    const base = Number(solution?.data?.totalCostVnd || 0);
-    const opt = computeOptionalInsuranceTotal();
-    const uiFinal = base + opt;
-
-    const breakdown = parcelInfo.map((p, i) => ({
-      parcelIndex: i,
-      categoryId: p.parcelCategory,
-      includeOptionalInsurance: !!p.includeOptionalInsurance,
-      declaredValueVnd: Number(p.valueVnd || 0),
-      optionalInsuranceFeeVnd: computeOptionalInsuranceFeeForParcel(p),
-    }));
-    sessionStorage.setItem('uiFinalTotalCostVnd', String(uiFinal));
-    sessionStorage.setItem('uiOptionalInsuranceTotalVnd', String(opt));
-    sessionStorage.setItem('uiOptionalInsuranceBreakdown', JSON.stringify(breakdown));
-  };
-
   return (
     <>
       <div>
@@ -512,13 +524,17 @@ function ParcelInfo({
                       checked={parcel.includeOptionalInsurance || false}
                       onChange={(e) => {
                         const updated = [...parcelInfo];
-                        updated[index].includeOptionalInsurance = e.target.checked;
+                        const isChecked = e.target.checked;
+                        updated[index].includeOptionalInsurance = isChecked;
+                        updated[index].isInsuranceIncluded = isChecked;
+                        updated[index].insuranceFeeVnd = isChecked ? baseFee : 0;
                         setParcelInfo(updated);
                       }}
                     >
                       Tính phí bảo hiểm cho hàng này
                       {policy ? ` (${baseFee.toLocaleString('vi-VN')} VND)` : ' (sẽ cộng khi tính giá)'}
                     </Checkbox>
+
                   );
                 }
                 return null;
@@ -815,8 +831,7 @@ function ParcelInfo({
               const hover = hoverMap[solution.type] || '#aaa';
 
               {/* OPTIONAL INSURANCE FEE */ }
-              const optionalFee = computeOptionalInsuranceTotal(); 
-              const displayPrice = (solution.data?.totalCostVnd || 0) + optionalFee;
+              const displayPrice = solution.data?.totalCostVnd || 0;
 
               return (
                 <div
@@ -850,7 +865,6 @@ function ParcelInfo({
                       setDisplayedDepartureStationId(firstStation.stationId);
                       setMetroSelector(prev => ({ ...prev, departureStationId: firstStation.stationId }));
                     }
-                    persistUiTotals(solution); 
                   }}
                 >
                   <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5em' }}>
