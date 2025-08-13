@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRef, useState } from "react";
 
 import { BsCart3 } from "react-icons/bs";
-import { GoPerson } from "react-icons/go";
+import { GoBell, GoPerson } from "react-icons/go";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
@@ -114,7 +114,6 @@ function Header() {
             <ul className="header-items">{navItems}</ul>
           </nav>
 
-          
           {/* Mobile menu */}
           <nav
             className={`header-mobile-menu ${isMobileMenuOpen ? "open" : ""}`}
@@ -141,9 +140,17 @@ function Header() {
               <GoSearch />
             </button>
           </form> */}
-          <button className="hamburger-icon" onClick={toggleMobileMenu}>
-            ☰
-          </button>
+            <button className="hamburger-icon" onClick={toggleMobileMenu}>
+              ☰
+            </button>
+            <div
+              className="header-block-notification"
+              onClick={() => console.log("Mở thông báo")}
+            >
+              <GoBell className="header-icons" />
+              {/* Nếu có số thông báo chưa đọc */}
+              <span className="notification-badge">3</span>
+            </div>
             <div
               className="header-block-account"
               ref={profileDropdownRef}
