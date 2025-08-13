@@ -120,10 +120,15 @@ function TrackingOrder() {
   };
 
   useEffect(() => {
-    fetchLivePosition();
-    intervalRef.current = setInterval(fetchLivePosition, 2000);
-    return () => clearInterval(intervalRef.current);
-  }, []);
+    if (!selectedShipment) return;
+
+    if (selectedShipment.shipmentStatus === 10) {
+      fetchLivePosition();
+      intervalRef.current = setInterval(fetchLivePosition, 2000);
+      return () => clearInterval(intervalRef.current);
+    }
+  }, [selectedShipment]);
+
 
   const getNearestIndex = (position, path) => {
     if (!path.length) return 0;
