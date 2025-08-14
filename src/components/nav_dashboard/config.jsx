@@ -98,6 +98,10 @@ export const navDashboardConfigStaff = [
       {
         key: "73",
         label: "Đơn hàng đã hoàn thành"
+      },
+      {
+        key: "74",
+        label: "Yêu cầu hỗ trợ"
       }
     ]
   },
@@ -158,6 +162,9 @@ export const navpath = {
   },
   73: {
     path: PATH_NAME.DASHBOARD_STAFF_HANDLED_ORDER,
+  },
+  74: {
+    path: PATH_NAME.DASHBOARD_STAFF_SUPPORT_TICKETS,
   },
   8: {
     path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
