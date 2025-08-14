@@ -348,6 +348,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.DASHBOARD_STAFF_SUPPORT_TICKETS,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import(
+                "../pages/dashboard/pages/staff/staff-support-tickets/SupportTicketStaff"
+              )
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
+      {
         path: PATH_NAME.DASHBOARD_STAFF_PAYMENT,
         element: (
           <ProtectedRouteStaff>

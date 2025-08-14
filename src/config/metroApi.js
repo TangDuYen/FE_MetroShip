@@ -172,4 +172,17 @@ export const getAllRegions = async () => {
   }
 }
 
+//SUPPORT_TICKETS 
+export const getAllSupportTickets = async () => {
+  try {
+    const res = await api.get("support-tickets?PageSize=1000");
+    return {
+      items: res.data.data.items,
+      additionalData: res.data.additionalData,
+    }
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+  }
+}
+
 

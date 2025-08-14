@@ -103,21 +103,19 @@ function HistoryOrders() {
         // Gộp thành danh sách đơn hàng
         const convertedOrders = sortedShipmentItems.map((shipment, index) => {
           const parcels = groupedByShipment[shipment.id] || [];
-          const totalWeight = parcels.reduce((sum, p) => sum + (p.chargeableWeightKg || 0), 0);
-          const totalVolume = parcels.reduce((sum, p) => sum + (p.volumeCm3 || 0), 0);
 
           return {
             id: index + 1,
             shipmentId: shipment.id,
             trackingCode: shipment.trackingCode || "N/A",
             name: parcels[0]?.parcelCategory?.categoryName || "Chưa rõ",
-            weight: totalWeight,
-            volume: totalVolume,
             price: shipment.totalCostVnd || 0,
             deliveryDate: shipment.scheduledDateTime || null,
             shipmentStatus: shipment.shipmentStatus,
             bookedAt: shipment.bookedAt,
             rating: shipment.rating || 0,
+            departureStationName: shipment.departureStationName || "",
+            destinationStationName: shipment.destinationStationName || "",
           };
         });
 
@@ -162,7 +160,7 @@ function HistoryOrders() {
 
   //   return () => clearInterval(interval);
   // }, [orders]);
-  
+
   useEffect(() => {
     async function fetchTransactionTypes() {
       try {
@@ -198,7 +196,7 @@ function HistoryOrders() {
       } else {
         toast.error("Không lấy được link thanh toán!");
         console.log(paymentPayload);
-        
+
       }
     } catch (err) {
       console.error("Lỗi khi thanh toán:", err);
@@ -316,9 +314,14 @@ function HistoryOrders() {
       key: "trackingCode",
     },
     {
-      title: "Tổng trọng lượng (kg)",
-      dataIndex: "weight",
-      key: "weight",
+      title: "Trạm gửi",
+      dataIndex: "departureStationName",
+      key: "departureStationName",
+    },
+    {
+      title: "Trạm nhận",
+      dataIndex: "destinationStationName",
+      key: "destinationStationName",
     },
     {
       title: "Tổng chi phí (VND)",
@@ -327,15 +330,16 @@ function HistoryOrders() {
       render: (price) => formatCurrency1(price),
     },
     {
-      title: "Tổng thể tích (cm³)",
-      dataIndex: "volume",
-      key: "volume",
-    },
-    {
       title: "Ngày gửi hàng",
       dataIndex: "deliveryDate",
       key: "deliveryDate",
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : "N/A"),
+    },
+    {
+      title: "Hạn chót gửi hàng lúc",
+      dataIndex: "deliveryDate",
+      key: "deliveryDate",
+      render: (date) => (date ? dayjs(date).format("HH:mm") : "N/A"),
     },
     {
       title: "Chi tiết",

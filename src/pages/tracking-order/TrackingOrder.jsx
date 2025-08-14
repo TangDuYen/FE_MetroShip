@@ -11,6 +11,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import { getAllParcelCategories } from '../../config/metroApi';
 import metro from "../../assets/metro_station.png";
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
@@ -152,6 +153,28 @@ function TrackingOrder() {
   const currentStatus = selectedShipment.shipmentStatus;
   const shipmentParcels = selectedShipment.parcels || [];
 
+  const handleInsuranceRequest = async (shipmentId) => {
+    try {
+      // Tạm thời set cứng subject và description
+      const payload = {
+        shipmentId,
+        subject: "Yêu cầu bồi thường",
+        description: "Khách hàng yêu cầu bồi thường vì kiện hàng bị mất.",
+        supportType: 1
+      };
+
+      const res = await api.post("/support-tickets", payload);
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Yêu cầu bồi thường đã được gửi thành công!");
+      } else {
+        toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu bồi thường:", error);
+      toast.error("Gửi yêu cầu thất bại!");
+    }
+  };
 
   return (
     <div className="tracking-order-container">
@@ -361,6 +384,16 @@ function TrackingOrder() {
                         {parcelStatusMap[p.status]}
                       </Tag>
                     </span>
+                  </div>
+                  <div className="detail-value">
+                    {p.status === 4 && (
+                      <Button
+                        type="primary"
+                        className='insurance-button'
+                        onClick={() => handleInsuranceRequest(selectedShipment.id)}>
+                        Yêu cầu bồi thường
+                      </Button>
+                    )}
                   </div>
                 </React.Fragment>
               ))}
