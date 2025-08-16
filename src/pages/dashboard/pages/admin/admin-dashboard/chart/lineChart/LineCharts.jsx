@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./LineCharts.scss";
 import {
   CartesianGrid,
@@ -37,7 +37,7 @@ function LineCharts() {
   const fetchRevenue = async () => {
     setLoading(true);
     try {
-      let url = "https://localhost:7085/api/Report/transaction-chart";
+      let url = "/Report/transaction-chart";
 
       if (filterType === 0) {
         url += `?FilterType=0`; // default
@@ -74,6 +74,10 @@ function LineCharts() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchRevenue();
+  }, []);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
