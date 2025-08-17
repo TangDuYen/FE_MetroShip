@@ -54,7 +54,7 @@ function MetroTrainManagement() {
       setMetroLines(lines);
       setLineMap(map);
 
-      const slotData = await getMetroTimeSlots(); // 👈 fetch time slots
+      const slotData = await getMetroTimeSlots();
       setTimeSlots(slotData);
 
       const data = await getAllMetroTrains();
