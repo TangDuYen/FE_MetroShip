@@ -20,11 +20,11 @@ import {
 import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
+import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { ReloadOutlined } from "@ant-design/icons";
 
 function AdminStaffManage() {
   const [users, setUsers] = useState([]);
@@ -107,7 +107,7 @@ function AdminStaffManage() {
 
   const handleAssign = async () => {
     try {
-      const values = await formAssign.validateFields(); // ✅ get all form values
+      const values = await formAssign.validateFields(); 
       const payload = {
         staffId: assigningStaff.id,
         stationId: values.stationId,
@@ -149,10 +149,10 @@ function AdminStaffManage() {
 
   const disabledDate = (current) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset to 00:00 of today
+    today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1); // +1 day
+    tomorrow.setDate(today.getDate() + 1);
     return current && current.valueOf() < tomorrow.getTime();
   };
   const columns = [
@@ -249,10 +249,6 @@ function AdminStaffManage() {
 
   return (
     <div className="staff-management-container">
-      {/* <Button type="primary" style={{ marginBottom: '1em' }} onClick={() => setShowAdd(true)}>
-        Thêm nhân viên
-      </Button> */}
-
       <div className="staff-filter-bar">
         <Space wrap size="middle">
           <Button type="primary" onClick={() => setShowAdd(true)}>

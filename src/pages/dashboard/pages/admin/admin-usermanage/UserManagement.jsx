@@ -1,10 +1,10 @@
 import "./UserManagement.scss";
 
+import { Button, Input, Space, Table } from "antd";
 import { useEffect, useState } from "react";
 
-import { Button, Input, Space, Table } from "antd";
-import { getAllCustomer } from "../../../../../config/metroApi";
 import { ReloadOutlined } from "@ant-design/icons";
+import { getAllCustomer } from "../../../../../config/metroApi";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);

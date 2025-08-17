@@ -6,6 +6,7 @@ import { getAllStations, getMetroLines } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import api from '../../../../../config/axios';
+import { toast } from 'react-toastify';
 
 function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
@@ -71,13 +72,12 @@ function MetroLineManagement() {
         try {
           if (editingLine) {
             // await api.put(`/api/metro-lines/${editingLine.id}`, payload);
-            message.success('Cập nhật thành công!');
+            toast.success('Cập nhật thành công!');
           } else {
             await api.post('/api/metro-lines', payload);
-            message.success('Đã thêm tuyến mới!');
+            toast.success('Đã thêm tuyến mới!');
           }
 
-          // reload again
           const metroLineData = await getMetroLines();
           setMetroLines(metroLineData);
 
@@ -85,7 +85,7 @@ function MetroLineManagement() {
           form.resetFields();
         } catch (error) {
           console.error('Submit failed:', error);
-          message.error('Có lỗi khi gửi dữ liệu!');
+          toast.error('Có lỗi khi gửi dữ liệu!');
         }
       })
       .catch((info) => {
@@ -149,7 +149,7 @@ function MetroLineManagement() {
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSubmit}
         cancelText="Hủy"
-        width={900} // rộng hơn để chứa danh sách station
+        width={900} 
         okText={editingLine ? 'Lưu' : 'Thêm'}
       >
         <Form form={form} layout="vertical">

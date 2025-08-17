@@ -2,7 +2,7 @@ import './HandledOrderStaff.scss';
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -52,6 +52,7 @@ function HandledOrderStaff() {
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
     const today = dayjs();
+    const [parcelCate,setParcelCate] = useState([]);
 
     if (!decodedUser?.StationId) {
         return (
@@ -76,14 +77,15 @@ function HandledOrderStaff() {
 
     //API ONE TIME
     useEffect(() => {
-        Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
-            ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+        Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId), getAllParcelCategories()]).then(
+            ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData, parcelCateData]) => {
                 setMetroLine(metroLineData)
                 setStations(stationData);
                 setShipments(shipmentsData.items);
                 setParcels(parcelsData);
                 setTimeSlots(timeSlotsData);
                 setMetroTrains(metroTrainData.items);
+                setParcelCate(parcelCateData);
 
                 //ADDITIONAL DATA TRAIN
                 const additional = metroTrainData.additionalData?.[0] || [];
@@ -112,9 +114,7 @@ function HandledOrderStaff() {
     };
 
 
-
     useEffect(() => {
-        // chỉ hiển thị đúng các trạng thái bạn muốn
         const opts = ALLOWED_STATUSES.map(id => ({
             id,
             label: shipmentStatusMap[id] || `Trạng thái ${id}`,
@@ -209,13 +209,6 @@ function HandledOrderStaff() {
         {
             title: 'Thời điểm tạo yêu cầu',
             key: 'createdAt',
-            // render: (_, record) => {
-            //     const relatedParcels = getParcelsByShipmentId(record.id);
-            //     if (relatedParcels.length > 0) {
-            //         return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-            //     }
-            //     return 'N/A';
-            // }
             render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
         },
         {
@@ -305,7 +298,6 @@ function HandledOrderStaff() {
         setDateRange(null);
         setStatusFilter(null);
         setSearchCode('');
-        // nếu muốn reset luôn kết quả về full allowed statuses ngay:
         const base = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
         setFilteredShipments(base);
     };
@@ -566,12 +558,12 @@ function HandledOrderStaff() {
                                                         {
                                                             key: 'createdAt',
                                                             label: 'Thời điểm tạo yêu cầu',
-                                                            value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+                                                            value: dayjs(selectedOrder.createdAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
                                                         },
                                                         {
                                                             key: 'totalCost',
                                                             label: 'Tổng chi phí',
-                                                            value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                                                            value: formatCurrency(parcel.priceVnd || 0),
                                                         },
                                                         {
                                                             key: 'parcelStatus',

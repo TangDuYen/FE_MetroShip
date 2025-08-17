@@ -1,9 +1,11 @@
 import "./SupportTicketStaff.scss";
 
-import { Button, Col, Input, Row, Select, Table, Tag } from "antd";
+import { Button, Col, Input, Modal, Row, Select, Space, Table, message } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllSupportTickets, getShipmentByStaffStation } from './../../../../../config/metroApi';
+import { getAllParcels, getAllShipments, getAllSupportTickets } from "./../../../../../config/metroApi";
 
+import api from "../../../../../config/axios";
+import axios from "axios";
 import dayjs from "dayjs";
 
 const { Search } = Input;
@@ -12,6 +14,7 @@ const { Option } = Select;
 function SupportTicketStaff({ stationId }) {
   const [tickets, setTickets] = useState([]);
   const [shipments, setShipments] = useState([]);
+  const [parcels, setParcels] = useState([]);
   const [statusList, setStatusList] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +23,24 @@ function SupportTicketStaff({ stationId }) {
   const [filterTicketId, setFilterTicketId] = useState("");
   const [filterShipmentCode, setFilterShipmentCode] = useState("");
 
+  // Modal state
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const [lostParcels, setLostParcels] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const openEditModal = (record) => {
+    const lostItems = parcels.filter((p) => p.shipmentId === record.shipmentId && p.status === 4);
+    setLostParcels(lostItems);
+
+    const order = shipments.find(s => s.id === record.shipmentId);
+    setSelectedOrder(order); // lưu thông tin đầy đủ
+
+    setSelectedShipment(record.shipmentId);
+    setIsModalVisible(true);
+  };
+
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -27,16 +48,19 @@ function SupportTicketStaff({ stationId }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [shipmentData, ticketData] = await Promise.all([
-        getShipmentByStaffStation(stationId),
+      const [shipmentData, ticketData, parcelData] = await Promise.all([
+        getAllShipments(),
         getAllSupportTickets(),
+        getAllParcels(),
       ]);
 
-      setShipments(shipmentData || []);
+      setShipments(shipmentData.items || []);
       setTickets(ticketData.items || []);
       setStatusList(ticketData.additionalData || []);
+      setParcels(parcelData || []);
     } catch (error) {
       console.error(error);
+      message.error("Lỗi tải dữ liệu");
     } finally {
       setLoading(false);
     }
@@ -44,7 +68,7 @@ function SupportTicketStaff({ stationId }) {
 
   const getShipmentCode = (id) => {
     const shipment = shipments.find((s) => s.id === id);
-    return shipment ? shipment.code : id;
+    return shipment ? shipment.trackingCode : id;
   };
 
   const filteredTickets = tickets.filter((t) => {
@@ -57,6 +81,26 @@ function SupportTicketStaff({ stationId }) {
       : true;
     return matchesStatus && matchesTicketId && matchesShipmentCode;
   });
+
+  const handleConfirmCompensation = async () => {
+    try {
+      const res = await api.post("/shipments/vnpay/payment-url", {
+        shipmentId: selectedShipment,
+        transactionType: 3,
+        returnUrl: window.location.origin + "/dashboard/staff/support-tickets",
+        cancelUrl: window.location.origin + "/dashboard/staff/support-tickets",
+      });
+
+      if (res.data?.paymentUrl) {
+        window.open(res.data.paymentUrl, "_blank");
+        setIsModalVisible(false);
+      } else {
+        message.error("Không tạo được link thanh toán");
+      }
+    } catch (err) {
+      message.error("Lỗi khi tạo link thanh toán");
+    }
+  };
 
   const columns = [
     {
@@ -78,35 +122,22 @@ function SupportTicketStaff({ stationId }) {
       key: "subject",
     },
     {
-      title: "Mô tả",
-      dataIndex: "description",
-      key: "description",
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        let color = "default";
-        if (status === 1) color = "orange";
-        if (status === 2) color = "green";
-        if (status === 3) color = "red";
-
-        const statusName = statusList.find((s) => s.id === status)?.value || status;
-        return <Tag color={color}>{statusName}</Tag>;
-      },
-    },
-    {
-      title: "Ngày mở",
-      dataIndex: "openedAt",
-      key: "openedAt",
-      render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
+      title: "Hành động",
+      render: (_, record) => (
+        <Space>
+          <Button
+            className="edit-train-button"
+            onClick={() => openEditModal(record)}
+          >
+            Giải quyết
+          </Button>
+        </Space>
+      ),
     },
   ];
 
   return (
     <div className="support-tickets-staff-container">
-      {/* Bộ lọc */}
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={8}>
           <Search
@@ -145,7 +176,6 @@ function SupportTicketStaff({ stationId }) {
         Làm mới
       </Button>
 
-      {/* Bảng */}
       <Table
         rowKey="id"
         columns={columns}
@@ -153,6 +183,111 @@ function SupportTicketStaff({ stationId }) {
         loading={loading}
         bordered
       />
+
+      {/* Modal bồi thường */}
+      <Modal
+        title={`Yêu cầu bồi thường cho đơn hàng: ${selectedOrder?.trackingCode || ''}`}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setModalOpen(false)}>
+            Hủy
+          </Button>,
+          <Button key="confirm" type="primary" onClick={handleConfirmCompensation}>
+            Xác nhận bồi thường
+          </Button>
+        ]}
+        width={700}
+      >
+        {selectedOrder && selectedOrder.relatedParcels && (
+          <Tabs defaultActiveKey="0">
+            {selectedOrder.relatedParcels
+              .filter(parcel => parcel.status === 4) 
+              .map((parcel, index) => (
+                <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Table
+                      dataSource={[
+                        {
+                          key: 'parcelCode',
+                          label: 'Mã kiện hàng',
+                          value: parcel.parcelCode || 'N/A',
+                        },
+                        {
+                          key: 'parcelCategory',
+                          label: 'Loại hàng',
+                          value: parcel.parcelCategory?.categoryName || 'N/A',
+                        },
+                        {
+                          key: 'chargeableWeightKg',
+                          label: 'Trọng lượng quy đổi',
+                          value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
+                        },
+                        {
+                          key: 'volumeCm3',
+                          label: 'Thể tích',
+                          value: `${parcel.volumeCm3 || 'N/A'} cm³`,
+                        },
+                        {
+                          key: 'departureStationName',
+                          label: 'Trạm gửi',
+                          value: selectedOrder.departureStationName || 'N/A',
+                        },
+                        {
+                          key: 'destinationStationName',
+                          label: 'Trạm nhận',
+                          value: selectedOrder.destinationStationName || 'N/A',
+                        },
+                        {
+                          key: 'departureDate',
+                          label: 'Ngày gửi',
+                          value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
+                        },
+                        {
+                          key: 'departureTime',
+                          label: 'Hạn chót gửi hàng',
+                          value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
+                        },
+                        {
+                          key: 'createdAt',
+                          label: 'Thời điểm tạo yêu cầu',
+                          value: dayjs(selectedOrder.bookedAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
+                        },
+                        {
+                          key: 'totalCost',
+                          label: 'Tổng chi phí',
+                          value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                        },
+                        {
+                          key: 'parcelStatus',
+                          label: 'Trạng thái kiện hàng',
+                          value: shipmentStatusMap[selectedOrder.shipmentStatus] || "Không xác nhận"
+                        },
+                      ]}
+                      columns={[
+                        {
+                          title: 'Thông tin',
+                          dataIndex: 'label',
+                          key: 'label',
+                        },
+                        {
+                          title: 'Chi tiết',
+                          dataIndex: 'value',
+                          key: 'value',
+                        },
+                      ]}
+                      pagination={false}
+                      bordered
+                      showHeader={false}
+                      rowClassName="order-detail-row"
+                    />
+                  </Space>
+                </TabPane>
+              ))}
+          </Tabs>
+        )}
+      </Modal>
+
     </div>
   );
 }
