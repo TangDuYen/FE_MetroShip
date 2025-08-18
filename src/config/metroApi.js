@@ -185,4 +185,11 @@ export const getAllSupportTickets = async () => {
   }
 }
 
-
+export const getAllInsurance = async () => {
+  try {
+    const res = await api.get("/insurance-policies?PageSize=1000");
+    return res.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu chính sách bảo hiểm");
+  }
+}
