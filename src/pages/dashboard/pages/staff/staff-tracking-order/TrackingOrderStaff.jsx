@@ -6,23 +6,21 @@ import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetro
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
-import { Html5Qrcode } from "html5-qrcode";
-import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
-import { QrcodeOutlined } from '@ant-design/icons';
 import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
+import isBetween from "dayjs/plugin/isBetween";
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
-const { RangePicker } = DatePicker;
+dayjs.extend(isBetween);
 
-const { TabPane } = Tabs;
+const { RangePicker } = DatePicker;
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
@@ -32,8 +30,6 @@ function TrackingOrderStaff() {
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
   const [dateFilter, setDateFilter] = useState(null);
-  const [stationFilter, setStationFilter] = useState(null);
-  const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -49,8 +45,8 @@ function TrackingOrderStaff() {
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
   const [metroTrains, setMetroTrains] = useState([]);
-  const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
-  const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
+  const [maxCapacity, setMaxCapacity] = useState(0); 
+  const [maxVolume, setMaxVolume] = useState(0);
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
@@ -147,23 +143,31 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 15
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
-      // || order.shipmentStatus == 22
       || order.shipmentStatus == 24
     );
 
     // CHỈNH SỬA FILTER
-    if (dateFilter) {
+    if (dateRange && dateRange.length === 2) {
+      const [startDate, endDate] = dateRange;
       filtered = filtered.filter(order =>
-        dayjs(order.scheduledDateTime).isSame(dayjs(dateFilter), 'day')
+        dayjs(order.scheduledDateTime).isBetween(
+          startDate.startOf("day"),
+          endDate.endOf("day"),
+          null,
+          "[]"
+        )
       );
     }
 
-    if (stationFilter) {
-      filtered = filtered.filter(order => order.departureStationName === stationFilter);
+    if (statusFilter) {
+      filtered = filtered.filter(order => order.shipmentStatus === statusFilter);
     }
 
-    if (routeFilter) {
-      filtered = filtered.filter(order => order.route === routeFilter);
+    if (searchCode && searchCode.trim() !== '') {
+      const searchLower = searchCode.trim().toLowerCase();
+      filtered = filtered.filter(order =>
+        order.trackingCode.toLowerCase().includes(searchLower)
+      );
     }
 
     setFilteredShipments(filtered);
@@ -174,7 +178,7 @@ function TrackingOrderStaff() {
     if (shipments.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateFilter, stationFilter, routeFilter]);
+  }, [shipments, dateRange, statusFilter, searchCode]);
 
   const handleOpenModal = (shipment) => {
     setSelectedOrder(shipment);
