@@ -1,12 +1,13 @@
 import "./AdminInsurance.scss";
 
-import { Button, Card, Table, Tag } from "antd";
+import { Button, Card, Input, Select, Space, Spin, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { getAllInsurance } from "../../../../../config/metroApi";
+import { ReloadOutlined } from "@ant-design/icons";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -34,6 +35,8 @@ import { getAllInsurance } from "../../../../../config/metroApi";
 function AdminInsurance() {
   const [policies, setPolicies] = useState([]);
   const navigate = useNavigate();
+  const [filteredStatusPolicies, setFilteredStatusPolicies] = useState("");
+  const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +54,20 @@ function AdminInsurance() {
 
     fetchData();
   }, []);
+
+  const filteredPolicies = policies.filter((item) => {
+    const matchName = item.name
+      .toLowerCase()
+      .includes(searchName.toLowerCase());
+    const matchStatus =
+      filteredStatusPolicies === ""
+        ? true
+        : filteredStatusPolicies === "active"
+        ? item.isActive
+        : !item.isActive;
+
+    return matchName && matchStatus;
+  });
 
   const columns = [
     {
@@ -136,10 +153,42 @@ function AdminInsurance() {
 
   return (
     <div className="admin-insurance-container">
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="Tìm theo tên chính sách"
+          allowClear
+          onChange={(e) => setSearchName(e.target.value)}
+          onSearch={(value) => setSearchName(value)}
+          style={{ width: 400 }}
+        />
+        <Select
+          placeholder="Trạng thái"
+          value={filteredStatusPolicies}
+          onChange={(v) => setFilteredStatusPolicies(v)}
+          style={{ width: 400 }}
+          allowClear
+        >
+          <Option value="active">
+            <Tag color="green">Đang áp dụng</Tag>
+          </Option>
+          <Option value="inactive">
+            {" "}
+            <Tag color="red">Ngưng hiệu lực</Tag>
+          </Option>
+        </Select>
+        <Button
+          className="clear-filter-button"
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setFilteredStatusPolicies([]);
+            setSearchName("");
+          }}
+        ></Button>
+      </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
         <Table
           columns={columns}
-          dataSource={policies}
+          dataSource={filteredPolicies}
           rowKey="id"
           pagination={{ pageSize: 10 }}
         />

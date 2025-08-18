@@ -44,6 +44,7 @@ function AdminStaffManage() {
   const [formAssign] = Form.useForm();
   const [searchText, setSearchText] = useState("");
   const [filterStations, setFilterStations] = useState([]);
+  const [filterRoles, setFilterRoles] = useState([]);
 
   const nav = useNavigate();
 
@@ -107,7 +108,7 @@ function AdminStaffManage() {
 
   const handleAssign = async () => {
     try {
-      const values = await formAssign.validateFields(); 
+      const values = await formAssign.validateFields();
       const payload = {
         staffId: assigningStaff.id,
         stationId: values.stationId,
@@ -144,7 +145,8 @@ function AdminStaffManage() {
     (u) =>
       u.fullName?.toLowerCase().includes(searchText.toLowerCase()) &&
       (filterStations.length === 0 ||
-        filterStations.includes(u.assignedStationId))
+        filterStations.includes(u.assignedStationId)) &&
+      (filterRoles.length === 0 || filterRoles.includes(u.currentRole))
   );
 
   const disabledDate = (current) => {
@@ -246,6 +248,9 @@ function AdminStaffManage() {
   ];
 
   // const data = users.map((u, index) => ({ ...u, key: index }));
+ // Lấy unique roles
+const uniqueRoles = [...new Set(users.map((u) => u.currentRole).filter(Boolean))];
+
 
   return (
     <div className="staff-management-container">
@@ -257,14 +262,14 @@ function AdminStaffManage() {
           <Input.Search
             allowClear
             placeholder="Tìm kiếm theo họ tên..."
-            style={{ width: 250 }}
+            style={{ width: 400 }}
             onChange={(e) => setSearchText(e.target.value)}
           />
           <Select
             mode="multiple"
             allowClear
             placeholder="Lọc theo trạm"
-            style={{ width: 200 }}
+            style={{ width: 400 }}
             value={filterStations}
             onChange={setFilterStations}
             options={stations.map((s) => ({
@@ -272,12 +277,28 @@ function AdminStaffManage() {
               value: s.id,
             }))}
           />
+          <Select
+            mode="multiple"
+            allowClear
+            placeholder="Lọc theo công việc"
+            style={{ width: 400 }}
+            value={filterRoles}
+            onChange={setFilterRoles}
+          >
+            {uniqueRoles.map((role) => (
+              <Option key={role} value={role}>
+                {role}
+              </Option>
+            ))}
+          </Select>
+
           <Button
             className="clear-filter-button"
             icon={<ReloadOutlined />}
             onClick={() => {
               setSearchText("");
               setFilterStations([]);
+              setFilterRoles([]);
             }}
           ></Button>
         </Space>
