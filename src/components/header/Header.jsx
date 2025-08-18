@@ -1,12 +1,12 @@
 import "./Header.scss";
 
+import { GoBell, GoPerson } from "react-icons/go";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout, selectUser } from "../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useRef, useState } from "react";
 
 import { BsCart3 } from "react-icons/bs";
-import { GoBell, GoPerson } from "react-icons/go";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
@@ -143,14 +143,14 @@ function Header() {
             <button className="hamburger-icon" onClick={toggleMobileMenu}>
               ☰
             </button>
-            <div
+            {/* <div
               className="header-block-notification"
               onClick={() => console.log("Mở thông báo")}
             >
               <GoBell className="header-icons" />
-              {/* Nếu có số thông báo chưa đọc */}
+              
               <span className="notification-badge">3</span>
-            </div>
+            </div> */}
             <div
               className="header-block-account"
               ref={profileDropdownRef}

@@ -32,8 +32,6 @@ function OrderStaff() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectParcel, setRejectParcel] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [stationFilter, setStationFilter] = useState(null);
-  const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -49,8 +47,8 @@ function OrderStaff() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-  const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
-  const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
+  const [maxCapacity, setMaxCapacity] = useState(0); 
+  const [maxVolume, setMaxVolume] = useState(0);
   const startIndex = (currentPage - 1) * pageSize;
   const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
   const [dateRange, setDateRange] = useState([]);
@@ -139,11 +137,7 @@ function OrderStaff() {
     if (dateRange && dateRange.length === 2) {
       const [startDate, endDate] = dateRange;
       filtered = filtered.filter(order =>
-        moment(order.bookedAt).isBetween(startDate.startOf('day'), endDate.endOf('day'))
-      );
-    } else if (dateFilter) {
-      filtered = filtered.filter(order =>
-        moment(order.bookedAt).isSame(dateFilter, 'day')
+        moment(order.createdAt).isBetween(startDate.startOf('day'), endDate.endOf('day'))
       );
     }
 
@@ -154,14 +148,18 @@ function OrderStaff() {
       );
     }
 
+    if (statusFilter) {
+      filtered = filtered.filter(order => order.shipmentStatus === statusFilter);
+    }
+
     setFilteredShipments(filtered);
   };
 
   useEffect(() => {
-    if (shipments.length > 0) {
+    if (shipmentsStaff.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateFilter, dateRange, searchCode]);
+  }, [shipmentsStaff, dateFilter, dateRange, searchCode]);
 
   const columns = [
     {
