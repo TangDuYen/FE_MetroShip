@@ -52,6 +52,15 @@ export const getAllParcelCategories = async () => {
   }
 };
 
+export const getParcelCategoryById = async (parcelCategoryId) => {
+  try {
+    const res = await api.get(`/parcel-category/${parcelCategoryId}`);
+    return res.data.data;
+  } catch (error) {
+    toast.error(res.data.message);
+  }
+};
+
 //PRICING
 
 //TRANSACTION

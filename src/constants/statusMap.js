@@ -24,8 +24,9 @@ export const shipmentStatusMap = {
   22: 'Đã hoàn thành',
   23: 'Delayed',
   24: 'Đã đến',
-  25: 'Bồi thường',
-  26: 'Đã bồi thường',
+  25: 'Đơn đã hoàn thành. Đợi bồi thường',
+  26: 'Bồi thường',
+  27: 'Đã bồi thường',
 };
 
 export const shipmentStatusColorMap = {
@@ -55,7 +56,8 @@ export const shipmentStatusColorMap = {
   23: "orange",      // Delayed - Chậm trễ 
   24: "cyan",        // Đã đến 
   25: "red",         // Bồi thường 
-  26: "green",       // Đã bồi thường 
+  26: "red",       // Đã bồi thường 
+  27: "green",       // Đã bồi thường 
 };
 
 
