@@ -1,54 +1,60 @@
 import './PrintOrder.scss';
 
-import { getAllCustomerShipments, getAllParcels } from './../../config/metroApi';
+import { formatCurrency, shipmentStatusMap } from '../../constants/statusMap';
+import { getAllCustomerShipments, getAllParcelCategories, getAllParcels } from './../../config/metroApi';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from 'antd';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
 import html2pdf from 'html2pdf.js';
-import { shipmentStatusMap } from '../../constants/statusMap';
 import { useLocation } from 'react-router-dom';
 
 function PrintOrder() {
   const location = useLocation();
   const [shipment, setShipment] = useState(null);
   const [parcels, setParcels] = useState([]);
+  const [parcelCate, setParcelCate] = useState([]);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [qrUrl, setQrUrl] = useState(null);
   const invoiceRef = useRef();
+  const [qrUrlsParcel, setQrUrlsParcel] = useState({});
+  
+
+
   useEffect(() => {
-    Promise.all([getAllCustomerShipments(), getAllParcels()]).then(
-      ([shipmentsData, parcelsData]) => {
+    Promise.all([getAllCustomerShipments(), getAllParcels(), getAllParcelCategories()]).then(
+      ([shipmentsData, parcelsData, parcelCateData]) => {
         const found = shipmentsData.find(
           (s) => s.trackingCode === location.state?.trackingCode
         );
         setShipment(found);
         setParcels(parcelsData);
+        setParcelCate(parcelCateData);
       }
     );
   }, [location]);
-const handleDownloadPDF = () => {
-  if (!invoiceRef.current) return;
+  const handleDownloadPDF = () => {
+    if (!invoiceRef.current) return;
 
-  invoiceRef.current.classList.add('pdf-scale');
+    invoiceRef.current.classList.add('pdf-scale');
 
-  const opt = {
-    margin: 0,
-    filename: `${shipment.trackingCode || 'invoice'}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+    const opt = {
+      margin: 0,
+      filename: `${shipment.trackingCode || 'invoice'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf()
+      .set(opt)
+      .from(invoiceRef.current)
+      .save()
+      .then(() => {
+        invoiceRef.current.classList.remove('pdf-scale');
+      });
   };
-
-  html2pdf()
-    .set(opt)
-    .from(invoiceRef.current)
-    .save()
-    .then(() => {
-      invoiceRef.current.classList.remove('pdf-scale');
-    });
-};
 
   useEffect(() => {
     const map = new Map();
@@ -65,7 +71,7 @@ const handleDownloadPDF = () => {
     const fetchQrForShipment = async () => {
       try {
         const res = await api.get(`/parcels/qrcode/${shipment.trackingCode}`);
-        setQrUrl(res.data); 
+        setQrUrl(res.data);
       } catch (err) {
         console.error('Lỗi QR đơn hàng:', err);
       }
@@ -76,11 +82,25 @@ const handleDownloadPDF = () => {
     }
   }, [shipment]);
 
-  const formatCurrency = (v) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(v);
+  useEffect(() => {
+    if (!relatedParcels.length) return;
+
+    const fetchAllQrParcels = async () => {
+      const qrResults = {};
+      for (const p of relatedParcels) {
+        try {
+          const res = await api.get(`/parcels/qrcode/${p.parcelCode}`);
+          qrResults[p.parcelCode] = res.data;
+        } catch (err) {
+          qrResults[p.parcelCode] = null;
+          console.error(`Lỗi QR kiện hàng ${p.parcelCode}:`, err);
+        }
+      }
+      setQrUrlsParcel(qrResults);
+    };
+
+    fetchAllQrParcels();
+  }, [relatedParcels]);
 
   if (!shipment) return <div style={{ padding: 20 }}>Đang tải...</div>;
 
@@ -90,11 +110,11 @@ const handleDownloadPDF = () => {
         <h1 className="invoice-title">HÓA ĐƠN VẬN CHUYỂN</h1>
         <div className="invoice-header">
           <div>
-            <strong>CÔNG TY: </strong>METRO EXPRESS
+            <strong>CÔNG TY: </strong>METROSHIP
             <br />
-            <strong>Địa chỉ: </strong>01 Lý Tự Trọng, Q1, TP.HCM
+            <strong>Địa chỉ: </strong>Số 1 Lưu Hữu Phước, Đông Hoà, Dĩ An, Hồ Chí Minh
             <br />
-            <strong>Điện thoại: </strong>1900 9999
+            <strong>Điện thoại: </strong>028 3835 1118 - 1109
           </div>
           <div style={{ textAlign: 'right' }}>
             <strong>Mã đơn: </strong>
@@ -104,7 +124,6 @@ const handleDownloadPDF = () => {
             {dayjs(shipment.bookedAt).format('DD/MM/YYYY')}
           </div>
         </div>
-
         <hr />
 
         <div className="info-section">
@@ -131,6 +150,7 @@ const handleDownloadPDF = () => {
               <th>Phí vận chuyển</th>
               <th>Bảo hiểm</th>
               <th>Tổng</th>
+              <th>QR CODE</th>
             </tr>
           </thead>
           <tbody>
@@ -144,12 +164,22 @@ const handleDownloadPDF = () => {
                 <td>{formatCurrency(p.shippingFeeVnd)}</td>
                 <td>{formatCurrency(p.insuranceFeeVnd)}</td>
                 <td>{formatCurrency(p.priceVnd)}</td>
+                <td>
+                  <td>
+                    {/* PARCEL QR CODE */}
+                    {qrUrlsParcel[p.parcelCode] && (
+                      <div style={{textAlign: 'center' }}>
+                        <img src={qrUrlsParcel[p.parcelCode]} alt={`QR-${p.parcelCode}`} width={50} height={50} />
+                      </div>
+                    )}
+                  </td>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* QR CODE */}
+        {/*SHIPMENT QR CODE */}
         {qrUrl && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <img src={qrUrl} alt={`QR-${shipment.trackingCode}`} width={120} height={120} />
@@ -162,7 +192,7 @@ const handleDownloadPDF = () => {
           <br />
           <strong>Trạng thái: </strong> {shipmentStatusMap[shipment.shipmentStatus] || 'N/A'}
           <br />
-          <strong>Dự kiến giao: </strong>{' '}
+          <strong>Hạn chót gửi hàng lúc: </strong>{' '}
           {dayjs(shipment.scheduledDateTime).format('DD/MM/YYYY HH:mm')}
         </div>
 

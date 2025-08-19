@@ -1,6 +1,7 @@
 import api from "./axios";
 import { toast } from "react-toastify";
 
+//SHIPMENT
 export const getAllShipments = async () => {
   try {
     const res = await api.get("/shipments?PageSize=1000");
@@ -22,6 +23,16 @@ export const getAllCustomerShipments = async () => {
   }
 };
 
+export const getShipmentByStaffStation = async (stationId) => {
+  try {
+    const res = await api.get(`/shipments?PageSize=1000&DepartureStationId=${stationId}`);
+    return res.data.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu đơn hàng do bạn chưa được phân công trạm");
+  }
+};
+
+//PARCEL
 export const getAllParcels = async () => {
   try {
     const res = await api.get("/parcels?PageSize=1000");
@@ -31,6 +42,7 @@ export const getAllParcels = async () => {
   }
 };
 
+//PARCEL-CATEGORY
 export const getAllParcelCategories = async () => {
   try {
     const res = await api.get("/parcel-category?PageSize=1000");
@@ -40,33 +52,18 @@ export const getAllParcelCategories = async () => {
   }
 };
 
-export const getAllStations = async () => {
+export const getParcelCategoryById = async (parcelCategoryId) => {
   try {
-    const res = await api.get("/stations");
+    const res = await api.get(`/parcel-category/${parcelCategoryId}`);
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu các trạm metro");
+    toast.error(res.data.message);
   }
 };
 
-export const getMetroLines = async () => {
-  try {
-    const res = await api.get("/metro-lines/dropdown");
-    return res.data.data;
-  } catch (error) {
-    toast.error("Không thể lấy dữ liệu các tuyến metro");
-  }
-};
+//PRICING
 
-export const getMetroTimeSlots = async () => {
-  try {
-    const res = await api.get("/metro-time-slots");
-    return res.data.data;
-  } catch (error) {
-    toast.error("Không thể lấy dữ liệu thời gian biểu của metro");
-  }
-};
-
+//TRANSACTION
 export const getAllTransactions = async () => {
   try {
     const res = await api.get("/transactions?PageSize=1000");
@@ -76,6 +73,45 @@ export const getAllTransactions = async () => {
   }
 };
 
+export const getAllTransactionTypes = async () => {
+  try {
+    const res = await api.get("/transactions/types");
+    return res.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu loại thanh toán");
+  }
+}
+
+//METROROUTE
+export const getMetroLines = async () => {
+  try {
+    const res = await api.get("/metro-lines/dropdown");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu các tuyến metro");
+  }
+};
+
+export const getMetroLinesByStation = async (stationId) => {
+  try {
+    const res = await api.get(`/metro-lines/dropdown?stationId=${stationId}`);
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu các tuyến metro");
+  }
+};
+
+//METRO-TIMESLOT
+export const getMetroTimeSlots = async () => {
+  try {
+    const res = await api.get("/metro-time-slots");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu thời gian biểu của metro");
+  }
+};
+
+//TRAIN
 export const getAllMetroTrains = async () => {
   try {
     const res = await api.get("/metro-trains?PageSize=1000");
@@ -85,6 +121,29 @@ export const getAllMetroTrains = async () => {
   }
 };
 
+export const getMetroTrainsByStation = async (stationId) => {
+  try {
+    const res = await api.get(`/metro-trains?StationId=${stationId}&PageSize=1000`);
+    return {
+      items: res.data.data.items,
+      additionalData: res.data.additionalData,
+    };
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu tàu");
+  }
+}
+
+//STATION
+export const getAllStations = async () => {
+  try {
+    const res = await api.get("/stations");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu các trạm metro");
+  }
+};
+
+//USER
 export const getAllCustomer = async () => {
   try {
     const res = await api.get("/users?PageSize=1000&role=3");
@@ -112,20 +171,34 @@ export const getAllAsignedStaffRole = async () => {
   }
 };
 
-export const getShipmentByStaffStation = async (stationId) => {
-  try {
-    const res = await api.get(`/shipments?PageSize=1000&DepartureStationId=${stationId}`);
-    return res.data.data.items;
-  } catch (error) {
-    toast.error("Không thể lấy dữ liệu đơn hàng do bạn chưa được phân công trạm");
-  }
-};
-
+//REGION
 export const getAllRegions = async () => {
   try {
     const res = await api.get("/regions?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
     toast.error("Không thể lấy dữ liệu khu vực");
+  }
+}
+
+//SUPPORT_TICKETS 
+export const getAllSupportTickets = async () => {
+  try {
+    const res = await api.get("support-tickets?PageSize=1000");
+    return {
+      items: res.data.data.items,
+      additionalData: res.data.additionalData,
+    }
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+  }
+}
+
+export const getAllInsurance = async () => {
+  try {
+    const res = await api.get("/insurance-policies?PageSize=1000");
+    return res.data.items;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu chính sách bảo hiểm");
   }
 }

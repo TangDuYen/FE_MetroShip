@@ -1,20 +1,22 @@
 import './OrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Typography } from 'antd';
-import { getAllMetroTrains, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { use, useEffect, useState } from 'react';
 
-import { ClockCircleOutlined } from '@ant-design/icons';
-import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
+import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
-import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
+import viVN from 'antd/lib/locale/vi_VN';
 
 const { TabPane } = Tabs;
+const { RangePicker } = DatePicker;
 
 const { Title } = Typography;
 
@@ -30,8 +32,6 @@ function OrderStaff() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectParcel, setRejectParcel] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [stationFilter, setStationFilter] = useState(null);
-  const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -44,6 +44,19 @@ function OrderStaff() {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
   const decodedUser = token ? jwtDecode(token) : null;
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 2;
+  const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
+  const [maxCapacity, setMaxCapacity] = useState(0);
+  const [maxVolume, setMaxVolume] = useState(0);
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
+  const [dateRange, setDateRange] = useState([]);
+  const [searchCode, setSearchCode] = useState('');
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [parcelCate, setParcelCate] = useState([]);
+  const ALLOWED_STATUS = [0, 7];
 
   if (!decodedUser?.StationId) {
     return (
@@ -60,20 +73,25 @@ function OrderStaff() {
     );
   }
 
-  //FORMAT TIỀN
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getAllMetroTrains()]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId), getAllParcelCategories()]).then(
+      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData, parcelCateData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
-        setMetroTrains(metroTrainData);
+        setMetroTrains(metroTrainData.items);
+        setParcelCate(parcelCateData);
+
+        //ADDITIONAL TRAIN DATA
+        const additional = metroTrainData.additionalData?.[0] || [];
+        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
+        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
+
+        setMaxCapacity(maxCapacityKg);
+        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
@@ -114,31 +132,42 @@ function OrderStaff() {
   };
 
   const handleFilterChange = () => {
-    const now = moment();
-    const start = now.clone().subtract(48, 'hours');
-    const end = now.clone().add(48, 'hours');
+    let filtered = shipmentsStaff.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
 
-    // Bước 1: lọc các đơn đã thanh toán, tạo trong vòng 48h
-    let filtered = shipmentsStaff.filter(order =>
-      order.shipmentStatus === 7 &&
-      moment(order.bookedAt).isBetween(start, end)
-    );
-
-    // Bước 2: nếu chọn ngày => lọc thêm theo ngày gửi (scheduleDateTime)
-    if (dateFilter) {
-      filtered = filtered.filter(order =>
-        moment(order.bookedAt).isSame(dateFilter, 'day')
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const [start, end] = dateRange;
+      filtered = filtered.filter(o =>
+        moment(o.createdAt).isBetween(start.startOf('day'), end.endOf('day'))
       );
+    }
+
+    if (searchCode && searchCode.trim() !== '') {
+      const searchLower = searchCode.trim().toLowerCase();
+      filtered = filtered.filter(order =>
+        order.trackingCode.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (statusFilter !== null && statusFilter !== undefined) {
+      filtered = filtered.filter(o => o.shipmentStatus === Number(statusFilter));
     }
     setFilteredShipments(filtered);
   };
 
-
   useEffect(() => {
-    if (shipments.length > 0) {
+    if (shipmentsStaff.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateFilter, stationFilter, routeFilter]);
+  }, [shipmentsStaff, dateFilter, dateRange, searchCode, statusFilter]);
+
+  useEffect(() => {
+    const opts = ALLOWED_STATUS.map(id => ({
+      id,
+      label: shipmentStatusMap[id] || `Trạng thái ${id}`,
+      color: shipmentStatusColorMap[id] || 'default',
+    }));
+    setStatusOptions(opts);
+  }, []);
 
   const columns = [
     {
@@ -170,7 +199,7 @@ function OrderStaff() {
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
-      title: 'Giờ gửi',
+      title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',
       key: 'scheduledTime',
       render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
@@ -178,15 +207,9 @@ function OrderStaff() {
     {
       title: 'Thời điểm tạo yêu cầu',
       key: 'createdAt',
-      render: (_, record) => {
-        const relatedParcels = getParcelsByShipmentId(record.id);
-        if (relatedParcels.length > 0) {
-          return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-        }
-        return 'N/A';
-      }
+      render: (_, record) =>
+        dayjs(record.createdAt).format("YYYY-MM-DD HH:mm:ss"),
     },
-
     {
       title: 'Tổng chi phí',
       key: 'totalCost',
@@ -196,9 +219,11 @@ function OrderStaff() {
       title: 'Trạng thái',
       dataIndex: 'shipmentStatus',
       key: 'shipmentStatus',
-      render: (status) => {
-        return shipmentStatusMap[status] || 'Không xác nhận';
-      },
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || 'Không xác nhận'}
+        </Tag>
+      ),
     },
     {
       title: 'Xem chi tiết',
@@ -227,7 +252,7 @@ function OrderStaff() {
       ),
     },
     {
-      title: 'Hành động',
+      title: 'Xác nhận',
       key: 'confirm',
       render: (_, record) => {
         return (
@@ -262,7 +287,7 @@ function OrderStaff() {
       }
     },
     {
-      title: 'Hành động',
+      title: 'Từ chối',
       key: 'action',
       render: (_, record) => {
         return (
@@ -303,96 +328,118 @@ function OrderStaff() {
     setModalOpen(true);
   };
 
+  const handleResetFilters = () => {
+    setDateRange(null);
+    setStatusFilter(null);
+    setSearchCode('');
+  };
+
   return (
-    // <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
     <>
       <div className="order-staff-container">
-        <div className="metro-info" style={{ marginBottom: "1em" }}>
-          <Card>
-            <Title level={3}>Thông tin tuyến Metro 1</Title>
+        <div className="metro-info">
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>Thông tin nhân viên</Title>
             <Row gutter={24}>
+              {/* AVATAR */}
               <Col span={6}>
                 <img
-                  src={MetroStation}
+                  src={StaffIcon}
                   alt="Metro_Subway"
-                  style={{
-                    width: "5em"
-                  }}
+                  style={{ width: "5em" }}
                 />
               </Col>
+
+              {/* STAFF ASSIGNMENT */}
               <Col span={18}>
-                <Flex justify="space-between" align="center">
+                <Flex justify="space-between" align="center" style={{ flexWrap: "wrap" }}>
+                  {/* Thông tin nhân viên */}
                   <div className="metro-line-description">
-                    Mã tuyến
+                    Vai trò
                     <div className="data">
-                      L1
+                      {decodedUser?.AssignmentRole || "N/A"}
                     </div>
                   </div>
                   <div className="metro-line-description">
-                    Số tàu hoạt động hiện tại
+                    Làm việc tại trạm
                     <div className="data">
-                      2
+                      {
+                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                      }
                     </div>
                   </div>
+
                   <div className="metro-line-description">
-                    Tổng sức chứa
+                    Thời gian bắt đầu
                     <div className="data">
-                      2000kg
+                      {staffAssignments?.[0]?.fromTime
+                        ? dayjs(staffAssignments[0].fromTime).format("DD/MM/YYYY")
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div className="metro-line-description">
+                    Thời gian kết thúc
+                    <div className="data">
+                      {staffAssignments?.[0]?.toTime
+                        ? dayjs(staffAssignments[0].toTime).format("DD/MM/YYYY")
+                        : "N/A"}
                     </div>
                   </div>
                 </Flex>
               </Col>
             </Row>
-            <Title level={3}>Thông tin tàu</Title>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">1</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">2</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
+          </Card>
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
+            <Row gutter={16}>
+              {currentData.map((train) => (
+                <Col span={24} key={train.id}>
+                  <Card className="metro-subway-info" style={{ marginBottom: '1em' }}>
+                    <Flex justify="space-between" align="center">
+                      <Flex align="center" gap="small">
+                        <img
+                          src={MetroStation}
+                          alt="Metro_Subway"
+                          style={{ width: "3em" }}
+                        />
+                        <div className="metro-subway-description" style={{ marginLeft: '0.5em' }}>
+                          Tàu
+                          <div className="subway-data">{train.trainCode}</div>
+                        </div>
+                      </Flex>
+                      <div className="metro-subway-description">
+                        Trọng tải tàu (kg)
+                        <div className="subway-data">
+                          {maxCapacity} kg
+                        </div>
+                      </div>
+                      <div className="metro-subway-description">
+                        Dung tích tàu (m³)
+                        <div className="subway-data">
+                          {maxVolume} m³
+                        </div>
+                      </div>
+                    </Flex>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            <Flex justify="center" style={{ marginTop: "1em" }}>
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={metroTrains.length}
+                onChange={(page) => setCurrentPage(page)}
+              />
+            </Flex>
           </Card>
         </div>
+
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
           <Card>
-            <Title level={3}>Thời gian</Title>
+            <Title level={3}>Ngày và Ca vận chuyển của Metro</Title>
             <Row gutter={16}>
               <Col span={6}>
                 <DatePicker
@@ -430,38 +477,50 @@ function OrderStaff() {
             </Row>
           </Card>
         </div>
+
         <div className="table-data">
           <Card>
             <Title level={3}>Đơn hàng</Title>
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
-              <Row>
-                <Col span={6} style={{ marginRight: "1em" }}>
-                  <Select
-                    value={stationFilter}
-                    onChange={(value) => { setStationFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn trạm"
-                    style={{ width: '100%' }}
-                  >
-                    {stations.map(station => (
-                      <Option key={station.id} value={station.stationNameVi}>
-                        {station.stationNameVi}
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <ConfigProvider locale={viVN}>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={setDateRange}
+                      style={{ width: '100%' }}
+                    />
+                  </ConfigProvider>
+                </Col>
+                <Col span={6}>
+                  <Select placeholder="Trạng thái"
+                    style={{ width: 350 }}
+                    allowClear
+                    value={statusFilter}
+                    onChange={setStatusFilter}>
+                    {statusOptions.map((s) => (
+                      <Option key={s.id} value={s.id}>
+                        <Tag color={shipmentStatusColorMap[s.id]}>
+                          {shipmentStatusMap[s.id]}
+                        </Tag>
                       </Option>
                     ))}
                   </Select>
                 </Col>
                 <Col span={6}>
-                  <Select
-                    value={routeFilter}
-                    onChange={(value) => { setRouteFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn tuyến"
-                    style={{ width: '100%' }}
-                  >
-                    {metroLines.map(metros => (
-                      <Option key={metros.id} value={metros.id}>
-                        {metros.lineNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+                  <Input.Search
+                    placeholder="Tìm theo mã đơn hàng"
+                    value={searchCode}
+                    onChange={(e) => setSearchCode(e.target.value)}
+                    onSearch={(v) => setSearchCode(v)}
+                    allowClear
+                  />
+                </Col>
+                <Col span={6}>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleResetFilters}>
+                  </Button>
                 </Col>
               </Row>
             </div>
@@ -472,6 +531,7 @@ function OrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
+              locale={{ emptyText: 'Không có dữ liệu' }}
             />
             <Modal
               title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
@@ -495,7 +555,10 @@ function OrderStaff() {
                             {
                               key: 'parcelCategory',
                               label: 'Loại hàng',
-                              value: parcel.parcelCategory?.categoryName || 'N/A',
+                              value:
+                                parcel.parcelCategory?.categoryName ||
+                                (parcelCate.find(c => c.id === parcel.parcelCategoryId)?.categoryName) ||
+                                'N/A',
                             },
                             {
                               key: 'chargeableWeightKg',
@@ -524,7 +587,7 @@ function OrderStaff() {
                             },
                             {
                               key: 'departureTime',
-                              label: 'Giờ gửi',
+                              label: 'Hạn chót nhận hàng lúc',
                               value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
                             },
                             {
@@ -535,7 +598,7 @@ function OrderStaff() {
                             {
                               key: 'totalCost',
                               label: 'Tổng chi phí',
-                              value: formatCurrency(selectedOrder.totalCostVnd || 0),
+                              value: formatCurrency(parcel.priceVnd || 0),
                             },
                             {
                               key: 'parcelStatus',
@@ -686,8 +749,6 @@ function OrderStaff() {
         </div>
       </div>
     </>
-    // </Spin>
-
   );
 }
 

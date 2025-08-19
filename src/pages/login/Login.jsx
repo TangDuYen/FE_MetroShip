@@ -30,6 +30,7 @@ function Login() {
     const refreshToken = response.data.refreshToken;
     const refreshTokenExpiredTime = response.data.refreshTokenExpiredTime;
     const userId = response.data.id;
+    const staffAssignments = response.data.staffAssignments;
 
     const user = jwtDecode(token);
 
@@ -51,6 +52,9 @@ function Login() {
     } else if (user.role.includes("Admin")) {
       nav("/dashboard/admin");
     } else if (user.role.includes("Staff")) {
+      if (Array.isArray(staffAssignments)) {
+        localStorage.setItem("staffAssignments", JSON.stringify(staffAssignments));
+      }
       nav("/dashboard/staff/pending-order");
     }
 

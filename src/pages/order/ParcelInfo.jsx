@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Spin, Table } from 'antd';
 import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PATH_NAME } from '../../constants/pathname';
 import Title from 'antd/es/skeleton/Title';
@@ -58,8 +58,9 @@ function ParcelInfo({
   const [uploadedImageUrls, setUploadedImageUrls] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentParcelIndex, setCurrentParcelIndex] = useState(null);
-  const [includeOptionalInsurance, setIncludeOptionalInsurance] = useState(false);
+  const debounceTimeoutRef = useRef(null);
 
+  //MODAL OPERATION
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -184,10 +185,9 @@ function ParcelInfo({
     setDimensionError(errors);
   }, [parcelInfo, parcelCategory]);
 
-
   const fetchChargeableWeight = async ({ weightKg, lengthCm, widthCm, heightCm }) => {
     try {
-      const res = await api.post("parcels/chargeable-weight", {
+      const res = await api.post("/parcels/chargeable-weight", {
         weightKg, lengthCm, widthCm, heightCm
       });
       return res.data?.data || 0;
@@ -217,25 +217,74 @@ function ParcelInfo({
       }
     }
 
+    // if (field === 'parcelCategory') {
+    //   const selectedCat = parcelCategory.find(cat => cat.id === value);
+
+    //   updatedList[index].categoryInsuranceId = selectedCat?.categoryInsurances?.[0]?.id || "";
+    //   updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
+    //   updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
+
+    //   if (selectedCat?.isInsuranceRequired) {
+    //     updatedList[index].valueVnd = updatedList[index].valueVnd;
+    //   } else {
+    //     delete updatedList[index].valueVnd;
+    //   }
+    // }
     if (field === 'parcelCategory') {
       const selectedCat = parcelCategory.find(cat => cat.id === value);
-      updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
-      updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
 
-      if (selectedCat?.insuranceRate) {
-        updatedList[index].valueVnd = updatedList[index].valueVnd || 0;
+      updatedList[index].categoryInsuranceId =
+        selectedCat?.categoryInsurances?.[0]?.id || '';
+
+      //REQUIRED INSURANCE
+      if (selectedCat?.isInsuranceRequired) {
+        updatedList[index].includeOptionalInsurance = false;
+        updatedList[index].valueVnd = updatedList[index].valueVnd; //USER INPUT VALUEVND
       } else {
+        updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
         delete updatedList[index].valueVnd;
       }
     }
     setParcelInfo(updatedList);
   };
 
+  //GET ACTIVE POLICY
+  const getPolicyForCategory = (categoryId) => {
+    const cat = parcelCategory.find(c => c.id === categoryId);
+    return cat?.categoryInsurances?.find(i => i.insurancePolicy?.isActive)?.insurancePolicy || null;
+  };
+
+  //OPTIONAL INSURANCE (CHECKBOX IS CHECKED)
+  const computeOptionalInsuranceFeeForParcel = (p) => {
+    const policy = getPolicyForCategory(p.parcelCategory);
+    if (!p?.includeOptionalInsurance || !policy) return 0;
+
+    const cat = parcelCategory.find(c => c.id === p.parcelCategory);
+    const base = Number(policy.baseFeeVnd || 0);
+
+    //BASEFEEVND FOR OPTIONAL
+    if (!cat?.isInsuranceRequired) {
+      return Math.round(base);
+    }
+
+    //INSURANCERATE FOR REQUIRED
+    const value = Number(p.valueVnd || 0);
+    const rate = Number(policy.insuranceFeeRateOnValue || 0);
+
+    const ratePart = value * rate;
+
+    return Math.round(base + ratePart);
+  };
+
+  //TOTAL OPTIONAL INSURANCE FEE
+  const computeOptionalInsuranceTotal = () => parcelInfo.reduce((sum, p) => sum + computeOptionalInsuranceFeeForParcel(p), 0);
+
   const addNewParcel = () => {
     setParcelInfo([
       ...parcelInfo,
       {
         parcelCategory: "",
+        categoryInsuranceId: "",
         weightKg: "",
         lengthCm: "",
         heightCm: "",
@@ -256,18 +305,39 @@ function ParcelInfo({
       timeSlotId: selectedTime || '',
       parcels: parcelInfo.map(p => ({
         parcelCategoryId: p.parcelCategory || '',
+        categoryInsuranceId: p.categoryInsuranceId || '',
         weightKg: Number(p.weightKg) || 0,
         lengthCm: Number(p.lengthCm) || 0,
         widthCm: Number(p.widthCm) || 0,
         heightCm: Number(p.heightCm) || 0,
+        ...p.isInsuranceIncluded ? { isInsuranceIncluded: true } : {},
+        ...p.insuranceFeeVnd ? { insuranceFeeVnd: Number(p.insuranceFeeVnd) } : {},
         ...p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {},
         descriptionImageUrl: p.descriptionImageUrl || '',
       })),
+      // parcels: parcelInfo.map(p => {
+      //   return {
+      //     parcelCategoryId: p.parcelCategory || '',
+      //     categoryInsuranceId: p.categoryInsuranceId || '',
+      //     weightKg: Number(p.weightKg) || 0,
+      //     lengthCm: Number(p.lengthCm) || 0,
+      //     widthCm: Number(p.widthCm) || 0,
+      //     heightCm: Number(p.heightCm) || 0,
+      //     ...(p.includeOptionalInsurance ? {
+      //       isInsuranceIncluded: true,
+      //       insuranceFeeVnd: Number(p.insuranceFeeVnd || 0)
+      //     } : {}),
+      //     ...(p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {}),
+      //     descriptionImageUrl: p.descriptionImageUrl || '',
+      //   };
+      // })
+
       userLatitude,
       userLongitude,
     };
   };
 
+  //DEBOUNCE API
   useEffect(() => {
     const ready =
       realDepartureStationId &&
@@ -278,17 +348,32 @@ function ParcelInfo({
         p.parcelCategory && p.weightKg && p.lengthCm && p.widthCm && p.heightCm
       );
 
-    if (ready) {
-      fetchTotalPriceItinerary();
+    if (!ready) return;
+
+    //CLEAR TIME OUT
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchTotalPriceItinerary();
+    }, 600); //DEBOUNCE 600MS
   }, [
     realDepartureStationId,
     metroSelector.destinationStationId,
     metroSelector.departureDateTime,
     selectedDate,
     selectedTime,
-    JSON.stringify(parcelInfo)
+    JSON.stringify(parcelInfo.map(p => ({
+      parcelCategory: p.parcelCategory,
+      weightKg: p.weightKg,
+      lengthCm: p.lengthCm,
+      widthCm: p.widthCm,
+      heightCm: p.heightCm,
+      includeOptionalInsurance: p.includeOptionalInsurance
+    })))
   ]);
+
 
   const fetchTotalPriceItinerary = async () => {
     const payload = buildPriceItineraryPayload();
@@ -297,7 +382,6 @@ function ParcelInfo({
       const res = await api.post('/shipments/total-price-itinerary', payload);
       const data = res.data?.data;
       const standardData = data?.standard;
-      const standardParcels = standardData?.parcels || [];
 
       const solutions = [
         { type: 'standard', data: standardData, label: 'Tiêu chuẩn' },
@@ -363,7 +447,7 @@ function ParcelInfo({
         }
         if (parsed.pickedTime) {
           setPickedTime(parsed.pickedTime);
-          setSelectedTime(parsed.pickedTime); 
+          setSelectedTime(parsed.pickedTime);
         }
         if (parsed.timeSlots) setTimeSlots(parsed.timeSlots);
         if (parsed.selectedSolutionIndex !== undefined) setSelectedSolutionIndex(parsed.selectedSolutionIndex);
@@ -375,7 +459,7 @@ function ParcelInfo({
     }
   }, []);
 
-  // SAVE DATA AFTER CHANGING
+  //SAVE DATA AFTER CHANGING
   useEffect(() => {
     const saveData = {
       parcelInfo,
@@ -429,32 +513,41 @@ function ParcelInfo({
               {/* OPTIONAL INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                if (selectedCat && !selectedCat.isInsuranceRequired && parcel.insuranceFeeVnd) {
+                const policy = selectedCat?.categoryInsurances
+                  ?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
+
+                if (selectedCat && !selectedCat.isInsuranceRequired) {
+                  const baseFee = policy?.baseFeeVnd ?? 0;
                   return (
                     <Checkbox
                       style={{ marginTop: '0.5em', color: '#444' }}
                       checked={parcel.includeOptionalInsurance || false}
                       onChange={(e) => {
                         const updated = [...parcelInfo];
-                        updated[index].includeOptionalInsurance = e.target.checked;
+                        const isChecked = e.target.checked;
+                        updated[index].includeOptionalInsurance = isChecked;
+                        updated[index].isInsuranceIncluded = isChecked;
+                        updated[index].insuranceFeeVnd = isChecked ? baseFee : 0;
                         setParcelInfo(updated);
                       }}
                     >
-                      Tính phí bảo hiểm cho hàng này ({parcel.insuranceFeeVnd.toLocaleString('vi-VN')} VND)
+                      Tính phí bảo hiểm cho hàng này
+                      {policy ? ` (${baseFee.toLocaleString('vi-VN')} VND)` : ' (sẽ cộng khi tính giá)'}
                     </Checkbox>
+
                   );
                 }
                 return null;
               })()}
 
-
               {/* REQUIRED INSURANCE */}
               {(() => {
                 const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
-                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate) {
+                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
+                if (selectedCat?.isInsuranceRequired || selectedCat?.insuranceRate) {
                   return (
                     <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
-                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {selectedCat.insuranceRate * 100}% trên giá trị món hàng.
+                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {policy.insuranceFeeRateOnValue * 100}% trên giá trị món hàng.
                       <div>
                         ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
                       </div>
@@ -467,8 +560,9 @@ function ParcelInfo({
               {/* UPLOAD BILL */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                if (selectedCat?.isInsuranceRequired && selectedCat?.insuranceRate > 0) {
-                  const insuranceCost = Math.round((parcel.valueVnd || 0) * selectedCat.insuranceRate);
+                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
+                if (selectedCat?.isInsuranceRequired) {
+                  const insuranceCost = Math.round((parcel.valueVnd || 0) * policy.insuranceFeeRateOnValue);
                   return (
                     <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
                       <InputNumber
@@ -737,10 +831,7 @@ function ParcelInfo({
               const hover = hoverMap[solution.type] || '#aaa';
 
               {/* OPTIONAL INSURANCE FEE */ }
-              const optionalFee = solution.data?.parcels
-                ?.filter((p, i) => parcelInfo[i]?.includeOptionalInsurance)
-                .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0) || 0;
-              const displayPrice = (solution.data?.totalCostVnd || 0) + optionalFee;
+              const displayPrice = solution.data?.totalCostVnd || 0;
 
               return (
                 <div

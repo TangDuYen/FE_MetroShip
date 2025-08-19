@@ -8,20 +8,25 @@ export const shipmentStatusMap = {
   6: 'Không đến gửi hàng',
   7: 'Chờ gửi hàng',
   8: 'Đã lấy hàng',
-  9: 'Đang vận chuyển',
-  10: 'Chờ nhận hàng',
-  11: 'Thu phí tồn kho',
-  12: 'Xuống hàng tại trạm',
-  13: 'Chờ chuyển tàu',
-  14: 'Chuyển tàu tiếp theo',
-  15: 'Đã quá hạn',
-  16: 'Trả đơn',
-  17: 'Đang trả đơn',
-  18: 'Đã trả đơn',
-  19: 'Đã giao hàng',
-  20: 'Hoàn tất',
-  21: 'Bị chậm trễ',
-  22: 'Đang lưu kho',
+  9: 'Đang lên hàng vào tàu',
+  10: 'Đang vận chuyển',
+  11: 'Đợi nhận hàng',
+  12: 'Thu phí tồn kho',
+  13: 'Xuống hàng khỏi tàu',
+  14: 'Đang lưu kho',
+  15: 'Đợi chuyển tàu',
+  16: 'Đang chuyển tàu',
+  17: 'Quá hạn',
+  18: 'Trả đơn',
+  19: 'Đang trả đơn',
+  20: 'Đã trả đơn',
+  21: 'Đã giao',
+  22: 'Đã hoàn thành',
+  23: 'Delayed',
+  24: 'Đã đến',
+  25: 'Đơn đã hoàn thành. Đợi bồi thường',
+  26: 'Bồi thường',
+  27: 'Đã bồi thường',
 };
 
 export const shipmentStatusColorMap = {
@@ -34,21 +39,27 @@ export const shipmentStatusColorMap = {
   6: "purple",       // Không đến gửi hàng
   7: "blue",         // Chờ gửi hàng
   8: "cyan",         // Đã lấy hàng
-  9: "processing",   // Đang vận chuyển
-  10: "lime",        // Chờ nhận hàng
-  11: "geekblue",    // Thu phí tồn kho
-  12: "red",         // Xuống hàng tại trạm
-  13: "volcano",     // Chờ chuyển tàu
-  14: "orange",      // Chuyển tàu tiếp theo
-  15: "red",         // Đã quá hạn
-  16: "purple",      // Trả đơn
-  17: "volcano",     // Đang trả đơn
-  18: "blue",        // Đã trả đơn
-  19: "success",     // Đã giao hàng
-  20: "green",       // Hoàn tất
-  21: "warning",     // Bị chậm trễ
-  22: "magenta",     // Đang lưu kho
+  9: "processing",   // Đang lên hàng vào tàu 
+  10: "lime",        // Đang vận chuyển 
+  11: "geekblue",    // Đợi nhận hàng 
+  12: "red",         // Thu phí tồn kho 
+  13: "volcano",     // Xuống hàng khỏi tàu
+  14: "orange",      // Đang lưu kho
+  15: "red",         // Đợi chuyển tàu
+  16: "purple",      // Đang chuyển tàu
+  17: "volcano",     // Quá hạn
+  18: "blue",        // Trả đơn
+  19: "success",     // Đang trả đơn
+  20: "green",       // Đã trả đơn
+  21: "warning",     // Đã giao
+  22: "magenta",     // Đã hoàn thành
+  23: "orange",      // Delayed - Chậm trễ 
+  24: "cyan",        // Đã đến 
+  25: "red",         // Bồi thường 
+  26: "red",       // Đã bồi thường 
+  27: "green",       // Đã bồi thường 
 };
+
 
 export const paymentStatusMap = {
   1: 'Đợi thanh toán',
@@ -63,32 +74,40 @@ export const paymentTransactionTypeMap = {
   3: 'Hoàn tiền'
 }
 
-// export const parcelStatusMap = {
-//     0: "Đang xử lý",
-//     1: "Đợi thanh toán",
-//     2: "Đợi gửi hàng",
-//     3: "Từ chối",
-//     4: "Chưa thanh toán",
-//     5: "Đã hủy",
-//     6: "Chờ hoàn tiền",
-//     7: "Đã hoàn tiền",
-//     8: "Không đến gửi hàng",
-//     9: "Đã nhận hàng tại trạm",
-//     10: "Đang trên đường vận chuyển - Tuyến ",
-//     11: "Chuyển sang tuyến ",
-//     12: "Đã nhận hàng ở trạm",
-//     13: "Đợi khách đến lấy hàng",
-//     14: "Hết hạn",
-//     15: "Lưu kho lâu",
-//     16: "Hoàn thành"
-// }
+export const parcelStatusMap = {
+  1: "Đã đặt",
+  2: "Bình thường",
+  3: "Bị hư hại",
+  4: "Bị mất",
+  5: "Đã hủy",
+}
+
+export const parcelStatusColorMap = {
+  1: "blue",
+  2: "green",
+  3: "purple",
+  4: "red",
+  5: "#ff6600ff",
+}
 
 export const shipmentStatusSteps = [
   { id: 0, label: 'Đơn hàng đã được đặt' },
   { id: 8, label: 'Đơn vị vận chuyển đã lấy hàng' },
-  { id: 9, label: 'Đơn hàng đang được vận chuyển' },
-  { id: 10, label: 'Đơn hàng đang chờ lấy' },
-  { id: 17, label: 'Đơn hàng đã giao thành công' },
+  { id: 10, label: 'Đơn hàng đang được vận chuyển' },
+  { id: 11, label: 'Đơn hàng đang chờ lấy' },
+  { id: 21, label: 'Đơn hàng đã giao thành công' },
 ];
 
+// export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
+export const formatCurrency = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return `${Math.floor(n).toLocaleString('vi-VN')} VND`;
+};
+
+export const formatCurrency1 = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return `${Math.floor(n).toLocaleString('vi-VN')}`;
+};
 

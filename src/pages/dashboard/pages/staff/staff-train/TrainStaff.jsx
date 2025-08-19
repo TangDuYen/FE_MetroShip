@@ -14,15 +14,15 @@ import {
   Typography,
 } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllMetroTrains, getAllRegions, getMetroLines } from "../../../../../config/metroApi";
-import moment from "moment";
+import { getAllRegions, getMetroLines, getMetroLinesByStation, getMetroTrainsByStation } from "../../../../../config/metroApi";
+
+import { PATH_NAME } from "../../../../../constants/pathname";
 import api from "../../../../../config/axios";
-import metro from "../../../../../assets/metro_station.png";
+import { jwtDecode } from "jwt-decode";
+import { selectUser } from "../../../../../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { PATH_NAME } from "../../../../../constants/pathname";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../../../redux/features/counterSlice";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -35,10 +35,11 @@ function TrainStaff() {
   const [loading, setLoading] = useState(true);
   const [maxCapacity, setMaxCapacity] = useState(0); // Trọng tải của tàu
   const [maxVolume, setMaxVolume] = useState(0); // Dung tích của tàu
-
+  const token = localStorage.getItem("token");
+  const decodedUser = token ? jwtDecode(token) : null;
 
   const navigate = useNavigate();
-  
+
   const [regions, setRegions] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -46,14 +47,14 @@ function TrainStaff() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getAllRegions(), getMetroLines()]).then(([regionsData, metroLinesData]) => {
+    Promise.all([getAllRegions(), getMetroLinesByStation(decodedUser?.StationId)]).then(([regionsData, metroLinesData]) => {
       setRegions(regionsData);
       setMetroLines(metroLinesData);
     })
-    getAllMetroTrains()
+    getMetroTrainsByStation(decodedUser?.StationId)
       .then((data) => {
         // Set the metro trains data
-        setMetroTrains(data.data.items);
+        setMetroTrains(data.items);
 
         // Extract max capacity and max volume from additionalData
         const additionalData = data.additionalData[0];
@@ -195,29 +196,29 @@ function TrainStaff() {
     maxVolume,
   }));
 
-//   const getNearestIndex = (position, path) => {
-//     if (!path.length) return 0;
-//     let minIndex = 0;
-//     let minDist = Infinity;
-//     path.forEach((p, i) => {
-//       const dist = Math.sqrt(
-//         Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
-//       );
-//       if (dist < minDist) {
-//         minDist = dist;
-//         minIndex = i;
-//       }
-//     });
-//     return minIndex;
-//   };
+  //   const getNearestIndex = (position, path) => {
+  //     if (!path.length) return 0;
+  //     let minIndex = 0;
+  //     let minDist = Infinity;
+  //     path.forEach((p, i) => {
+  //       const dist = Math.sqrt(
+  //         Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
+  //       );
+  //       if (dist < minDist) {
+  //         minDist = dist;
+  //         minIndex = i;
+  //       }
+  //     });
+  //     return minIndex;
+  //   };
 
-//   const currentIndex = getNearestIndex(position, trainPath);
+  //   const currentIndex = getNearestIndex(position, trainPath);
 
   return (
     <div className="staff-train-container">
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
         <div style={{ marginBottom: 16, display: "flex", gap: 12 }}>
-          <Select
+          {/* <Select
             showSearch
             optionFilterProp="children"
             placeholder="Chọn khu vực"
@@ -231,7 +232,7 @@ function TrainStaff() {
                 {region.regionName}
               </Option>
             ))}
-          </Select>
+          </Select> */}
 
           <Select
             showSearch

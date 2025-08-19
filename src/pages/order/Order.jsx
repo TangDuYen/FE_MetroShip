@@ -1,18 +1,17 @@
 import './Order.scss'
 
-import { Button, Col, ConfigProvider, Modal, Row, Spin, Steps, message } from 'antd';
+import { Button, ConfigProvider, Modal, Spin, Steps } from 'antd';
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
-import { Circle } from 'react-leaflet';
 import ConfirmPage from './ConfirmPage';
 import L from 'leaflet';
-import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
-import customerIcon from '../../assets/placeholder.webp'
+import customerIcon from '../../assets/placeholder.webp';
 import dayjs from 'dayjs';
+import { getAllTransactionTypes } from '../../config/metroApi';
 import metroMarker from '../../assets/metro-station.webp';
 import { selectUser } from '../../redux/features/counterSlice';
 import startStation from '../../assets/train.webp';
@@ -39,6 +38,7 @@ function Order() {
   const [timeSlots, setTimeSlots] = useState(null);
   const [parcelInfo, setParcelInfo] = useState([{
     parcelCategory: "",
+    categoryInsuranceId: "",
     weightKg: "",
     lengthCm: "",
     heightCm: "",
@@ -61,6 +61,8 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
   const [priceVnd, setPriceVnd] = useState(null);
+  const [transactionTypes, setTransactionTypes] = useState([]);
+  const [transactionTypeId, setTransactionTypeId] = useState(null);
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -105,7 +107,7 @@ function Order() {
           toast.success('Vị trí đã được lưu thành công!');
         },
         (error) => {
-          message.error('Không thể lấy vị trí của bạn. Bạn sẽ không thể nhận được gợi ý tuyến đường.');
+          toast.error('Không thể lấy vị trí của bạn. Bạn sẽ không thể nhận được gợi ý tuyến đường.');
         }
       );
     } else {
@@ -210,63 +212,51 @@ function Order() {
       recipientNationalId,
     } = personalInfo;
 
-    const {
-      departureStationId,
-      destinationStationId,
-      departureDateTime,
-    } = metroSelector;
+    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
 
     const itinerary = routeSolutions[selectedSolutionIndex];
 
-    const shipmentItineraries = itinerary?.data?.routes?.map(route => ({
-      routeId: route.routeId,
-      legOrder: route.legOrder,
-    })) || [];
-
-    const parcelsFromSolution = itinerary?.data?.parcels || [];
-
-    // INCLUDE OPTIONAL INSURANCE
-    const extraInsuranceFee = parcelsFromSolution
-      .filter((p, idx) => parcelInfo[idx]?.includeOptionalInsurance)
-      .reduce((sum, p) => sum + (p.insuranceFeeVnd || 0), 0);
-
-    const finalCostVnd = (itinerary?.data?.totalCostVnd || 0) + extraInsuranceFee;
+    const shipmentItineraries =
+      itinerary?.data?.routes?.map((route) => ({
+        routeId: route.routeId,
+        legOrder: route.legOrder,
+      })) || [];
 
     const validParcels = parcelInfo
-      .filter(p =>
-        p.parcelCategory &&
-        p.weightKg &&
-        p.lengthCm &&
-        p.widthCm &&
-        p.heightCm
+      .filter(
+        (p) =>
+          p.parcelCategory &&
+          p.categoryInsuranceId &&
+          p.weightKg &&
+          p.lengthCm &&
+          p.widthCm &&
+          p.heightCm
       )
       .map((p, idx) => {
         const base = {
           parcelCategoryId: p.parcelCategory,
+          categoryInsuranceId: p.categoryInsuranceId,
           weightKg: Number(p.weightKg),
           lengthCm: Number(p.lengthCm),
           widthCm: Number(p.widthCm),
           heightCm: Number(p.heightCm),
           isBulk: idx > 0,
         };
+
         if (p.descriptionImageUrl) base.descriptionImageUrl = p.descriptionImageUrl;
         if (p.description) base.description = p.description;
         if (p.shippingFeeVnd !== undefined) base.shippingFeeVnd = Number(p.shippingFeeVnd);
-        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
         if (p.chargeableWeight !== undefined) base.chargeableWeight = Number(p.chargeableWeight);
-        if (p.priceVnd !== undefined) {
-          let finalPrice = Number(p.priceVnd);
-          if (p.includeOptionalInsurance && p.insuranceFeeVnd) {
-            finalPrice += Number(p.insuranceFeeVnd);
-          }
-          base.priceVnd = finalPrice;
-        }
-        if (p.valueVnd !== undefined) base.valueVnd = p.valueVnd;
-        if (p.includeOptionalInsurance) {
-          base.isInsuranceIncluded = true;
-        }
+        if (p.insuranceFeeVnd !== undefined) base.insuranceFeeVnd = Number(p.insuranceFeeVnd);
+        if (p.priceVnd !== undefined) base.priceVnd = Number(p.priceVnd);
+        if (p.includeOptionalInsurance) base.isInsuranceIncluded = true;
+
+        //NOT SEND VALUEVND FOR OPTIONAL INSURANCE
+        if (p.valueVnd !== undefined) base.valueVnd = Number(p.valueVnd);
+
         return base;
       });
+
 
     return {
       ...(departureStationId && { departureStationId }),
@@ -279,14 +269,28 @@ function Order() {
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
-      totalCostVnd: finalCostVnd,
+      totalCostVnd: itinerary?.data?.totalCostVnd,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,
-      totalInsuranceFeeVnd: itinerary?.data?.totalInsuranceFeeVnd || 0,
+      totalInsuranceFeeVnd: Number(itinerary?.data?.totalInsuranceFeeVnd || 0),
       ...(totalKm && { totalKm: Number(totalKm) }),
       ...(shipmentItineraries.length > 0 && { shipmentItineraries }),
       parcels: validParcels,
     };
   };
+
+  useEffect(() => {
+    async function fetchTransactionTypes() {
+      try {
+        const res = await getAllTransactionTypes();
+        if (res?.statusCode === 200) {
+          setTransactionTypes(res.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy transaction types:", error);
+      }
+    }
+    fetchTransactionTypes();
+  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -296,16 +300,24 @@ function Order() {
       const bookingResponse = await api.post('/shipments', payload);
       if (bookingResponse.data.statusCode === 400) {
         toast.error(bookingResponse.data.message);
+        console.log(payload);
+
         setLoading(false);
         return;
       }
       toast.success("Đặt giao thành công!");
+      sessionStorage.removeItem("parcelFormData");
       const currentDomain = window.location.origin;
+      const shipmentCostType = transactionTypes.find(t => t.value === "ShipmentCost");
+      setTransactionTypeId(shipmentCostType.id);
       const paymentPayload = {
         shipmentId: bookingResponse.data.data.shipmentId,
+        transactionType: transactionTypeId,
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
+      console.log(paymentPayload);
+
       const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
       console.log(res.data);
 

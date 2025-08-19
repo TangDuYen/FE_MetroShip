@@ -1,23 +1,27 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Modal, Progress, Row, Select, Table, Tabs, Typography } from 'antd';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots } from '../../../../../config/metroApi';
+import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
-import { ClockCircleOutlined } from '@ant-design/icons';
-import { Html5Qrcode } from "html5-qrcode";
-import MetroIcon from '../../../../../assets/metro_train.png';
 import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
-import { QrcodeOutlined } from '@ant-design/icons';
+import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
+import isBetween from "dayjs/plugin/isBetween";
+import { jwtDecode } from 'jwt-decode';
+import { message } from 'antd';
 import moment from 'moment';
-import { shipmentStatusMap } from '../../../../../constants/statusMap';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import viVN from 'antd/lib/locale/vi_VN';
 
-const { TabPane } = Tabs;
+dayjs.extend(isBetween);
+
+const { RangePicker } = DatePicker;
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
@@ -27,8 +31,6 @@ function TrackingOrderStaff() {
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
   const [dateFilter, setDateFilter] = useState(null);
-  const [stationFilter, setStationFilter] = useState(null);
-  const [routeFilter, setRouteFilter] = useState(null);
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -37,20 +39,58 @@ function TrackingOrderStaff() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [cccdImage, setCccdImage] = useState(null);
   const [confirmImage, setConfirmImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
+  const decodedUser = token ? jwtDecode(token) : null;
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 2;
+  const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
+  const [metroTrains, setMetroTrains] = useState([]);
+  const [maxCapacity, setMaxCapacity] = useState(0);
+  const [maxVolume, setMaxVolume] = useState(0);
+  const [dateRange, setDateRange] = useState([]);
+  const [searchCode, setSearchCode] = useState('');
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 25, 26];
 
-  //FORMAT TIỀN
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
+
+  if (!decodedUser?.StationId) {
+    return (
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '24px',
+        fontWeight: 600,
+      }}>
+        Bạn chưa được phân công vào trạm
+      </div>
+    );
+  }
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines()]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData]) => {
+    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
+      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
+        setMetroTrains(metroTrainData.items);
+
+        //ADDITIONAL DATA TRAIN
+        const additional = metroTrainData.additionalData?.[0] || [];
+        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
+        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
+
+        setMaxCapacity(maxCapacityKg);
+        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
@@ -83,8 +123,17 @@ function TrackingOrderStaff() {
       return now.isBetween(start, end);
     });
   };
+  useEffect(() => {
+    const opts = ALLOWED_STATUS.map(id => ({
+      id,
+      label: shipmentStatusMap[id] || `Trạng thái ${id}`,
+      color: shipmentStatusColorMap[id] || 'default',
+    }));
+    setStatusOptions(opts);
+  }, []);
 
   const handleFilterChange = () => {
+    
     let filtered = shipments.filter(order =>
       order.shipmentStatus == 4
       || order.shipmentStatus == 8
@@ -96,22 +145,34 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 15
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
-      || order.shipmentStatus == 22
+      || order.shipmentStatus == 24
+      || order.shipmentStatus == 25
+      || order.shipmentStatus == 26
     );
 
-    // CHỈNH SỬA FILTER
-    if (dateFilter) {
+    //DATE RANGE FILTER
+    if (dateRange && dateRange.length === 2) {
+      const [startDate, endDate] = dateRange;
       filtered = filtered.filter(order =>
-        dayjs(order.scheduledDateTime).isSame(dayjs(dateFilter), 'day')
+        dayjs(order.scheduledDateTime).isBetween(
+          startDate.startOf("day"),
+          endDate.endOf("day"),
+          null,
+          "[]"
+        )
       );
     }
-
-    if (stationFilter) {
-      filtered = filtered.filter(order => order.departureStationName === stationFilter);
+    //STATUS FILTER
+    if (statusFilter) {
+      filtered = filtered.filter(order => order.shipmentStatus === statusFilter);
     }
 
-    if (routeFilter) {
-      filtered = filtered.filter(order => order.route === routeFilter);
+    //SEARCH TRACKING CODE
+    if (searchCode && searchCode.trim() !== '') {
+      const searchLower = searchCode.trim().toLowerCase();
+      filtered = filtered.filter(order =>
+        order.trackingCode.toLowerCase().includes(searchLower)
+      );
     }
 
     setFilteredShipments(filtered);
@@ -122,7 +183,7 @@ function TrackingOrderStaff() {
     if (shipments.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateFilter, stationFilter, routeFilter]);
+  }, [shipments, dateRange, statusFilter, searchCode]);
 
   const handleOpenModal = (shipment) => {
     setSelectedOrder(shipment);
@@ -136,7 +197,6 @@ function TrackingOrderStaff() {
     }
 
     try {
-
       //UPLOAD IMAGES
       const formData = new FormData();
       formData.append("files", cccdImage);
@@ -159,22 +219,24 @@ function TrackingOrderStaff() {
         ],
       };
       const confirmRes = await api.post("/shipments/complete", payload);
+      setLoading(true);
       if (confirmRes.data?.statusCode === 200) {
         toast.success("Xác nhận hoàn thành đơn hàng thành công!");
         setIsUploadModalOpen(false);
         setCccdImage(null);
         setConfirmImage(null);
         setSelectedOrder(null);
+        setLoading(false);
       } else {
         toast.error("Xác nhận thất bại!");
+        setLoading(false);
       }
     } catch (err) {
-      toast.error("Lỗi khi tải ảnh hoặc gửi xác nhận!");
+      toast.error(err.response?.data?.message);
+      setLoading(false);
       console.error(err);
     }
   };
-
-
 
   const columns = [
     {
@@ -206,7 +268,7 @@ function TrackingOrderStaff() {
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
-      title: 'Giờ gửi',
+      title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',
       key: 'scheduledTime',
       render: (_, record) => dayjs(record.scheduledDateTime).format('HH:mm'),
@@ -214,13 +276,14 @@ function TrackingOrderStaff() {
     {
       title: 'Thời điểm tạo yêu cầu',
       key: 'createdAt',
-      render: (_, record) => {
-        const relatedParcels = getParcelsByShipmentId(record.id);
-        if (relatedParcels.length > 0) {
-          return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-        }
-        return 'N/A';
-      }
+      // render: (_, record) => {
+      //   const relatedParcels = getParcelsByShipmentId(record.id);
+      //   if (relatedParcels.length > 0) {
+      //     return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
+      //   }
+      //   return 'N/A';
+      // }
+      render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: 'Tổng chi phí',
@@ -228,10 +291,14 @@ function TrackingOrderStaff() {
       render: (_, record) => formatCurrency(record.totalCostVnd),
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'shipmentStatus',
-      key: 'shipmentStatus',
-      render: (status) => { return shipmentStatusMap[status] || 'Không xác nhận'; },
+      title: "Trạng thái",
+      dataIndex: "shipmentStatus",
+      key: "shipmentStatus",
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || "Không rõ"}
+        </Tag>
+      ),
     },
     // {
     //   title: 'Vị trí hiện tại',
@@ -308,90 +375,112 @@ function TrackingOrderStaff() {
     );
   };
 
+  const handleResetFilters = () => {
+    setDateRange(null);
+    setStatusFilter(null);
+    setSearchCode('');
+  };
+
   return (
     <>
       <div className="order-staff-container">
         <div className="metro-info" style={{ marginBottom: "1em" }}>
-          <Card>
-            <Title level={3}>Thông tin tuyến Metro 1</Title>
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>Thông tin nhân viên</Title>
             <Row gutter={24}>
+              {/* AVATAR */}
               <Col span={6}>
                 <img
-                  src={MetroStation}
+                  src={StaffIcon}
                   alt="Metro_Subway"
-                  style={{
-                    width: "5em"
-                  }}
+                  style={{ width: "5em" }}
                 />
               </Col>
+
+              {/* STAFF ASSIGNMENT */}
               <Col span={18}>
-                <Flex justify="space-between" align="center">
+                <Flex justify="space-between" align="center" style={{ flexWrap: "wrap" }}>
+                  {/* Thông tin nhân viên */}
                   <div className="metro-line-description">
-                    Mã tuyến
+                    Vai trò
                     <div className="data">
-                      L1
+                      {decodedUser?.AssignmentRole || "N/A"}
                     </div>
                   </div>
                   <div className="metro-line-description">
-                    Số tàu hoạt động hiện tại
+                    Làm việc tại trạm
                     <div className="data">
-                      2
+                      {
+                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                      }
                     </div>
                   </div>
+
                   <div className="metro-line-description">
-                    Tổng sức chứa
+                    Thời gian bắt đầu
                     <div className="data">
-                      2000kg
+                      {staffAssignments?.[0]?.fromTime
+                        ? dayjs(staffAssignments[0].fromTime).format("DD/MM/YYYY")
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div className="metro-line-description">
+                    Thời gian kết thúc
+                    <div className="data">
+                      {staffAssignments?.[0]?.toTime
+                        ? dayjs(staffAssignments[0].toTime).format("DD/MM/YYYY")
+                        : "N/A"}
                     </div>
                   </div>
                 </Flex>
               </Col>
             </Row>
-            <Title level={3}>Thông tin tàu</Title>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">1</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
-            <Card className="metro-subway-info">
-              <Flex justify="space-between" align="center">
-                <Flex align="center" gap="small">
-                  <img
-                    src={MetroIcon}
-                    alt="Metro_Subway"
-                    style={{ width: "2em", marginRight: "1em" }}
-                  />
-                  <div className="metro-subway-description">
-                    Tàu số
-                    <div className="subway-data">2</div>
-                  </div>
-                </Flex>
-                <div className="metro-subway-description">
-                  Sức chứa hiện tại
-                  <div className="subway-data">
-                    750/1000 kg
-                    <Progress percent={75} size="small" />
-                  </div>
-                </div>
-              </Flex>
-            </Card>
+          </Card>
+          <Card style={{ marginBottom: '1em' }}>
+            <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
+            <Row gutter={16}>
+              {currentData.map((train) => (
+                <Col span={24} key={train.id}>
+                  <Card className="metro-subway-info" style={{ marginBottom: '1em' }}>
+                    <Flex justify="space-between" align="center">
+                      <Flex align="center" gap="small">
+                        <img
+                          src={MetroStation}
+                          alt="Metro_Subway"
+                          style={{ width: "3em" }}
+                        />
+                        <div className="metro-subway-description" style={{ marginLeft: '0.5em' }}>
+                          Tàu
+                          <div className="subway-data">{train.trainCode}</div>
+                        </div>
+                      </Flex>
+                      <div className="metro-subway-description">
+                        Trọng tải tàu (kg)
+                        <div className="subway-data">
+                          {maxCapacity} kg
+                        </div>
+                      </div>
+                      <div className="metro-subway-description">
+                        Dung tích tàu (m³)
+                        <div className="subway-data">
+                          {maxVolume} m³
+                        </div>
+                      </div>
+                    </Flex>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            <Flex justify="center" style={{ marginTop: "1em" }}>
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={metroTrains.length}
+                onChange={(page) => setCurrentPage(page)}
+              />
+            </Flex>
           </Card>
         </div>
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
@@ -438,34 +527,43 @@ function TrackingOrderStaff() {
           <Card>
             <Title level={3}>Đơn hàng</Title>
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
-              <Row>
-                <Col span={6} style={{ marginRight: "1em" }}>
-                  <Select
-                    value={stationFilter}
-                    onChange={(value) => { setStationFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn trạm"
-                    style={{ width: '100%' }}
-                  >
-                    {stations.map(station => (
-                      <Option key={station.id} value={station.stationNameVi}>
-                        {station.stationNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <ConfigProvider locale={viVN}>
+                    <RangePicker
+                      value={dateRange}
+                      onChange={setDateRange}
+                      style={{ width: '100%' }}
+                    />
+                  </ConfigProvider>
                 </Col>
                 <Col span={6}>
                   <Select
-                    value={routeFilter}
-                    onChange={(value) => { setRouteFilter(value); handleFilterChange(); }}
-                    placeholder="Chọn tuyến"
-                    style={{ width: '100%' }}
-                  >
-                    {metroLines.map(metros => (
-                      <Option key={metros.id} value={metros.id}>
-                        {metros.lineNameVi}
-                      </Option>
-                    ))}
-                  </Select>
+                    placeholder="Trạng thái"
+                    style={{ width: 350 }}
+                    allowClear
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={statusOptions.map(s => ({
+                      value: s.id,
+                      label: <Tag color={s.color}>{s.label}</Tag>,
+                    }))}
+                  />
+                </Col>
+                <Col span={6}>
+                  <Input.Search
+                    placeholder="Tìm theo mã đơn hàng"
+                    value={searchCode}
+                    onChange={(e) => setSearchCode(e.target.value)}
+                    onSearch={(v) => setSearchCode(v)}
+                    allowClear
+                  />
+                </Col>
+                <Col span={6}>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleResetFilters}>
+                  </Button>
                 </Col>
               </Row>
             </div>
@@ -476,6 +574,7 @@ function TrackingOrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
+              locale={{ emptyText: 'Không có dữ liệu' }}
             />
           </Card>
           <Modal
@@ -491,27 +590,29 @@ function TrackingOrderStaff() {
             cancelText="Hủy"
             destroyOnClose
           >
-            <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCccdImage(e.target.files[0])}
-                />
-                {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setConfirmImage(e.target.files[0])}
-                />
-                {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
-              </Col>
-            </Row>
+            <Spin spinning={loading} tip="Đang xác nhận hoàn thành" size="large">
+              <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCccdImage(e.target.files[0])}
+                  />
+                  {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
+                </Col>
+                <Col span={12}>
+                  <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setConfirmImage(e.target.files[0])}
+                  />
+                  {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
+                </Col>
+              </Row>
+            </Spin>
           </Modal>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import './PaymentStaff.scss';
 
 import { Col, DatePicker, Row, Select, Table } from 'antd';
+import { formatCurrency1, paymentStatusMap, paymentTransactionTypeMap } from '../../../../../constants/statusMap';
 import { getAllShipments, getAllTransactions } from '../../../../../config/metroApi';
-import { paymentStatusMap, paymentTransactionTypeMap } from '../../../../../constants/statusMap';
 import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
@@ -104,7 +104,7 @@ function PaymentStaff() {
       title: 'Tổng chi phí',
       dataIndex: 'paymentAmount',
       key: 'paymentAmount',
-      render: (value) => value.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND',
+      render: (value) => formatCurrency1(value),
     },
     {
       title: 'Đơn vị tiền tệ',

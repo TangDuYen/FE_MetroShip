@@ -1,59 +1,254 @@
 import './TrackingOrder.scss';
 
-import { Badge, Button, Card, Col, Divider, Row, Timeline } from 'antd';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import React, { useEffect, useState } from 'react';
-import { shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
+import { Badge, Button, Card, Col, Divider, Row, Tag, Timeline } from 'antd';
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { formatCurrency, parcelStatusColorMap, parcelStatusMap, shipmentStatusMap, shipmentStatusSteps } from '../../constants/statusMap';
 
-import { Icon } from 'leaflet';
 import { PATH_NAME } from '../../constants/pathname';
 import api from '../../config/axios';
+import axios from 'axios';
 import dayjs from 'dayjs';
+import { getAllParcelCategories } from '../../config/metroApi';
+import metro from "../../assets/metro_station.png";
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
-function TrackingOrder() {
+function ResizeMapOnShow() {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 200);
+  }, [map]);
+  return null;
+}
 
+const locationIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  shadowSize: [41, 41],
+});
+
+const metroIcon = new L.Icon({
+  iconUrl: metro,
+  iconSize: [25, 25],
+});
+
+function TrackingOrder() {
+  const [parcelCategory, setParcelCategory] = useState([]);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const { trackingCode } = useParams();
-
   const navigate = useNavigate();
+  const [position, setPosition] = useState([0, 0]);
+  const [path, setPath] = useState([]);
+  const [fromStation, setFromStation] = useState("");
+  const [toStation, setToStation] = useState("");
+  const [trainCode, setTrainCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [fullPathSegments, setFullPathSegments] = useState([]);
 
-  const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     if (!trackingCode) return;
 
-    const fetchShipmentDetails = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get(`/shipments/${trackingCode}`);
-        setSelectedShipment(res.data.data);
+        const [shipmentRes, categoryRes] = await Promise.all([
+          api.get(`/shipments/${trackingCode}`),
+          getAllParcelCategories()
+        ]);
+
+        const shipment = shipmentRes.data.data;
+        const categories = categoryRes;
+
+        // Gán category vào từng parcel
+        const parcelsWithCategory = (shipment.parcels || []).map((p) => {
+          const category = categories.find(c => c.id === p.parcelCategoryId);
+          return {
+            ...p,
+            parcelCategory: category || null
+          };
+        });
+        shipment.parcels = parcelsWithCategory;
+        setParcelCategory(categories);
+        setSelectedShipment(shipment);
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin đơn hàng:", error);
+        console.error("Lỗi khi tải dữ liệu:", error);
       }
     };
 
-    fetchShipmentDetails();
+    fetchData();
   }, [trackingCode]);
 
+  const fetchLivePosition = async () => {
+    try {
+      const res = await axios.get(
+        `https://localhost:7085/${trackingCode}/position`
+      );
+      const {
+        latitude,
+        longitude,
+        path,
+        fromStation,
+        toStation,
+        trainCode,
+        additionalData,
+      } = res.data;
+
+      setPosition([latitude, longitude]);
+      setFromStation(fromStation);
+      setToStation(toStation);
+      setTrainCode(trainCode || "");
+
+      if (path && Array.isArray(path)) {
+        setPath(path.map((p) => [p.latitude, p.longitude]));
+      }
+
+      const fullPath = additionalData?.shipment?.fullPath || [];
+      if (Array.isArray(fullPath)) {
+        setFullPathSegments(fullPath);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Lỗi lấy dữ liệu tàu:", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedShipment) return;
+
+    if (selectedShipment.shipmentStatus === 10) {
+      fetchLivePosition();
+      intervalRef.current = setInterval(fetchLivePosition, 2000);
+      return () => clearInterval(intervalRef.current);
+    }
+  }, [selectedShipment]);
+
+
+  const getNearestIndex = (position, path) => {
+    if (!path.length) return 0;
+    let minIndex = 0;
+    let minDist = Infinity;
+    path.forEach((p, i) => {
+      const dist = Math.sqrt(
+        Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
+      );
+      if (dist < minDist) {
+        minDist = dist;
+        minIndex = i;
+      }
+    });
+    return minIndex;
+  };
+
+  const currentIndex = getNearestIndex(position, path);
   if (!selectedShipment) return <div>Đang tải đơn...</div>;
 
   const currentStatus = selectedShipment.shipmentStatus;
   const shipmentParcels = selectedShipment.parcels || [];
 
+  const handleInsuranceRequest = async (shipmentId) => {
+    try {
+      // Tạm thời set cứng subject và description
+      const payload = {
+        shipmentId,
+        subject: "Yêu cầu bồi thường",
+        description: "Khách hàng yêu cầu bồi thường vì kiện hàng bị mất.",
+        supportType: 1
+      };
+
+      const res = await api.post("/support-tickets", payload);
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Yêu cầu bồi thường đã được gửi thành công!");
+      } else {
+        toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu bồi thường:", error);
+      toast.error("Gửi yêu cầu thất bại!");
+    }
+  };
 
   return (
     <div className="tracking-order-container">
       <div className="tracking-order-wrapper">
         <div className="left-column">
-          <Card style={{ marginTop: '2em', marginBottom: '16px' }}>
-            <MapContainer center={[10.762622, 106.660172]} zoom={13} style={{ width: '100%', height: '300px' }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <Marker position={[10.762622, 106.660172]} icon={new Icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png' })}>
-                <Popup>
-                  Station: {selectedShipment.currentStationName}
-                </Popup>
-              </Marker>
+          <Card style={{ marginTop: "2em", marginBottom: "16px" }}>
+            <MapContainer
+              center={position[0] !== 0 ? position : [10.76, 106.7]}
+              zoom={13}
+              style={{ width: "100%", height: "300px" }}
+            >
+              <ResizeMapOnShow />
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap contributors"
+              />
+
+              {fullPathSegments.map((segment, index) => (
+                <React.Fragment key={index}>
+                  <Polyline
+                    positions={segment.polyline.map((p) => [
+                      p.latitude,
+                      p.longitude,
+                    ])}
+                    color={segment.isCompleted ? "gray" : "blue"}
+                  />
+                  {segment.polyline.length > 0 && (
+                    <>
+                      <Marker
+                        position={[
+                          segment.from.latitude,
+                          segment.from.longitude,
+                        ]}
+                        icon={locationIcon}
+                      >
+                        <Popup>{segment.from.name}</Popup>
+                      </Marker>
+                      <Marker
+                        position={[segment.to.latitude, segment.to.longitude]}
+                        icon={locationIcon}
+                      >
+                        <Popup>{segment.to.name}</Popup>
+                      </Marker>
+                    </>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {path.length > 1 && (
+                <>
+                  <Polyline
+                    positions={path.slice(0, currentIndex + 1)}
+                    color="gray"
+                  />
+                  <Polyline positions={path.slice(currentIndex)} color="blue" />
+                </>
+              )}
+
+              {path.length > 0 && (
+                <>
+                  <Marker position={path[0]} icon={locationIcon}>
+                    <Popup>{fromStation || "Ga xuất phát"}</Popup>
+                  </Marker>
+                  <Marker position={path[path.length - 1]} icon={locationIcon}>
+                    <Popup>{toStation || "Ga đến"}</Popup>
+                  </Marker>
+                </>
+              )}
+
+              {position[0] !== 0 && (
+                <Marker position={position} icon={metroIcon}>
+                  <Popup>{trainCode || "Tàu Metro"}</Popup>
+                </Marker>
+              )}
             </MapContainer>
           </Card>
 
@@ -68,8 +263,8 @@ function TrackingOrder() {
             <div className="custom-progress">
               {[
                 { id: 8, label: 'Đã lấy hàng' },
-                { id: 9, label: 'Đang giao hàng' },
-                { id: 17, label: 'Đã giao hàng' },
+                { id: 10, label: 'Đang giao hàng' },
+                { id: 21, label: 'Đã giao hàng' },
               ].map((step, idx, arr) => {
                 const isCompleted = currentStatus >= step.id;
                 const isLast = idx === arr.length - 1;
@@ -104,7 +299,6 @@ function TrackingOrder() {
                 ))}
             </Timeline>
           </Card>
-
         </div>
 
         <div className="right-column" style={{ marginTop: '2em' }}>
@@ -139,7 +333,7 @@ function TrackingOrder() {
                 <span className="detail-value">{dayjs(selectedShipment.bookedAt).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Thời gian giao</span>
+                <span className="detail-label">Hạn chót gửi hàng lúc</span>
                 <span className="detail-value">{dayjs(selectedShipment.scheduledDateTime).format('DD/MM/YYYY HH:mm')}</span>
               </div>
               {shipmentParcels.map((p, i) => (
@@ -183,6 +377,24 @@ function TrackingOrder() {
                       </div>
                     </>
                   )}
+                  <div className="detail-item">
+                    <span className="detail-label">Tình trạng</span>
+                    <span className="detail-value">
+                      <Tag color={parcelStatusColorMap[p.status]}>
+                        {parcelStatusMap[p.status]}
+                      </Tag>
+                    </span>
+                  </div>
+                  <div className="detail-value">
+                    {p.status === 4 && (
+                      <Button
+                        type="primary"
+                        className='insurance-button'
+                        onClick={() => handleInsuranceRequest(selectedShipment.id)}>
+                        Yêu cầu bồi thường
+                      </Button>
+                    )}
+                  </div>
                 </React.Fragment>
               ))}
             </div>

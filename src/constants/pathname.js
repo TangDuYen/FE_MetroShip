@@ -34,6 +34,7 @@ export const PATH_NAME = {
   DASHBOARD_STAFF_PENDING_ORDER: "/dashboard/staff/pending-order",
   DASHBOARD_STAFF_TRACKING_ORDER: "/dashboard/staff/tracking-order",
   DASHBOARD_STAFF_HANDLED_ORDER: "/dashboard/staff/handled-order",
+  DASHBOARD_STAFF_SUPPORT_TICKETS: "/dashboard/staff/support-tickets",
   DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
   DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
   DASHBOARD_STAFF_ORDER_INFORMATION:
