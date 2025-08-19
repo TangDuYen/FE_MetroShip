@@ -1,11 +1,11 @@
 import './TrackingOrderStaff.scss'
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
-import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
 import StaffIcon from '../../../../../assets/profile.webp';
@@ -13,6 +13,7 @@ import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import isBetween from "dayjs/plugin/isBetween";
 import { jwtDecode } from 'jwt-decode';
+import { message } from 'antd';
 import moment from 'moment';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -45,13 +46,13 @@ function TrackingOrderStaff() {
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
   const [metroTrains, setMetroTrains] = useState([]);
-  const [maxCapacity, setMaxCapacity] = useState(0); 
+  const [maxCapacity, setMaxCapacity] = useState(0);
   const [maxVolume, setMaxVolume] = useState(0);
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 25, 26];
 
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -132,6 +133,7 @@ function TrackingOrderStaff() {
   }, []);
 
   const handleFilterChange = () => {
+    
     let filtered = shipments.filter(order =>
       order.shipmentStatus == 4
       || order.shipmentStatus == 8
@@ -144,9 +146,11 @@ function TrackingOrderStaff() {
       || order.shipmentStatus == 16
       || order.shipmentStatus == 18
       || order.shipmentStatus == 24
+      || order.shipmentStatus == 25
+      || order.shipmentStatus == 26
     );
 
-    // CHỈNH SỬA FILTER
+    //DATE RANGE FILTER
     if (dateRange && dateRange.length === 2) {
       const [startDate, endDate] = dateRange;
       filtered = filtered.filter(order =>
@@ -158,11 +162,12 @@ function TrackingOrderStaff() {
         )
       );
     }
-
+    //STATUS FILTER
     if (statusFilter) {
       filtered = filtered.filter(order => order.shipmentStatus === statusFilter);
     }
 
+    //SEARCH TRACKING CODE
     if (searchCode && searchCode.trim() !== '') {
       const searchLower = searchCode.trim().toLowerCase();
       filtered = filtered.filter(order =>
@@ -227,7 +232,7 @@ function TrackingOrderStaff() {
         setLoading(false);
       }
     } catch (err) {
-      toast.error("Lỗi khi tải ảnh hoặc gửi xác nhận!");
+      toast.error(err.response?.data?.message);
       setLoading(false);
       console.error(err);
     }
@@ -368,6 +373,12 @@ function TrackingOrderStaff() {
         record.trackingCode
       )
     );
+  };
+
+  const handleResetFilters = () => {
+    setDateRange(null);
+    setStatusFilter(null);
+    setSearchCode('');
   };
 
   return (
@@ -516,8 +527,8 @@ function TrackingOrderStaff() {
           <Card>
             <Title level={3}>Đơn hàng</Title>
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
-              <Row>
-                <Col span={6} style={{ marginRight: "1em" }}>
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
                   <ConfigProvider locale={viVN}>
                     <RangePicker
                       value={dateRange}
@@ -526,7 +537,7 @@ function TrackingOrderStaff() {
                     />
                   </ConfigProvider>
                 </Col>
-                <Col span={6} style={{ marginRight: "1em" }}>
+                <Col span={6}>
                   <Select
                     placeholder="Trạng thái"
                     style={{ width: 350 }}
@@ -538,24 +549,22 @@ function TrackingOrderStaff() {
                       label: <Tag color={s.color}>{s.label}</Tag>,
                     }))}
                   />
-
                 </Col>
-                <Col span={6} style={{ marginRight: "1em" }}>
+                <Col span={6}>
                   <Input.Search
                     placeholder="Tìm theo mã đơn hàng"
-                    onSearch={setSearchCode}
+                    value={searchCode}
+                    onChange={(e) => setSearchCode(e.target.value)}
+                    onSearch={(v) => setSearchCode(v)}
                     allowClear
                   />
                 </Col>
-                {/* <Col span={6}>
+                <Col span={6}>
                   <Button
                     icon={<ReloadOutlined />}
-                    onClick={() => {
-                      setDateRange([]);
-                      setSearchCode('');
-                    }}>
+                    onClick={handleResetFilters}>
                   </Button>
-                </Col> */}
+                </Col>
               </Row>
             </div>
             <Table
@@ -565,6 +574,7 @@ function TrackingOrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
+              locale={{ emptyText: 'Không có dữ liệu' }}
             />
           </Card>
           <Modal

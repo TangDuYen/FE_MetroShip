@@ -47,12 +47,12 @@ function HandledOrderStaff() {
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 26];
+    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 24, 27];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
     const today = dayjs();
-    const [parcelCate,setParcelCate] = useState([]);
+    const [parcelCate, setParcelCate] = useState([]);
 
     if (!decodedUser?.StationId) {
         return (
@@ -136,15 +136,16 @@ function HandledOrderStaff() {
     };
 
     const handleFilterChange = () => {
-        // giới hạn vào các trạng thái cho phép
+        //ALLOWED STATUS SHIPMENT FILTER
+        //JUST APPEAR THE SHIPMENT DONE
         let filtered = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
 
-        // lọc theo trạng thái chọn
+        //STATUS FILTER
         if (statusFilter !== null && statusFilter !== undefined) {
             filtered = filtered.filter(o => o.shipmentStatus === Number(statusFilter));
         }
 
-        // lọc theo date range (ở phần filter dưới bảng)
+        //DATE RANGE FILTER
         if (dateRange && dateRange[0] && dateRange[1]) {
             const [start, end] = dateRange;
             filtered = filtered.filter(o => {
@@ -153,13 +154,13 @@ function HandledOrderStaff() {
             });
         }
 
-        // lọc theo mã đơn hàng (trackingCode)
+        //SEARCH TRACKING CODE
         if (searchCode && searchCode.trim()) {
             const q = searchCode.trim().toLowerCase();
             filtered = filtered.filter(o => (o.trackingCode || '').toLowerCase().includes(q));
         }
 
-        // flag “expired” (nếu cần hiển thị cột hành động)
+        //EXPIRED SHIPMENT
         const hasExpired = shipments.some((item) => item.shipmentStatus === 17);
         setExpiredShipment(hasExpired);
 
@@ -500,6 +501,7 @@ function HandledOrderStaff() {
                             pagination={{ pageSize: 10 }}
                             bordered
                             style={{ cursor: 'pointer' }}
+                            locale={{ emptyText: 'Không có dữ liệu' }}
                         />
                         <Modal
                             title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}

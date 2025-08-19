@@ -47,7 +47,7 @@ function OrderStaff() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-  const [maxCapacity, setMaxCapacity] = useState(0); 
+  const [maxCapacity, setMaxCapacity] = useState(0);
   const [maxVolume, setMaxVolume] = useState(0);
   const startIndex = (currentPage - 1) * pageSize;
   const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
@@ -56,6 +56,7 @@ function OrderStaff() {
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
   const [parcelCate, setParcelCate] = useState([]);
+  const ALLOWED_STATUS = [0, 7];
 
   if (!decodedUser?.StationId) {
     return (
@@ -82,7 +83,6 @@ function OrderStaff() {
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
         setMetroTrains(metroTrainData.items);
-        setStatusOptions(shipmentsData.additionalData || []);
         setParcelCate(parcelCateData);
 
         //ADDITIONAL TRAIN DATA
@@ -132,12 +132,12 @@ function OrderStaff() {
   };
 
   const handleFilterChange = () => {
-    let filtered = shipmentsStaff.filter(order => order.shipmentStatus === 7);
+    let filtered = shipmentsStaff.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
 
-    if (dateRange && dateRange.length === 2) {
-      const [startDate, endDate] = dateRange;
-      filtered = filtered.filter(order =>
-        moment(order.createdAt).isBetween(startDate.startOf('day'), endDate.endOf('day'))
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const [start, end] = dateRange;
+      filtered = filtered.filter(o =>
+        moment(o.createdAt).isBetween(start.startOf('day'), end.endOf('day'))
       );
     }
 
@@ -148,10 +148,9 @@ function OrderStaff() {
       );
     }
 
-    if (statusFilter) {
-      filtered = filtered.filter(order => order.shipmentStatus === statusFilter);
+    if (statusFilter !== null && statusFilter !== undefined) {
+      filtered = filtered.filter(o => o.shipmentStatus === Number(statusFilter));
     }
-
     setFilteredShipments(filtered);
   };
 
@@ -159,7 +158,16 @@ function OrderStaff() {
     if (shipmentsStaff.length > 0) {
       handleFilterChange();
     }
-  }, [shipmentsStaff, dateFilter, dateRange, searchCode]);
+  }, [shipmentsStaff, dateFilter, dateRange, searchCode, statusFilter]);
+
+  useEffect(() => {
+    const opts = ALLOWED_STATUS.map(id => ({
+      id,
+      label: shipmentStatusMap[id] || `Trạng thái ${id}`,
+      color: shipmentStatusColorMap[id] || 'default',
+    }));
+    setStatusOptions(opts);
+  }, []);
 
   const columns = [
     {
@@ -320,6 +328,12 @@ function OrderStaff() {
     setModalOpen(true);
   };
 
+  const handleResetFilters = () => {
+    setDateRange(null);
+    setStatusFilter(null);
+    setSearchCode('');
+  };
+
   return (
     <>
       <div className="order-staff-container">
@@ -468,8 +482,8 @@ function OrderStaff() {
           <Card>
             <Title level={3}>Đơn hàng</Title>
             <div className="staion-sort" style={{ marginBottom: "1.5em" }}>
-              <Row>
-                <Col span={6} style={{ marginRight: "1em" }}>
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
                   <ConfigProvider locale={viVN}>
                     <RangePicker
                       value={dateRange}
@@ -478,7 +492,7 @@ function OrderStaff() {
                     />
                   </ConfigProvider>
                 </Col>
-                <Col span={6} style={{ marginRight: "1em" }}>
+                <Col span={6}>
                   <Select placeholder="Trạng thái"
                     style={{ width: 350 }}
                     allowClear
@@ -493,22 +507,21 @@ function OrderStaff() {
                     ))}
                   </Select>
                 </Col>
-                <Col span={6} style={{ marginRight: "1em" }}>
+                <Col span={6}>
                   <Input.Search
                     placeholder="Tìm theo mã đơn hàng"
-                    onSearch={setSearchCode}
+                    value={searchCode}
+                    onChange={(e) => setSearchCode(e.target.value)}
+                    onSearch={(v) => setSearchCode(v)}
                     allowClear
                   />
                 </Col>
-                {/* <Col span={6}>
+                <Col span={6}>
                   <Button
                     icon={<ReloadOutlined />}
-                    onClick={() => {
-                      setDateRange([]);
-                      setSearchCode('');
-                    }}>
+                    onClick={handleResetFilters}>
                   </Button>
-                </Col> */}
+                </Col>
               </Row>
             </div>
             <Table
@@ -518,6 +531,7 @@ function OrderStaff() {
               pagination={{ pageSize: 10 }}
               bordered
               style={{ cursor: 'pointer' }}
+              locale={{ emptyText: 'Không có dữ liệu' }}
             />
             <Modal
               title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
