@@ -87,7 +87,9 @@ function AdminProfile() {
       toast.success("Đổi mật khẩu thành công!");
     } catch (error) {
       console.error("Lỗi đổi mật khẩu:", error);
-      toast.error("Đổi mật khẩu thất bại!");
+      const errMessage =
+      error.response?.data?.message || "Đổi mật khẩu thất bại!";
+    toast.error(errMessage);
     }
   };
 
