@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
 import api from "../../../../../config/axios";
+import { toast } from "react-toastify";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -42,7 +43,11 @@ function AdminInsuranceDetails() {
         const res = await api.get(`/insurance-policies/${insuranceId}`);
         setPolicy(res.data);
       } catch (error) {
-        console.error("Lỗi khi lấy chi tiết policy:", error);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Không thể lấy chi tiết chính sách";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

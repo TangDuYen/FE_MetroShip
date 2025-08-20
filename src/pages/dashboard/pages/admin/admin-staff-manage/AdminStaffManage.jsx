@@ -137,7 +137,11 @@ function AdminStaffManage() {
       );
     } catch (err) {
       console.error(err);
-      toast.error("Có lỗi xảy ra khi phân công.");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Có lỗi xảy ra khi phân công.";
+      toast.error(errorMessage);
     }
   };
 
@@ -248,9 +252,10 @@ function AdminStaffManage() {
   ];
 
   // const data = users.map((u, index) => ({ ...u, key: index }));
- // Lấy unique roles
-const uniqueRoles = [...new Set(users.map((u) => u.currentRole).filter(Boolean))];
-
+  // Lấy unique roles
+  const uniqueRoles = [
+    ...new Set(users.map((u) => u.currentRole).filter(Boolean)),
+  ];
 
   return (
     <div className="staff-management-container">

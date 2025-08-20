@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
 import { getAllParcelCategories } from "../../../../../config/metroApi";
+import { toast } from "react-toastify";
 
 function ParcelCategoryManage() {
   const [parcelCategories, setParcelCategories] = useState([]);
@@ -45,7 +46,11 @@ function ParcelCategoryManage() {
 
       setParcelCategories(response || []);
     } catch (err) {
-      message.error("Không thể tải dữ liệu loại kiện hàng");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể tải dữ liệu loại kiện hàng";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -66,10 +71,12 @@ function ParcelCategoryManage() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/parcel-category/${id}`);
-      message.success("Đã xoá thành công!");
+      toast.success("Đã xoá thành công!");
       fetchParcelCategories();
-    } catch {
-      message.error("Xoá thất bại!");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || err.message || "Xoá thất bại!";
+      toast.error(errorMessage);
     }
   };
 
@@ -83,17 +90,21 @@ function ParcelCategoryManage() {
               ...values,
               id: editingCategory.id,
             });
-            message.success("Cập nhật loại kiện hàng thành công!");
+            toast.success("Cập nhật loại kiện hàng thành công!");
           } else {
             await api.post("/parcel-category", values);
-            message.success("Thêm loại kiện hàng thành công!");
+            toast.success("Thêm loại kiện hàng thành công!");
           }
 
           setIsModalOpen(false);
           form.resetFields();
           fetchParcelCategories();
         } catch (err) {
-          message.error("Gửi dữ liệu thất bại!");
+          const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Gửi dữ liệu thất bại!";
+          toast.error(errorMessage);
         }
       })
       .catch((info) => {

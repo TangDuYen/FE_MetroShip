@@ -10,7 +10,11 @@ export const getAllShipments = async () => {
       additionalData: res.data.additionalData,
     };
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu đơn hàng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -19,7 +23,11 @@ export const getAllCustomerShipments = async () => {
     const res = await api.get("/shipments/customer/history?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu đơn hàng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -28,7 +36,11 @@ export const getShipmentByStaffStation = async (stationId) => {
     const res = await api.get(`/shipments?PageSize=1000&DepartureStationId=${stationId}`);
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu đơn hàng do bạn chưa được phân công trạm");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng do bạn chưa phân công trạm";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -38,7 +50,11 @@ export const getAllParcels = async () => {
     const res = await api.get("/parcels?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu kiện hàng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu kiện hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -48,7 +64,11 @@ export const getAllParcelCategories = async () => {
     const res = await api.get("/parcel-category?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu phân loại kiện hàng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phân loại kiện hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -57,7 +77,11 @@ export const getParcelCategoryById = async (parcelCategoryId) => {
     const res = await api.get(`/parcel-category/${parcelCategoryId}`);
     return res.data.data;
   } catch (error) {
-    toast.error(res.data.message);
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phân loại kiện hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -69,7 +93,11 @@ export const getAllTransactions = async () => {
     const res = await api.get("/transactions?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu giao dịch");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu giao dịch";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -78,7 +106,11 @@ export const getAllTransactionTypes = async () => {
     const res = await api.get("/transactions/types");
     return res.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu loại thanh toán");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu loại thanh toán";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
@@ -88,7 +120,11 @@ export const getMetroLines = async () => {
     const res = await api.get("/metro-lines/dropdown");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu các tuyến metro");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tuyến metro";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -97,7 +133,11 @@ export const getMetroLinesByStation = async (stationId) => {
     const res = await api.get(`/metro-lines/dropdown?stationId=${stationId}`);
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu các tuyến metro");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tuyến metro";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -107,7 +147,11 @@ export const getMetroTimeSlots = async () => {
     const res = await api.get("/metro-time-slots");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu thời gian biểu của metro");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu thời gian biểu của metro";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -117,7 +161,11 @@ export const getAllMetroTrains = async () => {
     const res = await api.get("/metro-trains?PageSize=1000");
     return res.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu các tàu metro");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tàu metro";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -129,7 +177,11 @@ export const getMetroTrainsByStation = async (stationId) => {
       additionalData: res.data.additionalData,
     };
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu tàu");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu tàu";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
@@ -139,7 +191,11 @@ export const getAllStations = async () => {
     const res = await api.get("/stations");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu các trạm metro");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các trạm metro";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -149,7 +205,11 @@ export const getAllCustomer = async () => {
     const res = await api.get("/users?PageSize=1000&role=3");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu người dùng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu khách hàng";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -158,7 +218,11 @@ export const getAllStaff = async () => {
     const res = await api.get("/users?PageSize=1000&role=2");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu người dùng");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu nhân viên";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -167,7 +231,11 @@ export const getAllAsignedStaffRole = async () => {
     const res = await api.get("/users/assignment-roles");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu vai trò của nhân viên");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu vai trò của nhân viên";
+
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
@@ -177,20 +245,28 @@ export const getAllRegions = async () => {
     const res = await api.get("/regions?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu khu vực");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu khu vực";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
 //SUPPORT_TICKETS 
 export const getAllSupportTickets = async () => {
   try {
-    const res = await api.get("support-tickets?PageSize=1000");
+    const res = await api.get("/support-tickets?PageSize=1000");
     return {
       items: res.data.data.items,
       additionalData: res.data.additionalData,
     }
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phiếu hỗ trợ";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
@@ -199,6 +275,10 @@ export const getAllInsurance = async () => {
     const res = await api.get("/insurance-policies?PageSize=1000");
     return res.data.items;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu chính sách bảo hiểm");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu chính sách bảo hiểm";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
