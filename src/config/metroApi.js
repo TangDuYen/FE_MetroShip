@@ -194,6 +194,34 @@ export const getAllSupportTickets = async () => {
   }
 }
 
+export const getAllSupportTicketsById = async (supportTicketId) => {
+  try {
+    const res = await api.get(`support-tickets/${supportTicketId}`);
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+  }
+}
+
+export const getAllSupportTicketsType = async () => {
+  try {
+    const res = await api.get("support-tickets/type");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu loại phiếu hỗ trợ");
+  }
+}
+
+export const getAllSupportTicketsStatus = async () => {
+  try {
+    const res = await api.get("support-tickets/status");
+    return res.data.data;
+  } catch (error) {
+    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+  }
+}
+
+//INSURANCE
 export const getAllInsurance = async () => {
   try {
     const res = await api.get("/insurance-policies?PageSize=1000");
