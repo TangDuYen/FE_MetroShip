@@ -167,13 +167,6 @@ function OrderInformationStaff() {
                                     {parcelStatusMap[parcel.status]}
                                 </Tag>
                             </Descriptions.Item>
-                            <Descriptions.Item>
-                                {canClaim(parcel.status) && (
-                                    <Button danger onClick={() => handleCreatePaymentUrl()}>
-                                        Bồi thường
-                                    </Button>
-                                )}
-                            </Descriptions.Item>
                         </Descriptions>
                     </Card>
                 ))}

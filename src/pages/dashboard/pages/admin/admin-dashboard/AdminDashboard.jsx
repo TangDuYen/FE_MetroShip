@@ -1,16 +1,19 @@
+import "./AdminDashboard.scss";
+
 import {
   FaBoxOpen,
   FaClipboardCheck,
   FaSackDollar,
   FaUsers,
 } from "react-icons/fa6";
-import "./AdminDashboard.scss";
 import { useEffect, useState } from "react";
-import LineCharts from "./chart/lineChart/LineCharts";
-import ProgressChart from "./chart/progressChart/ProgressChart";
-import PieCharts from "./chart/pieChart/PieCharts";
+
 import BarCharts from "./chart/barChart/BarCharts";
+import LineCharts from "./chart/lineChart/LineCharts";
+import PieCharts from "./chart/pieChart/PieCharts";
+import ProgressChart from "./chart/progressChart/ProgressChart";
 import api from "../../../../../config/axios";
+import { formatCurrency } from './../../../../../constants/statusMap';
 
 function AdminDashboard() {
 
@@ -29,7 +32,7 @@ function AdminDashboard() {
       const { growthPaidAmount, totalPaidAmount } = transactionsRes.data.data;
 
       const statsData = [
-        { value: `${totalPaidAmount.toLocaleString()} VND`, change: `${growthPaidAmount}%` },
+        { value: `${formatCurrency(totalPaidAmount)}`, change: `${growthPaidAmount}%` },
         { value: `${totalShipments} đơn`, change: `${percentageNewShipments}%` },
         { value: `${totalUsersWithRoleUser} người`, change: `${percentageNewUsers}%` },
         { value: `${totalCompleteShipments} đơn`, change: `${percentageNewCompleteShipments}%` },

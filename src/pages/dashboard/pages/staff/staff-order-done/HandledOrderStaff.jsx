@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroStation from '../../../../../assets/metro_station.png';
+import { PATH_NAME } from '../../../../../constants/pathname';
 import { ReloadOutlined } from '@ant-design/icons';
 import StaffIcon from '../../../../../assets/profile.webp';
 import TabPane from 'antd/es/tabs/TabPane';
@@ -14,6 +15,7 @@ import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
 const { RangePicker } = DatePicker;
@@ -53,6 +55,7 @@ function HandledOrderStaff() {
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
     const today = dayjs();
     const [parcelCate, setParcelCate] = useState([]);
+    const navigate = useNavigate();
 
     if (!decodedUser?.StationId) {
         return (
@@ -292,7 +295,12 @@ function HandledOrderStaff() {
     const onRowClick = (record) => {
         const relatedParcels = getParcelsByShipmentId(record.id);
         setSelectedOrder({ ...record, relatedParcels });
-        setModalOpen(true);
+        navigate(
+            PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+                ":trackingCode",
+                record.trackingCode
+            )
+        );
     };
 
     const handleResetFilters = () => {
