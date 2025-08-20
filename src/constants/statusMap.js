@@ -65,13 +65,30 @@ export const paymentStatusMap = {
   1: 'Đợi thanh toán',
   2: 'Đã thanh toán',
   3: 'Đã hủy',
-  4: 'Thất bại'
+  4: 'Thất bại',
 };
 
 export const paymentTransactionTypeMap = {
   1: 'Phí giao hàng',
   2: 'Phí phạt',
-  3: 'Hoàn tiền'
+  3: 'Hoàn tiền',
+  4: 'Phí bồi thường'
+}
+
+export const supportTicketType = {
+  1: 'Hỗ trợ vấn đề bồi thường',
+  2: 'Hỗ trợ vấn đề kỹ thuật',
+  3: 'Hỗ trợ vấn đề giao dịch',
+  4: 'Hỗ trợ vấn đề giao hàng',
+  5: 'Hỗ trợ vấn đề tài khoản',
+  6: 'Hỗ trợ vấn đề đánh giá',
+  7: 'Khác',
+}
+
+export const supportTicketStatus = {
+  1: 'Đang giải quyết',
+  2: 'Đã giải quyết',
+  3: 'Từ chối',
 }
 
 export const parcelStatusMap = {
