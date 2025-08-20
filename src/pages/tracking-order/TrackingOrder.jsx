@@ -171,8 +171,8 @@ function TrackingOrder() {
         toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
       }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu bồi thường:", error);
-      toast.error("Gửi yêu cầu thất bại!");
+      console.error("Lỗi khi gửi yêu cầu bồi thường: ", error.response.data.message);
+      toast.error("Gửi yêu cầu thất bại: " + error.response.data.message);
     }
   };
 
