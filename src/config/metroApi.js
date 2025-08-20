@@ -275,7 +275,11 @@ export const getAllSupportTicketsById = async (supportTicketId) => {
     const res = await api.get(`support-tickets/${supportTicketId}`);
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phiếu hỗ trợ";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
@@ -284,7 +288,11 @@ export const getAllSupportTicketsType = async () => {
     const res = await api.get("support-tickets/type");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu loại phiếu hỗ trợ");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phiếu hỗ trợ";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 
@@ -293,7 +301,11 @@ export const getAllSupportTicketsStatus = async () => {
     const res = await api.get("support-tickets/status");
     return res.data.data;
   } catch (error) {
-    toast.error("Không thể lấy dữ liệu phiếu hỗ trợ");
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu phiếu hỗ trợ";
+
+    toast.error(errorMessage);
+    throw error;
   }
 }
 

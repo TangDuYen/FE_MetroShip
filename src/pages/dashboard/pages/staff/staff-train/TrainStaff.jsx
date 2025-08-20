@@ -156,13 +156,13 @@ function TrainStaff() {
             onClick={() => handleStartTrain(record)}
             style={{ marginRight: 8 }}
           >
-            Bắt đầu
+            Xác nhận tàu rời trạm
           </Button>
           <Button
             className="btn-arrival"
             onClick={() => handleConfirmArrival(record)}
           >
-            Đến trạm
+            Xác nhận tàu đến trạm
           </Button>
           <Button onClick={() => handleViewMapTrain(record)}>Xem bản đồ</Button>
         </div>
