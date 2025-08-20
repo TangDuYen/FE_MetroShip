@@ -398,9 +398,7 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRouteStaff>
             {lazyLoad(() =>
-              import(
-                "../pages/dashboard/pages/staff/staff-map/StaffMap"
-              )
+              import("../pages/dashboard/pages/staff/staff-map/StaffMap")
             )}
           </ProtectedRouteStaff>
         ),
@@ -546,6 +544,16 @@ export const router = createBrowserRouter([
               import(
                 "../pages/dashboard/pages/admin/admin-details-insurance/AdminInsuranceDetails"
               )
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_PRICE_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/admin/admin-pricing/AdminPrice")
             )}
           </ProtectedRouteAdmin>
         ),

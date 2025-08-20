@@ -4,6 +4,7 @@ import {
   DashboardOutlined,
   InsuranceOutlined,
   OrderedListOutlined,
+  PayCircleOutlined,
   ProductOutlined,
   ProfileOutlined,
   TeamOutlined,
@@ -58,6 +59,11 @@ export const navDashboardConfig = [
     key: "11",
     icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Loại bưu kiện",
+  },
+  {
+    key: "13",
+    icon: <PayCircleOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Giá vận chuyển",
   },
   {
     key: "12",
@@ -153,6 +159,9 @@ export const navpath = {
   },
   12: {
     path: PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE,
+  },
+  13: {
+    path: PATH_NAME.DASHBOARD_ADMIN_PRICE_MANAGEMENT,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
