@@ -60,7 +60,6 @@ export const shipmentStatusColorMap = {
   27: "green",       // Đã bồi thường 
 };
 
-
 export const paymentStatusMap = {
   1: 'Đợi thanh toán',
   2: 'Đã thanh toán',
@@ -68,11 +67,25 @@ export const paymentStatusMap = {
   4: 'Thất bại',
 };
 
+export const paymentStatusColorMap = {
+  1: "yellow",
+  2: "green",
+  3: "red",
+  4: "red",
+};
+
 export const paymentTransactionTypeMap = {
   1: 'Phí giao hàng',
   2: 'Phí phạt',
   3: 'Hoàn tiền',
   4: 'Phí bồi thường'
+}
+
+export const paymentTransactionTypeColorMap = {
+  1: "green",
+  2: "red",
+  3: "yellow",
+  4: "pink"
 }
 
 export const supportTicketType = {
@@ -89,6 +102,12 @@ export const supportTicketStatus = {
   1: 'Đang giải quyết',
   2: 'Đã giải quyết',
   3: 'Từ chối',
+}
+
+export const supportTicketStatusColorMap = {
+  1: "yellow",
+  2: "green",
+  3: "red",
 }
 
 export const parcelStatusMap = {

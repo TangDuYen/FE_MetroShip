@@ -1,9 +1,9 @@
 import "./SupportTicketStaff.scss";
 
-import { Button, Col, Input, Modal, Row, Select, Space, Table } from "antd";
+import { Button, Col, Input, Modal, Row, Select, Space, Table, Tag } from "antd";
 import React, { useEffect, useState } from "react";
 import { getAllParcels, getAllShipments, getAllSupportTickets } from "./../../../../../config/metroApi";
-import { supportTicketStatus, supportTicketType } from "../../../../../constants/statusMap";
+import { supportTicketStatus, supportTicketStatusColorMap, supportTicketType } from "../../../../../constants/statusMap";
 
 import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
@@ -140,7 +140,9 @@ function SupportTicketStaff({ stationId }) {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status) => supportTicketStatus[status],
+      render: (status) => <Tag color={supportTicketStatusColorMap[status]}>
+        {supportTicketStatus[status]}
+      </Tag>
     },
     {
       title: "Hành động",
@@ -179,7 +181,9 @@ function SupportTicketStaff({ stationId }) {
           >
             {Object.entries(supportTicketStatus).map(([key, label]) => (
               <Option key={key} value={parseInt(key, 10)}>
-                {label}
+                <Tag color={supportTicketStatusColorMap[key]}>
+                  {supportTicketStatus[key]}
+                </Tag>
               </Option>
             ))}
           </Select>
