@@ -4,25 +4,84 @@ import { GoBell, GoPerson } from "react-icons/go";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout, selectUser } from "../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BsCart3 } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
 import { toast } from "react-toastify";
+import connection from "../../config/signalR";
+import { message, Spin } from "antd";
+import api from "../../config/axios";
 
 function Header() {
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const profileDropdownRef = useRef(null);
+  const [openDropdown, setOpenDropdown] = useState(null); // null | "notification" | "profile"
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const toggleProfileDropdown = () => {
-    setIsProfileDropdownOpen((prev) => !prev);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch notifications khi mở dropdown
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/notifications");
+      setNotifications(res.data.data.items || []);
+    } catch (error) {
+      console.error("Lỗi fetch notifications:", error);
+      message.error("Không thể tải thông báo");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleToggleNotification = () => {
+    if (openDropdown === "notification") {
+      setOpenDropdown(null);
+    } else {
+      setOpenDropdown("notification");
+      fetchNotifications();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    }
+  };
+
+  useEffect(() => {
+    if (!connection) return;
+
+    connection.on("ReceiveNotification", (messageText) => {
+      const newNoti = {
+        id: Date.now(),
+        message: messageText,
+        isRead: false,
+        sentAt: new Date().toISOString(),
+      };
+      setNotifications((prev) => [newNoti, ...prev]);
+
+      // Hiện thông báo nhỏ góc màn hình
+      message.info(messageText, 3);
+    });
+
+    return () => {
+      connection.off("ReceiveNotification");
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
@@ -45,6 +104,13 @@ function Header() {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  // const toggleNotifications = () => {
+  //   setIsNotificationOpen((prev) => !prev);
+  //   setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  // };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const navItems = (
     <>
@@ -85,15 +151,22 @@ function Header() {
       </li>
       <li>
         {user ? (
-          <Link to={PATH_NAME.BOOKING_ORDER}>
-            <button className="header-btn">Tạo đơn</button>
-          </Link>
+          <button
+            className="header-btn"
+            onClick={() => navigate(PATH_NAME.BOOKING_ORDER)}
+          >
+            Tạo đơn
+          </button>
         ) : (
-          <Link to={PATH_NAME.LOGIN}>
-            <button className="header-btn" onClick={handleClick}>
-              Tạo đơn
-            </button>
-          </Link>
+          <button
+            className="header-btn"
+            onClick={() => {
+              handleClick();
+              navigate(PATH_NAME.LOGIN);
+            }}
+          >
+            Tạo đơn
+          </button>
         )}
       </li>
     </>
@@ -123,7 +196,7 @@ function Header() {
             </ul>
           </nav>
 
-          <div className="header-right">
+          <div className="header-right" ref={dropdownRef}>
             {/* <form method="get" className="header-form-search" role="search">
             <input
               type="text"
@@ -143,21 +216,53 @@ function Header() {
             <button className="hamburger-icon" onClick={toggleMobileMenu}>
               ☰
             </button>
-            {/* <div
+            {/* Notification Bell */}
+            <div
               className="header-block-notification"
-              onClick={() => console.log("Mở thông báo")}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  handleClick();
+                  navigate(PATH_NAME.LOGIN);
+                  return;
+                }
+                handleToggleNotification();
+              }}
             >
               <GoBell className="header-icons" />
-              
-              <span className="notification-badge">3</span>
-            </div> */}
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+
+              {openDropdown === "notification" && (
+                <div className="notification-dropdown">
+                  {loading ? (
+                    <Spin />
+                  ) : notifications.length === 0 ? (
+                    <div className="notification-empty">Không có thông báo</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div key={n.id} className="notification-item">
+                        <div className="noti-content">{n.message}</div>
+                        <div className="noti-time">
+                          {new Date(n.sentAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ACCOUNT */}
             <div
               className="header-block-account"
-              ref={profileDropdownRef}
-              onClick={toggleProfileDropdown}
+              onClick={() =>
+                setOpenDropdown(openDropdown === "profile" ? null : "profile")
+              }
             >
               <GoPerson className="header-icons" />
-              {isProfileDropdownOpen && (
+              {openDropdown === "profile" && (
                 <div className="navbar-dropdowns">
                   {user ? (
                     <>

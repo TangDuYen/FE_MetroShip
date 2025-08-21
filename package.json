@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
+    "@microsoft/signalr": "^9.0.6",
     "@react-oauth/google": "^0.12.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.9",

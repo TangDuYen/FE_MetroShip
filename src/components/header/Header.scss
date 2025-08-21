@@ -117,8 +117,8 @@
 
 .navbar-dropdowns {
   position: absolute;
-  top: 130%;
-  left: 160%;
+  top: 110%;
+  left: 40%;
   transform: translateX(-85%);
   background: #fff;
   box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
@@ -161,7 +161,7 @@
   padding: 10px 12px;
   border-radius: 50%;
 
-  &:hover{
+  &:hover {
     background-color: #ccc;
   }
 
@@ -179,6 +179,53 @@
     font-size: 10px;
     padding: 2px 5px;
     border-radius: 50%;
+  }
+  .notification-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    padding: 8px 0;
+    animation: fadeIn 0.2s ease;
+
+    .notification-empty {
+      padding: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .notification-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f2f2f2;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      &:hover {
+        background: #f9f9f9;
+      }
+
+      .noti-content {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .noti-time {
+        font-size: 12px;
+        color: #999;
+      }
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
   }
 }
 
