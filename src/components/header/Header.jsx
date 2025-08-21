@@ -11,10 +11,10 @@ import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
 import { toast } from "react-toastify";
-import connection from "../../config/signalR";
+import connection, { startConnection } from "../../config/signalR";
 import { message, Spin } from "antd";
 import api from "../../config/axios";
-
+import * as signalR from "@microsoft/signalr";
 function Header() {
   const [openDropdown, setOpenDropdown] = useState(null); // null | "notification" | "profile"
   const dropdownRef = useRef(null);
@@ -25,79 +25,86 @@ function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Fetch notifications khi mở dropdown
-  const fetchNotifications = async () => {
+ useEffect(() => {
+  if (!user) return;
+
+  const loadNotifications = async () => {
     try {
-      setLoading(true);
-      const res = await api.get("/notifications");
-      setNotifications(res.data.data.items || []);
-    } catch (error) {
-      console.error("Lỗi fetch notifications:", error);
-      message.error("Không thể tải thông báo");
-    } finally {
-      setLoading(false);
+      const res = await api.get("/notifications?PageSize=1000");
+      const items = res.data.data.items || [];
+
+      setNotifications(prev => {
+        const newNoti = items.filter(i => !prev.some(p => p.id === i.id));
+        if (newNoti.length === 0) return prev;
+        return [...newNoti, ...prev];
+      });
+
+      const newUnread = items.filter(i => !i.isRead).length;
+      setUnreadCount(newUnread);
+
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleToggleNotification = () => {
-    if (openDropdown === "notification") {
-      setOpenDropdown(null);
-    } else {
-      setOpenDropdown("notification");
-    fetchNotifications();
-      // setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    }
-  };
+  loadNotifications();
+  const interval = setInterval(loadNotifications, 2000);
+  return () => clearInterval(interval);
+}, [user?.id]);
 
-//   useEffect(() => {
-//     if (!connection) return;
 
-//     const handleNotification = (notification) => {
-//     const newNoti = {
-//       id: notification.id || Date.now(),
-//       message: notification.message,
-//       isRead: false,
-//       sentAt: notification.sentAt || new Date().toISOString(),
-//     };
-//     setNotifications((prev) => [newNoti, ...prev]);
-
-//     // Hiện toast ngay lập tức
-//     toast.info(notification.message, { autoClose: 3000 });
-//   };
-
-//   connection.on("ReceiveNotification", handleNotification);
-
-//   return () => {
-//     connection.off("ReceiveNotification", handleNotification);
-//   };
-// }, []);
-
-useEffect(() => {
-  if (!connection) return;
+  useEffect(() => {
+  if (!connection || !user?.id) return; // chỉ check id
 
   const handleNotification = (notification) => {
-    console.log("ReceiveNotification:", notification);
-    toast.info(notification.message, { autoClose: 3000 });
+    const newNoti = {
+      id: notification.id || Date.now(),
+      message: notification.message,
+      isRead: false,
+      sentAt: notification.sentAt || new Date().toISOString(),
+    };
 
-    setNotifications((prev) => [
-      {
-        id: notification.id || Date.now(),
-        message: notification.message,
-        isRead: false,
-        sentAt: notification.sentAt || new Date().toISOString(),
-      },
-      ...prev,
-    ]);
+    setNotifications(prev => [newNoti, ...prev]);
+    setUnreadCount(prev => prev + 1);
+
+    toast.info(notification.message, { autoClose: 3000 });
   };
 
   connection.on("ReceiveNotification", handleNotification);
 
-  return () => {
-    connection.off("ReceiveNotification", handleNotification);
+  startConnection().then(() => {
+    if (connection.state === signalR.HubConnectionState.Connected) {
+      connection.invoke("JoinNotificationGroup")
+        .then(() => console.log("✅ Joined notification group"))
+        .catch(err => console.error("JoinNotificationGroup error:", err));
+    }
+  });
+
+  return () => connection.off("ReceiveNotification", handleNotification);
+}, [user?.id]); // dùng user?.id thay vì user object
+
+
+
+
+  const handleToggleNotification = async () => {
+    if (openDropdown === "notification") {
+      setOpenDropdown(null);
+    } else {
+      setOpenDropdown("notification");
+
+      // Khi mở dropdown, đánh dấu tất cả là đã đọc
+      // setNotifications((prev) =>
+      //   prev.map((n) => ({ ...n, isRead: true }))
+      // );
+      // setUnreadCount(0);
+    }
   };
-}, []);
+
+
+
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -137,7 +144,7 @@ useEffect(() => {
   //   setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   // };
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  // const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const navItems = (
     <>
