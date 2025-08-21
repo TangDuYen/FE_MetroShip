@@ -58,6 +58,9 @@ function HistoryOrders() {
   const [rejectShipmentId, setRejectShipmentId] = useState(null);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactionTypeId, setTransactionTypeId] = useState(null);
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+  const [pendingShipment, setPendingShipment] = useState(null);
+
 
 
   useEffect(() => {
@@ -207,10 +210,22 @@ function HistoryOrders() {
     setFeedbackShipmentId(shipmentId);
     setIsFeedbackModalOpen(true);
   };
-  const handleCancelShipment = async (shipmentId) => {
-    setRejectShipmentId(shipmentId);
-    setIsRejectModalOpen(true);
+
+  const handleCancelShipment = (shipmentId) => {
+    const order = orders.find(o => o.shipmentId === shipmentId);
+    const deliveryTime = dayjs(order?.deliveryDate);
+    const now = dayjs();
+
+    //WARNING IF CANCEL IN 24HOURS
+    if (deliveryTime.diff(now, 'hour') < 24) {
+      setPendingShipment(shipmentId);
+      setIsWarningModalOpen(true);
+    } else {
+      setRejectShipmentId(shipmentId);
+      setIsRejectModalOpen(true);
+    }
   };
+
   const handleSubmitFeedback = async () => {
     try {
       const payload = {
@@ -537,6 +552,27 @@ function HistoryOrders() {
           />
         </div>
       </Modal>
+
+      <Modal
+        title="Lưu ý"
+        open={isWarningModalOpen}
+        onOk={() => {
+          setRejectShipmentId(pendingShipment);
+          setIsRejectModalOpen(true);
+          setIsWarningModalOpen(false);
+        }}
+        onCancel={() => {
+          setPendingShipment(null);
+          setIsWarningModalOpen(false);
+        }}
+        okText="Tôi hiểu và muốn tiếp tục"
+        cancelText="Hủy"
+      >
+        <p>
+          Nếu bạn hủy, bạn sẽ <strong style={{ color: 'red' }}>không được hoàn tiền</strong>. Bạn có chắc chắn muốn tiếp tục không?
+        </p>
+      </Modal>
+
     </div>
   );
 }
