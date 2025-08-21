@@ -2,7 +2,7 @@ import './HandledOrderStaff.scss';
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -26,6 +26,7 @@ function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [shipmentsStaff, setShipmentsStaff] = useState([]);
+    const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
     const [shipments, setShipments] = useState([]);
     const [parcels, setParcels] = useState([]);
     const [stations, setStations] = useState([]);
@@ -50,13 +51,15 @@ function HandledOrderStaff() {
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 27];
+    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 20, 21, 22, 27];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
     const today = dayjs();
     const [parcelCate, setParcelCate] = useState([]);
     const navigate = useNavigate();
+    const [mergedShipments, setMergedShipments] = useState([]);
+
 
     if (!decodedUser?.StationId) {
         return (
@@ -107,6 +110,19 @@ function HandledOrderStaff() {
             setShipmentsStaff(data);
         });
     }, []);
+    useEffect(() => {
+        getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
+            setShipmentsStaff1(data);
+        });
+    }, []);
+    useEffect(() => {
+        const combined = [...shipmentsStaff, ...shipmentsStaff1];
+
+        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+
+        setMergedShipments(unique);
+    }, [shipmentsStaff, shipmentsStaff1]);
+
 
     useEffect(() => {
         const map = new Map();
@@ -125,7 +141,7 @@ function HandledOrderStaff() {
 
 
     useEffect(() => {
-        const opts = ALLOWED_STATUSES.map(id => ({
+        const opts = ALLOWED_STATUS.map(id => ({
             id,
             label: shipmentStatusMap[id] || `Trạng thái ${id}`,
         }));
@@ -148,7 +164,8 @@ function HandledOrderStaff() {
     const handleFilterChange = () => {
         //ALLOWED STATUS SHIPMENT FILTER
         //JUST APPEAR THE SHIPMENT DONE
-        let filtered = shipmentsStaff.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        let filtered = mergedShipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
+
 
         //STATUS FILTER
         if (statusFilter !== null && statusFilter !== undefined) {
@@ -178,10 +195,10 @@ function HandledOrderStaff() {
     };
 
     useEffect(() => {
-        if (shipmentsStaff.length > 0) {
+        if (mergedShipments.length > 0) {
             handleFilterChange();
         }
-    }, [shipmentsStaff, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
+    }, [mergedShipments, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
 
 
     const baseColumns = [
@@ -314,7 +331,7 @@ function HandledOrderStaff() {
         setDateRange(null);
         setStatusFilter(null);
         setSearchCode('');
-        const base = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        const base = shipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
         setFilteredShipments(base);
     };
 
