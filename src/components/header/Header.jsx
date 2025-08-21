@@ -78,7 +78,7 @@ useEffect(() => {
   if (!connection) return;
 
   const handleNotification = (notification) => {
-    console.log("📩 ReceiveNotification:", notification); // <-- log nhận notification
+    console.log("ReceiveNotification:", notification);
     toast.info(notification.message, { autoClose: 3000 });
 
     setNotifications((prev) => [
