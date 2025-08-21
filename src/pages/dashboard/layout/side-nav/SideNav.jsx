@@ -31,6 +31,7 @@ function SideNav({ }) {
     localStorage.removeItem('refreshTokenExpiredTime');
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
+    localStorage.removeItem('staffAssignments');
     await dispatch(logout());
     navigate(PATH_NAME.HOME);
   }
