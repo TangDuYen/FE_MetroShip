@@ -23,7 +23,7 @@ export const shipmentStatusMap = {
   21: 'Đã giao',
   22: 'Đã hoàn thành',
   23: 'Delayed',
-  24: 'Đã đến',
+  24: 'Đã đến trạm đích',
   25: 'Đơn đã hoàn thành. Đợi bồi thường',
   26: 'Bồi thường',
   27: 'Đã bồi thường',
