@@ -30,6 +30,8 @@ function Header() {
     localStorage.removeItem("refreshTokenExpiredTime");
     localStorage.removeItem("userLatitude");
     localStorage.removeItem("userLongitude");
+    localStorage.removeItem("staffAssignments");
+    sessionStorage.removeItem("parcelFormData");
     dispatch(logout());
     navigate(PATH_NAME.HOME);
   };

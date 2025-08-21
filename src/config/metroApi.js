@@ -199,6 +199,33 @@ export const getAllStations = async () => {
   }
 };
 
+export const getAllStationsByRegion = async (regionId) => {
+  try {
+    const res = await api.get(`/stations?regionId=${regionId}`);
+    return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các trạm metro thuộc khu vực này";
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
+export const getNearbyStations = async ({ userLatitude, userLongitude }) => {
+  try {
+    const res = await api.post("/stations/nearby", { userLatitude, userLongitude });
+    return res.data?.data || [];
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Không thể lấy danh sách trạm gần bạn";
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
+
 //USER
 export const getAllCustomer = async () => {
   try {
