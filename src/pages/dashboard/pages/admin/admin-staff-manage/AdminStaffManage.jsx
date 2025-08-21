@@ -163,9 +163,11 @@ function AdminStaffManage() {
   };
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
     },
     {
       title: "Tên đăng nhập",

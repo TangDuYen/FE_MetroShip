@@ -3,6 +3,13 @@
 .staff-management-container {
     padding: 2.5em 2em 0 3em;
     font-family: $font-primary;
+
+    .ant-table-thead>tr>th {
+        background-color: $primary-color !important;
+        color: #fff !important;
+        font-weight: 600;
+        text-align: center;
+    }
 }
 
 .assign-staff-button {
@@ -15,6 +22,7 @@
         transform: scale(1.2);
     }
 }
+
 .ban-staff-button {
     background-color: #ff4d4f;
     color: white;
@@ -31,23 +39,23 @@
     font-family: $font-primary;
 }
 
-.staff-filter-bar{
+.staff-filter-bar {
     margin-bottom: 2em;
 }
 
 .clear-filter-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f0f0;
-  border: 1px solid #d9d9d9;
-  color: #595959;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f0f0;
+    border: 1px solid #d9d9d9;
+    color: #595959;
+    border-radius: 8px;
+    transition: all 0.2s ease;
 
-  &:hover {
-    background: #e6f7ff;
-    border-color: #91d5ff;
-    color: #1890ff;
-  }
+    &:hover {
+        background: #e6f7ff;
+        border-color: #91d5ff;
+        color: #1890ff;
+    }
 }

@@ -109,8 +109,11 @@ function MetroLineManagement() {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
     },
     {
       title: "Tên tuyến Vi",
