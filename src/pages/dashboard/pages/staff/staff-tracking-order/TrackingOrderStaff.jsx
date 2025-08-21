@@ -3,7 +3,7 @@ import './TrackingOrderStaff.scss'
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import MetroStation from '../../../../../assets/metro_station.png';
@@ -27,6 +27,7 @@ const { Title } = Typography;
 function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [shipmentsStaff, setShipmentsStaff] = useState([]);
+  const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
@@ -58,6 +59,8 @@ function TrackingOrderStaff() {
   const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
+  const [mergedShipments, setMergedShipments] = useState([]);
+
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
@@ -106,6 +109,20 @@ function TrackingOrderStaff() {
   }, []);
 
   useEffect(() => {
+    getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
+      setShipmentsStaff1(data);
+    });
+  }, []);
+  useEffect(() => {
+    const combined = [...shipmentsStaff, ...shipmentsStaff1];
+
+    
+    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+
+    setMergedShipments(unique);
+  }, [shipmentsStaff, shipmentsStaff1]);
+
+  useEffect(() => {
     const map = new Map();
     parcels.forEach((parcel) => {
       if (!map.has(parcel.shipmentId)) {
@@ -143,7 +160,7 @@ function TrackingOrderStaff() {
   }, []);
 
   const handleFilterChange = () => {
-    let filtered = shipmentsStaff.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
+    let filtered = mergedShipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
 
     //DATE RANGE FILTER
     if (dateRange && dateRange.length === 2) {
@@ -175,10 +192,10 @@ function TrackingOrderStaff() {
 
 
   useEffect(() => {
-    if (shipmentsStaff.length > 0) {
+    if (mergedShipments.length > 0) {
       handleFilterChange();
     }
-  }, [shipmentsStaff, dateRange, statusFilter, searchCode]);
+  }, [mergedShipments, dateRange, statusFilter, searchCode]);
 
   const handleOpenModal = (shipment) => {
     setSelectedOrder(shipment);
