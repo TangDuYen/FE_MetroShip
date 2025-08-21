@@ -38,7 +38,9 @@ function OrderStaff() {
   const [metroTrains, setMetroTrains] = useState([]);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyingParcel, setVerifyingParcel] = useState(null);
-  const [verifyImage, setVerifyImage] = useState(null);
+  const [verifyImageMain, setVerifyImageMain] = useState(null); // bắt buộc
+  const [verifyImageOptional, setVerifyImageOptional] = useState(null); // optional
+
   const [shipmentBeingVerified, setShipmentBeingVerified] = useState(null);
   const [shipmentRejected, setShipmentRejected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -137,7 +139,7 @@ function OrderStaff() {
     if (dateRange && dateRange[0] && dateRange[1]) {
       const [start, end] = dateRange;
       filtered = filtered.filter(o =>
-        moment(o.createdAt).isBetween(start.startOf('day'), end.endOf('day'))
+        moment(o.scheduledDateTime).isBetween(start.startOf('day'), end.endOf('day'))
       );
     }
 
@@ -202,7 +204,13 @@ function OrderStaff() {
       title: 'Bắt đầu nhận hàng',
       dataIndex: 'startReceiveAt',
       key: 'startReceiveAt',
-      render: (_, record) => dayjs(record.startReceiveAt).format('HH:mm'),
+      render: (_, record) => {
+        if (record.startReceiveAt) {
+          return dayjs(record.startReceiveAt).format('HH:mm');
+        } else {
+          return <Tag color='red'> Không xác định </Tag>
+        }
+      }
     },
     {
       title: 'Hạn chót gửi hàng',
@@ -687,40 +695,66 @@ function OrderStaff() {
               open={verifyModalOpen}
               onCancel={() => {
                 setVerifyModalOpen(false);
-                setVerifyImage(null);
+                setVerifyImageMain(null);
+                setVerifyImageOptional(null);
                 setShipmentBeingVerified(null);
               }}
               onOk={async () => {
-                if (!verifyImage) {
-                  toast.error("Vui lòng chọn ảnh!");
+                if (!verifyImageMain) {
+                  toast.error("Vui lòng chọn ảnh bắt buộc!");
                   return;
                 }
 
-                const formData = new FormData();
-                formData.append("file", verifyImage);
                 setLoading(true);
                 try {
-                  const uploadRes = await api.post("/media/image", formData, {
+                  //MAIN IMAGE UPLOAD
+                  const formDataMain = new FormData();
+                  formDataMain.append("file", verifyImageMain);
+                  const uploadMainRes = await api.post("/media/image", formDataMain, {
                     headers: { "Content-Type": "multipart/form-data" }
                   });
+                  const mainImageUrl = uploadMainRes.data?.data || uploadMainRes.data?.secure_url;
 
-                  const imageUrl = uploadRes.data?.data || uploadRes.data?.secure_url;
-
-                  if (!imageUrl) {
-                    toast.error("Không lấy được link ảnh sau khi upload.");
+                  if (!mainImageUrl) {
+                    toast.error("Không lấy được link ảnh bắt buộc sau khi upload.");
                     setLoading(false);
                     return;
+                  }
+                  //OPTIONAL IMAGE UPLOAD
+                  let optionalImageUrl = null;
+                  if (verifyImageOptional) {
+                    const formDataOptional = new FormData();
+                    formDataOptional.append("file", verifyImageOptional);
+                    const uploadOptionalRes = await api.post("/media/image", formDataOptional, {
+                      headers: { "Content-Type": "multipart/form-data" }
+                    });
+                    optionalImageUrl = uploadOptionalRes.data?.data || uploadOptionalRes.data?.secure_url;
+                  }
+
+                  const medias = [
+                    {
+                      mediaUrl: mainImageUrl,
+                      description: "Ảnh bắt buộc"
+                    }
+                  ];
+
+                  if (optionalImageUrl) {
+                    medias.push({
+                      mediaUrl: optionalImageUrl,
+                      description: "Ảnh phụ (hàng bảo hiểm)"
+                    });
                   }
 
                   await api.post("/shipments/staff/pickup-confirmation", {
                     shipmentId: shipmentBeingVerified?.id,
-                    pickedUpImageLink: imageUrl,
+                    pickedUpMedias: medias
                   });
 
                   toast.success("Xác minh đơn hàng thành công!");
                   setLoading(false);
                   setVerifyModalOpen(false);
-                  setVerifyImage(null);
+                  setVerifyImageMain(null);
+                  setVerifyImageOptional(null);
                   setShipmentBeingVerified(null);
                   await getAllShipments();
                 } catch (error) {
@@ -734,24 +768,48 @@ function OrderStaff() {
               cancelText="Huỷ"
             >
               <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setVerifyImage(e.target.files[0])}
-                />
-                {verifyImage && (
-                  <div style={{ marginTop: 10 }}>
-                    <strong>Ảnh đã chọn:</strong>
-                    <br />
-                    <img
-                      src={URL.createObjectURL(verifyImage)}
-                      alt="preview"
-                      style={{ maxWidth: "100%", maxHeight: 200, marginTop: 10 }}
-                    />
-                  </div>
-                )}
+                <div style={{ marginBottom: "1em", display: "flex", flexDirection: "column" }}>
+                  <label style={{ marginBottom: "0.5em" }}>
+                    <strong>Ảnh xác minh</strong>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setVerifyImageMain(e.target.files[0])}
+                  />
+                  {verifyImageMain && (
+                    <div style={{ marginTop: 10 }}>
+                      <img
+                        src={URL.createObjectURL(verifyImageMain)}
+                        alt="preview-main"
+                        style={{ maxWidth: "100%", maxHeight: 200 }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: "1em", display: "flex", flexDirection: "column" }}>
+                  <label style={{ marginBottom: "0.5em" }}>
+                    <strong>Ảnh hàng bắt buộc bảo hiểm (không bắt buộc):</strong>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setVerifyImageOptional(e.target.files[0])}
+                  />
+                  {verifyImageOptional && (
+                    <div style={{ marginTop: 10 }}>
+                      <img
+                        src={URL.createObjectURL(verifyImageOptional)}
+                        alt="preview-optional"
+                        style={{ maxWidth: "100%", maxHeight: 200 }}
+                      />
+                    </div>
+                  )}
+                </div>
               </Spin>
             </Modal>
+
           </Card>
         </div>
       </div>
