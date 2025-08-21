@@ -3,8 +3,8 @@ import "./AdminStationManage.scss";
 import { Button, Select, Space, Spin, Table } from "antd";
 import { useEffect, useState } from "react";
 
-import { getAllStations } from "../../../../../config/metroApi";
 import { ReloadOutlined } from "@ant-design/icons";
+import { getAllStations } from "../../../../../config/metroApi";
 
 function AdminStationManage() {
   const [stations, setStations] = useState([]);
@@ -45,6 +45,13 @@ function AdminStationManage() {
 
   const columns = [
     {
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
+    },
+    {
       title: "Tên trạm (Tiếng Việt)",
       dataIndex: "stationNameVi",
       key: "stationNameVi",
@@ -67,15 +74,15 @@ function AdminStationManage() {
       dataIndex: "stationCode",
       key: "stationCode",
     },
-    {
-      title: "Đóng trạm",
-      key: "close",
-      render: (_, record) => (
-        <Button className="close-station-button" onClick={() => {}}>
-          Đóng trạm
-        </Button>
-      ),
-    },
+    // {
+    //   title: "Đóng trạm",
+    //   key: "close",
+    //   render: (_, record) => (
+    //     <Button className="close-station-button" onClick={() => { }}>
+    //       Đóng trạm
+    //     </Button>
+    //   ),
+    // },
   ];
 
   return (

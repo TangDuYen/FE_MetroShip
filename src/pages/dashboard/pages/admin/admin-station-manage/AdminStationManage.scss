@@ -3,6 +3,13 @@
 .admin-station-manage-container {
     padding: 2.5em 2em 0 3em;
     font-family: $font-primary;
+
+    .ant-table-thead>tr>th {
+        background-color: $primary-color !important;
+        color: #fff !important;
+        font-weight: 600;
+        text-align: center;
+    }
 }
 
 .close-station-button {
