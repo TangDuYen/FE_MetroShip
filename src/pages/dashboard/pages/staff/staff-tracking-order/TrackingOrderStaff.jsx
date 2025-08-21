@@ -475,7 +475,7 @@ function TrackingOrderStaff() {
                     Làm việc tại trạm
                     <div className="data">
                       {
-                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                        stations.find(station => station.stationId === decodedUser?.StationId)?.stationNameVi || "N/A"
                       }
                     </div>
                   </div>
@@ -501,7 +501,8 @@ function TrackingOrderStaff() {
               </Col>
             </Row>
           </Card>
-          <Card style={{ marginBottom: '1em' }}>
+
+          {/* <Card style={{ marginBottom: '1em' }}>
             <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
             <Row gutter={16}>
               {currentData.map((train) => (
@@ -545,7 +546,7 @@ function TrackingOrderStaff() {
                 onChange={(page) => setCurrentPage(page)}
               />
             </Flex>
-          </Card>
+          </Card> */}
         </div>
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
           <Card>

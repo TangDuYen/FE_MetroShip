@@ -199,6 +199,12 @@ function OrderStaff() {
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
     {
+      title: 'Bắt đầu nhận hàng',
+      dataIndex: 'startReceiveAt',
+      key: 'startReceiveAt',
+      render: (_, record) => dayjs(record.startReceiveAt).format('HH:mm'),
+    },
+    {
       title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',
       key: 'scheduledTime',
@@ -364,7 +370,7 @@ function OrderStaff() {
                     Làm việc tại trạm
                     <div className="data">
                       {
-                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                        stations.find(station => station.stationId === decodedUser?.StationId)?.stationNameVi || "N/A"
                       }
                     </div>
                   </div>
@@ -390,7 +396,7 @@ function OrderStaff() {
               </Col>
             </Row>
           </Card>
-          <Card style={{ marginBottom: '1em' }}>
+          {/* <Card style={{ marginBottom: '1em' }}>
             <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
             <Row gutter={16}>
               {currentData.map((train) => (
@@ -434,7 +440,7 @@ function OrderStaff() {
                 onChange={(page) => setCurrentPage(page)}
               />
             </Flex>
-          </Card>
+          </Card> */}
         </div>
 
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
@@ -719,8 +725,9 @@ function OrderStaff() {
                   await getAllShipments();
                 } catch (error) {
                   setLoading(false);
+                  const errorMessage = error.response?.data?.message || "Lỗi không xác định";
                   console.error("Lỗi khi xác minh:", error);
-                  toast.error("Lỗi khi xác minh. Vui lòng thử lại!");
+                  toast.error(errorMessage);
                 }
               }}
               okText="Xác nhận"

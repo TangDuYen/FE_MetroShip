@@ -120,7 +120,14 @@ function SupportTicketStaff({ stationId }) {
 
   const columns = [
     {
-      title: "Mã đơn hàng",
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
+    },
+    {
+      title: "Phiếu hỗ trợ cho đơn hàng",
       dataIndex: "shipmentId",
       key: "shipmentId",
       render: (shipmentId) => getShipmentCode(shipmentId),

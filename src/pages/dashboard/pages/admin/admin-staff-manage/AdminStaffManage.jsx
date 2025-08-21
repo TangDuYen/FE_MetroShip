@@ -124,7 +124,7 @@ function AdminStaffManage() {
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
 
-      const station = stations.find((s) => s.id === values.stationId);
+      const station = stations.find((s) => s.stationId === values.stationId);
       setUsers((prev) =>
         prev.map((user) =>
           user.id === assigningStaff.id
@@ -279,7 +279,7 @@ function AdminStaffManage() {
             onChange={setFilterStations}
             options={stations.map((s) => ({
               label: s.stationNameVi,
-              value: s.id,
+              value: s.stationId,
             }))}
           />
           <Select
@@ -337,7 +337,7 @@ function AdminStaffManage() {
               placeholder="Chọn trạm"
               options={stations.map((s) => ({
                 label: s.stationNameVi,
-                value: s.id,
+                value: s.stationId,
               }))}
             />
           </Form.Item>
