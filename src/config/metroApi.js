@@ -322,3 +322,17 @@ export const getAllInsurance = async () => {
     throw error;
   }
 }
+
+//PRICE
+export const getAllPrice = async () => {
+  try {
+    const res = await api.get("/pricing?PageSize=1000");
+    return res.data.items;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu giá vận chuyển";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+}

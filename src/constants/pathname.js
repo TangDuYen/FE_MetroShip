@@ -60,4 +60,6 @@ export const PATH_NAME = {
   DASHBOARD_ADMIN_METRO_INSURANCE: "/dashboard/admin/metro-insurance",
   DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS:
     "/dashboard/admin/metro-insurance-details/:insuranceId",
+    DASHBOARD_ADMIN_PRICE_MANAGEMENT:
+    "/dashboard/admin/price-management",
 };

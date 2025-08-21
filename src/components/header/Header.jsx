@@ -4,25 +4,118 @@ import { GoBell, GoPerson } from "react-icons/go";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout, selectUser } from "../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BsCart3 } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
 import logo from "../../assets/logo.png";
 import { toast } from "react-toastify";
-
+import connection, { startConnection } from "../../config/signalR";
+import { message, Spin } from "antd";
+import api from "../../config/axios";
+import * as signalR from "@microsoft/signalr";
 function Header() {
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const profileDropdownRef = useRef(null);
+  const [openDropdown, setOpenDropdown] = useState(null); // null | "notification" | "profile"
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const toggleProfileDropdown = () => {
-    setIsProfileDropdownOpen((prev) => !prev);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+ useEffect(() => {
+  if (!user) return;
+
+  const loadNotifications = async () => {
+    try {
+      const res = await api.get("/notifications?PageSize=1000");
+      const items = res.data.data.items || [];
+
+      setNotifications(prev => {
+        const newNoti = items.filter(i => !prev.some(p => p.id === i.id));
+        if (newNoti.length === 0) return prev;
+        return [...newNoti, ...prev];
+      });
+
+      const newUnread = items.filter(i => !i.isRead).length;
+      setUnreadCount(newUnread);
+
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  loadNotifications();
+  const interval = setInterval(loadNotifications, 2000);
+  return () => clearInterval(interval);
+}, [user?.id]);
+
+
+  useEffect(() => {
+  if (!connection || !user?.id) return; // chỉ check id
+
+  const handleNotification = (notification) => {
+    const newNoti = {
+      id: notification.id || Date.now(),
+      message: notification.message,
+      isRead: false,
+      sentAt: notification.sentAt || new Date().toISOString(),
+    };
+
+    setNotifications(prev => [newNoti, ...prev]);
+    setUnreadCount(prev => prev + 1);
+
+    toast.info(notification.message, { autoClose: 3000 });
+  };
+
+  connection.on("ReceiveNotification", handleNotification);
+
+  startConnection().then(() => {
+    if (connection.state === signalR.HubConnectionState.Connected) {
+      connection.invoke("JoinNotificationGroup")
+        .then(() => console.log("✅ Joined notification group"))
+        .catch(err => console.error("JoinNotificationGroup error:", err));
+    }
+  });
+
+  return () => connection.off("ReceiveNotification", handleNotification);
+}, [user?.id]); // dùng user?.id thay vì user object
+
+
+
+
+  const handleToggleNotification = async () => {
+    if (openDropdown === "notification") {
+      setOpenDropdown(null);
+    } else {
+      setOpenDropdown("notification");
+
+      // Khi mở dropdown, đánh dấu tất cả là đã đọc
+      // setNotifications((prev) =>
+      //   prev.map((n) => ({ ...n, isRead: true }))
+      // );
+      // setUnreadCount(0);
+    }
+  };
+
+
+
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
@@ -45,6 +138,13 @@ function Header() {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  // const toggleNotifications = () => {
+  //   setIsNotificationOpen((prev) => !prev);
+  //   setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  // };
+
+  // const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const navItems = (
     <>
@@ -85,15 +185,22 @@ function Header() {
       </li>
       <li>
         {user ? (
-          <Link to={PATH_NAME.BOOKING_ORDER}>
-            <button className="header-btn">Tạo đơn</button>
-          </Link>
+          <button
+            className="header-btn"
+            onClick={() => navigate(PATH_NAME.BOOKING_ORDER)}
+          >
+            Tạo đơn
+          </button>
         ) : (
-          <Link to={PATH_NAME.LOGIN}>
-            <button className="header-btn" onClick={handleClick}>
-              Tạo đơn
-            </button>
-          </Link>
+          <button
+            className="header-btn"
+            onClick={() => {
+              handleClick();
+              navigate(PATH_NAME.LOGIN);
+            }}
+          >
+            Tạo đơn
+          </button>
         )}
       </li>
     </>
@@ -123,7 +230,7 @@ function Header() {
             </ul>
           </nav>
 
-          <div className="header-right">
+          <div className="header-right" ref={dropdownRef}>
             {/* <form method="get" className="header-form-search" role="search">
             <input
               type="text"
@@ -143,21 +250,53 @@ function Header() {
             <button className="hamburger-icon" onClick={toggleMobileMenu}>
               ☰
             </button>
-            {/* <div
+            {/* Notification Bell */}
+            <div
               className="header-block-notification"
-              onClick={() => console.log("Mở thông báo")}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  handleClick();
+                  navigate(PATH_NAME.LOGIN);
+                  return;
+                }
+                handleToggleNotification();
+              }}
             >
               <GoBell className="header-icons" />
-              
-              <span className="notification-badge">3</span>
-            </div> */}
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+
+              {openDropdown === "notification" && (
+                <div className="notification-dropdown">
+                  {loading ? (
+                    <Spin />
+                  ) : notifications.length === 0 ? (
+                    <div className="notification-empty">Không có thông báo</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div key={n.id} className="notification-item">
+                        <div className="noti-content">{n.message}</div>
+                        <div className="noti-time">
+                          {new Date(n.sentAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ACCOUNT */}
             <div
               className="header-block-account"
-              ref={profileDropdownRef}
-              onClick={toggleProfileDropdown}
+              onClick={() =>
+                setOpenDropdown(openDropdown === "profile" ? null : "profile")
+              }
             >
               <GoPerson className="header-icons" />
-              {isProfileDropdownOpen && (
+              {openDropdown === "profile" && (
                 <div className="navbar-dropdowns">
                   {user ? (
                     <>
