@@ -1,7 +1,6 @@
 import { PATH_NAME } from "../constants/pathname";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
 
 const baseUrl = "https://localhost:7085/api/";
 // const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
@@ -9,7 +8,6 @@ const config = {
   baseURL: baseUrl,
   timeout: 3000000,
 };
-const navigate = useNavigate();
 const api = axios.create(config);
 
 let isRefreshing = false;
@@ -57,7 +55,7 @@ const handleBefore = async (config) => {
         } catch (err) {
           localStorage.removeItem("token");
           localStorage.removeItem("refreshToken");
-          navigate(PATH_NAME.LOGIN);
+          window.location.href = PATH_NAME.LOGIN;
           processQueue(err, null);
           throw err;
         } finally {
@@ -95,7 +93,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
-      navigate(PATH_NAME.LOGIN);
+      window.location.href = PATH_NAME.LOGIN;
     }
     return Promise.reject(error);
   }
