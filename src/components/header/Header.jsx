@@ -46,31 +46,58 @@ function Header() {
       setOpenDropdown(null);
     } else {
       setOpenDropdown("notification");
-      fetchNotifications();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    fetchNotifications();
+      // setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     }
   };
 
-  useEffect(() => {
-    if (!connection) return;
+//   useEffect(() => {
+//     if (!connection) return;
 
-    connection.on("ReceiveNotification", (messageText) => {
-      const newNoti = {
-        id: Date.now(),
-        message: messageText,
+//     const handleNotification = (notification) => {
+//     const newNoti = {
+//       id: notification.id || Date.now(),
+//       message: notification.message,
+//       isRead: false,
+//       sentAt: notification.sentAt || new Date().toISOString(),
+//     };
+//     setNotifications((prev) => [newNoti, ...prev]);
+
+//     // Hiện toast ngay lập tức
+//     toast.info(notification.message, { autoClose: 3000 });
+//   };
+
+//   connection.on("ReceiveNotification", handleNotification);
+
+//   return () => {
+//     connection.off("ReceiveNotification", handleNotification);
+//   };
+// }, []);
+
+useEffect(() => {
+  if (!connection) return;
+
+  const handleNotification = (notification) => {
+    console.log("📩 ReceiveNotification:", notification); // <-- log nhận notification
+    toast.info(notification.message, { autoClose: 3000 });
+
+    setNotifications((prev) => [
+      {
+        id: notification.id || Date.now(),
+        message: notification.message,
         isRead: false,
-        sentAt: new Date().toISOString(),
-      };
-      setNotifications((prev) => [newNoti, ...prev]);
+        sentAt: notification.sentAt || new Date().toISOString(),
+      },
+      ...prev,
+    ]);
+  };
 
-      // Hiện thông báo nhỏ góc màn hình
-      message.info(messageText, 3);
-    });
+  connection.on("ReceiveNotification", handleNotification);
 
-    return () => {
-      connection.off("ReceiveNotification");
-    };
-  }, []);
+  return () => {
+    connection.off("ReceiveNotification", handleNotification);
+  };
+}, []);
 
   useEffect(() => {
     function handleClickOutside(e) {
