@@ -2,7 +2,7 @@ import './HandledOrderStaff.scss';
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -25,6 +25,7 @@ const { Title } = Typography;
 function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [shipmentsStaff, setShipmentsStaff] = useState([]);
     const [shipments, setShipments] = useState([]);
     const [parcels, setParcels] = useState([]);
     const [stations, setStations] = useState([]);
@@ -49,7 +50,7 @@ function HandledOrderStaff() {
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 24, 27];
+    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 27];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
@@ -102,6 +103,12 @@ function HandledOrderStaff() {
     }, []);
 
     useEffect(() => {
+        getShipmentByStaffStation(decodedUser.StationId).then((data) => {
+            setShipmentsStaff(data);
+        });
+    }, []);
+
+    useEffect(() => {
         const map = new Map();
         parcels.forEach((parcel) => {
             if (!map.has(parcel.shipmentId)) {
@@ -141,7 +148,7 @@ function HandledOrderStaff() {
     const handleFilterChange = () => {
         //ALLOWED STATUS SHIPMENT FILTER
         //JUST APPEAR THE SHIPMENT DONE
-        let filtered = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        let filtered = shipmentsStaff.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
 
         //STATUS FILTER
         if (statusFilter !== null && statusFilter !== undefined) {
@@ -171,10 +178,10 @@ function HandledOrderStaff() {
     };
 
     useEffect(() => {
-        if (shipments.length > 0) {
+        if (shipmentsStaff.length > 0) {
             handleFilterChange();
         }
-    }, [shipments, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
+    }, [shipmentsStaff, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
 
 
     const baseColumns = [
@@ -415,7 +422,8 @@ function HandledOrderStaff() {
 
                 <div className="filter-sort" style={{ marginBottom: "1em" }}>
                     <Card>
-                        <Title level={3}>Thời gian</Title>
+                        <Title level={3}>Ngày và Ca vận chuyển của Metro</Title>
+
                         <Row gutter={16}>
                             <Col span={6}>
                                 <DatePicker

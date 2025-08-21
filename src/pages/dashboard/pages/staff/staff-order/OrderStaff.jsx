@@ -136,10 +136,15 @@ function OrderStaff() {
   const handleFilterChange = () => {
     let filtered = shipmentsStaff.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
 
-    if (dateRange && dateRange[0] && dateRange[1]) {
-      const [start, end] = dateRange;
-      filtered = filtered.filter(o =>
-        moment(o.scheduledDateTime).isBetween(start.startOf('day'), end.endOf('day'))
+    if (dateRange && dateRange.length === 2) {
+      const [startDate, endDate] = dateRange;
+      filtered = filtered.filter(order =>
+        dayjs(order.scheduledDateTime).isBetween(
+          startDate.startOf("day"),
+          endDate.endOf("day"),
+          null,
+          "[]"
+        )
       );
     }
 
