@@ -29,6 +29,32 @@ export const shipmentStatusMap = {
   27: 'Đã bồi thường',
 };
 
+export const trainStatusMap = {
+  0: "Chưa được lập lịch",             // NotScheduled
+  1: "Đã lập lịch",                    // Scheduled
+  2: "Chờ khởi hành",                  // AwaitingDeparture
+  3: "Đã khởi hành",                   // Departed
+  4: "Đang di chuyển",                 // InTransit
+  5: "Đã đến ga trung gian",           // ArrivedAtStation
+  7: "Tiếp tục hành trình",            // ResumingTransit
+  8: "Bị trì hoãn",                    // Delayed
+  9: "Đã hủy",                         // Cancelled
+  10: "Đã hoàn thành",                 // Completed
+};
+
+export const trainStatusColorMap = {
+  0: "default",  // xám
+  1: "blue",     // xanh dương
+  2: "orange",   // cam
+  3: "geekblue",    // xanh lá
+  4: "cyan",     // xanh ngọc
+  5: "purple",   // tím
+  7: "magenta", // xanh đậm
+  8: "volcano",  // đỏ cam (delay)
+  9: "red",      // đỏ (cancelled)
+  10: "success", // xanh lá (completed)
+};
+
 export const shipmentStatusColorMap = {
   0: "orange",       // Chờ thanh toán
   1: "red",          // Từ chối
