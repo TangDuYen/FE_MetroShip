@@ -78,10 +78,11 @@ function TrainStaff() {
   const handleStartTrain = async (train) => {
     try {
       await api.post(`/train/${train.id}/status`);
-      toast.success(`Tàu ${train.trainCode} đã được khởi động`);
+      toast.success(`Xác nhận tàu ${train.trainCode} đã rời trạm thành công.`);
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
-      toast.error(`Không thể khởi động tàu ${train.trainCode}`);
+      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
+      toast.error(errorMessage);
     }
   };
 
@@ -101,7 +102,9 @@ function TrainStaff() {
       toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
     } catch (error) {
       console.error("Lỗi xác nhận tàu đến trạm:", error);
-      toast.error("Xác nhận tàu thất bại.");
+      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
+
+      toast.error(errorMessage);
     }
   };
 
