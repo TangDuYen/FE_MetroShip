@@ -63,6 +63,8 @@ function Order() {
   const [priceVnd, setPriceVnd] = useState(null);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactionTypeId, setTransactionTypeId] = useState(null);
+  const [isScheduleWarningModalOpen, setIsScheduleWarningModalOpen] = useState(false);
+
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -229,7 +231,18 @@ function Order() {
     if (currentStep < steps.length - 1) {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
-      showModal();
+      if (currentStep === steps.length - 1) {
+        const selectedDate = dayjs(metroSelector?.departureDateTime);
+        const now = dayjs();
+
+        if (selectedDate.diff(now, 'minute') <= 120) {
+          setIsScheduleWarningModalOpen(true);
+          return;
+        }
+
+        showModal();
+      }
+
     }
   };
 
@@ -548,6 +561,26 @@ function Order() {
             >
               <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
             </Modal>
+
+            <Modal
+              title="CLưu ý"
+              open={isScheduleWarningModalOpen}
+              onOk={() => {
+                setIsScheduleWarningModalOpen(false);
+                showModal();
+              }}
+              onCancel={() => {
+                setIsScheduleWarningModalOpen(false);
+              }}
+              okText="Tôi hiểu và muốn tiếp tục"
+              cancelText="Hủy"
+              className="modal-warning-schedule"
+            >
+              <p>
+                <strong>MetroShip</strong> chỉ hỗ trợ nhận hàng trong khoảng thời gian bạn đã chọn. Nếu bạn không đến đúng giờ để gửi hàng, đơn sẽ <strong>bị hủy và bạn sẽ mất 100% phí</strong>. Bạn có muốn tiếp tục không?
+              </p>
+            </Modal>
+
           </div>
         </div>
       </Spin>

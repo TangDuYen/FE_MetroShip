@@ -1,7 +1,11 @@
 import "./Header.scss";
 
+import * as signalR from "@microsoft/signalr";
+
 import { GoBell, GoPerson } from "react-icons/go";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Spin, message } from "antd";
+import connection, { startConnection } from "../../config/signalR";
 import { logout, selectUser } from "../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
@@ -9,12 +13,10 @@ import { useEffect, useRef, useState } from "react";
 import { BsCart3 } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
 import { PATH_NAME } from "../../constants/pathname";
+import api from "../../config/axios";
 import logo from "../../assets/logo.png";
 import { toast } from "react-toastify";
-import connection, { startConnection } from "../../config/signalR";
-import { message, Spin } from "antd";
-import api from "../../config/axios";
-import * as signalR from "@microsoft/signalr";
+
 function Header() {
   const [openDropdown, setOpenDropdown] = useState(null); // null | "notification" | "profile"
   const dropdownRef = useRef(null);
@@ -123,6 +125,7 @@ function Header() {
     localStorage.removeItem("refreshTokenExpiredTime");
     localStorage.removeItem("userLatitude");
     localStorage.removeItem("userLongitude");
+    localStorage.removeItem("departureStationLocation");
     localStorage.removeItem("staffAssignments");
     sessionStorage.removeItem("parcelFormData");
     dispatch(logout());
