@@ -61,8 +61,7 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
   const [priceVnd, setPriceVnd] = useState(null);
-  const [transactionTypes, setTransactionTypes] = useState([]);
-  const [transactionTypeId, setTransactionTypeId] = useState(null);
+  const [isScheduleWarningModalOpen, setIsScheduleWarningModalOpen] = useState(false);
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -182,17 +181,66 @@ function Order() {
     },
   ];
   const handleNext = () => {
+    switch (currentStep) {
+      case 0: //PERSONAL INFO VALIDATION
+        if (!personalInfo.recipientName?.trim() && !personalInfo.recipientPhone?.trim()) {
+          toast.error("Vui lòng điền họ tên và số điện thoại người nhận");
+          return;
+        } else if (!personalInfo.recipientName?.trim()) {
+          toast.error("Vui lòng điền họ tên người nhận");
+          return;
+        } else if (!personalInfo.recipientPhone?.trim()) {
+          toast.error("Vui lòng điền số điện thoại người nhận");
+          return;
+        }
+        break;
 
-    if (currentStep === 0) {
-      if (!personalInfo.recipientName?.trim() || !personalInfo.recipientPhone?.trim()) {
-        toast.error("Vui lòng điền đầy đủ thông tin người nhận");
-        return;
-      }
+      case 1: //PARCEL INFO VALIDATION
+        const isValidParcel = parcelInfo.every(p =>
+          p.parcelCategory &&
+          p.categoryInsuranceId &&
+          p.weightKg &&
+          p.lengthCm &&
+          p.widthCm &&
+          p.heightCm
+        );
+
+        if (!isValidParcel) {
+          toast.error("Vui lòng điền đầy đủ thông tin kiện hàng");
+          return;
+        }
+
+        if (!metroSelector.departureStationId || !metroSelector.destinationStationId) {
+          toast.error("Vui lòng chọn ga đi và ga đến");
+          return;
+        }
+
+        if (!pickedDate || !pickedTime) {
+          toast.error("Vui lòng chọn ngày và giờ gửi");
+          return;
+        }
+        break;
+
+      default:
+        break;
     }
+
     if (currentStep < steps.length - 1) {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
-      showModal();
+      if (currentStep === steps.length - 1) {
+        //WARNING USER BOOKING NEAR DEADLINE
+        const selectedDate = dayjs(metroSelector?.departureDateTime);
+        const now = dayjs();
+        const minutesLeft = selectedDate.diff(now, 'minute', true);
+        console.log("Thời gian còn lại đến hạn chót gửi hàng tại trạm:", minutesLeft, "phút");
+        if (minutesLeft <= 180) {
+          setIsScheduleWarningModalOpen(true);
+          return;
+        }
+        showModal();
+      }
+
     }
   };
 
@@ -212,7 +260,7 @@ function Order() {
       recipientNationalId,
     } = personalInfo;
 
-    const { departureStationId, destinationStationId, departureDateTime } = metroSelector;
+    const { departureStationId, destinationStationId, departureDateTime, startReceiveAt } = metroSelector;
 
     const itinerary = routeSolutions[selectedSolutionIndex];
 
@@ -268,6 +316,7 @@ function Order() {
       ...(recipientEmail ? { recipientEmail } : {}),
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
+      ...(startReceiveAt && { startReceiveAt: new Date(startReceiveAt).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
       totalCostVnd: itinerary?.data?.totalCostVnd,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,
@@ -278,19 +327,6 @@ function Order() {
     };
   };
 
-  useEffect(() => {
-    async function fetchTransactionTypes() {
-      try {
-        const res = await getAllTransactionTypes();
-        if (res?.statusCode === 200) {
-          setTransactionTypes(res.data);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy transaction types:", error);
-      }
-    }
-    fetchTransactionTypes();
-  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -308,11 +344,9 @@ function Order() {
       toast.success("Đặt giao thành công!");
       sessionStorage.removeItem("parcelFormData");
       const currentDomain = window.location.origin;
-      const shipmentCostType = transactionTypes.find(t => t.value === "ShipmentCost");
-      setTransactionTypeId(shipmentCostType.id);
       const paymentPayload = {
         shipmentId: bookingResponse.data.data.shipmentId,
-        transactionType: transactionTypeId,
+        transactionType: 1,
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
@@ -335,7 +369,6 @@ function Order() {
       toast.error(errorMessage);
     }
   };
-
 
   return (
     <>
@@ -512,6 +545,26 @@ function Order() {
             >
               <p>Để gợi ý tuyến đường tối ưu, ứng dụng cần truy cập vị trí của bạn. Bạn có muốn tiếp tục không?</p>
             </Modal>
+
+            <Modal
+              title="CLưu ý"
+              open={isScheduleWarningModalOpen}
+              onOk={() => {
+                setIsScheduleWarningModalOpen(false);
+                showModal();
+              }}
+              onCancel={() => {
+                setIsScheduleWarningModalOpen(false);
+              }}
+              okText="Tôi hiểu và muốn tiếp tục"
+              cancelText="Hủy"
+              className="modal-warning-schedule"
+            >
+              <p>
+                <strong>MetroShip</strong> chỉ hỗ trợ nhận hàng trong khoảng thời gian bạn đã chọn. Nếu bạn không đến đúng giờ để gửi hàng, đơn sẽ <strong>bị hủy và bạn sẽ mất 100% phí</strong>. Bạn có muốn tiếp tục không?
+              </p>
+            </Modal>
+
           </div>
         </div>
       </Spin>

@@ -124,7 +124,7 @@ function AdminStaffManage() {
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
 
-      const station = stations.find((s) => s.id === values.stationId);
+      const station = stations.find((s) => s.stationId === values.stationId);
       setUsers((prev) =>
         prev.map((user) =>
           user.id === assigningStaff.id
@@ -137,7 +137,11 @@ function AdminStaffManage() {
       );
     } catch (err) {
       console.error(err);
-      toast.error("Có lỗi xảy ra khi phân công.");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Có lỗi xảy ra khi phân công.";
+      toast.error(errorMessage);
     }
   };
 
@@ -159,9 +163,11 @@ function AdminStaffManage() {
   };
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
     },
     {
       title: "Tên đăng nhập",
@@ -248,9 +254,10 @@ function AdminStaffManage() {
   ];
 
   // const data = users.map((u, index) => ({ ...u, key: index }));
- // Lấy unique roles
-const uniqueRoles = [...new Set(users.map((u) => u.currentRole).filter(Boolean))];
-
+  // Lấy unique roles
+  const uniqueRoles = [
+    ...new Set(users.map((u) => u.currentRole).filter(Boolean)),
+  ];
 
   return (
     <div className="staff-management-container">
@@ -274,7 +281,7 @@ const uniqueRoles = [...new Set(users.map((u) => u.currentRole).filter(Boolean))
             onChange={setFilterStations}
             options={stations.map((s) => ({
               label: s.stationNameVi,
-              value: s.id,
+              value: s.stationId,
             }))}
           />
           <Select
@@ -332,7 +339,7 @@ const uniqueRoles = [...new Set(users.map((u) => u.currentRole).filter(Boolean))
               placeholder="Chọn trạm"
               options={stations.map((s) => ({
                 label: s.stationNameVi,
-                value: s.id,
+                value: s.stationId,
               }))}
             />
           </Form.Item>

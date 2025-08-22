@@ -36,7 +36,7 @@ function HeaderDashboard({ name, subName, onPress }) {
       {/* CENTER: ROLE */}
       <Col className="header-dashboard__center">
         <p className="header-dashboard__title" style={{ color: "white", margin: 0 }}>
-          Chào {user?.role} !
+          Chào {user?.UserName} !
         </p>
       </Col>
 

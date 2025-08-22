@@ -3,7 +3,7 @@ import './TrackingOrderStaff.scss'
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import MetroStation from '../../../../../assets/metro_station.png';
@@ -26,6 +26,8 @@ const { RangePicker } = DatePicker;
 const { Title } = Typography;
 function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [shipmentsStaff, setShipmentsStaff] = useState([]);
+  const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
@@ -52,7 +54,12 @@ function TrackingOrderStaff() {
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 25, 26];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 24, 25, 26];
+  const [openRefundModal, setOpenRefundModal] = useState(false);
+  const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
+  const [openCompensationModal, setOpenCompensationModal] = useState(false);
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const [mergedShipments, setMergedShipments] = useState([]);
 
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -96,6 +103,26 @@ function TrackingOrderStaff() {
   }, []);
 
   useEffect(() => {
+    getShipmentByStaffStation(decodedUser.StationId).then((data) => {
+      setShipmentsStaff(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
+      setShipmentsStaff1(data);
+    });
+  }, []);
+  useEffect(() => {
+    const combined = [...shipmentsStaff, ...shipmentsStaff1];
+
+    
+    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+
+    setMergedShipments(unique);
+  }, [shipmentsStaff, shipmentsStaff1]);
+
+  useEffect(() => {
     const map = new Map();
     parcels.forEach((parcel) => {
       if (!map.has(parcel.shipmentId)) {
@@ -133,22 +160,7 @@ function TrackingOrderStaff() {
   }, []);
 
   const handleFilterChange = () => {
-    
-    let filtered = shipments.filter(order =>
-      order.shipmentStatus == 4
-      || order.shipmentStatus == 8
-      || order.shipmentStatus == 9
-      || order.shipmentStatus == 10
-      || order.shipmentStatus == 11
-      || order.shipmentStatus == 13
-      || order.shipmentStatus == 14
-      || order.shipmentStatus == 15
-      || order.shipmentStatus == 16
-      || order.shipmentStatus == 18
-      || order.shipmentStatus == 24
-      || order.shipmentStatus == 25
-      || order.shipmentStatus == 26
-    );
+    let filtered = mergedShipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
 
     //DATE RANGE FILTER
     if (dateRange && dateRange.length === 2) {
@@ -180,10 +192,10 @@ function TrackingOrderStaff() {
 
 
   useEffect(() => {
-    if (shipments.length > 0) {
+    if (mergedShipments.length > 0) {
       handleFilterChange();
     }
-  }, [shipments, dateRange, statusFilter, searchCode]);
+  }, [mergedShipments, dateRange, statusFilter, searchCode]);
 
   const handleOpenModal = (shipment) => {
     setSelectedOrder(shipment);
@@ -238,6 +250,44 @@ function TrackingOrderStaff() {
     }
   };
 
+  const handleAction = (shipment) => {
+    setSelectedShipment(shipment);
+    switch (shipment.shipmentStatus) {
+      case 12:
+        setOpenSurchargeModal(true);
+        break;
+      case 4:
+        setOpenRefundModal(true);
+        break;
+      case 25:
+        setOpenCompensationModal(true);
+        break;
+    }
+  };
+
+  const createPaymentLink = async (shipment, transactionType) => {
+    try {
+      const payload = {
+        shipmentId: shipment.id,
+        transactionType,
+        returnUrl: window.location.origin + "/dashboard/staff/tracking-order",
+        cancelUrl: window.location.origin + "/dashboard/staff/tracking-order",
+      };
+
+      const res = await api.post("/shipments/vnpay/payment-url", payload);
+
+      if (res.data?.statusCode === 200 && res.data.data) {
+        window.location.href = res.data.data; // Redirect to VNPay
+      } else {
+        toast.error("Không lấy được link thanh toán!");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Lỗi khi tạo link thanh toán");
+      console.error(err);
+    }
+  };
+
+
   const columns = [
     {
       title: 'STT',
@@ -276,13 +326,6 @@ function TrackingOrderStaff() {
     {
       title: 'Thời điểm tạo yêu cầu',
       key: 'createdAt',
-      // render: (_, record) => {
-      //   const relatedParcels = getParcelsByShipmentId(record.id);
-      //   if (relatedParcels.length > 0) {
-      //     return dayjs(relatedParcels[0].createdAt).format('YYYY-MM-DD HH:mm:ss');
-      //   }
-      //   return 'N/A';
-      // }
       render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
@@ -300,14 +343,6 @@ function TrackingOrderStaff() {
         </Tag>
       ),
     },
-    // {
-    //   title: 'Vị trí hiện tại',
-    //   dataIndex: 'departureStationName',
-    //   key: 'departureStation',
-    //   render: (_, record) => {
-    //     return `Trạm ${record.currentStationName}` || 'Không xác định';
-    //   }
-    // },
     {
       title: 'Xem chi tiết',
       key: 'action',
@@ -336,32 +371,70 @@ function TrackingOrderStaff() {
       ),
     },
     {
-      title: 'Xác nhận',
+      title: 'Thao tác',
       key: 'action',
-      render: (_, record) => (
-        <ConfigProvider
-          theme={{
-            components: {
-              Button: {
-                defaultColor: "white",
-                defaultBg: "#0066CC",
-                defaultBorderColor: "#0066CC",
-                defaultHoverBorderColor: "#FFC107",
-                defaultHoverColor: "black",
-                defaultHoverBg: "#FFC107",
-                defaultActiveBg: "#4CAF50",
-                defaultActiveBorderColor: "#4CAF50",
-                defaultActiveColor: "white",
-              }
-            }
-          }}>
-          <Button type="primary" onClick={() => handleOpenModal(record)}>
-            Hoàn thành
-          </Button>
+      render: (_, record) => {
+        let buttonLabel = null;
+        let transactionType = null;
+        let disabled = false;
+        let onClickAction = null;
 
-        </ConfigProvider>
-      ),
-    },
+        switch (record.shipmentStatus) {
+          case 11: // AWAITING DELIVERED
+            buttonLabel = "Xác nhận giao hàng thành công";
+            onClickAction = () => handleOpenModal(record);
+            disabled = false;
+            break;
+          case 12: // APPLY SURCHARGE
+            buttonLabel = "Thu phí tồn kho";
+            transactionType = 2;
+            onClickAction = () => handleAction(record, transactionType);
+            break;
+          case 4: // REFUND
+            buttonLabel = "Hoàn tiền";
+            transactionType = 3;
+            onClickAction = () => handleAction(record, transactionType);
+            break;
+          case 25: // COMPENSATION
+            buttonLabel = "Bồi thường";
+            transactionType = 4;
+            onClickAction = () => handleAction(record, transactionType);
+            break;
+          default:
+            buttonLabel = "Xác nhận giao hàng thành công";
+            onClickAction = () => { };
+            disabled = true;
+            break;
+        }
+
+        return (
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#4CAF50",
+                  defaultBorderColor: "#4CAF50",
+                  defaultHoverBorderColor: "#FFC107",
+                  defaultHoverColor: "black",
+                  defaultHoverBg: "#FFC107",
+                }
+              }
+            }}
+          >
+            <Button
+              type="primary"
+              disabled={disabled}
+              onClick={onClickAction}
+            >
+              {buttonLabel}
+            </Button>
+          </ConfigProvider>
+        );
+      },
+    }
+
+
   ];
 
   const onRowClick = (record) => {
@@ -411,7 +484,7 @@ function TrackingOrderStaff() {
                     Làm việc tại trạm
                     <div className="data">
                       {
-                        stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                        stations.find(station => station.stationId === decodedUser?.StationId)?.stationNameVi || "N/A"
                       }
                     </div>
                   </div>
@@ -437,7 +510,8 @@ function TrackingOrderStaff() {
               </Col>
             </Row>
           </Card>
-          <Card style={{ marginBottom: '1em' }}>
+
+          {/* <Card style={{ marginBottom: '1em' }}>
             <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
             <Row gutter={16}>
               {currentData.map((train) => (
@@ -481,11 +555,11 @@ function TrackingOrderStaff() {
                 onChange={(page) => setCurrentPage(page)}
               />
             </Flex>
-          </Card>
+          </Card> */}
         </div>
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
           <Card>
-            <Title level={3}>Thời gian</Title>
+            <Title level={3}>Ngày và Ca vận chuyển của Metro</Title>
             <Row gutter={16}>
               <Col span={6}>
                 <DatePicker
@@ -567,6 +641,7 @@ function TrackingOrderStaff() {
                 </Col>
               </Row>
             </div>
+
             <Table
               columns={columns}
               dataSource={filteredShipments}
@@ -577,6 +652,8 @@ function TrackingOrderStaff() {
               locale={{ emptyText: 'Không có dữ liệu' }}
             />
           </Card>
+
+          {/* UPLOAD CONFIRM IMAGES SHIPMENT */}
           <Modal
             open={isUploadModalOpen}
             onCancel={() => {
@@ -614,6 +691,49 @@ function TrackingOrderStaff() {
               </Row>
             </Spin>
           </Modal>
+
+          {/* REFUND MODAL */}
+          <Modal
+            open={openRefundModal}
+            onOk={() => {
+              createPaymentLink(selectedShipment, 3);
+              setOpenRefundModal(false);
+            }}
+            onCancel={() => setOpenRefundModal(false)}
+            okText="Xác nhận"
+            cancelText="Hủy"
+          >
+            <p>Xác nhận hoàn tiền cho đơn hàng này?</p>
+          </Modal>
+
+          {/* SURCHARGE MODAL */}
+          <Modal
+            open={openSurchargeModal}
+            onOk={() => {
+              createPaymentLink(selectedShipment, 2);
+              setOpenSurchargeModal(false);
+            }}
+            onCancel={() => setOpenSurchargeModal(false)}
+            okText="Xác nhận"
+            cancelText="Hủy"
+          >
+            <p>Thu thêm phí tồn kho do khách nhận trễ?</p>
+          </Modal>
+
+          {/* COMPENSATION MODAL */}
+          <Modal
+            open={openCompensationModal}
+            onOk={() => {
+              createPaymentLink(selectedShipment, 4); // Compensation
+              setOpenCompensationModal(false);
+            }}
+            onCancel={() => setOpenCompensationModal(false)}
+            okText="Xác nhận"
+            cancelText="Hủy"
+          >
+            <p>Bồi thường cho đơn hàng bị mất kiện?</p>
+          </Modal>
+
         </div>
       </div>
     </>

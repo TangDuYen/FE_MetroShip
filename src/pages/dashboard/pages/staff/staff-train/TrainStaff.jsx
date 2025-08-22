@@ -11,10 +11,17 @@ import {
   Select,
   Spin,
   Table,
+  Tag,
   Typography,
 } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllRegions, getMetroLines, getMetroLinesByStation, getMetroTrainsByStation } from "../../../../../config/metroApi";
+import {
+  getAllRegions,
+  getAllStations,
+  getMetroLines,
+  getMetroLinesByStation,
+  getMetroTrainsByStation,
+} from "../../../../../config/metroApi";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
 import api from "../../../../../config/axios";
@@ -23,6 +30,11 @@ import { selectUser } from "../../../../../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import {
+  trainStatusColorMap,
+  trainStatusMap,
+} from "../../../../../constants/statusMap";
+import { ReloadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -42,15 +54,22 @@ function TrainStaff() {
 
   const [regions, setRegions] = useState([]);
   const [metroLines, setMetroLines] = useState([]);
+  const [stations, setStations] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getAllRegions(), getMetroLinesByStation(decodedUser?.StationId)]).then(([regionsData, metroLinesData]) => {
+    Promise.all([
+      getAllRegions(),
+      getMetroLinesByStation(decodedUser?.StationId),
+      getAllStations(),
+    ]).then(([regionsData, metroLinesData, stationsData]) => {
       setRegions(regionsData);
       setMetroLines(metroLinesData);
-    })
+      setStations(stationsData);
+    });
     getMetroTrainsByStation(decodedUser?.StationId)
       .then((data) => {
         // Set the metro trains data
@@ -75,13 +94,23 @@ function TrainStaff() {
       });
   }, []);
 
+  // Hàm tìm stationNameVi theo currentStationId
+  const getStationName = (currentStationId) => {
+    if (!currentStationId) return "Không xác định";
+    const station = stations.find(
+      (s) => String(s.stationId) === String(currentStationId)
+    );
+    return station ? station.stationNameVi : "Không xác định";
+  };
+
   const handleStartTrain = async (train) => {
     try {
       await api.post(`/train/${train.id}/status`);
-      toast.success(`Tàu ${train.trainCode} đã được khởi động`);
+      toast.success(`Xác nhận tàu ${train.trainCode} đã rời trạm thành công.`);
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
-      toast.error(`Không thể khởi động tàu ${train.trainCode}`);
+      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
+      toast.error(errorMessage);
     }
   };
 
@@ -101,7 +130,9 @@ function TrainStaff() {
       toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
     } catch (error) {
       console.error("Lỗi xác nhận tàu đến trạm:", error);
-      toast.error("Xác nhận tàu thất bại.");
+      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
+
+      toast.error(errorMessage);
     }
   };
 
@@ -147,6 +178,23 @@ function TrainStaff() {
       render: () => maxVolume, // Show max volume
     },
     {
+      title: "Vị trí hiện tại",
+      dataIndex: "currentStationId",
+      key: "currentStationId",
+      render: (currentStationId) => getStationName(currentStationId),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={trainStatusColorMap[status]}>
+          {trainStatusMap[status] || "Không xác định"}
+        </Tag>
+      ),
+    },
+
+    {
       title: "Hành động",
       key: "actions",
       render: (_, record) => (
@@ -156,13 +204,13 @@ function TrainStaff() {
             onClick={() => handleStartTrain(record)}
             style={{ marginRight: 8 }}
           >
-            Bắt đầu
+            Xác nhận tàu rời trạm
           </Button>
           <Button
             className="btn-arrival"
             onClick={() => handleConfirmArrival(record)}
           >
-            Đến trạm
+            Xác nhận tàu đến trạm
           </Button>
           <Button onClick={() => handleViewMapTrain(record)}>Xem bản đồ</Button>
         </div>
@@ -181,9 +229,10 @@ function TrainStaff() {
     const matchRegion = selectedRegion
       ? getLineIdsByRegion(selectedRegion)?.includes(train.lineId)
       : true;
-    return matchLine && matchRegion;
+    const matchStatus =
+      selectedStatus !== null ? train.status === selectedStatus : true;
+    return matchLine && matchRegion && matchStatus;
   });
-
 
   // Map the metroTrains data to fit the table format
   const data = filteredTrains.map((train, index) => ({
@@ -192,6 +241,8 @@ function TrainStaff() {
     id: train.id,
     trainCode: train.trainCode,
     modelName: train.modelName,
+    currentStationId: train.currentStationId,
+    status: train.status,
     maxCapacity,
     maxVolume,
   }));
@@ -249,6 +300,27 @@ function TrainStaff() {
               </Option>
             ))}
           </Select>
+          <Select
+            placeholder="Chọn trạng thái tàu"
+            allowClear
+            style={{ width: 250 }}
+            value={selectedStatus}
+            onChange={(value) => setSelectedStatus(value)}
+          >
+            {Object.keys(trainStatusMap).map((key) => (
+              <Option key={key} value={Number(key)}>
+                {trainStatusMap[key]}
+              </Option>
+            ))}
+          </Select>
+          <Button
+            className="clear-filter-button"
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              setSelectedLine(null);
+              setSelectedStatus(null);
+            }}
+          ></Button>
         </div>
 
         <Table

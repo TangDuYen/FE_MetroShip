@@ -96,10 +96,10 @@ function MetroTrainManagement() {
     let filtered = [...allTrains];
 
     if (selectedLineId && selectedLineId.length > 0) {
-    filtered = filtered.filter((train) =>
-      selectedLineId.includes(train.lineId)
-    );
-  }
+      filtered = filtered.filter((train) =>
+        selectedLineId.includes(train.lineId)
+      );
+    }
 
     if (searchTrainCode) {
       const kw = searchTrainCode.toLowerCase();
@@ -144,7 +144,9 @@ function MetroTrainManagement() {
       form.resetFields();
     } catch (err) {
       console.error(err);
-      toast.error("Phân tàu thất bại!");
+      const errorMessage =
+        err.response?.data?.message || err.message || "Phân tàu thất bại!";
+      toast.error(errorMessage);
     }
   };
 
@@ -209,7 +211,7 @@ function MetroTrainManagement() {
           Thêm tàu
         </Button>
         <Select
-         mode="multiple"
+          mode="multiple"
           showSearch
           optionFilterProp="children"
           filterOption={(input, option) =>

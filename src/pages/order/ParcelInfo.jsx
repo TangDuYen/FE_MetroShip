@@ -1,7 +1,7 @@
 import 'leaflet/dist/leaflet.css';
 
 import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Spin, Table } from 'antd';
-import { getAllParcelCategories, getAllStations, getMetroLines, getMetroTimeSlots } from '../../config/metroApi';
+import { getAllParcelCategories, getAllRegions, getAllStations, getAllStationsByRegion, getMetroLines, getMetroTimeSlots, getNearbyStations } from '../../config/metroApi';
 import { useEffect, useRef, useState } from 'react';
 
 import { PATH_NAME } from '../../constants/pathname';
@@ -59,6 +59,16 @@ function ParcelInfo({
   const [loading, setLoading] = useState(false);
   const [currentParcelIndex, setCurrentParcelIndex] = useState(null);
   const debounceTimeoutRef = useRef(null);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [regions, setRegions] = useState([]);
+  const [selectedRegionFrom, setSelectedRegionFrom] = useState(null);
+  const [selectedRegionTo, setSelectedRegionTo] = useState(null);
+
+  const [stationsFrom, setStationsFrom] = useState([]);
+  const [stationsTo, setStationsTo] = useState([]);
+  const [nearbyStations, setNearbyStations] = useState([]);
+
+
 
   //MODAL OPERATION
   const showModal = () => {
@@ -70,15 +80,149 @@ function ParcelInfo({
   };
 
   //API ONE TIME
+  // useEffect(() => {
+  //   Promise.all([getMetroTimeSlots(), getAllStations(), getAllParcelCategories(), getAllRegions()]).then(
+  //     ([timeSlotsData, stationData, parcelCategoryData, regionData]) => {
+  //       setStations(stationData);
+  //       setTimeSlot(timeSlotsData);
+  //       setParcelCategory(parcelCategoryData);
+  //       setRegions(regionData);
+  //     }
+  //   );
+  // }, []);
+
   useEffect(() => {
-    Promise.all([getMetroTimeSlots(), getAllStations(), getAllParcelCategories()]).then(
-      ([timeSlotsData, stationData, parcelCategoryData]) => {
-        setStations(stationData);
+    (async () => {
+      try {
+        const [timeSlotsData, parcelCategoryData, regionData] = await Promise.all([
+          getMetroTimeSlots(),
+          getAllParcelCategories(),
+          getAllRegions(),
+        ]);
+
         setTimeSlot(timeSlotsData);
         setParcelCategory(parcelCategoryData);
+        setRegions(regionData);
+
+        //SET DEFAULT REGION: HCM CITY
+        const defaultHcm =
+          regionData.find(r => r.regionName?.toLowerCase().includes("hồ chí minh")) ||
+          regionData[0];
+
+        setSelectedRegionFrom(defaultHcm?.id || null);
+        setSelectedRegionTo(defaultHcm?.id || null);
+
+        let fromStations = [];
+        let toStations = [];
+
+        //GET STATIONS BY REGION
+        if (defaultHcm?.id) {
+          [fromStations, toStations] = await Promise.all([
+            getAllStationsByRegion(defaultHcm.id),
+            getAllStationsByRegion(defaultHcm.id),
+          ]);
+        }
+
+        let nearby = [];
+        if (userLatitude && userLongitude) {
+          nearby = await getNearbyStations({ userLatitude, userLongitude });
+          setNearbyStations(nearby);
+
+          if (Array.isArray(nearby) && nearby.length > 0) {
+            const nearest = nearby[0];
+
+            //PREFILL DEPARTURE STATION ID
+            setRealDepartureStationId(nearest.stationId);
+            setDisplayedDepartureStationId(nearest.stationId);
+            setMetroSelector(prev => ({ ...prev, departureStationId: nearest.stationId }));
+
+            localStorage.setItem("departureStationLocation", JSON.stringify({
+              id: nearest.stationId,
+              name: nearest.stationNameVi,
+              lat: nearest.latitude,
+              lng: nearest.longitude
+            }));
+          }
+        }
+
+        //MERGE NEARBY STATIONS WITH STATIONS LIST FROM REGION
+        const stationMap = new Map();
+        nearby.forEach(st => stationMap.set(st.stationId, st));
+        fromStations.forEach(st => stationMap.set(st.stationId, st));
+
+        setStationsFrom(Array.from(stationMap.values()));
+        setStationsTo(toStations || []);
+        console.log("Stations From:", stationsFrom);
+
+      } catch (err) {
+        console.error(err);
       }
-    );
+    })();
+
   }, []);
+
+
+  const handleChangeRegionFrom = async (regionId) => {
+    setSelectedRegionFrom(regionId);
+    try {
+      const stationsOfRegion = await getAllStationsByRegion(regionId);
+      const normalizeStation = (st) => ({
+        stationId: st.stationId,
+        stationNameVi: st.stationNameVi,
+        latitude: st.latitude,
+        longitude: st.longitude,
+      });
+      let mergedStations = (stationsOfRegion || []).map(normalizeStation);
+      if (userLatitude && userLongitude) {
+        const nearby = await getNearbyStations({ userLatitude, userLongitude });
+        if (Array.isArray(nearby) && nearby.length > 0) {
+          const stationMap = new Map();
+          nearby.map(normalizeStation).forEach(st => stationMap.set(st.stationId, st));
+          mergedStations.forEach(st => stationMap.set(st.stationId, st));
+          mergedStations = Array.from(stationMap.values());
+        }
+      }
+      setStationsFrom(mergedStations);
+
+
+      if (mergedStations?.length > 0) {
+        //GET FIRST STATION IF NOT IN NEW LIST
+        if (!displayedDepartureStationId && mergedStations.length > 0) {
+          const firstStation = mergedStations[0];
+          const firstStationId = firstStation.stationId;
+
+          setDisplayedDepartureStationId(firstStationId);
+          setRealDepartureStationId(firstStationId);
+          setMetroSelector(prev => ({ ...prev, departureStationId: firstStationId }));
+        } else {
+          //RESET STATION IF NOT IN NEW LIST
+          if (!mergedStations?.some(s => s.stationId === displayedDepartureStationId)) {
+            setDisplayedDepartureStationId(null);
+            setRealDepartureStationId(null);
+            setMetroSelector(prev => ({ ...prev, departureStationId: "" }));
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleChangeRegionTo = async (regionId) => {
+    setSelectedRegionTo(regionId);
+    try {
+      const list = await getAllStationsByRegion(regionId);
+      setStationsTo(list || []);
+
+      if (!list?.some(s => s.stationId === metroSelector.destinationStationId)) {
+        setMetroSelector(prev => ({ ...prev, destinationStationId: "" }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+
 
   const filterValidTimeSlots = (timeSlots, selectedDate) => {
     const now = dayjs();
@@ -124,11 +268,26 @@ function ParcelInfo({
         const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
         if (selectedSlot) {
           const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-          const combinedDateTime = dateObj.hour(hour).minute(minute).subtract(30, 'minute').second(0).format("YYYY-MM-DDTHH:mm:ss");
-          console.log(selectedSlot.id);
-          console.log('Combined DateTime:', combinedDateTime);
+
+          const combinedDateTime = dateObj
+            .hour(hour)
+            .minute(minute)
+            .subtract(selectedSlot.scheduleBeforeShiftMinutes, "minute")
+            .second(0)
+            .format("YYYY-MM-DDTHH:mm:ss");
+
+          const startReceiveAt = dateObj
+            .hour(hour)
+            .minute(minute)
+            .subtract(selectedSlot.maxScheduleBeforeShiftMinutes || 0, "minute")
+            .second(0)
+            .format("YYYY-MM-DDTHH:mm:ss");
           setTimeSlots(selectedSlot.id);
-          setMetroSelector(prev => ({ ...prev, departureDateTime: combinedDateTime }));
+          setMetroSelector(prev => ({
+            ...prev,
+            departureDateTime: combinedDateTime,
+            startReceiveAt: startReceiveAt,
+          }));
         }
       }
     }
@@ -217,19 +376,6 @@ function ParcelInfo({
       }
     }
 
-    // if (field === 'parcelCategory') {
-    //   const selectedCat = parcelCategory.find(cat => cat.id === value);
-
-    //   updatedList[index].categoryInsuranceId = selectedCat?.categoryInsurances?.[0]?.id || "";
-    //   updatedList[index].isInsuranceIncluded = selectedCat?.isInsuranceRequired || false;
-    //   updatedList[index].includeOptionalInsurance = updatedList[index].includeOptionalInsurance ?? false;
-
-    //   if (selectedCat?.isInsuranceRequired) {
-    //     updatedList[index].valueVnd = updatedList[index].valueVnd;
-    //   } else {
-    //     delete updatedList[index].valueVnd;
-    //   }
-    // }
     if (field === 'parcelCategory') {
       const selectedCat = parcelCategory.find(cat => cat.id === value);
 
@@ -280,6 +426,10 @@ function ParcelInfo({
   const computeOptionalInsuranceTotal = () => parcelInfo.reduce((sum, p) => sum + computeOptionalInsuranceFeeForParcel(p), 0);
 
   const addNewParcel = () => {
+    if (parcelInfo.length >= 5) {
+      toast.error("Bạn chỉ được nhập tối đa 5 kiện hàng trong một đơn hàng!");
+      return;
+    }
     setParcelInfo([
       ...parcelInfo,
       {
@@ -315,23 +465,6 @@ function ParcelInfo({
         ...p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {},
         descriptionImageUrl: p.descriptionImageUrl || '',
       })),
-      // parcels: parcelInfo.map(p => {
-      //   return {
-      //     parcelCategoryId: p.parcelCategory || '',
-      //     categoryInsuranceId: p.categoryInsuranceId || '',
-      //     weightKg: Number(p.weightKg) || 0,
-      //     lengthCm: Number(p.lengthCm) || 0,
-      //     widthCm: Number(p.widthCm) || 0,
-      //     heightCm: Number(p.heightCm) || 0,
-      //     ...(p.includeOptionalInsurance ? {
-      //       isInsuranceIncluded: true,
-      //       insuranceFeeVnd: Number(p.insuranceFeeVnd || 0)
-      //     } : {}),
-      //     ...(p.valueVnd ? { valueVnd: Number(p.valueVnd) } : {}),
-      //     descriptionImageUrl: p.descriptionImageUrl || '',
-      //   };
-      // })
-
       userLatitude,
       userLongitude,
     };
@@ -453,6 +586,8 @@ function ParcelInfo({
         if (parsed.selectedSolutionIndex !== undefined) setSelectedSolutionIndex(parsed.selectedSolutionIndex);
         if (parsed.displayedDepartureStationId) setDisplayedDepartureStationId(parsed.displayedDepartureStationId);
         if (parsed.realDepartureStationId) setRealDepartureStationId(parsed.realDepartureStationId);
+        if (parsed.selectedRegionFrom) setSelectedRegionFrom(parsed.selectedRegionFrom);
+        if (parsed.selectedRegionTo) setSelectedRegionTo(parsed.selectedRegionTo);
       } catch (e) {
         console.error("Lỗi khi parse dữ liệu cache:", e);
       }
@@ -469,7 +604,9 @@ function ParcelInfo({
       timeSlots,
       selectedSolutionIndex,
       displayedDepartureStationId,
-      realDepartureStationId
+      realDepartureStationId,
+      selectedRegionFrom,
+      selectedRegionTo,
     };
     sessionStorage.setItem("parcelFormData", JSON.stringify(saveData));
   }, [
@@ -665,7 +802,25 @@ function ParcelInfo({
 
         {/* METRO DEPARTURE & DESTINATION */}
         <div className="metro-selector">
-          <Title level={4}>Chọn trạm Metro</Title>
+          {/* DEPARTURE REGION */}
+          <div>
+            <label>Khu vực</label>
+            <Select
+              placeholder="Chọn khu vực"
+              style={{ width: "100%", marginBottom: '1em', marginTop: '0.5em' }}
+              value={selectedRegionFrom}
+              onChange={handleChangeRegionFrom}
+              loading={!regions.length}
+            >
+              {regions.map((region) => (
+                <Select.Option key={region.id} value={region.id}>
+                  {region.regionName}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
+          {/* DEPARTURE STATION */}
           <div className="selector-group">
             <label>Trạm gửi:</label>
             <Select
@@ -676,22 +831,64 @@ function ParcelInfo({
               }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để gửi hàng"
-              value={displayedDepartureStationId}
+              value={displayedDepartureStationId || undefined}
               onChange={(value) => {
                 setRealDepartureStationId(value);
                 setDisplayedDepartureStationId(value);
+                setMetroSelector(prev => ({ ...prev, departureStationId: value }));
+                const allStations = [...stationsFrom, ...nearbyStations];
+                const selectedStation = allStations.find(st => st.stationId === value);
+
+                if (selectedStation) {
+                  localStorage.setItem(
+                    "departureStationLocation",
+                    JSON.stringify({
+                      id: selectedStation.stationId,
+                      name: selectedStation.stationNameVi,
+                      lat: selectedStation.latitude,
+                      lng: selectedStation.longitude,
+                    })
+                  );
+                }
               }}
+              notFoundContent="Không có trạm trong khu vực này"
             >
-              {stations.map(station => (
-                <Option key={station.id} value={station.id}>
-                  {station.stationNameVi}
-                </Option>
-              ))}
+              {[...stationsFrom]
+                .sort((a, b) => {
+                  const isANearby = nearbyStations.some(ns => ns.stationId === (a.stationId || a.stationId));
+                  const isBNearby = nearbyStations.some(ns => ns.stationId === (b.stationId || b.stationId));
+                  if (isANearby && !isBNearby) return -1;
+                  if (!isANearby && isBNearby) return 1;
+                  return 0;
+                })
+                .map(station => (
+                  <Option key={station.stationId} value={station.stationId}>
+                    {station.stationNameVi}
+                  </Option>
+                ))}
             </Select>
           </div>
 
-
           <div className="selector-group">
+            {/* DESTINATION REGION */}
+            <div>
+              <label>Khu vực</label>
+              <Select
+                placeholder="Chọn khu vực"
+                style={{ width: "100%", marginBottom: '1em', marginTop: '0.5em' }}
+                value={selectedRegionTo}
+                onChange={handleChangeRegionTo}
+                loading={!regions.length}
+              >
+                {regions.map((region) => (
+                  <Select.Option key={region.id} value={region.id}>
+                    {region.regionName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+
+            {/* DESTINATION STATION */}
             <label>Trạm nhận:</label>
             <Select
               showSearch
@@ -701,11 +898,12 @@ function ParcelInfo({
               }
               style={{ width: '100%', marginBottom: '1em', marginTop: '0.5em' }}
               placeholder="Chọn trạm để nhận hàng"
-              value={metroSelector.destinationStationId}
-              onChange={handleDestinationChange}
+              value={metroSelector.destinationStationId || undefined}
+              onChange={(value) => setMetroSelector(prev => ({ ...prev, destinationStationId: value }))}
+              notFoundContent="Không có trạm trong khu vực này"
             >
-              {stations.map(station => (
-                <Option key={station.id} value={station.id}>
+              {stationsTo.map(station => (
+                <Option key={station.stationId} value={station.stationId}>
                   {station.stationNameVi}
                 </Option>
               ))}

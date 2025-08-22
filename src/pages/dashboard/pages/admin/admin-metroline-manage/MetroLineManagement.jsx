@@ -1,12 +1,22 @@
-import './MetroLineManagement.scss';
+import "./MetroLineManagement.scss";
 
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Table, message } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { getAllStations, getMetroLines } from '../../../../../config/metroApi';
-import { useEffect, useState } from 'react';
+import {
+  Button,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  message,
+} from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { getAllStations, getMetroLines } from "../../../../../config/metroApi";
+import { useEffect, useState } from "react";
 
-import api from '../../../../../config/axios';
-import { toast } from 'react-toastify';
+import api from "../../../../../config/axios";
+import { toast } from "react-toastify";
 
 function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
@@ -19,7 +29,7 @@ function MetroLineManagement() {
   useEffect(() => {
     Promise.all([getAllStations(), getMetroLines()]).then(
       ([stationData, metroLineData]) => {
-        setMetroLines(metroLineData)
+        setMetroLines(metroLineData);
         setStations(stationData);
       }
     );
@@ -37,7 +47,7 @@ function MetroLineManagement() {
   };
 
   const handleDelete = () => {
-    message.success('Đã xóa tuyến metro.');
+    message.success("Đã xóa tuyến metro.");
   };
 
   const handleSubmit = () => {
@@ -50,7 +60,7 @@ function MetroLineManagement() {
             id: station?.id,
             stationNameVi: station?.stationNameVi,
             stationNameEn: station?.stationNameEn,
-            address: s.address || 'N/A',
+            address: s.address || "N/A",
             isUnderground: false,
             isActive: true,
             regionId: station?.regionId,
@@ -72,10 +82,10 @@ function MetroLineManagement() {
         try {
           if (editingLine) {
             // await api.put(`/api/metro-lines/${editingLine.id}`, payload);
-            toast.success('Cập nhật thành công!');
+            toast.success("Cập nhật thành công!");
           } else {
-            await api.post('/api/metro-lines', payload);
-            toast.success('Đã thêm tuyến mới!');
+            await api.post("/api/metro-lines", payload);
+            toast.success("Đã thêm tuyến mới!");
           }
 
           const metroLineData = await getMetroLines();
@@ -84,36 +94,44 @@ function MetroLineManagement() {
           setIsModalOpen(false);
           form.resetFields();
         } catch (error) {
-          console.error('Submit failed:', error);
-          toast.error('Có lỗi khi gửi dữ liệu!');
+          console.error("Submit failed:", error);
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Có lỗi khi gửi dữ liệu!";
+          toast.error(errorMessage);
         }
       })
       .catch((info) => {
-        console.error('Validate Failed:', info);
+        console.error("Validate Failed:", info);
       });
   };
 
-
-
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
+      title: 'STT',
+      dataIndex: 'stt',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+      width: 60,
     },
     {
-      title: 'Tên tuyến Vi',
-      dataIndex: 'lineNameVi',
+      title: "Tên tuyến Vi",
+      dataIndex: "lineNameVi",
     },
     {
-      title: 'Tên tuyến En',
-      dataIndex: 'lineNameEn',
+      title: "Tên tuyến En",
+      dataIndex: "lineNameEn",
     },
     {
-      title: 'Hành động',
-      dataIndex: 'actions',
+      title: "Hành động",
+      dataIndex: "actions",
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(record)}
+          />
           <Popconfirm
             title="Xác nhận xoá tàu này?"
             onConfirm={() => handleDelete(record.id)}
@@ -124,7 +142,6 @@ function MetroLineManagement() {
           </Popconfirm>
         </Space>
       ),
-
     },
   ];
 
@@ -144,47 +161,47 @@ function MetroLineManagement() {
       />
 
       <Modal
-        title={editingLine ? 'Cập nhật tuyến Metro' : 'Thêm tuyến Metro mới'}
+        title={editingLine ? "Cập nhật tuyến Metro" : "Thêm tuyến Metro mới"}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSubmit}
         cancelText="Hủy"
-        width={900} 
-        okText={editingLine ? 'Lưu' : 'Thêm'}
+        width={900}
+        okText={editingLine ? "Lưu" : "Thêm"}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             label="Tên tuyến (Tiếng Việt)"
             name="lineNameVi"
-            rules={[{ required: true, message: 'Nhập tên tuyến tiếng Việt' }]}
+            rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             label="Tên tuyến (Tiếng Anh)"
             name="lineNameEn"
-            rules={[{ required: true, message: 'Nhập tên tuyến tiếng Anh' }]}
+            rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             label="Region Code"
             name="regionCode"
-            rules={[{ required: true, message: 'Nhập mã vùng (regionCode)' }]}
+            rules={[{ required: true, message: "Nhập mã vùng (regionCode)" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             label="Line Code"
             name="lineCode"
-            rules={[{ required: true, message: 'Nhập mã tuyến (lineCode)' }]}
+            rules={[{ required: true, message: "Nhập mã tuyến (lineCode)" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             label="Line Number"
             name="lineNumber"
-            rules={[{ required: true, message: 'Nhập số tuyến (lineNumber)' }]}
+            rules={[{ required: true, message: "Nhập số tuyến (lineNumber)" }]}
           >
             <Input type="number" />
           </Form.Item>
@@ -192,13 +209,22 @@ function MetroLineManagement() {
           <Form.List name="stations">
             {(fields, { add, remove }) => (
               <>
-                <div style={{ marginBottom: 12, fontWeight: 600 }}>Danh sách ga (stations)</div>
+                <div style={{ marginBottom: 12, fontWeight: 600 }}>
+                  Danh sách ga (stations)
+                </div>
                 {fields.map(({ key, name, ...restField }) => (
-                  <div key={key} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  <div
+                    key={key}
+                    style={{
+                      display: "flex",
+                      gap: "1rem",
+                      marginBottom: "1rem",
+                    }}
+                  >
                     <Form.Item
                       {...restField}
-                      name={[name, 'stationId']}
-                      rules={[{ required: true, message: 'Chọn ga' }]}
+                      name={[name, "stationId"]}
+                      rules={[{ required: true, message: "Chọn ga" }]}
                       style={{ flex: 2 }}
                     >
                       <Select
@@ -224,10 +250,8 @@ function MetroLineManagement() {
               </>
             )}
           </Form.List>
-
         </Form>
       </Modal>
-
     </div>
   );
 }

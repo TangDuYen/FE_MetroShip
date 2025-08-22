@@ -1,13 +1,13 @@
+import { PATH_NAME } from "../constants/pathname";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-const baseUrl = "https://localhost:7085/api/";
-// const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
+// const baseUrl = "https://localhost:7085/api/";
+const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
 const config = {
   baseURL: baseUrl,
   timeout: 3000000,
 };
-
 const api = axios.create(config);
 
 let isRefreshing = false;
@@ -53,6 +53,9 @@ const handleBefore = async (config) => {
           processQueue(null, newToken);
           config.headers["Authorization"] = `Bearer ${newToken}`;
         } catch (err) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          window.location.href = PATH_NAME.LOGIN;
           processQueue(err, null);
           throw err;
         } finally {
@@ -83,6 +86,18 @@ const handleError = (error) => {
   console.error("Request Error: ", error);
   return Promise.reject(error);
 };
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      window.location.href = PATH_NAME.LOGIN;
+    }
+    return Promise.reject(error);
+  }
+);
 
 api.interceptors.request.use(handleBefore, handleError);
 

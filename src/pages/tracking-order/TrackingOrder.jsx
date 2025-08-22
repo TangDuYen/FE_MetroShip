@@ -49,7 +49,7 @@ function TrackingOrder() {
   const [trainCode, setTrainCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [fullPathSegments, setFullPathSegments] = useState([]);
-
+  const BASE_URL = "https://metroship-cosdy.ondigitalocean.app/";
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -86,8 +86,9 @@ function TrackingOrder() {
 
   const fetchLivePosition = async () => {
     try {
+
       const res = await axios.get(
-        `https://localhost:7085/${trackingCode}/position`
+        `${BASE_URL}${trackingCode}/position`
       );
       const {
         latitude,
@@ -155,7 +156,7 @@ function TrackingOrder() {
 
   const handleInsuranceRequest = async (shipmentId) => {
     try {
-      // Tạm thời set cứng subject và description
+
       const payload = {
         shipmentId,
         subject: "Yêu cầu bồi thường",
@@ -171,8 +172,8 @@ function TrackingOrder() {
         toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
       }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu bồi thường:", error);
-      toast.error("Gửi yêu cầu thất bại!");
+      console.error("Lỗi khi gửi yêu cầu bồi thường: ", error.response.data.message);
+      toast.error("Gửi yêu cầu thất bại: " + error.response.data.message);
     }
   };
 
@@ -264,16 +265,22 @@ function TrackingOrder() {
               {[
                 { id: 8, label: 'Đã lấy hàng' },
                 { id: 10, label: 'Đang giao hàng' },
-                { id: 21, label: 'Đã giao hàng' },
+                { id: 22, label: 'Đã giao hàng' },
               ].map((step, idx, arr) => {
-                const isCompleted = currentStatus >= step.id;
                 const isLast = idx === arr.length - 1;
+                const isCompleted = isLast ? currentStatus === 22 : currentStatus >= step.id;
+                const nextStep = arr[idx + 1];
+                const isLineCompleted = nextStep
+                  ? nextStep.id === 22
+                    ? currentStatus === 22
+                    : currentStatus >= nextStep.id
+                  : false;
                 return (
                   <div key={step.id} className="progress-step">
                     <div className={`dot ${isCompleted ? 'completed' : ''}`}>
                       {isLast && isCompleted ? '' : ''}
                     </div>
-                    {!isLast && <div className={`line ${currentStatus >= arr[idx + 1].id ? 'completed' : ''}`} />}
+                    {!isLast && <div className={`line ${isLineCompleted ? 'completed' : ''}`} />}
                     <div className={`label ${isCompleted ? 'active' : ''}`}>{step.label}</div>
                   </div>
                 );

@@ -23,10 +23,36 @@ export const shipmentStatusMap = {
   21: 'Đã giao',
   22: 'Đã hoàn thành',
   23: 'Delayed',
-  24: 'Đã đến',
+  24: 'Đã đến trạm đích',
   25: 'Đơn đã hoàn thành. Đợi bồi thường',
   26: 'Bồi thường',
   27: 'Đã bồi thường',
+};
+
+export const trainStatusMap = {
+  0: "Chưa được lập lịch",             // NotScheduled
+  1: "Đã lập lịch",                    // Scheduled
+  2: "Chờ khởi hành",                  // AwaitingDeparture
+  3: "Đã khởi hành",                   // Departed
+  4: "Đang di chuyển",                 // InTransit
+  5: "Đã đến ga trung gian",           // ArrivedAtStation
+  7: "Tiếp tục hành trình",            // ResumingTransit
+  8: "Bị trì hoãn",                    // Delayed
+  9: "Đã hủy",                         // Cancelled
+  10: "Đã hoàn thành",                 // Completed
+};
+
+export const trainStatusColorMap = {
+  0: "default",  // xám
+  1: "blue",     // xanh dương
+  2: "orange",   // cam
+  3: "geekblue",    // xanh lá
+  4: "cyan",     // xanh ngọc
+  5: "purple",   // tím
+  7: "magenta", // xanh đậm
+  8: "volcano",  // đỏ cam (delay)
+  9: "red",      // đỏ (cancelled)
+  10: "success", // xanh lá (completed)
 };
 
 export const shipmentStatusColorMap = {
@@ -60,18 +86,54 @@ export const shipmentStatusColorMap = {
   27: "green",       // Đã bồi thường 
 };
 
-
 export const paymentStatusMap = {
   1: 'Đợi thanh toán',
   2: 'Đã thanh toán',
   3: 'Đã hủy',
-  4: 'Thất bại'
+  4: 'Thất bại',
+};
+
+export const paymentStatusColorMap = {
+  1: "yellow",
+  2: "green",
+  3: "red",
+  4: "red",
 };
 
 export const paymentTransactionTypeMap = {
   1: 'Phí giao hàng',
   2: 'Phí phạt',
-  3: 'Hoàn tiền'
+  3: 'Hoàn tiền',
+  4: 'Phí bồi thường'
+}
+
+export const paymentTransactionTypeColorMap = {
+  1: "green",
+  2: "red",
+  3: "yellow",
+  4: "pink"
+}
+
+export const supportTicketType = {
+  1: 'Hỗ trợ vấn đề bồi thường',
+  2: 'Hỗ trợ vấn đề kỹ thuật',
+  3: 'Hỗ trợ vấn đề giao dịch',
+  4: 'Hỗ trợ vấn đề giao hàng',
+  5: 'Hỗ trợ vấn đề tài khoản',
+  6: 'Hỗ trợ vấn đề đánh giá',
+  7: 'Khác',
+}
+
+export const supportTicketStatus = {
+  1: 'Đang giải quyết',
+  2: 'Đã giải quyết',
+  3: 'Từ chối',
+}
+
+export const supportTicketStatusColorMap = {
+  1: "yellow",
+  2: "green",
+  3: "red",
 }
 
 export const parcelStatusMap = {

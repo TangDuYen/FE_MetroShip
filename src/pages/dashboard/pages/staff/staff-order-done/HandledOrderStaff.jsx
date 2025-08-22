@@ -2,11 +2,12 @@ import './HandledOrderStaff.scss';
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation } from '../../../../../config/metroApi';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
 import MetroStation from '../../../../../assets/metro_station.png';
+import { PATH_NAME } from '../../../../../constants/pathname';
 import { ReloadOutlined } from '@ant-design/icons';
 import StaffIcon from '../../../../../assets/profile.webp';
 import TabPane from 'antd/es/tabs/TabPane';
@@ -14,6 +15,7 @@ import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
 const { RangePicker } = DatePicker;
@@ -23,6 +25,8 @@ const { Title } = Typography;
 function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [shipmentsStaff, setShipmentsStaff] = useState([]);
+    const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
     const [shipments, setShipments] = useState([]);
     const [parcels, setParcels] = useState([]);
     const [stations, setStations] = useState([]);
@@ -47,12 +51,15 @@ function HandledOrderStaff() {
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUSES = [1, 2, 3, 5, 6, 20, 21, 22, 24, 27];
+    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 20, 21, 22, 27];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
     const today = dayjs();
     const [parcelCate, setParcelCate] = useState([]);
+    const navigate = useNavigate();
+    const [mergedShipments, setMergedShipments] = useState([]);
+
 
     if (!decodedUser?.StationId) {
         return (
@@ -99,6 +106,25 @@ function HandledOrderStaff() {
     }, []);
 
     useEffect(() => {
+        getShipmentByStaffStation(decodedUser.StationId).then((data) => {
+            setShipmentsStaff(data);
+        });
+    }, []);
+    useEffect(() => {
+        getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
+            setShipmentsStaff1(data);
+        });
+    }, []);
+    useEffect(() => {
+        const combined = [...shipmentsStaff, ...shipmentsStaff1];
+
+        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+
+        setMergedShipments(unique);
+    }, [shipmentsStaff, shipmentsStaff1]);
+
+
+    useEffect(() => {
         const map = new Map();
         parcels.forEach((parcel) => {
             if (!map.has(parcel.shipmentId)) {
@@ -115,7 +141,7 @@ function HandledOrderStaff() {
 
 
     useEffect(() => {
-        const opts = ALLOWED_STATUSES.map(id => ({
+        const opts = ALLOWED_STATUS.map(id => ({
             id,
             label: shipmentStatusMap[id] || `Trạng thái ${id}`,
         }));
@@ -138,7 +164,8 @@ function HandledOrderStaff() {
     const handleFilterChange = () => {
         //ALLOWED STATUS SHIPMENT FILTER
         //JUST APPEAR THE SHIPMENT DONE
-        let filtered = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        let filtered = mergedShipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
+
 
         //STATUS FILTER
         if (statusFilter !== null && statusFilter !== undefined) {
@@ -168,10 +195,10 @@ function HandledOrderStaff() {
     };
 
     useEffect(() => {
-        if (shipments.length > 0) {
+        if (mergedShipments.length > 0) {
             handleFilterChange();
         }
-    }, [shipments, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
+    }, [mergedShipments, dateFilter, stationFilter, routeFilter, statusFilter, dateRange, searchCode]);
 
 
     const baseColumns = [
@@ -292,14 +319,19 @@ function HandledOrderStaff() {
     const onRowClick = (record) => {
         const relatedParcels = getParcelsByShipmentId(record.id);
         setSelectedOrder({ ...record, relatedParcels });
-        setModalOpen(true);
+        navigate(
+            PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+                ":trackingCode",
+                record.trackingCode
+            )
+        );
     };
 
     const handleResetFilters = () => {
         setDateRange(null);
         setStatusFilter(null);
         setSearchCode('');
-        const base = shipments.filter(o => ALLOWED_STATUSES.includes(o.shipmentStatus));
+        const base = shipments.filter(o => ALLOWED_STATUS.includes(o.shipmentStatus));
         setFilteredShipments(base);
     };
 
@@ -332,7 +364,7 @@ function HandledOrderStaff() {
                                         Làm việc tại trạm
                                         <div className="data">
                                             {
-                                                stations.find(station => station.id === decodedUser?.StationId)?.stationNameVi || "N/A"
+                                                stations.find(station => station.stationId === decodedUser?.StationId)?.stationNameVi || "N/A"
                                             }
                                         </div>
                                     </div>
@@ -358,7 +390,7 @@ function HandledOrderStaff() {
                             </Col>
                         </Row>
                     </Card>
-                    <Card style={{ marginBottom: '1em' }}>
+                    {/* <Card style={{ marginBottom: '1em' }}>
                         <Title level={3}> {metroTrains.length} tàu hoạt động hiện tại</Title>
                         <Row gutter={16}>
                             {currentData.map((train) => (
@@ -402,12 +434,13 @@ function HandledOrderStaff() {
                                 onChange={(page) => setCurrentPage(page)}
                             />
                         </Flex>
-                    </Card>
+                    </Card> */}
                 </div>
 
                 <div className="filter-sort" style={{ marginBottom: "1em" }}>
                     <Card>
-                        <Title level={3}>Thời gian</Title>
+                        <Title level={3}>Ngày và Ca vận chuyển của Metro</Title>
+
                         <Row gutter={16}>
                             <Col span={6}>
                                 <DatePicker
