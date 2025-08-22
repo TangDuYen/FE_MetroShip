@@ -137,6 +137,8 @@ function ParcelInfo({
             setMetroSelector(prev => ({ ...prev, departureStationId: nearest.stationId }));
 
             localStorage.setItem("departureStationLocation", JSON.stringify({
+              id: nearest.stationId,
+              name: nearest.stationNameVi,
               lat: nearest.latitude,
               lng: nearest.longitude
             }));
@@ -834,14 +836,15 @@ function ParcelInfo({
                 setRealDepartureStationId(value);
                 setDisplayedDepartureStationId(value);
                 setMetroSelector(prev => ({ ...prev, departureStationId: value }));
-                const selectedStation = stationsFrom.find(
-                  st => st.stationId === value
-                );
+                const allStations = [...stationsFrom, ...nearbyStations];
+                const selectedStation = allStations.find(st => st.stationId === value);
 
                 if (selectedStation) {
                   localStorage.setItem(
                     "departureStationLocation",
                     JSON.stringify({
+                      id: selectedStation.stationId,
+                      name: selectedStation.stationNameVi,
                       lat: selectedStation.latitude,
                       lng: selectedStation.longitude,
                     })
