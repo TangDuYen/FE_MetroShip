@@ -61,10 +61,7 @@ function Order() {
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
   const [priceVnd, setPriceVnd] = useState(null);
-  const [transactionTypes, setTransactionTypes] = useState([]);
-  const [transactionTypeId, setTransactionTypeId] = useState(null);
   const [isScheduleWarningModalOpen, setIsScheduleWarningModalOpen] = useState(false);
-
 
   const customIcon = L.icon({
     iconUrl: metroMarker,
@@ -232,14 +229,15 @@ function Order() {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
       if (currentStep === steps.length - 1) {
+        //WARNING USER BOOKING NEAR DEADLINE
         const selectedDate = dayjs(metroSelector?.departureDateTime);
         const now = dayjs();
-
-        if (selectedDate.diff(now, 'minute') <= 120) {
+        const minutesLeft = selectedDate.diff(now, 'minute', true);
+        console.log("Thời gian còn lại đến hạn chót gửi hàng tại trạm:", minutesLeft, "phút");
+        if (minutesLeft <= 180) {
           setIsScheduleWarningModalOpen(true);
           return;
         }
-
         showModal();
       }
 
@@ -329,19 +327,6 @@ function Order() {
     };
   };
 
-  useEffect(() => {
-    async function fetchTransactionTypes() {
-      try {
-        const res = await getAllTransactionTypes();
-        if (res?.statusCode === 200) {
-          setTransactionTypes(res.data);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy transaction types:", error);
-      }
-    }
-    fetchTransactionTypes();
-  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -384,7 +369,6 @@ function Order() {
       toast.error(errorMessage);
     }
   };
-
 
   return (
     <>

@@ -49,7 +49,7 @@ function TrackingOrder() {
   const [trainCode, setTrainCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [fullPathSegments, setFullPathSegments] = useState([]);
-  const BASE_URL = "https://metroship-cosdy.ondigitalocean.app/api/";
+  const BASE_URL = "https://metroship-cosdy.ondigitalocean.app/";
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ function TrackingOrder() {
     try {
 
       const res = await axios.get(
-        `${BASE_URL}/${trackingCode}/position`
+        `${BASE_URL}${trackingCode}/position`
       );
       const {
         latitude,
