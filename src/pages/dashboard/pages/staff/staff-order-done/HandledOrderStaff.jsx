@@ -111,24 +111,30 @@ function HandledOrderStaff() {
         );
     }, []);
 
+    const reloadShipments = async () => {
+        try {
+            const [byStation, byDestination] = await Promise.all([
+                getShipmentByStaffStation(decodedUser.StationId),
+                getShipmentByStaffDestinationStation(decodedUser.StationId)
+            ]);
+
+            setShipmentsStaff(byStation);
+            setShipmentsStaff1(byDestination);
+
+
+            const combined = [...byStation, ...byDestination];
+            const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+            setMergedShipments(unique);
+
+        } catch (e) {
+            console.error(e);
+            const errorMessage = e.response?.data?.message || "Không thể tải lại danh sách đơn hàng";
+            toast.error(errorMessage);
+        }
+    };
     useEffect(() => {
-        getShipmentByStaffStation(decodedUser.StationId).then((data) => {
-            setShipmentsStaff(data);
-        });
+        reloadShipments();
     }, []);
-    useEffect(() => {
-        getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
-            setShipmentsStaff1(data);
-        });
-    }, []);
-    useEffect(() => {
-        const combined = [...shipmentsStaff, ...shipmentsStaff1];
-
-        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
-
-        setMergedShipments(unique);
-    }, [shipmentsStaff, shipmentsStaff1]);
-
 
     useEffect(() => {
         const map = new Map();
@@ -396,51 +402,6 @@ function HandledOrderStaff() {
                             </Col>
                         </Row>
                     </Card>
-                    {/* <Card style={{ marginBottom: '1em' }}>
-                        <Title level={3}> {metroTrains.length} tàu hoạt động hiện tại</Title>
-                        <Row gutter={16}>
-                            {currentData.map((train) => (
-                                <Col span={24} key={train.id}>
-                                    <Card className="metro-subway-info" style={{ marginBottom: '1em' }}>
-                                        <Flex justify="space-between" align="center">
-                                            <Flex align="center" gap="small">
-                                                <img
-                                                    src={MetroStation}
-                                                    alt="Metro_Subway"
-                                                    style={{ width: "3em" }}
-                                                />
-                                                <div className="metro-subway-description" style={{ marginLeft: '0.5em' }}>
-                                                    Tàu
-                                                    <div className="subway-data">{train.trainCode}</div>
-                                                </div>
-                                            </Flex>
-                                            <div className="metro-subway-description">
-                                                Trọng tải tàu (kg)
-                                                <div className="subway-data">
-                                                    {maxCapacity} kg
-                                                </div>
-                                            </div>
-                                            <div className="metro-subway-description">
-                                                Dung tích tàu (m³)
-                                                <div className="subway-data">
-                                                    {maxVolume} m³
-                                                </div>
-                                            </div>
-                                        </Flex>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
-
-                        <Flex justify="center" style={{ marginTop: "1em" }}>
-                            <Pagination
-                                current={currentPage}
-                                pageSize={pageSize}
-                                total={metroTrains.length}
-                                onChange={(page) => setCurrentPage(page)}
-                            />
-                        </Flex>
-                    </Card> */}
                 </div>
 
                 <div className="filter-sort" style={{ marginBottom: "1em" }}>
@@ -641,7 +602,6 @@ function HandledOrderStaff() {
                             open={confirmModalOpen}
                             onCancel={() => setConfirmModalOpen(false)}
                             onOk={() => {
-                                // Giả sử sau này sẽ gọi API ở đây
                                 toast.success('Tạo đơn hàng hoàn thành công!');
                                 setConfirmModalOpen(false);
                             }}
