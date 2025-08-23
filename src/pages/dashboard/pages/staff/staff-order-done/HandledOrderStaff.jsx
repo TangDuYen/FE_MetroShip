@@ -1,6 +1,6 @@
 import './HandledOrderStaff.scss';
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
@@ -21,6 +21,12 @@ import viVN from 'antd/lib/locale/vi_VN';
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Title } = Typography;
+const customizeRenderEmpty = () => (
+    <Empty
+        image={Empty.PRESENTED_IMAGE_DEFAULT}
+        description="Không có dữ liệu"
+    />
+);
 
 function HandledOrderStaff() {
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -527,15 +533,16 @@ function HandledOrderStaff() {
                                 </Col>
                             </Row>
                         </div>
-                        <Table
-                            columns={columns}
-                            dataSource={filteredShipments}
-                            rowKey="trackingCode"
-                            pagination={{ pageSize: 10 }}
-                            bordered
-                            style={{ cursor: 'pointer' }}
-                            locale={{ emptyText: 'Không có dữ liệu' }}
-                        />
+                        <ConfigProvider renderEmpty={customizeRenderEmpty}>
+                            <Table
+                                columns={columns}
+                                dataSource={filteredShipments}
+                                rowKey="trackingCode"
+                                pagination={{ pageSize: 10 }}
+                                bordered
+                                style={{ cursor: 'pointer' }}
+                            />
+                        </ConfigProvider>
                         <Modal
                             title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
                             open={modalOpen}

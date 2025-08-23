@@ -1,7 +1,7 @@
 import './OrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
-import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Switch, Table, Tabs, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ReloadOutlined, SmileOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { use, useEffect, useState } from 'react';
@@ -17,6 +17,13 @@ import viVN from 'antd/lib/locale/vi_VN';
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
+
+const customizeRenderEmpty = () => (
+  <Empty
+    image={Empty.PRESENTED_IMAGE_DEFAULT}
+    description="Không có dữ liệu"
+  />
+);
 
 const { Title } = Typography;
 
@@ -40,7 +47,6 @@ function OrderStaff() {
   const [verifyingParcel, setVerifyingParcel] = useState(null);
   const [verifyImageMain, setVerifyImageMain] = useState(null); // bắt buộc
   const [verifyImageOptional, setVerifyImageOptional] = useState(null); // optional
-
   const [shipmentBeingVerified, setShipmentBeingVerified] = useState(null);
   const [shipmentRejected, setShipmentRejected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -543,15 +549,16 @@ function OrderStaff() {
                 </Col>
               </Row>
             </div>
-            <Table
-              columns={columns}
-              dataSource={filteredShipments}
-              rowKey="trackingCode"
-              pagination={{ pageSize: 10 }}
-              bordered
-              style={{ cursor: 'pointer' }}
-              locale={{ emptyText: 'Không có dữ liệu' }}
-            />
+            <ConfigProvider renderEmpty={customizeRenderEmpty}>
+              <Table
+                columns={columns}
+                dataSource={filteredShipments}
+                rowKey="trackingCode"
+                pagination={{ pageSize: 10 }}
+                bordered
+                style={{ cursor: 'pointer' }}
+              />
+            </ConfigProvider>
             <Modal
               title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
               open={modalOpen}
