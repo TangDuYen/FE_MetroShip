@@ -9,6 +9,13 @@
     padding: 20px 300px 20px 150px;
   }
 
+  .ant-table-thead>tr>th {
+    background-color: $primary-color !important;
+    color: #fff !important;
+    font-weight: 600;
+    text-align: center;
+  }
+
   .history-order-row {
     display: flex;
     justify-content: center;
@@ -25,7 +32,7 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
       border-radius: 5px;
 
-      .history-pagination{
+      .history-pagination {
         display: flex;
         justify-content: flex-end;
         margin-top: 16px;
@@ -36,6 +43,7 @@
           font-weight: bold;
         }
       }
+
       .goods-table {
         width: 100%;
         border-collapse: collapse;
@@ -55,6 +63,7 @@
           font-size: 16px;
         }
       }
+
       .pay-button {
         background-color: $secondary-text-color;
         color: white;
@@ -65,6 +74,7 @@
         font-size: 14px;
         transition: 0.2s;
       }
+
       .feedback-button {
         background-color: $secondary-text-color;
         color: white;
@@ -79,6 +89,7 @@
       .pay-button:hover {
         background-color: #218838;
       }
+
       .feedback-button:hover {
         background-color: #218838;
       }
@@ -96,7 +107,3 @@
     }
   }
 }
-
-
-
-

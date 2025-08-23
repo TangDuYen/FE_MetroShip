@@ -35,7 +35,7 @@ export const trainStatusMap = {
   2: "Chờ khởi hành",                  // AwaitingDeparture
   3: "Đã khởi hành",                   // Departed
   4: "Đang di chuyển",                 // InTransit
-  5: "Đã đến ga trung gian",           // ArrivedAtStation
+  5: "Đã đến ga ",                     // ArrivedAtStation
   7: "Tiếp tục hành trình",            // ResumingTransit
   8: "Bị trì hoãn",                    // Delayed
   9: "Đã hủy",                         // Cancelled

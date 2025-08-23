@@ -9,6 +9,13 @@
     padding: 20px 300px 20px 150px;
   }
 
+  .ant-table-thead>tr>th {
+    background-color: $primary-color !important;
+    color: #fff !important;
+    font-weight: 600;
+    text-align: center;
+  }
+
   .history-payment-row {
     display: flex;
     justify-content: center;
@@ -24,11 +31,7 @@
       background: #fff;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
       border-radius: 5px;
-      
 
-     
-
-    
     }
   }
 }
