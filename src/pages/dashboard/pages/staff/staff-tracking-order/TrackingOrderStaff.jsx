@@ -1,6 +1,6 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
@@ -22,6 +22,12 @@ import viVN from 'antd/lib/locale/vi_VN';
 dayjs.extend(isBetween);
 
 const { RangePicker } = DatePicker;
+const customizeRenderEmpty = () => (
+  <Empty
+    image={Empty.PRESENTED_IMAGE_DEFAULT}
+    description="Không có dữ liệu"
+  />
+);
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
@@ -116,7 +122,7 @@ function TrackingOrderStaff() {
   useEffect(() => {
     const combined = [...shipmentsStaff, ...shipmentsStaff1];
 
-    
+
     const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
 
     setMergedShipments(unique);
@@ -641,16 +647,16 @@ function TrackingOrderStaff() {
                 </Col>
               </Row>
             </div>
-
-            <Table
-              columns={columns}
-              dataSource={filteredShipments}
-              rowKey="trackingCode"
-              pagination={{ pageSize: 10 }}
-              bordered
-              style={{ cursor: 'pointer' }}
-              locale={{ emptyText: 'Không có dữ liệu' }}
-            />
+            <ConfigProvider renderEmpty={customizeRenderEmpty}>
+              <Table
+                columns={columns}
+                dataSource={filteredShipments}
+                rowKey="trackingCode"
+                pagination={{ pageSize: 10 }}
+                bordered
+                style={{ cursor: 'pointer' }}
+              />
+            </ConfigProvider>
           </Card>
 
           {/* UPLOAD CONFIRM IMAGES SHIPMENT */}

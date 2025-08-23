@@ -348,7 +348,7 @@ function HistoryOrders() {
       title: "Hạn chót gửi hàng lúc",
       dataIndex: "deliveryDate",
       key: "deliveryDate",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "N/A"),
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định"),
     },
     {
       title: "Chi tiết",
@@ -363,7 +363,7 @@ function HistoryOrders() {
       key: "shipmentStatus",
       render: (status) => (
         <Tag color={shipmentStatusColorMap[status] || "default"}>
-          {shipmentStatusMap[status] || "Không rõ"}
+          {shipmentStatusMap[status] || "Không xác định"}
         </Tag>
       ),
     },
@@ -436,7 +436,7 @@ function HistoryOrders() {
       // }
 
       //REFUND SHIPMENT
-      if (item.shipmentStatus === 15) {
+      if (item.shipmentStatus === 17) {
         actions.push(
           <Button
             danger
@@ -446,7 +446,6 @@ function HistoryOrders() {
           </Button>
         );
       }
-
       return <Space>{actions}</Space>;
     },
   });
@@ -471,12 +470,14 @@ function HistoryOrders() {
                 <Select
                   value={filterStatus}
                   onChange={(value) => setFilterStatus(value)}
-                  style={{ width: 200 }}
+                  style={{ width: 300 }}
                 >
                   <Option value="all">Tất cả trạng thái</Option>
                   {Object.entries(shipmentStatusMap).map(([value, label]) => (
                     <Option key={value} value={value}>
-                      {label}
+                      <Tag color={shipmentStatusColorMap[value] || "default"}>
+                        {shipmentStatusMap[value] || "Không xác định"}
+                      </Tag>
                     </Option>
                   ))}
                 </Select>
