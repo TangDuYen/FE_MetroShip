@@ -459,7 +459,7 @@ function HistoryOrders() {
             <Sidebar />
           </div>
           <div className="history-order-right">
-            <Card title="THÔNG TIN TÀI KHOẢN" bordered={false}>
+            <Card title="DANH SÁCH ĐƠN HÀNG CỦA BẠN" bordered={false}>
               <Space style={{ marginBottom: 16 }}>
                 <Input
                   placeholder="Nhập mã hàng hóa, tên hàng hóa"
