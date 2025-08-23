@@ -149,7 +149,7 @@ function AdminStaffManage() {
     (u) =>
       u.fullName?.toLowerCase().includes(searchText.toLowerCase()) &&
       (filterStations.length === 0 ||
-        filterStations.includes(u.assignedStationId)) &&
+        filterStations.includes(String(u.assignedStationId))) &&
       (filterRoles.length === 0 || filterRoles.includes(u.currentRole))
   );
 
@@ -281,8 +281,9 @@ function AdminStaffManage() {
             onChange={setFilterStations}
             options={stations.map((s) => ({
               label: s.stationNameVi,
-              value: s.stationId,
+              value: String(s.stationId),
             }))}
+            optionFilterProp="label" 
           />
           <Select
             mode="multiple"
