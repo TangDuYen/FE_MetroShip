@@ -365,7 +365,7 @@ function Order() {
     } catch (error) {
       console.error(error);
       setLoading(false);
-      const errorMessage = error.response?.data.message || "An error occurred";
+      const errorMessage = error.response?.data.message || "Có lỗi đã xảy ra";
       toast.error(errorMessage);
     }
   };

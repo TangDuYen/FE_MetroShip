@@ -26,5 +26,20 @@
       border-color: #389e0d !important;
       color: #fff !important;
     }
+
+    &:disabled,
+    &.ant-btn[disabled] {
+      background-color: rgba(0, 0, 0, 0.04) !important; // xám nhạt
+      border-color: #d9d9d9 !important;
+      color: rgba(0, 0, 0, 0.25) !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  .ant-table-thead>tr>th {
+    background-color: $primary-color !important;
+    color: #fff !important;
+    font-weight: 600;
+    text-align: center;
   }
 }

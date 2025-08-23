@@ -1,32 +1,32 @@
 import "./Tracking.scss";
 import "react-vertical-timeline-component/style.min.css";
 
+import {
+  Alert,
+  Button,
+  Col,
+  Descriptions,
+  Input,
+  Row,
+  Tag,
+  Timeline,
+  Typography,
+} from "antd";
 import { FaShippingFast, FaTimesCircle } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
-
-import {
-  Input,
-  Button,
-  Alert,
-  Descriptions,
-  Timeline,
-  Typography,
-  Row,
-  Col,
-  Tag,
-} from "antd";
-import { getAllShipments } from "../../config/metroApi";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import { PATH_NAME } from "../../constants/pathname";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
+
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
+import { getAllShipments } from "../../config/metroApi";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 function Tracking() {
@@ -128,7 +128,10 @@ function Tracking() {
               {new Date(result.scheduledDateTime).toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item>
-              <Link to={`${PATH_NAME.TRACKING_ORDER}/${result.trackingCode}`}>
+              <Link to={PATH_NAME.TRACKING_ORDER.replace(
+                      ":trackingCode",
+                      result.trackingCode
+                    )}>
                 <Button type="primary">Xem chi tiết</Button>
               </Link>
             </Descriptions.Item>
