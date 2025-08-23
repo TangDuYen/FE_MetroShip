@@ -38,7 +38,6 @@ const metroIcon = new L.Icon({
 });
 
 function TrackingOrder() {
-  const [parcelCategory, setParcelCategory] = useState([]);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const { trackingCode } = useParams();
   const navigate = useNavigate();
@@ -49,46 +48,28 @@ function TrackingOrder() {
   const [trainCode, setTrainCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [fullPathSegments, setFullPathSegments] = useState([]);
-  const BASE_URL = "https://metroship-cosdy.ondigitalocean.app/";
   const intervalRef = useRef(null);
+
+
+  const fetchData = async () => {
+    try {
+      const shipmentRes = await api.get(`/shipments/${trackingCode}`);
+      const shipment = shipmentRes.data.data;
+      setSelectedShipment(shipment);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+    }
+  };
 
   useEffect(() => {
     if (!trackingCode) return;
-
-    const fetchData = async () => {
-      try {
-        const [shipmentRes, categoryRes] = await Promise.all([
-          api.get(`/shipments/${trackingCode}`),
-          getAllParcelCategories()
-        ]);
-
-        const shipment = shipmentRes.data.data;
-        const categories = categoryRes;
-
-        // Gán category vào từng parcel
-        const parcelsWithCategory = (shipment.parcels || []).map((p) => {
-          const category = categories.find(c => c.id === p.parcelCategoryId);
-          return {
-            ...p,
-            parcelCategory: category || null
-          };
-        });
-        shipment.parcels = parcelsWithCategory;
-        setParcelCategory(categories);
-        setSelectedShipment(shipment);
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
-      }
-    };
-
     fetchData();
   }, [trackingCode]);
 
   const fetchLivePosition = async () => {
     try {
-
-      const res = await axios.get(
-        `${BASE_URL}${trackingCode}/position`
+      const res = await api.get(
+        `/${trackingCode}/position`
       );
       const {
         latitude,
@@ -124,11 +105,11 @@ function TrackingOrder() {
   useEffect(() => {
     if (!selectedShipment) return;
 
-    if (selectedShipment.shipmentStatus === 10) {
-      fetchLivePosition();
-      intervalRef.current = setInterval(fetchLivePosition, 2000);
-      return () => clearInterval(intervalRef.current);
-    }
+    // if (selectedShipment.shipmentStatus === 10) {
+    //   fetchLivePosition();
+    //   intervalRef.current = setInterval(fetchLivePosition, 2000);
+    //   return () => clearInterval(intervalRef.current);
+    // }
   }, [selectedShipment]);
 
 
@@ -168,6 +149,7 @@ function TrackingOrder() {
 
       if (res.status === 200 || res.status === 201) {
         toast.success("Yêu cầu bồi thường đã được gửi thành công!");
+        fetchData();
       } else {
         toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
       }
@@ -268,11 +250,11 @@ function TrackingOrder() {
                 { id: 22, label: 'Đã giao hàng' },
               ].map((step, idx, arr) => {
                 const isLast = idx === arr.length - 1;
-                const isCompleted = isLast ? currentStatus === 22 : currentStatus >= step.id;
+                const isCompleted = isLast ? (currentStatus === 22 || currentStatus === 25 || currentStatus === 27) : currentStatus >= step.id;
                 const nextStep = arr[idx + 1];
                 const isLineCompleted = nextStep
                   ? nextStep.id === 22
-                    ? currentStatus === 22
+                    ? (currentStatus === 22 || currentStatus === 25 || currentStatus === 27)
                     : currentStatus >= nextStep.id
                   : false;
                 return (
@@ -393,7 +375,7 @@ function TrackingOrder() {
                     </span>
                   </div>
                   <div className="detail-value">
-                    {p.status === 4 && (
+                    {p.status === 4 && !selectedShipment.isCompensationRequested && (
                       <Button
                         type="primary"
                         className='insurance-button'

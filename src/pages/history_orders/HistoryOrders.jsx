@@ -345,16 +345,10 @@ function HistoryOrders() {
       render: (price) => formatCurrency1(price),
     },
     {
-      title: "Ngày gửi hàng",
-      dataIndex: "deliveryDate",
-      key: "deliveryDate",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : "N/A"),
-    },
-    {
       title: "Hạn chót gửi hàng lúc",
       dataIndex: "deliveryDate",
       key: "deliveryDate",
-      render: (date) => (date ? dayjs(date).format("HH:mm") : "N/A"),
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "N/A"),
     },
     {
       title: "Chi tiết",

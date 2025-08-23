@@ -53,7 +53,7 @@ function Header() {
   };
 
   loadNotifications();
-  const interval = setInterval(loadNotifications, 2000);
+  const interval = setInterval(loadNotifications, 3600000);
   return () => clearInterval(interval);
 }, [user?.id]);
 
