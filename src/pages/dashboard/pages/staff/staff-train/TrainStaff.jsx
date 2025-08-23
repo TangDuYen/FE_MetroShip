@@ -109,7 +109,8 @@ function TrainStaff() {
       toast.success(`Tàu ${train.trainCode} đã được khởi động`);
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
-      toast.error(`Không thể khởi động tàu ${train.trainCode}`);
+      const message = error.response?.data?.message || `Không thể khởi động tàu ${train.trainCode}`;
+      toast.error(message);
     }
   };
 
@@ -128,8 +129,8 @@ function TrainStaff() {
 
       toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
     } catch (error) {
-      console.error("Lỗi xác nhận tàu đến trạm:", error);
-      toast.error("Xác nhận tàu thất bại.");
+      const message = error.response?.data?.message || "Xác nhận tàu thất bại.";
+      toast.error(message);
     }
   };
 
@@ -194,24 +195,36 @@ function TrainStaff() {
     {
       title: "Hành động",
       key: "actions",
-      render: (_, record) => (
-        <div className="action-buttons">
-          <Button
-            type="primary"
-            onClick={() => handleStartTrain(record)}
-            style={{ marginRight: 8 }}
-          >
-            Xác nhận tàu rời trạm
-          </Button>
-          <Button
-            className="btn-arrival"
-            onClick={() => handleConfirmArrival(record)}
-          >
-            Xác nhận tàu đến trạm
-          </Button>
-          <Button onClick={() => handleViewMapTrain(record)}>Xem bản đồ</Button>
-        </div>
-      ),
+      render: (_, record) => {
+        const isAtCurrentStation =
+          String(record.currentStationId) === String(user?.StationId);
+          const isStatusZero = (record.status) === 0;
+
+        return (
+          <div className="action-buttons">
+            <Button
+              type="primary"
+              onClick={() => handleStartTrain(record)}
+              style={{ marginRight: 8 }}
+              disabled={isStatusZero || !isAtCurrentStation} // chỉ bật khi tàu đang ở ga của staff
+            >
+              Xác nhận tàu rời trạm
+            </Button>
+
+            <Button
+              className="btn-arrival"
+              onClick={() => handleConfirmArrival(record)}
+              disabled={isStatusZero || isAtCurrentStation} // disable nếu trùng ga staff
+            >
+              Xác nhận tàu đến trạm
+            </Button>
+
+            <Button onClick={() => handleViewMapTrain(record)}>
+              Xem bản đồ
+            </Button>
+          </div>
+        );
+      },
     },
   ];
   // Hàm lấy danh sách lineId thuộc khu vực
