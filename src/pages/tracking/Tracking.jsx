@@ -132,7 +132,12 @@ function Tracking() {
             </Descriptions.Item>
             <Descriptions.Item>
               {user ? (
-                <Link to={`${PATH_NAME.TRACKING_ORDER}/${result.trackingCode}`}>
+                <Link
+                  to={PATH_NAME.TRACKING_ORDER.replace(
+                    ":trackingCode",
+                    result.trackingCode
+                  )}
+                >
                   <Button type="primary">Xem chi tiết</Button>
                 </Link>
               ) : (
