@@ -6,7 +6,7 @@
   font-family: $font-primary;
 
   .history-order-wrapper {
-    padding: 20px 300px 20px 150px;
+    padding: 20px 150px 20px 60px;
   }
 
   .ant-table-thead>tr>th {
@@ -23,11 +23,15 @@
     flex: 1;
 
     .history-order-left {
-      flex: 0.3;
+      flex: 0 0 20%;
+      max-width: 20%;
+      // flex: 0.1;
     }
 
     .history-order-right {
-      flex: 0.7;
+      flex: 0 0 80%; 
+      max-width: 80%;
+      // flex: 0.9;
       background: #fff;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
       border-radius: 5px;

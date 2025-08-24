@@ -27,10 +27,8 @@ import { SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import dayjs from "dayjs";
-import { getAllTransactionTypes } from "../../config/metroApi";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import { max } from "moment/moment";
 import { toast } from "react-toastify";
 
 dayjs.extend(isSameOrAfter);
@@ -56,84 +54,80 @@ function HistoryOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
   const [rejectShipmentId, setRejectShipmentId] = useState(null);
-  const [transactionTypes, setTransactionTypes] = useState([]);
-  const [transactionTypeId, setTransactionTypeId] = useState(null);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
   const [pendingShipment, setPendingShipment] = useState(null);
 
+  const fetchData = async () => {
+    try {
+      const [parcelsRes, shipmentsRes] = await Promise.all([
+        api.get("/parcels?PageSize=1000"),
+        api.get("/shipments/customer/history?PageSize=1000"),
+      ]);
 
+      const parcelItems = parcelsRes.data?.data?.items || [];
+      const shipmentItems = shipmentsRes.data?.data?.items || [];
+
+      const shipmentMap = new Map(
+        shipmentItems.map((item) => [
+          item.id,
+          {
+            // date: item.scheduledDateTime
+            //   ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
+            //   : "",
+            date: item.scheduledDateTime || null,
+            status: item.shipmentStatus,
+            bookedAt: item.bookedAt,
+            totalCost: item.totalCostVnd || 0,
+            trackingCode: item.trackingCode,
+            rating: item.rating || 0,
+          },
+        ])
+      );
+
+      // Gom tất cả parcels theo shipmentId
+      const groupedByShipment = parcelItems.reduce((acc, parcel) => {
+        const { shipmentId } = parcel;
+        if (!acc[shipmentId]) acc[shipmentId] = [];
+        acc[shipmentId].push(parcel);
+        return acc;
+      }, {});
+
+      const sortedShipmentItems = [...shipmentItems].sort(
+        (a, b) => new Date(b.lastUpdatedAt) - new Date(a.lastUpdatedAt)
+      );
+
+      // Gộp thành danh sách đơn hàng
+      const convertedOrders = sortedShipmentItems.map((shipment, index) => {
+        const parcels = groupedByShipment[shipment.id] || [];
+
+        return {
+          id: index + 1,
+          shipmentId: shipment.id,
+          trackingCode: shipment.trackingCode || "N/A",
+          name: parcels[0]?.parcelCategory?.categoryName || "Chưa rõ",
+          price: shipment.totalCostVnd || 0,
+          deliveryDate: shipment.scheduledDateTime || null,
+          shipmentStatus: shipment.shipmentStatus,
+          bookedAt: shipment.bookedAt,
+          rating: shipment.rating || 0,
+          departureStationName: shipment.departureStationName || "",
+          destinationStationName: shipment.destinationStationName || "",
+        };
+      });
+
+      // setOrders(
+      //   convertedOrders.sort(
+      //     (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
+      //   )
+      // );
+
+      setOrders(convertedOrders);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [parcelsRes, shipmentsRes] = await Promise.all([
-          api.get("/parcels?PageSize=1000"),
-          api.get("/shipments/customer/history?PageSize=1000"),
-        ]);
-
-        const parcelItems = parcelsRes.data?.data?.items || [];
-        const shipmentItems = shipmentsRes.data?.data?.items || [];
-
-        const shipmentMap = new Map(
-          shipmentItems.map((item) => [
-            item.id,
-            {
-              // date: item.scheduledDateTime
-              //   ? new Date(item.scheduledDateTime).toLocaleDateString("vi-VN")
-              //   : "",
-              date: item.scheduledDateTime || null,
-              status: item.shipmentStatus,
-              bookedAt: item.bookedAt,
-              totalCost: item.totalCostVnd || 0,
-              trackingCode: item.trackingCode,
-              rating: item.rating || 0,
-            },
-          ])
-        );
-
-        // Gom tất cả parcels theo shipmentId
-        const groupedByShipment = parcelItems.reduce((acc, parcel) => {
-          const { shipmentId } = parcel;
-          if (!acc[shipmentId]) acc[shipmentId] = [];
-          acc[shipmentId].push(parcel);
-          return acc;
-        }, {});
-
-        const sortedShipmentItems = [...shipmentItems].sort(
-          (a, b) => new Date(b.lastUpdatedAt) - new Date(a.lastUpdatedAt)
-        );
-
-        // Gộp thành danh sách đơn hàng
-        const convertedOrders = sortedShipmentItems.map((shipment, index) => {
-          const parcels = groupedByShipment[shipment.id] || [];
-
-          return {
-            id: index + 1,
-            shipmentId: shipment.id,
-            trackingCode: shipment.trackingCode || "N/A",
-            name: parcels[0]?.parcelCategory?.categoryName || "Chưa rõ",
-            price: shipment.totalCostVnd || 0,
-            deliveryDate: shipment.scheduledDateTime || null,
-            shipmentStatus: shipment.shipmentStatus,
-            bookedAt: shipment.bookedAt,
-            rating: shipment.rating || 0,
-            departureStationName: shipment.departureStationName || "",
-            destinationStationName: shipment.destinationStationName || "",
-          };
-        });
-
-        // setOrders(
-        //   convertedOrders.sort(
-        //     (a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate)
-        //   )
-        // );
-
-        setOrders(convertedOrders);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -164,28 +158,12 @@ function HistoryOrders() {
   //   return () => clearInterval(interval);
   // }, [orders]);
 
-  useEffect(() => {
-    async function fetchTransactionTypes() {
-      try {
-        const res = await getAllTransactionTypes();
-        if (res?.statusCode === 200) {
-          setTransactionTypes(res.data);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy transaction types:", error);
-      }
-    }
-    fetchTransactionTypes();
-  }, []);
-
   const handlePayment = async (shipmentId) => {
     try {
       const currentDomain = window.location.origin;
-      const shipmentCostType = transactionTypes.find(t => t.value === "ShipmentCost");
-      setTransactionTypeId(shipmentCostType.id);
       const paymentPayload = {
         shipmentId: shipmentId,
-        transactionType: shipmentCostType.id,
+        transactionType: 1,
         returnUrl: `${currentDomain}/payment-success`,
         cancelUrl: `${currentDomain}/payment-fail`,
       };
@@ -248,6 +226,7 @@ function HistoryOrders() {
       setIsFeedbackModalOpen(false);
       setRating(0);
       setComment('');
+      await fetchData();
     }
   };
 
@@ -276,11 +255,13 @@ function HistoryOrders() {
     } finally {
       setIsRejectModalOpen(false);
       setRejectReason('');
+      await fetchData();
     }
   }
 
-  const handleRequestReturn = (shipmentId) => {
+  const handleRequestReturn = async (shipmentId) => {
     toast.success("Yêu cầu hoàn đơn thành công!");
+    await fetchData(); 
     console.log("Refund shipment", shipmentId);
   }
 
@@ -348,7 +329,7 @@ function HistoryOrders() {
       title: "Hạn chót gửi hàng lúc",
       dataIndex: "deliveryDate",
       key: "deliveryDate",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "N/A"),
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định"),
     },
     {
       title: "Chi tiết",
@@ -363,7 +344,7 @@ function HistoryOrders() {
       key: "shipmentStatus",
       render: (status) => (
         <Tag color={shipmentStatusColorMap[status] || "default"}>
-          {shipmentStatusMap[status] || "Không rõ"}
+          {shipmentStatusMap[status] || "Không xác định"}
         </Tag>
       ),
     },
@@ -436,7 +417,7 @@ function HistoryOrders() {
       // }
 
       //REFUND SHIPMENT
-      if (item.shipmentStatus === 15) {
+      if (item.shipmentStatus === 17) {
         actions.push(
           <Button
             danger
@@ -446,7 +427,6 @@ function HistoryOrders() {
           </Button>
         );
       }
-
       return <Space>{actions}</Space>;
     },
   });
@@ -459,7 +439,7 @@ function HistoryOrders() {
             <Sidebar />
           </div>
           <div className="history-order-right">
-            <Card title="THÔNG TIN TÀI KHOẢN" bordered={false}>
+            <Card title="DANH SÁCH ĐƠN HÀNG CỦA BẠN" bordered={false}>
               <Space style={{ marginBottom: 16 }}>
                 <Input
                   placeholder="Nhập mã hàng hóa, tên hàng hóa"
@@ -471,12 +451,14 @@ function HistoryOrders() {
                 <Select
                   value={filterStatus}
                   onChange={(value) => setFilterStatus(value)}
-                  style={{ width: 200 }}
+                  style={{ width: 300 }}
                 >
                   <Option value="all">Tất cả trạng thái</Option>
                   {Object.entries(shipmentStatusMap).map(([value, label]) => (
                     <Option key={value} value={value}>
-                      {label}
+                      <Tag color={shipmentStatusColorMap[value] || "default"}>
+                        {shipmentStatusMap[value] || "Không xác định"}
+                      </Tag>
                     </Option>
                   ))}
                 </Select>

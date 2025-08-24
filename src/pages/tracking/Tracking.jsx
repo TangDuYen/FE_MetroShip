@@ -1,34 +1,34 @@
 import "./Tracking.scss";
 import "react-vertical-timeline-component/style.min.css";
 
+import {
+  Alert,
+  Button,
+  Col,
+  Descriptions,
+  Input,
+  Row,
+  Tag,
+  Timeline,
+  Typography,
+} from "antd";
 import { FaShippingFast, FaTimesCircle } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
-
-import {
-  Input,
-  Button,
-  Alert,
-  Descriptions,
-  Timeline,
-  Typography,
-  Row,
-  Col,
-  Tag,
-} from "antd";
-import { getAllShipments } from "../../config/metroApi";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import { PATH_NAME } from "../../constants/pathname";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/features/counterSlice";
+
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../constants/pathname";
+import { getAllShipments } from "../../config/metroApi";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 function Tracking() {

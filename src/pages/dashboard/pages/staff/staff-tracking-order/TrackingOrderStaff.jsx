@@ -1,19 +1,17 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Flex, Input, Modal, Pagination, Progress, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
 import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
-import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
 import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import isBetween from "dayjs/plugin/isBetween";
 import { jwtDecode } from 'jwt-decode';
-import { message } from 'antd';
 import moment from 'moment';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +20,12 @@ import viVN from 'antd/lib/locale/vi_VN';
 dayjs.extend(isBetween);
 
 const { RangePicker } = DatePicker;
+const customizeRenderEmpty = () => (
+  <Empty
+    image={Empty.PRESENTED_IMAGE_DEFAULT}
+    description="Không có dữ liệu"
+  />
+);
 
 const { Title } = Typography;
 function TrackingOrderStaff() {
@@ -41,6 +45,7 @@ function TrackingOrderStaff() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [cccdImage, setCccdImage] = useState(null);
   const [confirmImage, setConfirmImage] = useState(null);
+  const [billImage, setBillImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
   const decodedUser = token ? jwtDecode(token) : null;
@@ -63,7 +68,6 @@ function TrackingOrderStaff() {
 
 
   const startIndex = (currentPage - 1) * pageSize;
-  const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
 
   if (!decodedUser?.StationId) {
     return (
@@ -82,11 +86,10 @@ function TrackingOrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
-      ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
+      ([parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
-        setShipments(shipmentsData.items);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
         setMetroTrains(metroTrainData.items);
@@ -102,25 +105,30 @@ function TrackingOrderStaff() {
     );
   }, []);
 
-  useEffect(() => {
-    getShipmentByStaffStation(decodedUser.StationId).then((data) => {
-      setShipmentsStaff(data);
-    });
-  }, []);
+  const reloadShipments = async () => {
+    try {
+      const [byStation, byDestination] = await Promise.all([
+        getShipmentByStaffStation(decodedUser.StationId),
+        getShipmentByStaffDestinationStation(decodedUser.StationId)
+      ]);
 
-  useEffect(() => {
-    getShipmentByStaffDestinationStation(decodedUser.StationId).then((data) => {
-      setShipmentsStaff1(data);
-    });
-  }, []);
-  useEffect(() => {
-    const combined = [...shipmentsStaff, ...shipmentsStaff1];
+      setShipmentsStaff(byStation);
+      setShipmentsStaff1(byDestination);
 
-    
-    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
 
-    setMergedShipments(unique);
-  }, [shipmentsStaff, shipmentsStaff1]);
+      const combined = [...byStation, ...byDestination];
+      const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+      setMergedShipments(unique);
+
+    } catch (e) {
+      console.error(e);
+      const errorMessage = e.response?.data?.message || "Không thể tải lại danh sách đơn hàng";
+      toast.error(errorMessage);
+    }
+  };
+  useEffect(() => {
+    reloadShipments();
+  }, [])
 
   useEffect(() => {
     const map = new Map();
@@ -192,9 +200,7 @@ function TrackingOrderStaff() {
 
 
   useEffect(() => {
-    if (mergedShipments.length > 0) {
-      handleFilterChange();
-    }
+    handleFilterChange();
   }, [mergedShipments, dateRange, statusFilter, searchCode]);
 
   const handleOpenModal = (shipment) => {
@@ -204,7 +210,7 @@ function TrackingOrderStaff() {
 
   const handleConfirmUpload = async () => {
     if (!cccdImage || !confirmImage) {
-      toast.error("Vui lòng chọn cả hai ảnh.");
+      toast.error("Vui lòng upload đủ ảnh CCCD và ảnh xác nhận!");
       return;
     }
 
@@ -213,6 +219,9 @@ function TrackingOrderStaff() {
       const formData = new FormData();
       formData.append("files", cccdImage);
       formData.append("files", confirmImage);
+      if (billImage) {
+        formData.append("files", billImage);
+      }
       const res = await api.post("/media/images", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -230,6 +239,13 @@ function TrackingOrderStaff() {
           { mediaUrl: urls[1], description: "Ảnh nhận hàng" },
         ],
       };
+
+      if (billImage && urls[2]) {
+        payload.pickedUpMedias.push({
+          mediaUrl: urls[2],
+          description: "Ảnh xác nhận giao dịch nộp phạt nhận hàng trễ",
+        });
+      }
       const confirmRes = await api.post("/shipments/complete", payload);
       setLoading(true);
       if (confirmRes.data?.statusCode === 200) {
@@ -239,6 +255,7 @@ function TrackingOrderStaff() {
         setConfirmImage(null);
         setSelectedOrder(null);
         setLoading(false);
+        await reloadShipments();
       } else {
         toast.error("Xác nhận thất bại!");
         setLoading(false);
@@ -510,52 +527,6 @@ function TrackingOrderStaff() {
               </Col>
             </Row>
           </Card>
-
-          {/* <Card style={{ marginBottom: '1em' }}>
-            <Title level={3}>{metroTrains.length} tàu hoạt động hiện tại</Title>
-            <Row gutter={16}>
-              {currentData.map((train) => (
-                <Col span={24} key={train.id}>
-                  <Card className="metro-subway-info" style={{ marginBottom: '1em' }}>
-                    <Flex justify="space-between" align="center">
-                      <Flex align="center" gap="small">
-                        <img
-                          src={MetroStation}
-                          alt="Metro_Subway"
-                          style={{ width: "3em" }}
-                        />
-                        <div className="metro-subway-description" style={{ marginLeft: '0.5em' }}>
-                          Tàu
-                          <div className="subway-data">{train.trainCode}</div>
-                        </div>
-                      </Flex>
-                      <div className="metro-subway-description">
-                        Trọng tải tàu (kg)
-                        <div className="subway-data">
-                          {maxCapacity} kg
-                        </div>
-                      </div>
-                      <div className="metro-subway-description">
-                        Dung tích tàu (m³)
-                        <div className="subway-data">
-                          {maxVolume} m³
-                        </div>
-                      </div>
-                    </Flex>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-
-            <Flex justify="center" style={{ marginTop: "1em" }}>
-              <Pagination
-                current={currentPage}
-                pageSize={pageSize}
-                total={metroTrains.length}
-                onChange={(page) => setCurrentPage(page)}
-              />
-            </Flex>
-          </Card> */}
         </div>
         <div className="filter-sort" style={{ marginBottom: "1em" }}>
           <Card>
@@ -641,16 +612,16 @@ function TrackingOrderStaff() {
                 </Col>
               </Row>
             </div>
-
-            <Table
-              columns={columns}
-              dataSource={filteredShipments}
-              rowKey="trackingCode"
-              pagination={{ pageSize: 10 }}
-              bordered
-              style={{ cursor: 'pointer' }}
-              locale={{ emptyText: 'Không có dữ liệu' }}
-            />
+            <ConfigProvider renderEmpty={customizeRenderEmpty}>
+              <Table
+                columns={columns}
+                dataSource={filteredShipments}
+                rowKey="trackingCode"
+                pagination={{ pageSize: 10 }}
+                bordered
+                style={{ cursor: 'pointer' }}
+              />
+            </ConfigProvider>
           </Card>
 
           {/* UPLOAD CONFIRM IMAGES SHIPMENT */}
@@ -665,12 +636,13 @@ function TrackingOrderStaff() {
             onOk={handleConfirmUpload}
             okText="Xác nhận"
             cancelText="Hủy"
+            width={900}
             destroyOnClose
           >
             <Spin spinning={loading} tip="Đang xác nhận hoàn thành" size="large">
               <Title level={4}>Xác nhận hoàn thành đơn hàng</Title>
-              <Row gutter={16}>
-                <Col span={12}>
+              <Row gutter={18}>
+                <Col span={8}>
                   <div style={{ marginBottom: 8 }}>Ảnh CCCD</div>
                   <input
                     type="file"
@@ -679,7 +651,7 @@ function TrackingOrderStaff() {
                   />
                   {cccdImage && <img src={URL.createObjectURL(cccdImage)} alt="CCCD" style={{ marginTop: 10, maxWidth: '100%' }} />}
                 </Col>
-                <Col span={12}>
+                <Col span={8}>
                   <div style={{ marginBottom: 8 }}>Ảnh nhận hàng</div>
                   <input
                     type="file"
@@ -687,6 +659,15 @@ function TrackingOrderStaff() {
                     onChange={(e) => setConfirmImage(e.target.files[0])}
                   />
                   {confirmImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
+                </Col>
+                <Col span={8}>
+                  <div style={{ marginBottom: 8 }}>Ảnh giao dịch nộp phạt (không bắt buộc)</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setBillImage(e.target.files[0])}
+                  />
+                  {billImage && <img src={URL.createObjectURL(confirmImage)} alt="Confirm" style={{ marginTop: 10, maxWidth: '100%' }} />}
                 </Col>
               </Row>
             </Spin>
@@ -733,7 +714,6 @@ function TrackingOrderStaff() {
           >
             <p>Bồi thường cho đơn hàng bị mất kiện?</p>
           </Modal>
-
         </div>
       </div>
     </>
