@@ -41,7 +41,6 @@ const { Option } = Select;
 
 function TrainStaff() {
   const user = useSelector(selectUser);
-  console.log("User data:", user);
 
   const [metroTrains, setMetroTrains] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +57,8 @@ function TrainStaff() {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [direction, setDirection] = useState(null);
+  const [selectedTrain, setSelectedTrain] = useState(null);
 
   // useEffect(() => {
   //   setLoading(true);
@@ -95,17 +96,18 @@ function TrainStaff() {
   // }, []);
 
   // Hàm tìm stationNameVi theo currentStationId
-  
-const reloadData = async () => {
+
+  const reloadData = async () => {
     if (!decodedUser?.StationId) return;
     setLoading(true);
     try {
-      const [regionsData, metroLinesData, stationsData, trainData] = await Promise.all([
-        getAllRegions(),
-        getMetroLinesByStation(decodedUser.StationId),
-        getAllStations(),
-        getMetroTrainsByStation(decodedUser.StationId),
-      ]);
+      const [regionsData, metroLinesData, stationsData, trainData] =
+        await Promise.all([
+          getAllRegions(),
+          getMetroLinesByStation(decodedUser.StationId),
+          getAllStations(),
+          getMetroTrainsByStation(decodedUser.StationId),
+        ]);
 
       setRegions(regionsData);
       setMetroLines(metroLinesData);
@@ -116,12 +118,15 @@ const reloadData = async () => {
 
       // capacity & volume
       const additionalData = trainData.additionalData[0];
-      const capacity = additionalData.find((item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG");
-      const volume = additionalData.find((item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3");
+      const capacity = additionalData.find(
+        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
+      );
+      const volume = additionalData.find(
+        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
+      );
 
       setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
       setMaxVolume(volume ? volume.configValue : "Không xác định");
-
     } catch (error) {
       console.error("Error reload data:", error);
     } finally {
@@ -141,6 +146,56 @@ const reloadData = async () => {
     return station ? station.stationNameVi : "Không xác định";
   };
 
+  const fetchLivePosition = async (train) => {
+    try {
+      const res = await api.get(`/train/${train.id}/position`);
+      const { additionalData } = res.data;
+
+      // Chỉ lấy direction từ fullPath
+      const direction = additionalData?.fullPath?.[0]?.direction ?? null;
+      console.log("👉 Direction đầu tiên:", direction);
+      setDirection(direction);
+      setLoading(false);
+    } catch (err) {
+      console.error("Lỗi lấy dữ liệu tàu:", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTrain) {
+      fetchLivePosition(selectedTrain);
+    }
+  }, [selectedTrain]);
+
+  const handleReset = async (train) => {
+    if (!train) {
+      toast.error("Chưa chọn tàu để reset lịch.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("trainIdOrCode", train.id);
+
+      await api.post(`/train/schedule?startFromEnd=${direction}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success(
+        `Đặt lại lịch cho tàu ${selectedTrain.trainCode} thành công.`
+      );
+    } catch (error) {
+      console.error(
+        "Lỗi khi reset lịch tàu:",
+        error.response?.data || error
+      );
+      toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+    }
+  };
+
   const handleStartTrain = async (train) => {
     try {
       await api.post(`/train/${train.id}/status`);
@@ -149,7 +204,9 @@ const reloadData = async () => {
       await reloadData();
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
-      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
+      const errorMessage =
+        error.response?.data?.message ||
+        `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
       toast.error(errorMessage);
     }
   };
@@ -171,7 +228,9 @@ const reloadData = async () => {
       await reloadData();
     } catch (error) {
       console.error("Lỗi xác nhận tàu đến trạm:", error);
-      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
+      const errorMessage =
+        error.response?.data?.message ||
+        `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
 
       toast.error(errorMessage);
     }
@@ -241,7 +300,7 @@ const reloadData = async () => {
       render: (_, record) => {
         const isAtCurrentStation =
           String(record.currentStationId) === String(user?.StationId);
-          const isStatusZero = (record.status) === 0;
+        const isStatusZero = record.status === 0;
 
         return (
           <div className="action-buttons">
@@ -262,8 +321,23 @@ const reloadData = async () => {
               Xác nhận tàu đến trạm
             </Button>
 
-            <Button onClick={() => handleViewMapTrain(record)}>
+            <Button
+              onClick={() => {
+                fetchLivePosition(record);
+                handleViewMapTrain(record);
+              }}
+            >
               Xem bản đồ
+            </Button>
+
+            <Button
+              danger
+              onClick={() => {
+                fetchLivePosition(record);
+                handleReset(record);
+              }}
+            >
+              Reset
             </Button>
           </div>
         );
@@ -299,7 +373,6 @@ const reloadData = async () => {
     maxCapacity,
     maxVolume,
   }));
-
 
   return (
     <div className="staff-train-container">

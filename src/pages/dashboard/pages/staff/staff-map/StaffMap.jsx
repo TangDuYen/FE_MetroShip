@@ -82,28 +82,27 @@ function StaffMap() {
         additionalData,
       };
 
-       // so sánh dữ liệu mới với dữ liệu cũ
+      // so sánh dữ liệu mới với dữ liệu cũ
       if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
+        setPosition([latitude, longitude]);
+        setFromStation(fromStation);
+        setToStation(toStation);
 
-      setPosition([latitude, longitude]);
-      setFromStation(fromStation);
-      setToStation(toStation);
+        if (path && Array.isArray(path)) {
+          setPath(path.map((p) => [p.latitude, p.longitude]));
+        }
 
-      if (path && Array.isArray(path)) {
-        setPath(path.map((p) => [p.latitude, p.longitude]));
-      }
+        // 🔥 Lấy dữ liệu chặng (fullPath)
+        const fullPath = additionalData?.fullPath || [];
+        if (Array.isArray(fullPath)) {
+          setFullPathSegments(fullPath);
+        }
 
-      // 🔥 Lấy dữ liệu chặng (fullPath)
-      const fullPath = additionalData?.fullPath || [];
-      if (Array.isArray(fullPath)) {
-        setFullPathSegments(fullPath);
-      }
-
-      lastDataRef.current = newData;
+        lastDataRef.current = newData;
         setIntervalTime(2000);
-    } else {
-      setIntervalTime(30000);
-    }
+      } else {
+        setIntervalTime(10000);
+      }
       setLoading(false);
     } catch (err) {
       console.error("Lỗi lấy dữ liệu tàu:", err);
@@ -136,11 +135,11 @@ function StaffMap() {
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(fetchLivePosition, intervalTime);
-
+    if (intervalTime) {
+      intervalRef.current = setInterval(fetchLivePosition, intervalTime);
+    }
     return () => clearInterval(intervalRef.current);
   }, [intervalTime]);
-
 
   const getCurrentSegmentIndex = (position, segments) => {
     if (!segments.length) return 0;
@@ -168,7 +167,6 @@ function StaffMap() {
     position,
     fullPathSegments
   );
-
 
   return (
     <div className="staff-map-container">
@@ -306,12 +304,11 @@ function StaffMap() {
               ));
             })()}
 
-
             {path.length > 0 && (
               <>
-                <Marker position={path[0]} icon={locationIcon}>
+                {/*<Marker position={path[0]} icon={locationIcon}>
                   <Popup>{fromStation || "Ga xuất phát"}</Popup>
-                </Marker>
+                </Marker>*/}
                 <Marker position={path[path.length - 1]} icon={locationIcon}>
                   <Popup>{toStation || "Ga đến"}</Popup>
                 </Marker>
