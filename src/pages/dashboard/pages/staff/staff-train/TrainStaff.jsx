@@ -146,55 +146,38 @@ function TrainStaff() {
     return station ? station.stationNameVi : "Không xác định";
   };
 
-  const fetchLivePosition = async (train) => {
-    try {
-      const res = await api.get(`/train/${train.id}/position`);
-      const { additionalData } = res.data;
-
-      // Chỉ lấy direction từ fullPath
-      const direction = additionalData?.fullPath?.[0]?.direction ?? null;
-      console.log("👉 Direction đầu tiên:", direction);
-      setDirection(direction);
-      setLoading(false);
-    } catch (err) {
-      console.error("Lỗi lấy dữ liệu tàu:", err);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedTrain) {
-      fetchLivePosition(selectedTrain);
-    }
-  }, [selectedTrain]);
-
   const handleReset = async (train) => {
-    if (!train) {
-      toast.error("Chưa chọn tàu để reset lịch.");
+  if (!train) {
+    toast.error("Chưa chọn tàu để reset lịch.");
+    return;
+  }
+
+  try {
+    // fetch direction luôn cho chắc chắn
+    const res = await api.get(`/train/${train.id}/position`);
+    const { additionalData } = res.data;
+    const dir = additionalData?.fullPath?.[0]?.direction;
+
+    if (dir !== 0 && dir !== 1) {
+      toast.error("Không có direction để reset lịch tàu.");
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("trainIdOrCode", train.id);
+    const formData = new FormData();
+    formData.append("trainIdOrCode", train.id);
 
-      await api.post(`/train/schedule?startFromEnd=${direction}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-      toast.success(
-        `Đặt lại lịch cho tàu ${selectedTrain.trainCode} thành công.`
-      );
-    } catch (error) {
-      console.error(
-        "Lỗi khi reset lịch tàu:",
-        error.response?.data || error
-      );
-      toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
-    }
-  };
+    toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+    await reloadData();
+  } catch (error) {
+    console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+    toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+  }
+};
+
 
   const handleStartTrain = async (train) => {
     try {
@@ -323,19 +306,21 @@ function TrainStaff() {
 
             <Button
               onClick={() => {
-                fetchLivePosition(record);
                 handleViewMapTrain(record);
               }}
+              style={{ marginRight: 8 }}
             >
               Xem bản đồ
             </Button>
 
             <Button
               danger
+              
               onClick={() => {
-                fetchLivePosition(record);
+                setSelectedTrain(record);
                 handleReset(record);
               }}
+              
             >
               Reset
             </Button>
