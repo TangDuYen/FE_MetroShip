@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./AdminPrice.scss";
-import { Button, Card, Space, Spin, Table, Tag, Typography } from "antd";
+import { Button, Card, Empty, Space, Spin, Table, Tag, Typography } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { getAllPrice } from "../../../../../config/metroApi";
 
@@ -59,6 +59,12 @@ function AdminPrice() {
     { title: "Đơn vị", dataIndex: "units", key: "units", width: 300 },
   ];
 
+  const renderEmpty = () => (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_DEFAULT}
+      description="Không có dữ liệu"
+    />
+  );
   return (
     <div className="admin-price-container">
       {/* <Space style={{ marginBottom: 16 }}>
@@ -89,13 +95,16 @@ function AdminPrice() {
             >
               Bảng giá theo trọng lượng
             </Typography.Title>
-            <Table
-              columns={weightColumns}
-              dataSource={price.weightTiers.map((w, i) => ({ ...w, key: i }))}
-              pagination={{ pageSize: 10 }}
-              bordered
-            //   size="small"
-            />
+
+            <ConfigProvider renderEmpty={renderEmpty}>
+              <Table
+                columns={weightColumns}
+                dataSource={price.weightTiers.map((w, i) => ({ ...w, key: i }))}
+                pagination={{ pageSize: 10 }}
+                bordered
+                //   size="small"
+              />
+            </ConfigProvider>
 
             <Typography.Title
               level={4}
@@ -103,13 +112,18 @@ function AdminPrice() {
             >
               Bảng giá theo khoảng cách
             </Typography.Title>
-            <Table
-              columns={distanceColumns}
-              dataSource={price.distanceTiers.map((d, i) => ({ ...d, key: i }))}
-              pagination={{ pageSize: 5 }}
-              bordered
-              size="small"
-            />
+            <ConfigProvider renderEmpty={renderEmpty}>
+              <Table
+                columns={distanceColumns}
+                dataSource={price.distanceTiers.map((d, i) => ({
+                  ...d,
+                  key: i,
+                }))}
+                pagination={{ pageSize: 5 }}
+                bordered
+                size="small"
+              />
+            </ConfigProvider>
           </Card>
         ))}
       </Spin>

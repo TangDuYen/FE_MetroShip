@@ -1,6 +1,16 @@
 import "./AdminInsurance.scss";
 
-import { Button, Card, Input, Select, Space, Spin, Table, Tag } from "antd";
+import {
+  Button,
+  Card,
+  Empty,
+  Input,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
@@ -186,12 +196,21 @@ function AdminInsurance() {
         ></Button>
       </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          columns={columns}
-          dataSource={filteredPolicies}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredPolicies}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
     </div>
   );

@@ -22,6 +22,8 @@ import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/features/counterSlice";
 
 import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
@@ -35,6 +37,7 @@ function Tracking() {
   const [code, setTrackingCode] = useState("");
   const [result, setResult] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     const fetchDataShipment = async () => {
@@ -128,12 +131,25 @@ function Tracking() {
               {new Date(result.scheduledDateTime).toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item>
-              <Link to={PATH_NAME.TRACKING_ORDER.replace(
-                      ":trackingCode",
-                      result.trackingCode
-                    )}>
-                <Button type="primary">Xem chi tiết</Button>
-              </Link>
+              {user ? (
+                <Link
+                  to={PATH_NAME.TRACKING_ORDER.replace(
+                    ":trackingCode",
+                    result.trackingCode
+                  )}
+                >
+                  <Button type="primary">Xem chi tiết</Button>
+                </Link>
+              ) : (
+                <Button
+                  type="primary"
+                  onClick={() =>
+                    toast.info("Bạn cần đăng nhập để xem chi tiết!")
+                  }
+                >
+                  Xem chi tiết
+                </Button>
+              )}
             </Descriptions.Item>
           </Descriptions>
 
@@ -165,7 +181,6 @@ function Tracking() {
             />
           )} */}
 
-          
           {/* <div className="tracking-history">
             {result.history.map((item, idx) => (
               <div

@@ -3,6 +3,7 @@ import "./MetroTrainManagement.scss";
 import {
   Button,
   DatePicker,
+  Empty,
   Form,
   Input,
   Modal,
@@ -247,12 +248,21 @@ function MetroTrainManagement() {
       </Space>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          columns={columns}
-          dataSource={filteredTrains}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredTrains}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
 
       <Modal

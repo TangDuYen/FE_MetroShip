@@ -3,6 +3,7 @@ import "./ParcelCategoryManage.scss";
 import {
   Button,
   Checkbox,
+  Empty,
   Form,
   Input,
   InputNumber,
@@ -209,12 +210,21 @@ function ParcelCategoryManage() {
         ></Button>
       </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
 
       <Modal

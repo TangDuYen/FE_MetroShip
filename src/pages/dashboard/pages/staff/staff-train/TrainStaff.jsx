@@ -41,7 +41,6 @@ const { Option } = Select;
 
 function TrainStaff() {
   const user = useSelector(selectUser);
-  console.log("User data:", user);
 
   const [metroTrains, setMetroTrains] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,43 +57,87 @@ function TrainStaff() {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [direction, setDirection] = useState(null);
+  const [selectedTrain, setSelectedTrain] = useState(null);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   setLoading(true);
+  //   Promise.all([
+  //     getAllRegions(),
+  //     getMetroLinesByStation(decodedUser?.StationId),
+  //     getAllStations(),
+  //   ]).then(([regionsData, metroLinesData, stationsData]) => {
+  //     setRegions(regionsData);
+  //     setMetroLines(metroLinesData);
+  //     setStations(stationsData);
+  //   });
+  //   getMetroTrainsByStation(decodedUser?.StationId)
+  //     .then((data) => {
+  //       // Set the metro trains data
+  //       setMetroTrains(data.items);
+
+  //       // Extract max capacity and max volume from additionalData
+  //       const additionalData = data.additionalData[0];
+  //       const capacity = additionalData.find(
+  //         (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
+  //       );
+  //       const volume = additionalData.find(
+  //         (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
+  //       );
+
+  //       setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
+  //       setMaxVolume(volume ? volume.configValue : "Không xác định");
+
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching metro trains data", error);
+  //     });
+  // }, []);
+
+  // Hàm tìm stationNameVi theo currentStationId
+
+  const reloadData = async () => {
+    if (!decodedUser?.StationId) return;
     setLoading(true);
-    Promise.all([
-      getAllRegions(),
-      getMetroLinesByStation(decodedUser?.StationId),
-      getAllStations(),
-    ]).then(([regionsData, metroLinesData, stationsData]) => {
+    try {
+      const [regionsData, metroLinesData, stationsData, trainData] =
+        await Promise.all([
+          getAllRegions(),
+          getMetroLinesByStation(decodedUser.StationId),
+          getAllStations(),
+          getMetroTrainsByStation(decodedUser.StationId),
+        ]);
+
       setRegions(regionsData);
       setMetroLines(metroLinesData);
       setStations(stationsData);
-    });
-    getMetroTrainsByStation(decodedUser?.StationId)
-      .then((data) => {
-        // Set the metro trains data
-        setMetroTrains(data.items);
 
-        // Extract max capacity and max volume from additionalData
-        const additionalData = data.additionalData[0];
-        const capacity = additionalData.find(
-          (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
-        );
-        const volume = additionalData.find(
-          (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
-        );
+      // set metro trains
+      setMetroTrains(trainData.items);
 
-        setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
-        setMaxVolume(volume ? volume.configValue : "Không xác định");
+      // capacity & volume
+      const additionalData = trainData.additionalData[0];
+      const capacity = additionalData.find(
+        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
+      );
+      const volume = additionalData.find(
+        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
+      );
 
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching metro trains data", error);
-      });
+      setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
+      setMaxVolume(volume ? volume.configValue : "Không xác định");
+    } catch (error) {
+      console.error("Error reload data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    reloadData(); // load lần đầu
   }, []);
 
-  // Hàm tìm stationNameVi theo currentStationId
   const getStationName = (currentStationId) => {
     if (!currentStationId) return "Không xác định";
     const station = stations.find(
@@ -103,13 +146,50 @@ function TrainStaff() {
     return station ? station.stationNameVi : "Không xác định";
   };
 
+  const handleReset = async (train) => {
+  if (!train) {
+    toast.error("Chưa chọn tàu để reset lịch.");
+    return;
+  }
+
+  try {
+    // fetch direction luôn cho chắc chắn
+    const res = await api.get(`/train/${train.id}/position`);
+    const { additionalData } = res.data;
+    const dir = additionalData?.fullPath?.[0]?.direction;
+
+    if (dir !== 0 && dir !== 1) {
+      toast.error("Không có direction để reset lịch tàu.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("trainIdOrCode", train.id);
+
+    await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+    await reloadData();
+  } catch (error) {
+    console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+    toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+  }
+};
+
+
   const handleStartTrain = async (train) => {
     try {
       await api.post(`/train/${train.id}/status`);
       toast.success(`Xác nhận tàu ${train.trainCode} đã rời trạm thành công.`);
+
+      await reloadData();
     } catch (error) {
       console.error("Lỗi khi start tàu:", error);
-      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
+      const errorMessage =
+        error.response?.data?.message ||
+        `Không thể xác nhận tàu ${train.trainCode} rời trạm.`;
       toast.error(errorMessage);
     }
   };
@@ -128,9 +208,12 @@ function TrainStaff() {
       });
 
       toast.success(`Tàu ${train.trainCode} đã được xác nhận đến trạm.`);
+      await reloadData();
     } catch (error) {
       console.error("Lỗi xác nhận tàu đến trạm:", error);
-      const errorMessage = error.response?.data?.message || `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
+      const errorMessage =
+        error.response?.data?.message ||
+        `Không thể xác nhận tàu ${train.trainCode} đã đến trạm.`;
 
       toast.error(errorMessage);
     }
@@ -200,7 +283,7 @@ function TrainStaff() {
       render: (_, record) => {
         const isAtCurrentStation =
           String(record.currentStationId) === String(user?.StationId);
-          const isStatusZero = (record.status) === 0;
+        const isStatusZero = record.status === 0;
 
         return (
           <div className="action-buttons">
@@ -221,8 +304,25 @@ function TrainStaff() {
               Xác nhận tàu đến trạm
             </Button>
 
-            <Button onClick={() => handleViewMapTrain(record)}>
+            <Button
+              onClick={() => {
+                handleViewMapTrain(record);
+              }}
+              style={{ marginRight: 8 }}
+            >
               Xem bản đồ
+            </Button>
+
+            <Button
+              danger
+              
+              onClick={() => {
+                setSelectedTrain(record);
+                handleReset(record);
+              }}
+              
+            >
+              Reset
             </Button>
           </div>
         );
@@ -258,24 +358,6 @@ function TrainStaff() {
     maxCapacity,
     maxVolume,
   }));
-
-  //   const getNearestIndex = (position, path) => {
-  //     if (!path.length) return 0;
-  //     let minIndex = 0;
-  //     let minDist = Infinity;
-  //     path.forEach((p, i) => {
-  //       const dist = Math.sqrt(
-  //         Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2)
-  //       );
-  //       if (dist < minDist) {
-  //         minDist = dist;
-  //         minIndex = i;
-  //       }
-  //     });
-  //     return minIndex;
-  //   };
-
-  //   const currentIndex = getNearestIndex(position, trainPath);
 
   return (
     <div className="staff-train-container">
