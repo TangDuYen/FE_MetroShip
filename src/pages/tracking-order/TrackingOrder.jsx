@@ -44,7 +44,7 @@ function RecenterMap({ position }) {
   const map = useMap();
   useEffect(() => {
     if (position[0] !== 0) {
-      map.setView(position); // 👈 tự động center theo vị trí mới
+      map.setView(position); 
     }
   }, [position, map]);
   return null;

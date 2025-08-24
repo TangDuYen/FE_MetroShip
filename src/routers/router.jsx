@@ -237,6 +237,10 @@ export const router = createBrowserRouter([
         element: lazyLoad(() => import("../pages/services/Service")),
       },
       {
+        path: PATH_NAME.TRACKING,
+        element: lazyLoad(() => import("../pages/tracking/Tracking")),
+      },
+      {
         path: PATH_NAME.EXPRESS_DELIVERY,
         element: lazyLoad(() =>
           import("../pages/services/expressDelivery/ExpressDelivery")
@@ -254,10 +258,7 @@ export const router = createBrowserRouter([
           import("../pages/services/parcelRules/ParcelRules")
         ),
       },
-      {
-        path: PATH_NAME.TRACKING,
-        element: lazyLoad(() => import("../pages/tracking/Tracking")),
-      },
+      
       {
         path: PATH_NAME.SUPPORT,
         element: lazyLoad(() => import("../pages/support/Support")),
