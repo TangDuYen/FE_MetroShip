@@ -1,6 +1,6 @@
 import "./AdminStationManage.scss";
 
-import { Button, Select, Space, Spin, Table } from "antd";
+import { Button, Empty, Select, Space, Spin, Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";
@@ -45,9 +45,9 @@ function AdminStationManage() {
 
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -152,12 +152,21 @@ function AdminStationManage() {
         ></Button>
       </Space>
       <Spin spinning={loading}>
-        <Table
-          dataSource={filtered.map((s, i) => ({ ...s, key: s.id || i }))}
-          columns={columns}
-          pagination={{ pageSize: 10 }}
-          bordered
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            dataSource={filtered.map((s, i) => ({ ...s, key: s.id || i }))}
+            columns={columns}
+            pagination={{ pageSize: 10 }}
+            bordered
+          />
+        </ConfigProvider>
       </Spin>
     </div>
   );

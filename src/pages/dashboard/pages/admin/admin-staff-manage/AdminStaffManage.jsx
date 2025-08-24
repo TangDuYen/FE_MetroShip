@@ -3,6 +3,7 @@ import "./AdminStaffManage.scss";
 import {
   Button,
   DatePicker,
+  Empty,
   Form,
   Input,
   Modal,
@@ -163,9 +164,9 @@ function AdminStaffManage() {
   };
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -283,7 +284,7 @@ function AdminStaffManage() {
               label: s.stationNameVi,
               value: String(s.stationId),
             }))}
-            optionFilterProp="label" 
+            optionFilterProp="label"
           />
           <Select
             mode="multiple"
@@ -311,13 +312,21 @@ function AdminStaffManage() {
           ></Button>
         </Space>
       </div>
-
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <ConfigProvider
+        renderEmpty={() => (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_DEFAULT}
+            description="Không có dữ liệu"
+          />
+        )}
+      >
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
+      </ConfigProvider>
       <Modal
         title={`Giao việc cho ${assigningStaff?.fullName || ""}`}
         open={isAssignModalOpen}
