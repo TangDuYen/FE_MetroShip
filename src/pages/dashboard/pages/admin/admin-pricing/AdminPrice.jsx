@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
 import "./AdminPrice.scss";
-import { Button, Card, Empty, Space, Spin, Table, Tag, Typography } from "antd";
+
+import { Button, Card, ConfigProvider, Empty, Space, Spin, Table, Tag, Typography } from "antd";
+import React, { useEffect, useState } from "react";
+
 import { ReloadOutlined } from "@ant-design/icons";
 import { getAllPrice } from "../../../../../config/metroApi";
 
