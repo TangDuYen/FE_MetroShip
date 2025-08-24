@@ -1,6 +1,6 @@
 import "./UserManagement.scss";
 
-import { Button, Empty, Input, Space, Table } from "antd";
+import { Button, ConfigProvider, Empty, Input, Space, Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";

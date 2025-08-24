@@ -3,6 +3,7 @@ import "./AdminInsurance.scss";
 import {
   Button,
   Card,
+  ConfigProvider,
   Empty,
   Input,
   Select,
@@ -14,10 +15,10 @@ import {
 import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
-import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
-import { getAllInsurance } from "../../../../../config/metroApi";
 import { ReloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { getAllInsurance } from "../../../../../config/metroApi";
+import { useNavigate } from "react-router-dom";
 
 // const fakeInsurancePolicies = [
 //   {

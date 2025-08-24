@@ -1,6 +1,6 @@
 import "./AdminStationManage.scss";
 
-import { Button, Empty, Select, Space, Spin, Table } from "antd";
+import { Button, ConfigProvider, Empty, Select, Space, Spin, Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";

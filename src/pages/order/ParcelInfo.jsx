@@ -41,6 +41,8 @@ function ParcelInfo({
   setChargeableWeight,
   shippingFeeVnd,
   setShippingFeeVnd,
+  departureStation,
+  setDepartureStation
 }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -142,6 +144,8 @@ function ParcelInfo({
               lat: nearest.latitude,
               lng: nearest.longitude
             }));
+
+            setDepartureStation(nearest);
           }
         }
 
@@ -688,6 +692,9 @@ function ParcelInfo({
                       <div>
                         ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
                       </div>
+                      <div>
+                        ⚠️ MetroShip không nhận vận chuyển các loại trang sức (bạc, vàng, kim cương).
+                      </div>
                     </div>
                   );
                 }
@@ -849,6 +856,7 @@ function ParcelInfo({
                       lng: selectedStation.longitude,
                     })
                   );
+                  setDepartureStation(selectedStation);
                 }
               }}
               notFoundContent="Không có trạm trong khu vực này"
