@@ -260,9 +260,34 @@ function HistoryOrders() {
   }
 
   const handleRequestReturn = async (shipmentId) => {
-    toast.success("Yêu cầu hoàn đơn thành công!");
-    await fetchData(); 
-    console.log("Refund shipment", shipmentId);
+    try {
+      const response = await api.post(`/shipments/return/${shipmentId}`);
+      toast.success("Yêu cầu hoàn đơn thành công!");
+
+      const currentDomain = window.location.origin;
+      const paymentPayload = {
+        shipmentId: shipmentId,
+        // transactionType: 1,
+        returnUrl: `${currentDomain}/payment-success`,
+        cancelUrl: `${currentDomain}/payment-fail`,
+      };
+
+      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
+      console.log(res.data);
+
+      // statusCode nằm trực tiếp trong res.data
+      if (res.data?.statusCode === 200 && res.data.data) {
+        window.location.href = res.data.data; // Redirect to VNPay
+      } else {
+        toast.error("Không lấy được link thanh toán!");
+        console.log(paymentPayload);
+      }
+      console.log("Yêu cầu hoàn đơn", shipmentId);
+    } catch (error) {
+      console.log("Lỗi hoàn đơn:", error);
+      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi khi yêu cầu hoàn đơn.";
+      toast.error(errorMessage);
+    }
   }
 
   const filteredGoods = orders.filter((item) => {
@@ -394,7 +419,7 @@ function HistoryOrders() {
       }
 
       //FEEDBACK SHIPMENT
-      if (item.shipmentStatus === 22 && !hasRated) {
+      if (item.shipmentStatus === 21 && !hasRated) {
         actions.push(
           <Button
             type="primary"
@@ -417,7 +442,7 @@ function HistoryOrders() {
       // }
 
       //REFUND SHIPMENT
-      if (item.shipmentStatus === 17) {
+      if (item.shipmentStatus === 16) {
         actions.push(
           <Button
             danger
