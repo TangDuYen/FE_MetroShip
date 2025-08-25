@@ -378,19 +378,19 @@ function TrackingOrder() {
             <div className="custom-progress">
               {[
                 { id: 8, label: "Đã lấy hàng" },
-                { id: 10, label: "Đang giao hàng" },
-                { id: 22, label: "Đã giao hàng" },
+                { id: 9, label: "Đang giao hàng" },
+                { id: 21, label: "Đã giao hàng" },
               ].map((step, idx, arr) => {
                 const isLast = idx === arr.length - 1;
                 const isCompleted = isLast
-                  ? currentStatus === 22 ||
+                  ? currentStatus === 21 ||
                   currentStatus === 24 ||
                   currentStatus === 26
                   : currentStatus >= step.id;
                 const nextStep = arr[idx + 1];
                 const isLineCompleted = nextStep
-                  ? nextStep.id === 22
-                    ? currentStatus === 22 ||
+                  ? nextStep.id === 21
+                    ? currentStatus === 21 ||
                     currentStatus === 24 ||
                     currentStatus === 26
                     : currentStatus >= nextStep.id

@@ -412,10 +412,11 @@ function AdminStaffManage() {
             setShowAdd(false);
             formAdd.resetFields();
             await getAllStaff();
-          } catch (err) {
-            console.error("Add staff error:", err);
+          } catch (error) {
+            console.error("Add staff error:", error);
+            const errorMessage = error.response?.data?.message || error.message;
             toast.error(
-              "Thêm nhân viên thất bại! Nhân viên đã tồn tại trong hệ thống"
+              errorMessage
             );
           }
         }}

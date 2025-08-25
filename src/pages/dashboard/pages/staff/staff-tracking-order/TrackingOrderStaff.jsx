@@ -260,13 +260,16 @@ function TrackingOrderStaff() {
   const handleAction = (shipment) => {
     setSelectedShipment(shipment);
     switch (shipment.shipmentStatus) {
-      case 12:
+      case 11:
         setOpenSurchargeModal(true);
         break;
       case 4:
         setOpenRefundModal(true);
         break;
       case 24:
+        setOpenCompensationModal(true);
+        break;
+      case 25:
         setOpenCompensationModal(true);
         break;
     }
