@@ -426,35 +426,35 @@ function AdminStaffManage() {
             name="userName"
             rules={[{ required: true, message: "Không được để trống tên đăng nhập" }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên đăng nhập"/>
           </Form.Item>
           <Form.Item
             label="Họ tên"
             name="fullName"
             rules={[{ required: true, message: "Không được để trống họ tên" }]}
           >
-            <Input />
+            <Input placeholder="Nhập họ và tên"/>
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
             rules={[{ type: "email", required: true, message: "Không được để trống email" }]}
           >
-            <Input />
+            <Input placeholder="Nhập email"/>
           </Form.Item>
           <Form.Item
             label="Số điện thoại"
             name="phoneNumber"
             rules={[{ required: true, message: "Không được để trống số điện thoại" }]}
           >
-            <Input />
+            <Input placeholder="Nhập số điện thoại"/>
           </Form.Item>
           <Form.Item
             label="Mật khẩu"
             name="password"
             rules={[{ required: true, message: "Không được để trống mật khẩu" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu"/>
           </Form.Item>
           <Form.Item
             label="Xác nhận mật khẩu"
@@ -471,7 +471,7 @@ function AdminStaffManage() {
               }),
             ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập xác nhận mật khẩu"/>
           </Form.Item>
           <Form.Item
             label="Ngày sinh"

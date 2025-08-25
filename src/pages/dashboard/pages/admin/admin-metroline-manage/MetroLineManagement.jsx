@@ -14,7 +14,11 @@ import {
   Table,
   message,
 } from "antd";
-import { DeleteOutlined, EditOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { getAllStations, getMetroLines } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
@@ -160,14 +164,14 @@ function MetroLineManagement() {
 
   return (
     <div className="metro-line-management-container">
-      <div style={{ marginBottom: 16 }}>
+      <Space wrap size="middle" style={{marginBottom: 16 }}>
         <Button type="primary" onClick={openAddModal}>
           Thêm tuyến mới
         </Button>
         <Select
           allowClear
           placeholder="Chọn tuyến"
-          style={{ width: 250, marginLeft: 8}}
+          style={{ width: 400}}
           value={selectedLine}
           onChange={(value) => setSelectedLine(value)}
         >
@@ -181,13 +185,12 @@ function MetroLineManagement() {
         </Select>
         <Button
           className="clear-filter-button"
-          style={{marginLeft: 8}}
           icon={<ReloadOutlined />}
           onClick={() => {
             setSelectedLine(null);
           }}
         ></Button>
-      </div>
+      </Space>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
         <ConfigProvider
