@@ -185,6 +185,8 @@ function TrackingOrderStaff() {
       );
     }
 
+    filtered.sort((a, b) => dayjs(b.lastUpdatedAt).diff(dayjs(a.lastUpdatedAt)));
+    
     setFilteredShipments(filtered);
   };
 
@@ -205,6 +207,8 @@ function TrackingOrderStaff() {
     }
 
     try {
+      setLoading(true);
+
       //UPLOAD IMAGES
       const formData = new FormData();
       formData.append("files", cccdImage);
@@ -237,7 +241,6 @@ function TrackingOrderStaff() {
         });
       }
       const confirmRes = await api.post("/shipments/complete", payload);
-      setLoading(true);
       if (confirmRes.data?.statusCode === 200) {
         toast.success("Xác nhận hoàn thành đơn hàng thành công!");
         setIsUploadModalOpen(false);
@@ -406,6 +409,11 @@ function TrackingOrderStaff() {
             onClickAction = () => handleAction(record, transactionType);
             break;
           case 24: // COMPENSATION
+            buttonLabel = "Bồi thường";
+            transactionType = 4;
+            onClickAction = () => handleAction(record, transactionType);
+            break;
+          case 25: // COMPENSATION
             buttonLabel = "Bồi thường";
             transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);

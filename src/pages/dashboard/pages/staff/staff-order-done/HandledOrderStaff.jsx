@@ -202,7 +202,7 @@ function HandledOrderStaff() {
         //EXPIRED SHIPMENT
         const hasExpired = shipments.some((item) => item.shipmentStatus === 17);
         setExpiredShipment(hasExpired);
-
+        filtered.sort((a, b) => dayjs(b.lastUpdatedAt).diff(dayjs(a.lastUpdatedAt)));
         setFilteredShipments(filtered);
     };
 
