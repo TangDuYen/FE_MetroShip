@@ -153,16 +153,27 @@ function TrackingOrder() {
   };
 
   useEffect(() => {
+    if (!selectedShipment) return;
+
+    if (selectedShipment.shipmentStatus === 9) {
       fetchLivePosition();
-  }, [trackingCode]);
+    } else {
+      // reset map khi chưa đến trạng thái 10
+      setPosition([0, 0]);
+      setPath([]);
+      setFullPathSegments([]);
+    }
+  }, [selectedShipment]);
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (intervalTime) {
+
+    if (selectedShipment?.shipmentStatus === 9 && intervalTime) {
       intervalRef.current = setInterval(fetchLivePosition, intervalTime);
     }
+
     return () => clearInterval(intervalRef.current);
-  }, [intervalTime]);
+  }, [intervalTime, selectedShipment]);
 
   const getCurrentSegmentIndex = (position, segments) => {
     if (!segments.length) return 0;
