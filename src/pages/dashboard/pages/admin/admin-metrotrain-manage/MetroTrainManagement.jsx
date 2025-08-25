@@ -84,6 +84,66 @@ function MetroTrainManagement() {
     fetchInitialData();
   }, []);
 
+  const handleReset = async (train) => {
+    if (!train) {
+      toast.error("Chưa chọn tàu để reset lịch.");
+      return;
+    }
+
+    try {
+      // fetch direction luôn cho chắc chắn
+      const res = await api.get(`/train/${train.id}/position`);
+      const { additionalData } = res.data;
+      const dir = additionalData?.fullPath?.[0]?.direction;
+
+      if (dir !== 0 && dir !== 1) {
+        toast.error("Không có direction để reset lịch tàu.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("trainIdOrCode", train.id);
+
+      await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+    } catch (error) {
+      console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+      toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+    }
+  };
+
+  //KHI NÀO METRO-TRAIN THÊM DIRECTION. THÌ SỬ DỤNG NÀY
+//   const handleReset = async (train) => {
+//   if (!train) {
+//     toast.error("Chưa chọn tàu để reset lịch.");
+//     return;
+//   }
+
+//   const dir = train.direction;
+
+//   if (dir !== 0 && dir !== 1) {
+//     toast.error("Không có direction để reset lịch tàu.");
+//     return;
+//   }
+
+//   try {
+//     const formData = new FormData();
+//     formData.append("trainIdOrCode", train.id);
+
+//     await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+//       headers: { "Content-Type": "multipart/form-data" },
+//     });
+
+//     toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+//   } catch (error) {
+//     console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+//     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+//   }
+// };
+
   // const handleFilterByLine = (lineId) => {
   //   setSelectedLineId(lineId);
   //   if (!lineId) {
@@ -200,6 +260,15 @@ function MetroTrainManagement() {
           >
             {" "}
             Cập nhật{" "}
+          </Button>
+          <Button
+            danger
+            onClick={() => {
+              // setSelectedTrain(record);
+              handleReset(record);
+            }}
+          >
+            Reset
           </Button>
         </Space>
       ),

@@ -14,7 +14,7 @@ import {
   Table,
   message,
 } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, ReloadOutlined } from "@ant-design/icons";
 import { getAllStations, getMetroLines } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
@@ -28,6 +28,7 @@ function MetroLineManagement() {
   const [form] = Form.useForm();
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLine, setSelectedLine] = useState(null);
 
   //API ONE TIME
   useEffect(() => {
@@ -38,6 +39,11 @@ function MetroLineManagement() {
       }
     );
   }, []);
+
+  const filteredLines = selectedLine
+    ? metroLines.filter((line) => line.lineNameVi === selectedLine)
+    : metroLines;
+
   const openAddModal = () => {
     setEditingLine(null);
     form.resetFields();
@@ -158,6 +164,29 @@ function MetroLineManagement() {
         <Button type="primary" onClick={openAddModal}>
           Thêm tuyến mới
         </Button>
+        <Select
+          allowClear
+          placeholder="Chọn tuyến"
+          style={{ width: 250, marginLeft: 8}}
+          value={selectedLine}
+          onChange={(value) => setSelectedLine(value)}
+        >
+          {[...new Set(metroLines.map((line) => line.lineNameVi))].map(
+            (lineName) => (
+              <Select.Option key={lineName} value={lineName}>
+                {lineName}
+              </Select.Option>
+            )
+          )}
+        </Select>
+        <Button
+          className="clear-filter-button"
+          style={{marginLeft: 8}}
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setSelectedLine(null);
+          }}
+        ></Button>
       </div>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
@@ -171,7 +200,7 @@ function MetroLineManagement() {
         >
           <Table
             columns={columns}
-            dataSource={metroLines}
+            dataSource={filteredLines}
             rowKey="id"
             pagination={{ pageSize: 10 }}
           />

@@ -71,7 +71,7 @@ function AdminInsurance() {
       .toLowerCase()
       .includes(searchName.toLowerCase());
     const matchStatus =
-      filteredStatusPolicies === ""
+      !filteredStatusPolicies
         ? true
         : filteredStatusPolicies === "active"
         ? item.isActive
@@ -174,24 +174,27 @@ function AdminInsurance() {
         />
         <Select
           placeholder="Trạng thái"
-          value={filteredStatusPolicies}
-          onChange={(v) => setFilteredStatusPolicies(v)}
+          value={filteredStatusPolicies || undefined}
+          onChange={(v) => setFilteredStatusPolicies(v || "")}
           style={{ width: 400 }}
           allowClear
-        >
-          <Option value="active">
-            <Tag color="green">Đang áp dụng</Tag>
-          </Option>
-          <Option value="inactive">
-            {" "}
-            <Tag color="red">Ngưng hiệu lực</Tag>
-          </Option>
-        </Select>
+          options={[
+            {
+              value: "active",
+              label: <Tag color="green">Đang áp dụng</Tag>,
+            },
+            {
+              value: "inactive",
+              label: <Tag color="red">Ngưng hiệu lực</Tag>,
+            },
+          ]}
+        />
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
           onClick={() => {
-            setFilteredStatusPolicies([]);
+            setFilteredStatusPolicies("");
             setSearchName("");
           }}
         ></Button>
