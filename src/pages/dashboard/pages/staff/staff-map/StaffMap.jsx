@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import metro from "../../../../../assets/metro_station.png";
 import "./StaffMap.scss";
+import "leaflet/dist/leaflet.css";
+
+import { Button, Spin, Typography } from "antd";
 import {
   MapContainer,
   Marker,
@@ -9,13 +10,14 @@ import {
   TileLayer,
   useMap,
 } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+
+import L from "leaflet";
 import api from "../../../../../config/axios";
-import { Button, Spin, Typography } from "antd";
 import { getAllMetroTrains } from "../../../../../config/metroApi";
-import locationIconImg from "../../../../../assets/placeholder.webp";
+import locationIconImg from "../../../../../assets/metro-station.webp";
+import metro from "../../../../../assets/metro_station.png";
 import startStation from "../../../../../assets/train.webp";
 
 function ResizeMapOnShow() {
