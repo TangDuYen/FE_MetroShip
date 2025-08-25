@@ -57,7 +57,7 @@ function HandledOrderStaff() {
     const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 20, 21, 22, 26];
+    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 21, 22, 26];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
