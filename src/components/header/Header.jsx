@@ -4,7 +4,7 @@ import * as signalR from "@microsoft/signalr";
 
 import { GoBell, GoPerson } from "react-icons/go";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Spin, message } from "antd";
+import { Badge, Button, Spin, Tooltip, message } from "antd";
 import connection, { startConnection } from "../../config/signalR";
 import { logout, selectUser } from "../../redux/features/counterSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,6 +16,8 @@ import { PATH_NAME } from "../../constants/pathname";
 import api from "../../config/axios";
 import logo from "../../assets/logo.png";
 import { toast } from "react-toastify";
+import { DeleteOutlined } from "@ant-design/icons";
+import { BiCheckDouble } from "react-icons/bi";
 
 function Header() {
   const [openDropdown, setOpenDropdown] = useState(null); // null | "notification" | "profile"
@@ -30,66 +32,90 @@ function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
- useEffect(() => {
-  if (!user) return;
-
-  const loadNotifications = async () => {
-    try {
-      const res = await api.get("/notifications?PageSize=1000");
-      const items = res.data.data.items || [];
-
-      setNotifications(prev => {
-        const newNoti = items.filter(i => !prev.some(p => p.id === i.id));
-        if (newNoti.length === 0) return prev;
-        return [...newNoti, ...prev];
-      });
-
-      const newUnread = items.filter(i => !i.isRead).length;
-      setUnreadCount(newUnread);
-
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  loadNotifications();
-  const interval = setInterval(loadNotifications, 3600000);
-  return () => clearInterval(interval);
-}, [user?.id]);
-
-
   useEffect(() => {
-  if (!connection || !user?.id) return; // chỉ check id
+    if (!user) return;
 
-  const handleNotification = (notification) => {
-    const newNoti = {
-      id: notification.id || Date.now(),
-      message: notification.message,
-      isRead: false,
-      sentAt: notification.sentAt || new Date().toISOString(),
+    const loadNotifications = async () => {
+      try {
+        setLoading(true);
+
+        // lấy danh sách thông báo
+        const res = await api.get("/notifications?PageSize=1000");
+        const items = res.data.data.items || [];
+        setNotifications(items);
+
+        // lấy số thông báo chưa đọc từ API
+        const unreadRes = await api.get("/notifications/unread-count");
+        setUnreadCount(unreadRes.data.data || 0);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setNotifications(prev => [newNoti, ...prev]);
-    setUnreadCount(prev => prev + 1);
+    loadNotifications();
+  }, [user?.id]);
 
-    toast.info(notification.message, { autoClose: 3000 });
+  const markAllAsRead = async () => {
+    try {
+      const res = await api.put("/notifications/read-all");
+
+      // cập nhật local state sau khi BE confirm
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+
+      console.log("Đã đọc thành công:", res.data || res.status);
+    } catch (err) {
+      console.error("Lỗi đọc tất cả:", err);
+    }
   };
 
-  connection.on("ReceiveNotification", handleNotification);
-
-  startConnection().then(() => {
-    if (connection.state === signalR.HubConnectionState.Connected) {
-      connection.invoke("JoinNotificationGroup")
-        .then(() => console.log("✅ Joined notification group"))
-        .catch(err => console.error("JoinNotificationGroup error:", err));
+  const deleteNotification = async (id) => {
+    try {
+      const res = await api.delete(`/notifications/${id}`);
+      if (res.data?.statusCode === 200) {
+        // Xóa thành công thì cập nhật local state
+        setNotifications((prev) => prev.filter((x) => x.id !== id));
+        toast.success("Đã xóa thông báo");
+      } else {
+        toast.error("Xóa thông báo thất bại");
+      }
+    } catch (err) {
+      console.error("Lỗi xóa thông báo:", err);
+      toast.error("Có lỗi xảy ra khi xóa");
     }
-  });
+  };
 
-  return () => connection.off("ReceiveNotification", handleNotification);
-}, [user?.id]); // dùng user?.id thay vì user object
+  useEffect(() => {
+    if (!connection || !user?.id) return; // chỉ check id
 
+    const handleNotification = (notification) => {
+      const newNoti = {
+        id: notification.id || Date.now(),
+        message: notification.message,
+        isRead: false,
+        sentAt: notification.sentAt || new Date().toISOString(),
+      };
 
+      setNotifications((prev) => [newNoti, ...prev]);
+      setUnreadCount((prev) => prev + 1); // tăng trực tiếp
+      toast.info(notification.message, { autoClose: 3000 });
+    };
 
+    connection.on("ReceiveNotification", handleNotification);
+
+    startConnection().then(() => {
+      if (connection.state === signalR.HubConnectionState.Connected) {
+        connection
+          .invoke("JoinNotificationGroup")
+          .then(() => console.log("✅ Joined notification group"))
+          .catch((err) => console.error("JoinNotificationGroup error:", err));
+      }
+    });
+
+    return () => connection.off("ReceiveNotification", handleNotification);
+  }, [user?.id]); // dùng user?.id thay vì user object
 
   const handleToggleNotification = async () => {
     if (openDropdown === "notification") {
@@ -104,9 +130,6 @@ function Header() {
       // setUnreadCount(0);
     }
   };
-
-
-
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -236,22 +259,6 @@ function Header() {
           </nav>
 
           <div className="header-right" ref={dropdownRef}>
-            {/* <form method="get" className="header-form-search" role="search">
-            <input
-              type="text"
-              name="query"
-              className="header-search-auto"
-              placeholder="Tìm kiếm sản phẩm"
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              className="header-btn-search"
-              aria-label="Tìm kiếm"
-            >
-              <GoSearch />
-            </button>
-          </form> */}
             <button className="hamburger-icon" onClick={toggleMobileMenu}>
               ☰
             </button>
@@ -268,24 +275,78 @@ function Header() {
                 handleToggleNotification();
               }}
             >
-              <GoBell className="header-icons" />
-              {unreadCount > 0 && (
-                <span className="notification-badge">{unreadCount}</span>
-              )}
+              <Badge count={unreadCount} overflowCount={9}>
+                <GoBell className="header-icons" />
+              </Badge>
 
               {openDropdown === "notification" && (
                 <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <Button
+                      type="text"
+                      danger
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNotifications([]);
+                      }}
+                    >
+                      Xóa tất cả
+                    </Button>
+
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<BiCheckDouble style={{ fontSize: 20 }} />}
+                      style={{
+                        color: notifications.some((n) => !n.isRead)
+                          ? "green"
+                          : "gray",
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAllAsRead();
+                      }}
+                    >
+                      Đánh dấu tất cả đã đọc
+                    </Button>
+                  </div>
                   {loading ? (
                     <Spin />
                   ) : notifications.length === 0 ? (
                     <div className="notification-empty">Không có thông báo</div>
                   ) : (
                     notifications.map((n) => (
-                      <div key={n.id} className="notification-item">
-                        <div className="noti-content">{n.message}</div>
+                      <div
+                        key={n.id}
+                        className={`notification-item ${
+                          n.isRead ? "read" : "unread"
+                        }`}
+                      >
+                        <Tooltip title={n.message} placement="topLeft">
+                          <div className="noti-content">{n.message}</div>
+                        </Tooltip>
                         <div className="noti-time">
-                          {new Date(n.sentAt).toLocaleString()}
+                          <span className="time">
+                            {new Date(n.sentAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <span className="date">
+                            {new Date(n.sentAt).toLocaleDateString("vi-VN")}
+                          </span>
                         </div>
+
+                        <button
+                          className="noti-delete-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(n.id);
+                          }}
+                        >
+                          <DeleteOutlined />
+                        </button>
                       </div>
                     ))
                   )}
