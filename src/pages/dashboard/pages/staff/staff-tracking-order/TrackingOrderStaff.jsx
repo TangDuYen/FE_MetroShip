@@ -3,7 +3,7 @@ import './TrackingOrderStaff.scss'
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
@@ -32,7 +32,7 @@ function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [shipmentsStaff, setShipmentsStaff] = useState([]);
   const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
-  const [shipments, setShipments] = useState([]);
+  const [shipmentsStaff2, setShipmentsStaff2] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
@@ -52,14 +52,11 @@ function TrackingOrderStaff() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-  const [metroTrains, setMetroTrains] = useState([]);
-  const [maxCapacity, setMaxCapacity] = useState(0);
-  const [maxVolume, setMaxVolume] = useState(0);
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 24, 25, 26];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 13, 14, 16, 19, 23, 25, 24];
   const [openRefundModal, setOpenRefundModal] = useState(false);
   const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
@@ -86,37 +83,30 @@ function TrackingOrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
-      ([parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines()]).then(
+      ([parcelsData, timeSlotsData, stationData, metroLineData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
-        setMetroTrains(metroTrainData.items);
-
-        //ADDITIONAL DATA TRAIN
-        const additional = metroTrainData.additionalData?.[0] || [];
-        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
-        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
-
-        setMaxCapacity(maxCapacityKg);
-        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
 
   const reloadShipments = async () => {
     try {
-      const [byStation, byDestination] = await Promise.all([
+      const [byStation, byDestination, includeStation] = await Promise.all([
         getShipmentByStaffStation(decodedUser.StationId),
-        getShipmentByStaffDestinationStation(decodedUser.StationId)
+        getShipmentByStaffDestinationStation(decodedUser.StationId),
+        getShipmentByStaffIncludedStation(decodedUser.StationId)
       ]);
 
       setShipmentsStaff(byStation);
       setShipmentsStaff1(byDestination);
+      setShipmentsStaff2(includeStation);
 
 
-      const combined = [...byStation, ...byDestination];
+      const combined = [...byStation, ...byDestination, ...includeStation];
       const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
       setMergedShipments(unique);
 
@@ -276,7 +266,7 @@ function TrackingOrderStaff() {
       case 4:
         setOpenRefundModal(true);
         break;
-      case 25:
+      case 24:
         setOpenCompensationModal(true);
         break;
     }
@@ -397,7 +387,7 @@ function TrackingOrderStaff() {
         let onClickAction = null;
 
         switch (record.shipmentStatus) {
-          case 11: // AWAITING DELIVERED
+          case 10: // AWAITING DELIVERED
             buttonLabel = "Xác nhận giao hàng thành công";
             onClickAction = () => handleOpenModal(record);
             disabled = false;
@@ -412,7 +402,7 @@ function TrackingOrderStaff() {
             transactionType = 3;
             onClickAction = () => handleAction(record, transactionType);
             break;
-          case 25: // COMPENSATION
+          case 24: // COMPENSATION
             buttonLabel = "Bồi thường";
             transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);

@@ -560,7 +560,8 @@ function ParcelInfo({
         }
       }
     } catch (error) {
-      toast.error('Không thể lấy giá vận chuyển. Vui lòng thử lại sau.');
+      const errorMessage = error.resposne?.data?.message || "Không thể lấy giá vận chuyển. Vui lòng thử lại sau.";
+      toast.error(errorMessage);
       console.error('Lỗi fetch giá itinerary:', error);
     }
   };
@@ -879,7 +880,7 @@ function ParcelInfo({
 
           <div className="selector-group">
             {/* DESTINATION REGION */}
-            <div>
+            {/* <div>
               <label>Khu vực</label>
               <Select
                 placeholder="Chọn khu vực"
@@ -894,7 +895,7 @@ function ParcelInfo({
                   </Select.Option>
                 ))}
               </Select>
-            </div>
+            </div> */}
 
             {/* DESTINATION STATION */}
             <label>Trạm nhận:</label>
