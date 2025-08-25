@@ -246,11 +246,11 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập tên loại kiện hàng" },
             ]}
           >
-            <Input />
+            <Input placeholder="Nhập tên loại kiện hàng"/>
           </Form.Item>
 
           <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} placeholder="Nhập mô tả"/>
           </Form.Item>
 
           <Form.Item
@@ -268,7 +268,7 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập khối lượng giới hạn" },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập khối lượng tối đa"/>
           </Form.Item>
 
           <Form.Item
@@ -278,7 +278,7 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập thể tích giới hạn" },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập thể tích tối đa"/>
           </Form.Item>
 
           <Form.Item
@@ -288,7 +288,7 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập chiều dài tối đa" },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều dài tối đa"/>
           </Form.Item>
 
           <Form.Item
@@ -298,7 +298,7 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập chiều rộng tối đa" },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều rộng tối đa"/>
           </Form.Item>
 
           <Form.Item
@@ -308,7 +308,7 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập chiều cao tối đa" },
             ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} />
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều cao tối đa"/>
           </Form.Item>
 
           <Form.Item name="isActive" label="Kích hoạt" valuePropName="checked">
