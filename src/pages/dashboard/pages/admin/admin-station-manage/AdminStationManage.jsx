@@ -1,10 +1,18 @@
 import "./AdminStationManage.scss";
 
-import { Button, ConfigProvider, Empty, Select, Space, Spin, Table } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  Empty,
+  Select,
+  Space,
+  Spin,
+  Table,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";
-import { getAllStations } from "../../../../../config/metroApi";
+import { getAllRegions, getAllStations } from "../../../../../config/metroApi";
 
 function AdminStationManage() {
   const [stations, setStations] = useState([]);
@@ -12,22 +20,31 @@ function AdminStationManage() {
   const [selectedStation, setSelectedStation] = useState([]);
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [regions, setRegions] = useState([]);
 
   useEffect(() => {
-    const fetchStations = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await getAllStations();
-        setStations(response);
+        const [stationsRes, regionsRes] = await Promise.all([
+          getAllStations(),
+          getAllRegions(),
+        ]);
+        setStations(stationsRes);
+        setRegions(regionsRes);
       } catch (error) {
-        console.error("Failed to fetch stations:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchStations();
+    fetchData();
   }, []);
+
+  const regionMap = Object.fromEntries(
+    regions.map((r) => [r.id, r.regionName])
+  );
+
   const stationsWithLine = stations.map((s) => ({
     ...s,
     lineCode: s.stationCode.split("-")[1],
@@ -135,9 +152,9 @@ function AdminStationManage() {
           onChange={setSelectedRegion}
           optionFilterProp="children"
         >
-          {[...new Set(stations.map((s) => s.regionId))].map((region) => (
-            <Select.Option key={region} value={region}>
-              {region}
+          {[...new Set(stations.map((s) => s.regionId))].map((regionId) => (
+            <Select.Option key={regionId} value={regionId}>
+              {regionMap[regionId] || regionId}
             </Select.Option>
           ))}
         </Select>
