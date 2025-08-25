@@ -8,8 +8,8 @@ export const shipmentStatusMap = {
   6: 'Không đến gửi hàng',
   7: 'Chờ gửi hàng',
   8: 'Đã lấy hàng',
-  9: 'Đang lên hàng vào tàu',
-  10: 'Đang vận chuyển',
+  9: 'Đang vận chuyển',
+  10: 'Đợi nhận hàng',
   11: 'Đợi nhận hàng',
   12: 'Thu phí tồn kho',
   13: 'Xuống hàng khỏi tàu',
@@ -22,11 +22,9 @@ export const shipmentStatusMap = {
   20: 'Đã trả đơn',
   21: 'Đã giao',
   22: 'Đã hoàn thành',
-  23: 'Delayed',
-  24: 'Đã đến trạm đích',
-  25: 'Đơn đã hoàn thành. Đợi bồi thường',
-  26: 'Bồi thường',
-  27: 'Đã bồi thường',
+  23: 'Đã đến trạm đích',
+  24: 'Đơn đã hoàn thành. Đợi bồi thường',
+  26: 'Đã bồi thường',
 };
 
 export const trainStatusMap = {
@@ -82,8 +80,7 @@ export const shipmentStatusColorMap = {
   23: "orange",      // Delayed - Chậm trễ 
   24: "cyan",        // Đã đến 
   25: "red",         // Bồi thường 
-  26: "red",       // Đã bồi thường 
-  27: "green",       // Đã bồi thường 
+  26: "green",       // Đã bồi thường 
 };
 
 export const paymentStatusMap = {

@@ -212,18 +212,18 @@ function OrderStaff() {
       key: 'scheduledDateTime',
       render: (_, record) => dayjs(record.scheduledDateTime).format('DD/MM/YYYY'),
     },
-    {
-      title: 'Bắt đầu nhận hàng',
-      dataIndex: 'startReceiveAt',
-      key: 'startReceiveAt',
-      render: (_, record) => {
-        if (record.startReceiveAt) {
-          return dayjs(record.startReceiveAt).format('HH:mm');
-        } else {
-          return <Tag color='red'> Không xác định </Tag>
-        }
-      }
-    },
+    // {
+    //   title: 'Bắt đầu nhận hàng',
+    //   dataIndex: 'startReceiveAt',
+    //   key: 'startReceiveAt',
+    //   render: (_, record) => {
+    //     if (record.startReceiveAt) {
+    //       return dayjs(record.startReceiveAt).format('HH:mm');
+    //     } else {
+    //       return <Tag color='red'> Không xác định </Tag>
+    //     }
+    //   }
+    // },
     {
       title: 'Hạn chót gửi hàng',
       dataIndex: 'scheduledDateTime',

@@ -56,7 +56,7 @@ function TrackingOrderStaff() {
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 24, 25, 26];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 25];
   const [openRefundModal, setOpenRefundModal] = useState(false);
   const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
@@ -266,7 +266,7 @@ function TrackingOrderStaff() {
       case 4:
         setOpenRefundModal(true);
         break;
-      case 25:
+      case 24:
         setOpenCompensationModal(true);
         break;
     }
@@ -387,7 +387,7 @@ function TrackingOrderStaff() {
         let onClickAction = null;
 
         switch (record.shipmentStatus) {
-          case 11: // AWAITING DELIVERED
+          case 10: // AWAITING DELIVERED
             buttonLabel = "Xác nhận giao hàng thành công";
             onClickAction = () => handleOpenModal(record);
             disabled = false;
@@ -402,7 +402,7 @@ function TrackingOrderStaff() {
             transactionType = 3;
             onClickAction = () => handleAction(record, transactionType);
             break;
-          case 25: // COMPENSATION
+          case 24: // COMPENSATION
             buttonLabel = "Bồi thường";
             transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);
