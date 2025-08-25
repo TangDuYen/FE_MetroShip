@@ -318,7 +318,7 @@ function Order() {
       ...(recipientEmail ? { recipientEmail } : {}),
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
-      ...(startReceiveAt && { startReceiveAt: new Date(startReceiveAt).toISOString() }),
+      // ...(startReceiveAt && { startReceiveAt: new Date(startReceiveAt).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
       totalCostVnd: itinerary?.data?.totalCostVnd,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,

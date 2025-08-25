@@ -1,4 +1,5 @@
 import "./TrackingOrder.scss";
+import "leaflet/dist/leaflet.css";
 
 import { Badge, Button, Card, Col, Divider, Row, Tag, Timeline } from "antd";
 import {
@@ -18,19 +19,18 @@ import {
   shipmentStatusSteps,
 } from "../../constants/statusMap";
 
+import L from "leaflet";
 import { PATH_NAME } from "../../constants/pathname";
 import api from "../../config/axios";
 import axios from "axios";
 import dayjs from "dayjs";
 import { getAllParcelCategories } from "../../config/metroApi";
+import locationIconImg from "../../assets/placeholder.webp";
 import metro from "../../assets/metro_station.png";
+import startStation from "../../assets/train.webp";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
-import locationIconImg from "../../assets/placeholder.webp";
-import startStation from "../../assets/train.webp";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 function ResizeMapOnShow() {
   const map = useMap();
@@ -44,7 +44,7 @@ function RecenterMap({ position }) {
   const map = useMap();
   useEffect(() => {
     if (position[0] !== 0) {
-      map.setView(position); 
+      map.setView(position);
     }
   }, [position, map]);
   return null;
@@ -83,7 +83,7 @@ function TrackingOrder() {
   const [fullPathSegments, setFullPathSegments] = useState([]);
   const intervalRef = useRef(null);
   const lastDataRef = useRef(null); // lưu lần fetch trước
-    const [intervalTime, setIntervalTime] = useState(2000);
+  const [intervalTime, setIntervalTime] = useState(2000);
 
   const fetchData = async () => {
     try {
@@ -123,27 +123,27 @@ function TrackingOrder() {
         additionalData,
       };
 
-       if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
-      setPosition([latitude, longitude]);
-      setFromStation(fromStation);
-      setToStation(toStation);
-      setTrainCode(trainCode || ""); // có thì set, không thì để rỗng
+      if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
+        setPosition([latitude, longitude]);
+        setFromStation(fromStation);
+        setToStation(toStation);
+        setTrainCode(trainCode || ""); // có thì set, không thì để rỗng
 
-      if (path && Array.isArray(path)) {
-        setPath(path.map((p) => [p.latitude, p.longitude]));
+        if (path && Array.isArray(path)) {
+          setPath(path.map((p) => [p.latitude, p.longitude]));
+        }
+
+        const fullPath = additionalData?.shipment?.fullPath || [];
+        if (Array.isArray(fullPath)) {
+          setFullPathSegments(fullPath);
+        }
+
+        // lưu dữ liệu để lần sau so sánh
+        lastDataRef.current = newData;
+        setIntervalTime(2000); // có thay đổi → fetch nhanh
+      } else {
+        setIntervalTime(5000); // không đổi → fetch chậm
       }
-
-      const fullPath = additionalData?.shipment?.fullPath || [];
-      if (Array.isArray(fullPath)) {
-        setFullPathSegments(fullPath);
-      }
-
-      // lưu dữ liệu để lần sau so sánh
-      lastDataRef.current = newData;
-      setIntervalTime(2000); // có thay đổi → fetch nhanh
-    } else {
-      setIntervalTime(5000); // không đổi → fetch chậm
-    }
 
       setLoading(false);
     } catch (err) {
@@ -153,16 +153,16 @@ function TrackingOrder() {
   };
 
   useEffect(() => {
-    fetchLivePosition();
+      fetchLivePosition();
   }, [trackingCode]);
 
   useEffect(() => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (intervalTime) {
-        intervalRef.current = setInterval(fetchLivePosition, intervalTime);
-      }
-      return () => clearInterval(intervalRef.current);
-    }, [intervalTime]);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalTime) {
+      intervalRef.current = setInterval(fetchLivePosition, intervalTime);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [intervalTime]);
 
   const getCurrentSegmentIndex = (position, segments) => {
     if (!segments.length) return 0;
@@ -173,7 +173,7 @@ function TrackingOrder() {
       seg.polyline.forEach((p) => {
         const dist = Math.sqrt(
           Math.pow(p.latitude - position[0], 2) +
-            Math.pow(p.longitude - position[1], 2)
+          Math.pow(p.longitude - position[1], 2)
         );
         if (dist < minDist) {
           minDist = dist;
@@ -239,125 +239,124 @@ function TrackingOrder() {
               />
 
               {fullPathSegments.map((segment, index) => {
-              if (!segment.polyline?.length) return null;
+                if (!segment.polyline?.length) return null;
 
-              const pts = segment.polyline.map((p) => [
-                p.latitude,
-                p.longitude,
-              ]);
+                const pts = segment.polyline.map((p) => [
+                  p.latitude,
+                  p.longitude,
+                ]);
 
-              // Segment trước đoạn hiện tại => xám
-              if (index < currentSegmentIndex) {
-                return (
-                  <Polyline
-                    key={index}
-                    positions={pts}
-                    color="gray"
-                    weight={5}
-                  />
-                );
-              }
-
-              // Segment sau đoạn hiện tại => xanh
-              if (index > currentSegmentIndex) {
-                return (
-                  <Polyline
-                    key={index}
-                    positions={pts}
-                    color="blue"
-                    weight={5}
-                  />
-                );
-              }
-
-              // Segment hiện tại => tách đôi (xám + xanh)
-              let nearestIdx = 0;
-              let minDist = Infinity;
-              segment.polyline.forEach((p, i) => {
-                const dist =
-                  Math.pow(p.latitude - position[0], 2) +
-                  Math.pow(p.longitude - position[1], 2);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestIdx = i;
-                }
-              });
-                 return (
-                <React.Fragment key={index}>
-                  {nearestIdx > 0 && (
+                // Segment trước đoạn hiện tại => xám
+                if (index < currentSegmentIndex) {
+                  return (
                     <Polyline
-                      positions={pts.slice(0, nearestIdx + 1)}
+                      key={index}
+                      positions={pts}
                       color="gray"
                       weight={5}
                     />
-                  )}
-                  <Polyline
-                    positions={pts.slice(nearestIdx)}
-                    color="blue"
-                    weight={5}
-                  />
-                </React.Fragment>
-              );
-            })}
+                  );
+                }
+
+                // Segment sau đoạn hiện tại => xanh
+                if (index > currentSegmentIndex) {
+                  return (
+                    <Polyline
+                      key={index}
+                      positions={pts}
+                      color="blue"
+                      weight={5}
+                    />
+                  );
+                }
+
+                // Segment hiện tại => tách đôi (xám + xanh)
+                let nearestIdx = 0;
+                let minDist = Infinity;
+                segment.polyline.forEach((p, i) => {
+                  const dist =
+                    Math.pow(p.latitude - position[0], 2) +
+                    Math.pow(p.longitude - position[1], 2);
+                  if (dist < minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
+                  }
+                });
+                return (
+                  <React.Fragment key={index}>
+                    {nearestIdx > 0 && (
+                      <Polyline
+                        positions={pts.slice(0, nearestIdx + 1)}
+                        color="gray"
+                        weight={5}
+                      />
+                    )}
+                    <Polyline
+                      positions={pts.slice(nearestIdx)}
+                      color="blue"
+                      weight={5}
+                    />
+                  </React.Fragment>
+                );
+              })}
 
               {(() => {
-              const allStations = [];
-              fullPathSegments.forEach((segment, index) => {
-                if (index === 0) {
-                  allStations.push({
-                    name: segment.from.name,
-                    lat: segment.from.latitude,
-                    lng: segment.from.longitude,
-                    type: "start",
-                  });
-                }
-                if (index === fullPathSegments.length - 1) {
-                  allStations.push({
-                    name: segment.to.name,
-                    lat: segment.to.latitude,
-                    lng: segment.to.longitude,
-                    type: "end",
-                  });
-                } else {
-                  allStations.push({
-                    name: segment.to.name,
-                    lat: segment.to.latitude,
-                    lng: segment.to.longitude,
-                    type: "middle",
-                  });
-                }
-              });
-              return allStations.map((station, idx) => (
-                <Marker
-                  key={idx}
-                  position={[station.lat, station.lng]}
-                  icon={
-                    station.type === "start"
-                      ? startMetro
-                      : station.type === "end"
-                      ? locationIcon
-                      : locationIcon
+                const allStations = [];
+                fullPathSegments.forEach((segment, index) => {
+                  if (index === 0) {
+                    allStations.push({
+                      name: segment.from.name,
+                      lat: segment.from.latitude,
+                      lng: segment.from.longitude,
+                      type: "start",
+                    });
                   }
-                >
-                  <Popup>{station.name}</Popup>
-                </Marker>
-              ));
-            })()}
+                  if (index === fullPathSegments.length - 1) {
+                    allStations.push({
+                      name: segment.to.name,
+                      lat: segment.to.latitude,
+                      lng: segment.to.longitude,
+                      type: "end",
+                    });
+                  } else {
+                    allStations.push({
+                      name: segment.to.name,
+                      lat: segment.to.latitude,
+                      lng: segment.to.longitude,
+                      type: "middle",
+                    });
+                  }
+                });
+                return allStations.map((station, idx) => (
+                  <Marker
+                    key={idx}
+                    position={[station.lat, station.lng]}
+                    icon={
+                      station.type === "start"
+                        ? startMetro
+                        : station.type === "end"
+                          ? locationIcon
+                          : locationIcon
+                    }
+                  >
+                    <Popup>{station.name}</Popup>
+                  </Marker>
+                ));
+              })()}
 
-            {position[0] !== 0 && (
-              <Marker position={position} icon={metroIcon}>
-                <Popup>Shipment hiện tại</Popup>
-              </Marker>
-            )}
+              {position[0] !== 0 && (
+                <Marker position={position} icon={metroIcon}>
+                  <Popup>Shipment hiện tại</Popup>
+                </Marker>
+              )}
             </MapContainer>
           </Card>
 
           <Card
             title={
               <Badge
-                className={`status-badge ${
-                  currentStatus >= 20 ? "delivered" : "in-transit"
-                }`}
+                className={`status-badge ${currentStatus >= 20 ? "delivered" : "in-transit"
+                  }`}
               >
                 {shipmentStatusMap[selectedShipment.shipmentStatus] ||
                   "Không rõ trạng thái"}
@@ -374,15 +373,15 @@ function TrackingOrder() {
                 const isLast = idx === arr.length - 1;
                 const isCompleted = isLast
                   ? currentStatus === 22 ||
-                    currentStatus === 25 ||
-                    currentStatus === 27
+                  currentStatus === 24 ||
+                  currentStatus === 26
                   : currentStatus >= step.id;
                 const nextStep = arr[idx + 1];
                 const isLineCompleted = nextStep
                   ? nextStep.id === 22
                     ? currentStatus === 22 ||
-                      currentStatus === 25 ||
-                      currentStatus === 27
+                    currentStatus === 24 ||
+                    currentStatus === 26
                     : currentStatus >= nextStep.id
                   : false;
                 return (
