@@ -205,41 +205,101 @@ function ParcelInfo({
     }
   };
 
+  // const filterValidTimeSlots = (timeSlots, selectedDate) => {
+  //   const now = dayjs();
+  //   const isToday = selectedDate && dayjs(selectedDate).isSame(now, 'day');
+
+  //   return timeSlots.filter(slot => {
+  //     if (!isToday) return true;
+
+  //     const [h, m] = slot.openTime.split(':').map(Number);
+  //     const slotTime = dayjs().hour(h).minute(m).second(0)
+  //       .subtract(slot.scheduleBeforeShiftMinutes || 0, 'minute');
+
+  //     return now.isBefore(slotTime);
+  //   });
+  // };
 
   const filterValidTimeSlots = (timeSlots, selectedDate) => {
     const now = dayjs();
-    const isToday = selectedDate && dayjs(selectedDate).isSame(now, 'day');
+    const isToday = selectedDate && dayjs(selectedDate).isSame(now, "day");
 
     return timeSlots.filter(slot => {
       if (!isToday) return true;
 
-      const [h, m] = slot.openTime.split(':').map(Number);
-      const slotTime = dayjs().hour(h).minute(m).second(0)
-        .subtract(slot.scheduleBeforeShiftMinutes || 0, 'minute');
+      const [coH, coM] = slot.cutOffTime.split(":").map(Number);
+      let cutOff = dayjs().hour(coH).minute(coM).second(0);
 
-      return now.isBefore(slotTime);
+      if (cutOff.isBefore(dayjs().startOf("day").hour(4))) {
+        cutOff = cutOff.add(1, "day");
+      }
+
+      return now.isBefore(cutOff);
     });
   };
 
-  const getSingleTimeOptions = () => {
-    const validSlots = filterValidTimeSlots(timeSlot, selectedDate);
+  // const getSingleTimeOptions = () => {
+  //   const validSlots = filterValidTimeSlots(timeSlot, selectedDate);
 
-    return validSlots.map((slot) => {
-      const [h, m] = slot.openTime.split(':').map(Number);
-      const baseTime = dayjs().hour(h).minute(m).second(0);
+  //   return validSlots.map((slot) => {
+  //     const [h, m] = slot.openTime.split(':').map(Number);
+  //     const baseTime = dayjs().hour(h).minute(m).second(0);
 
-      const latestDrop = baseTime.subtract(slot.scheduleBeforeShiftMinutes || 30, 'minute');
-      const earliestDrop = baseTime.subtract(slot.maxScheduleBeforeShiftMinutes || 120, 'minute');
+  //     const latestDrop = baseTime.subtract(slot.scheduleBeforeShiftMinutes || 30, 'minute');
+  //     const earliestDrop = baseTime.subtract(slot.maxScheduleBeforeShiftMinutes || 120, 'minute');
 
-      return {
-        label: `${earliestDrop.format('HH:mm')} - ${latestDrop.format('HH:mm')}`,
-        value: slot.id,
-      };
-    });
-  };
+  //     return {
+  //       label: `${earliestDrop.format('HH:mm')} - ${latestDrop.format('HH:mm')}`,
+  //       value: slot.id,
+  //     };
+  //   });
+  // };
 
-  const timeOptions = getSingleTimeOptions();
+  const getSingleTimeOptions = (timeSlots, selectedDate) => {
+    const validSlots = filterValidTimeSlots(timeSlots, selectedDate);
 
+    return validSlots.map(slot => ({
+      label: `${slot.startReceivingTime} - ${slot.cutOffTime}`,
+      value: slot.id,
+    }));
+  }
+
+  const timeOptions = getSingleTimeOptions(timeSlot || [], selectedDate);
+
+  // useEffect(() => {
+  //   if (selectedDate || selectedTime) {
+  //     setPickedDate(selectedDate);
+  //     setPickedTime(selectedTime);
+
+  //     if (selectedDate && selectedTime) {
+  //       const dateObj = dayjs(selectedDate);
+  //       const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
+  //       if (selectedSlot) {
+  //         const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
+
+  //         const combinedDateTime = dateObj
+  //           .hour(hour)
+  //           .minute(minute)
+  //           .subtract(selectedSlot.scheduleBeforeShiftMinutes, "minute")
+  //           .second(0)
+  //           .format("YYYY-MM-DDTHH:mm:ss");
+
+  //         const startReceiveAt = dateObj
+  //           .hour(hour)
+  //           .minute(minute)
+  //           .subtract(selectedSlot.maxScheduleBeforeShiftMinutes || 0, "minute")
+  //           .second(0)
+  //           .format("YYYY-MM-DDTHH:mm:ss");
+  //         setTimeSlots(selectedSlot.id);
+  //         setMetroSelector(prev => ({
+  //           ...prev,
+  //           departureDateTime: combinedDateTime,
+  //           startReceiveAt: startReceiveAt,
+  //         }));
+  //       }
+  //     }
+  //   }
+  // }, [selectedDate, selectedTime, timeSlot]);
   useEffect(() => {
     if (selectedDate || selectedTime) {
       setPickedDate(selectedDate);
@@ -248,26 +308,22 @@ function ParcelInfo({
       if (selectedDate && selectedTime) {
         const dateObj = dayjs(selectedDate);
         const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
+
         if (selectedSlot) {
-          const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
+          const [srH, srM] = selectedSlot.startReceivingTime.split(":").map(Number);
+          const [coH, coM] = selectedSlot.cutOffTime.split(":").map(Number);
 
-          const combinedDateTime = dateObj
-            .hour(hour)
-            .minute(minute)
-            .subtract(selectedSlot.scheduleBeforeShiftMinutes, "minute")
-            .second(0)
-            .format("YYYY-MM-DDTHH:mm:ss");
+          const startReceiveAt = dateObj.hour(srH).minute(srM).second(0).format("YYYY-MM-DDTHH:mm:ss");
+          let cutOffAt = dateObj.hour(coH).minute(coM).second(0);
 
-          const startReceiveAt = dateObj
-            .hour(hour)
-            .minute(minute)
-            .subtract(selectedSlot.maxScheduleBeforeShiftMinutes || 0, "minute")
-            .second(0)
-            .format("YYYY-MM-DDTHH:mm:ss");
+          if (cutOffAt.isBefore(startReceiveAt)) {
+            cutOffAt = cutOffAt.add(1, "day");
+          }
+
           setTimeSlots(selectedSlot.id);
           setMetroSelector(prev => ({
             ...prev,
-            departureDateTime: combinedDateTime,
+            departureDateTime: cutOffAt.format("YYYY-MM-DDTHH:mm:ss"),
             startReceiveAt: startReceiveAt,
           }));
         }
@@ -879,7 +935,7 @@ function ParcelInfo({
                   station.stationId !== displayedDepartureStationId)//FILTER NOT SAME AS DEPARTURE
                 .map(station => (
                   <Option key={station.stationId} value={station.stationId}>
-                    {station.stationNameVi}
+                    {station.stationNameVi} 
                   </Option>
                 ))}
             </Select>
@@ -909,7 +965,7 @@ function ParcelInfo({
                     placeholder="Chọn giờ gửi"
                     value={selectedTime}
                     onChange={(value) => setSelectedTime(value)}
-                    style={{ marginBottom: '1em', marginRight: '1em' }}
+                    style={{ marginBottom: '1em', marginRight: '1em', width: '200px' }}
                   >
                     {timeOptions.map((opt) => (
                       <Option key={opt.value} value={opt.value}>
