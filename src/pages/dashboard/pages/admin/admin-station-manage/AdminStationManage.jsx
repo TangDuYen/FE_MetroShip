@@ -1,10 +1,18 @@
 import "./AdminStationManage.scss";
 
-import { Button, Select, Space, Spin, Table } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  Empty,
+  Select,
+  Space,
+  Spin,
+  Table,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";
-import { getAllStations } from "../../../../../config/metroApi";
+import { getAllRegions, getAllStations } from "../../../../../config/metroApi";
 
 function AdminStationManage() {
   const [stations, setStations] = useState([]);
@@ -12,22 +20,31 @@ function AdminStationManage() {
   const [selectedStation, setSelectedStation] = useState([]);
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [regions, setRegions] = useState([]);
 
   useEffect(() => {
-    const fetchStations = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await getAllStations();
-        setStations(response);
+        const [stationsRes, regionsRes] = await Promise.all([
+          getAllStations(),
+          getAllRegions(),
+        ]);
+        setStations(stationsRes);
+        setRegions(regionsRes);
       } catch (error) {
-        console.error("Failed to fetch stations:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchStations();
+    fetchData();
   }, []);
+
+  const regionMap = Object.fromEntries(
+    regions.map((r) => [r.id, r.regionName])
+  );
+
   const stationsWithLine = stations.map((s) => ({
     ...s,
     lineCode: s.stationCode.split("-")[1],
@@ -45,9 +62,9 @@ function AdminStationManage() {
 
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -135,9 +152,9 @@ function AdminStationManage() {
           onChange={setSelectedRegion}
           optionFilterProp="children"
         >
-          {[...new Set(stations.map((s) => s.regionId))].map((region) => (
-            <Select.Option key={region} value={region}>
-              {region}
+          {[...new Set(stations.map((s) => s.regionId))].map((regionId) => (
+            <Select.Option key={regionId} value={regionId}>
+              {regionMap[regionId] || regionId}
             </Select.Option>
           ))}
         </Select>
@@ -152,12 +169,21 @@ function AdminStationManage() {
         ></Button>
       </Space>
       <Spin spinning={loading}>
-        <Table
-          dataSource={filtered.map((s, i) => ({ ...s, key: s.id || i }))}
-          columns={columns}
-          pagination={{ pageSize: 10 }}
-          bordered
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            dataSource={filtered.map((s, i) => ({ ...s, key: s.id || i }))}
+            columns={columns}
+            pagination={{ pageSize: 10 }}
+            bordered
+          />
+        </ConfigProvider>
       </Spin>
     </div>
   );

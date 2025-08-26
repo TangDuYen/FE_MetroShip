@@ -11,7 +11,6 @@ import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
 import customerIcon from '../../assets/placeholder.webp';
 import dayjs from 'dayjs';
-import { getAllTransactionTypes } from '../../config/metroApi';
 import metroMarker from '../../assets/metro-station.webp';
 import { selectUser } from '../../redux/features/counterSlice';
 import startStation from '../../assets/train.webp';
@@ -60,6 +59,7 @@ function Order() {
   const nav = useNavigate();
   const [routeSolutions, setRouteSolutions] = useState([]); // routeSolutions from api
   const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0); // selectedRouteSolutions by user
+  const [departureStation, setDepartureStation] = useState(null);
   const [priceVnd, setPriceVnd] = useState(null);
   const [isScheduleWarningModalOpen, setIsScheduleWarningModalOpen] = useState(false);
 
@@ -159,6 +159,8 @@ function Order() {
           setChargeableWeight={setChargeableWeight}
           shippingFeeVnd={shippingFeeVnd}
           setShippingFeeVnd={setShippingFeeVnd}
+          departureStation={departureStation}
+          setDepartureStation={setDepartureStation}
           onNext={() => setCurrentStep(2)}
         />
       ),
@@ -316,7 +318,7 @@ function Order() {
       ...(recipientEmail ? { recipientEmail } : {}),
       ...(recipientNationalId && { recipientNationalId }),
       ...(departureDateTime && { scheduledDateTime: new Date(departureDateTime).toISOString() }),
-      ...(startReceiveAt && { startReceiveAt: new Date(startReceiveAt).toISOString() }),
+      // ...(startReceiveAt && { startReceiveAt: new Date(startReceiveAt).toISOString() }),
       ...(timeSlots && { timeSlotId: timeSlots }),
       totalCostVnd: itinerary?.data?.totalCostVnd,
       totalShippingFeeVnd: itinerary?.data?.totalShippingFeeVnd || 0,
@@ -390,6 +392,16 @@ function Order() {
                 </>
               )}
 
+              {!routeSolutions.length && departureStation && (
+                <>
+                  <Marker
+                    position={[departureStation.latitude, departureStation.longitude]}
+                    icon={startMetro}>
+                    <Popup>{departureStation.stationNameVi}</Popup>
+                  </Marker>
+                </>
+              )}
+
               {routeSolutions.length > 0 &&
                 routeSolutions[selectedSolutionIndex]?.data?.routes.map((routeLeg) => {
                   const stations = routeSolutions[selectedSolutionIndex]?.data?.stations || [];
@@ -421,8 +433,6 @@ function Order() {
                   </Marker>
                 ))}
             </MapContainer>
-
-
           </div>
           <div className="order__container--vertical">
             <div className="order__text">Thông tin đơn hàng</div>

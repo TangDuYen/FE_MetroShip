@@ -1,33 +1,87 @@
+// export const shipmentStatusMap = {
+//   0: 'Chờ thanh toán',
+//   1: 'Từ chối',
+//   2: 'Không thanh toán',
+//   3: 'Đã hủy',
+//   4: 'Chờ hoàn tiền',
+//   5: 'Đã hoàn tiền',
+//   6: 'Không đến gửi hàng',
+//   7: 'Chờ gửi hàng',
+//   8: 'Đã lấy hàng',
+//   9: 'Đang vận chuyển',
+//   10: 'Đợi nhận hàng',
+//   11: 'Thu phí tồn kho',
+//   13: 'Xuống hàng khỏi tàu',
+//   14: 'Đợi chuyển tàu',
+//   15: 'Đợi chuyển tàu',
+//   16: 'Quá hạn',
+//   17: 'Quá hạn',
+//   18: 'Trả đơn',
+//   19: 'Hoàn đơn',
+//   21: 'Đã hoàn thành',
+//   22: 'Delayed',
+//   23: 'Đã đến trạm đích',
+//   24: 'Đơn đã hoàn thành. Đợi bồi thường',
+//   25: 'Đợi bồi thường',
+//   26: 'Đã bồi thường',
+//   27: 'Đã bồi thường',
+// };
+
 export const shipmentStatusMap = {
   0: 'Chờ thanh toán',
   1: 'Từ chối',
-  2: 'Không thanh toán',
+  2: 'Chưa thanh toán',
   3: 'Đã hủy',
   4: 'Chờ hoàn tiền',
   5: 'Đã hoàn tiền',
-  6: 'Không đến gửi hàng',
+  6: 'Không gửi hàng',
   7: 'Chờ gửi hàng',
   8: 'Đã lấy hàng',
-  9: 'Đang lên hàng vào tàu',
-  10: 'Đang vận chuyển',
-  11: 'Đợi nhận hàng',
-  12: 'Thu phí tồn kho',
-  13: 'Xuống hàng khỏi tàu',
-  14: 'Đang lưu kho',
-  15: 'Đợi chuyển tàu',
-  16: 'Đang chuyển tàu',
-  17: 'Quá hạn',
-  18: 'Trả đơn',
-  19: 'Đang trả đơn',
-  20: 'Đã trả đơn',
-  21: 'Đã giao',
-  22: 'Đã hoàn thành',
-  23: 'Delayed',
-  24: 'Đã đến trạm đích',
-  25: 'Đơn đã hoàn thành. Đợi bồi thường',
-  26: 'Bồi thường',
-  27: 'Đã bồi thường',
+  9: 'Đang vận chuyển',
+  10: 'Chờ nhận hàng',
+  11: 'Thu phụ phí',
+  13: 'Xuống hàng',
+  14: 'Chờ chuyển tàu',
+  16: 'Quá hạn',
+  19: 'Hoàn đơn',
+  21: 'Hoàn thành',
+  22: 'Trì hoãn',
+  23: 'Đến trạm đích',
+  24: 'Đã giao. Chờ bồi thường',
+  25: 'Chờ bồi thường', 
+  26: 'Đã bồi thường',
 };
+
+export const shipmentStatusColorMap = {
+  0: "orange",       // Chờ thanh toán
+  1: "red",          // Từ chối
+  2: "volcano",      // Không thanh toán
+  3: "magenta",      // Đã hủy
+  4: "gold",         // Chờ hoàn tiền
+  5: "green",        // Đã hoàn tiền
+  6: "purple",       // Không đến gửi hàng
+  7: "blue",         // Chờ gửi hàng
+  8: "cyan",         // Đã lấy hàng
+  9: "processing",   // Đang lên hàng vào tàu 
+  10: "lime",        // Đang vận chuyển 
+  11: "geekblue",    // Đợi nhận hàng 
+  12: "red",         // Thu phí tồn kho 
+  13: "volcano",     // Xuống hàng khỏi tàu
+  14: "orange",      // Đang lưu kho
+  15: "red",         // Đợi chuyển tàu
+  16: "volcano",      // Đang chuyển tàu
+  17: "volcano",     // Quá hạn
+  18: "blue",        // Trả đơn
+  19: "purple",     // Đang trả đơn
+  20: "green",       // Đã trả đơn
+  21: "green",     // Đã giao
+  22: "volcano",     // Đã hoàn thành
+  23: "blue",      // Delayed - Chậm trễ 
+  24: "pink",        // Đã đến 
+  25: "red",         // Bồi thường 
+  26: "green",       // Đã bồi thường 
+};
+
 
 export const trainStatusMap = {
   0: "Chưa được lập lịch",             // NotScheduled
@@ -53,37 +107,6 @@ export const trainStatusColorMap = {
   8: "volcano",  // đỏ cam (delay)
   9: "red",      // đỏ (cancelled)
   10: "success", // xanh lá (completed)
-};
-
-export const shipmentStatusColorMap = {
-  0: "orange",       // Chờ thanh toán
-  1: "red",          // Từ chối
-  2: "volcano",      // Không thanh toán
-  3: "magenta",      // Đã hủy
-  4: "gold",         // Chờ hoàn tiền
-  5: "green",        // Đã hoàn tiền
-  6: "purple",       // Không đến gửi hàng
-  7: "blue",         // Chờ gửi hàng
-  8: "cyan",         // Đã lấy hàng
-  9: "processing",   // Đang lên hàng vào tàu 
-  10: "lime",        // Đang vận chuyển 
-  11: "geekblue",    // Đợi nhận hàng 
-  12: "red",         // Thu phí tồn kho 
-  13: "volcano",     // Xuống hàng khỏi tàu
-  14: "orange",      // Đang lưu kho
-  15: "red",         // Đợi chuyển tàu
-  16: "purple",      // Đang chuyển tàu
-  17: "volcano",     // Quá hạn
-  18: "blue",        // Trả đơn
-  19: "success",     // Đang trả đơn
-  20: "green",       // Đã trả đơn
-  21: "warning",     // Đã giao
-  22: "magenta",     // Đã hoàn thành
-  23: "orange",      // Delayed - Chậm trễ 
-  24: "cyan",        // Đã đến 
-  25: "red",         // Bồi thường 
-  26: "red",       // Đã bồi thường 
-  27: "green",       // Đã bồi thường 
 };
 
 export const paymentStatusMap = {

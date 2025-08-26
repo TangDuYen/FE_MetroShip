@@ -2,8 +2,8 @@ import { PATH_NAME } from "../constants/pathname";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-const baseUrl = "https://localhost:7085/api/";
-// const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
+// const baseUrl = "https://localhost:7085/api/";
+const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
 const config = {
   baseURL: baseUrl,
   timeout: 3000000,
@@ -93,6 +93,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem('refreshTokenExpiredTime');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('staffAssignments');
       window.location.href = PATH_NAME.LOGIN;
     }
     return Promise.reject(error);

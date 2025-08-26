@@ -1,6 +1,6 @@
 import "./UserManagement.scss";
 
-import { Button, Input, Space, Table } from "antd";
+import { Button, ConfigProvider, Empty, Input, Space, Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";
@@ -30,9 +30,9 @@ function UserManagement() {
 
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -85,12 +85,21 @@ function UserManagement() {
           }}
         ></Button>
       </Space>
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <ConfigProvider
+        renderEmpty={() => (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_DEFAULT}
+            description="Không có dữ liệu"
+          />
+        )}
+      >
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
+      </ConfigProvider>
     </div>
   );
 }

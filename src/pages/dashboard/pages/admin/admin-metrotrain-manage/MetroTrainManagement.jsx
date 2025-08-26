@@ -2,7 +2,9 @@ import "./MetroTrainManagement.scss";
 
 import {
   Button,
+  ConfigProvider,
   DatePicker,
+  Empty,
   Form,
   Input,
   Modal,
@@ -11,6 +13,7 @@ import {
   Space,
   Spin,
   Table,
+  Tag,
 } from "antd";
 import {
   DeleteOutlined,
@@ -20,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import {
   getAllMetroTrains,
+  getAllStations,
   getMetroLines,
   getMetroTimeSlots,
 } from "../../../../../config/metroApi";
@@ -27,6 +31,10 @@ import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
 import { toast } from "react-toastify";
+import {
+  trainStatusColorMap,
+  trainStatusMap,
+} from "../../../../../constants/statusMap";
 
 function MetroTrainManagement() {
   const [metroTrains, setMetroTrains] = useState([]);
@@ -43,6 +51,9 @@ function MetroTrainManagement() {
   const [lineMap, setLineMap] = useState({});
   const [timeSlots, setTimeSlots] = useState([]);
   const [searchTrainCode, setSearchTrainCode] = useState("");
+  const [stations, setStations] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [modalMode, setModalMode] = useState("add");
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -76,11 +87,75 @@ function MetroTrainManagement() {
 
       setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
       setMaxVolume(volume ? volume.configValue : "Không xác định");
+
+      const stationRes = await getAllStations();
+      setStations(stationRes || []);
+
       setLoading(false);
     };
 
     fetchInitialData();
   }, []);
+
+  const handleReset = async (train) => {
+    if (!train) {
+      toast.error("Chưa chọn tàu để reset lịch.");
+      return;
+    }
+
+    try {
+      // fetch direction luôn cho chắc chắn
+      const res = await api.get(`/train/${train.id}/position`);
+      const { additionalData } = res.data;
+      const dir = additionalData?.fullPath?.[0]?.direction;
+
+      if (dir !== 0 && dir !== 1) {
+        toast.error("Không có direction để reset lịch tàu.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("trainIdOrCode", train.id);
+
+      await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+    } catch (error) {
+      console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+      toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+    }
+  };
+
+  //KHI NÀO METRO-TRAIN THÊM DIRECTION. THÌ SỬ DỤNG NÀY
+  //   const handleReset = async (train) => {
+  //   if (!train) {
+  //     toast.error("Chưa chọn tàu để reset lịch.");
+  //     return;
+  //   }
+
+  //   const dir = train.direction;
+
+  //   if (dir !== 0 && dir !== 1) {
+  //     toast.error("Không có direction để reset lịch tàu.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("trainIdOrCode", train.id);
+
+  //     await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
+
+  //     toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+  //   } catch (error) {
+  //     console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+  //     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+  //   }
+  // };
 
   // const handleFilterByLine = (lineId) => {
   //   setSelectedLineId(lineId);
@@ -110,22 +185,42 @@ function MetroTrainManagement() {
       );
     }
 
+    if (selectedStatus != null) {
+      filtered = filtered.filter((train) => train.status === selectedStatus);
+    }
+
     setFilteredTrains(filtered);
   };
 
   useEffect(() => {
     applyFilters();
-  }, [selectedLineId, searchTrainCode]);
+  }, [selectedLineId, searchTrainCode, selectedStatus]);
 
+  const getStationName = (currentStationId) => {
+    if (!currentStationId) return "Không xác định";
+    const station = stations.find(
+      (s) => String(s.stationId) === String(currentStationId)
+    );
+    return station ? station.stationNameVi : "Không xác định";
+  };
   const openAddModal = () => {
     form.resetFields();
     setEditingTrain(null);
+    setModalMode("add");
     setIsModalOpen(true);
   };
 
   const openEditModal = (train) => {
     setEditingTrain(train);
     form.setFieldsValue(train);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  const openAssignModal = (train) => {
+    setEditingTrain(train);
+    form.setFieldsValue(train);
+    setModalMode("assign");
     setIsModalOpen(true);
   };
 
@@ -177,6 +272,22 @@ function MetroTrainManagement() {
       render: () => maxVolume,
     },
     {
+      title: "Vị trí hiện tại",
+      dataIndex: "currentStationId",
+      key: "currentStationId",
+      render: (currentStationId) => getStationName(currentStationId),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={trainStatusColorMap[status]}>
+          {trainStatusMap[status] || "Không xác định"}
+        </Tag>
+      ),
+    },
+    {
       title: "Hành động",
       render: (_, record) => (
         <Space>
@@ -187,7 +298,7 @@ function MetroTrainManagement() {
               color: "white",
               border: "#0066CC",
             }}
-            onClick={() => openEditModal(record)}
+            onClick={() => openAssignModal(record)}
           >
             {" "}
             Phân tàu{" "}
@@ -198,6 +309,15 @@ function MetroTrainManagement() {
           >
             {" "}
             Cập nhật{" "}
+          </Button>
+          <Button
+            danger
+            onClick={() => {
+              // setSelectedTrain(record);
+              handleReset(record);
+            }}
+          >
+            Reset
           </Button>
         </Space>
       ),
@@ -231,36 +351,74 @@ function MetroTrainManagement() {
         </Select>
         <Input.Search
           placeholder="Tìm mã tàu"
-          style={{ width: 250 }}
+          style={{ width: 300 }}
           value={searchTrainCode}
           onChange={(e) => setSearchTrainCode(e.target.value)}
         />
+        <Select
+          placeholder="Trạng thái"
+          allowClear
+          style={{ width: 300 }}
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+        >
+          {Object.entries(trainStatusMap).map(([key, value]) => (
+            <Select.Option key={key} value={parseInt(key)}>
+              <Tag color={trainStatusColorMap[key]} style={{ marginRight: 8 }}>
+                {value}
+              </Tag>
+            </Select.Option>
+          ))}
+        </Select>
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
           onClick={() => {
             setSearchTrainCode("");
             setSelectedLineId([]);
+            setSelectedStatus(null);
             setFilteredTrains(allTrains);
           }}
         ></Button>
       </Space>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          columns={columns}
-          dataSource={filteredTrains}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredTrains}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
 
       <Modal
-        title={editingTrain ? "Phân tàu" : "Cập nhật tàu"}
+        title={
+          modalMode === "add"
+            ? "Thêm tàu"
+            : modalMode === "edit"
+            ? "Cập nhật tàu"
+            : "Phân tàu"
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSubmit}
-        okText={editingTrain ? "Phân tàu" : "Thêm"}
+        okText={
+          modalMode === "add"
+            ? "Thêm"
+            : modalMode === "edit"
+            ? "Cập nhật"
+            : "Phân tàu"
+        }
         cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
@@ -269,15 +427,16 @@ function MetroTrainManagement() {
             label="Mã tàu"
             rules={[{ required: true, message: "Vui lòng nhập mã tàu" }]}
           >
-            <Input disabled />
+            <Input placeholder="Nhập mã tàu" disabled={modalMode !== "add"} />
           </Form.Item>
 
           <Form.Item
+            placeholder="Nhập Model tàu"
             name="modelName"
             label="Model tàu"
             rules={[{ required: true, message: "Vui lòng nhập model tàu" }]}
           >
-            <Input disabled />
+            <Input placeholder="Nhập model tàu" disabled={modalMode !== "add"} />
           </Form.Item>
 
           <Form.Item

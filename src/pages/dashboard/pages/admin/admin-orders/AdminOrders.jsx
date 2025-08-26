@@ -4,6 +4,7 @@ import {
   Button,
   ConfigProvider,
   DatePicker,
+  Empty,
   Input,
   Modal,
   Select,
@@ -336,12 +337,21 @@ function AdminOrders() {
         ></Button>
       </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          dataSource={filteredData}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            dataSource={filteredData}
+            columns={columns}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
 
       <Modal

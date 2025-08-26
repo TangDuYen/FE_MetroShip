@@ -2,14 +2,15 @@ import "./AdminStaffManage.scss";
 
 import {
   Button,
+  ConfigProvider,
   DatePicker,
+  Empty,
   Form,
   Input,
   Modal,
   Select,
   Space,
   Table,
-  message,
 } from "antd";
 import {
   getAllAsignedStaffRole,
@@ -129,9 +130,9 @@ function AdminStaffManage() {
         prev.map((user) =>
           user.id === assigningStaff.id
             ? {
-                ...user,
-                assignedStation: station?.stationNameVi || "Đã phân công",
-              }
+              ...user,
+              assignedStation: station?.stationNameVi || "Đã phân công",
+            }
             : user
         )
       );
@@ -163,9 +164,9 @@ function AdminStaffManage() {
   };
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -283,7 +284,7 @@ function AdminStaffManage() {
               label: s.stationNameVi,
               value: String(s.stationId),
             }))}
-            optionFilterProp="label" 
+            optionFilterProp="label"
           />
           <Select
             mode="multiple"
@@ -311,13 +312,21 @@ function AdminStaffManage() {
           ></Button>
         </Space>
       </div>
-
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <ConfigProvider
+        renderEmpty={() => (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_DEFAULT}
+            description="Không có dữ liệu"
+          />
+        )}
+      >
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
+      </ConfigProvider>
       <Modal
         title={`Giao việc cho ${assigningStaff?.fullName || ""}`}
         open={isAssignModalOpen}
@@ -361,7 +370,7 @@ function AdminStaffManage() {
             />
           </Form.Item>
 
-          <Form.Item label="Ca trực" name="timeSlotId">
+          {/* <Form.Item label="Ca trực" name="timeSlotId">
             <Select
               placeholder="Chọn ca làm việc"
               options={timeSlots.map((slot) => ({
@@ -369,7 +378,7 @@ function AdminStaffManage() {
                 value: slot.id,
               }))}
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item label="Công việc" name="role" rules={[{ required: true }]}>
             <Select
@@ -403,10 +412,11 @@ function AdminStaffManage() {
             setShowAdd(false);
             formAdd.resetFields();
             await getAllStaff();
-          } catch (err) {
-            console.error("Add staff error:", err);
+          } catch (error) {
+            console.error("Add staff error:", error);
+            const errorMessage = error.response?.data?.message || error.message;
             toast.error(
-              "Thêm nhân viên thất bại! Nhân viên đã tồn tại trong hệ thống"
+              errorMessage
             );
           }
         }}
@@ -415,44 +425,44 @@ function AdminStaffManage() {
           <Form.Item
             label="Tên đăng nhập"
             name="userName"
-            rules={[{ required: true, message: "Bắt buộc" }]}
+            rules={[{ required: true, message: "Không được để trống tên đăng nhập" }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên đăng nhập"/>
           </Form.Item>
           <Form.Item
             label="Họ tên"
             name="fullName"
-            rules={[{ required: true, message: "Bắt buộc" }]}
+            rules={[{ required: true, message: "Không được để trống họ tên" }]}
           >
-            <Input />
+            <Input placeholder="Nhập họ và tên"/>
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
-            rules={[{ type: "email", required: true }]}
+            rules={[{ type: "email", required: true, message: "Không được để trống email" }]}
           >
-            <Input />
+            <Input placeholder="Nhập email"/>
           </Form.Item>
           <Form.Item
             label="Số điện thoại"
             name="phoneNumber"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Không được để trống số điện thoại" }]}
           >
-            <Input />
+            <Input placeholder="Nhập số điện thoại"/>
           </Form.Item>
           <Form.Item
             label="Mật khẩu"
             name="password"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Không được để trống mật khẩu" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu"/>
           </Form.Item>
           <Form.Item
             label="Xác nhận mật khẩu"
             name="confirmPassword"
             dependencies={["password"]}
             rules={[
-              { required: true, message: "Bắt buộc" },
+              { required: true, message: "Không được để trống mật khẩu" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue("password") === value)
@@ -462,7 +472,7 @@ function AdminStaffManage() {
               }),
             ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập xác nhận mật khẩu"/>
           </Form.Item>
           <Form.Item
             label="Ngày sinh"

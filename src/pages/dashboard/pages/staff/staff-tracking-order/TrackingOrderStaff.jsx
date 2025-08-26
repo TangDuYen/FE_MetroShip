@@ -1,13 +1,14 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { formatCurrency, parcelStatusMap, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
 import StaffIcon from '../../../../../assets/profile.webp';
+import TabPane from 'antd/es/tabs/TabPane';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import isBetween from "dayjs/plugin/isBetween";
@@ -32,7 +33,7 @@ function TrackingOrderStaff() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [shipmentsStaff, setShipmentsStaff] = useState([]);
   const [shipmentsStaff1, setShipmentsStaff1] = useState([]);
-  const [shipments, setShipments] = useState([]);
+  const [shipmentsStaff2, setShipmentsStaff2] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
@@ -52,20 +53,16 @@ function TrackingOrderStaff() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-  const [metroTrains, setMetroTrains] = useState([]);
-  const [maxCapacity, setMaxCapacity] = useState(0);
-  const [maxVolume, setMaxVolume] = useState(0);
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 24, 25, 26];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 13, 14, 16, 19, 23, 25, 24];
   const [openRefundModal, setOpenRefundModal] = useState(false);
   const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [mergedShipments, setMergedShipments] = useState([]);
-
 
   const startIndex = (currentPage - 1) * pageSize;
 
@@ -86,37 +83,30 @@ function TrackingOrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId)]).then(
-      ([parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData]) => {
+    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines()]).then(
+      ([parcelsData, timeSlotsData, stationData, metroLineData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
-        setMetroTrains(metroTrainData.items);
-
-        //ADDITIONAL DATA TRAIN
-        const additional = metroTrainData.additionalData?.[0] || [];
-        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
-        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
-
-        setMaxCapacity(maxCapacityKg);
-        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
 
   const reloadShipments = async () => {
     try {
-      const [byStation, byDestination] = await Promise.all([
+      const [byStation, byDestination, includeStation] = await Promise.all([
         getShipmentByStaffStation(decodedUser.StationId),
-        getShipmentByStaffDestinationStation(decodedUser.StationId)
+        getShipmentByStaffDestinationStation(decodedUser.StationId),
+        getShipmentByStaffIncludedStation(decodedUser.StationId)
       ]);
 
       setShipmentsStaff(byStation);
       setShipmentsStaff1(byDestination);
+      setShipmentsStaff2(includeStation);
 
 
-      const combined = [...byStation, ...byDestination];
+      const combined = [...byStation, ...byDestination, ...includeStation];
       const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
       setMergedShipments(unique);
 
@@ -144,6 +134,23 @@ function TrackingOrderStaff() {
   const getParcelsByShipmentId = (shipmentId) => {
     return parcels.filter(parcel => parcel.shipmentId === shipmentId);
   };
+
+  const getShipmentByCode = async (trackingCode) => {
+    try {
+      const res = await getShipmentByTrackingCode(trackingCode);
+      const shipmentData = res.data;
+      if (shipmentData) {
+        setSelectedShipment(shipmentData);
+      } else {
+        toast.error("Không tìm thấy thông tin đơn hàng");
+      }
+    } catch (error) {
+      console.error(error);
+      const errorMessage = error.response?.data?.message || "Không thể tải lại chi tiết đơn hàng";
+      toast.error(errorMessage);
+    }
+  };
+
 
   const getCurrentShift = (slots) => {
     const now = moment();
@@ -195,6 +202,8 @@ function TrackingOrderStaff() {
       );
     }
 
+    filtered.sort((a, b) => dayjs(b.lastUpdatedAt).diff(dayjs(a.lastUpdatedAt)));
+
     setFilteredShipments(filtered);
   };
 
@@ -215,6 +224,8 @@ function TrackingOrderStaff() {
     }
 
     try {
+      setLoading(true);
+
       //UPLOAD IMAGES
       const formData = new FormData();
       formData.append("files", cccdImage);
@@ -247,7 +258,6 @@ function TrackingOrderStaff() {
         });
       }
       const confirmRes = await api.post("/shipments/complete", payload);
-      setLoading(true);
       if (confirmRes.data?.statusCode === 200) {
         toast.success("Xác nhận hoàn thành đơn hàng thành công!");
         setIsUploadModalOpen(false);
@@ -270,13 +280,19 @@ function TrackingOrderStaff() {
   const handleAction = (shipment) => {
     setSelectedShipment(shipment);
     switch (shipment.shipmentStatus) {
-      case 12:
+      case 11:
         setOpenSurchargeModal(true);
         break;
       case 4:
+        getShipmentByCode(shipment.trackingCode);
         setOpenRefundModal(true);
         break;
+      case 24:
+        getShipmentByCode(shipment.trackingCode);
+        setOpenCompensationModal(true);
+        break;
       case 25:
+        getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
         break;
     }
@@ -397,7 +413,7 @@ function TrackingOrderStaff() {
         let onClickAction = null;
 
         switch (record.shipmentStatus) {
-          case 11: // AWAITING DELIVERED
+          case 10: // AWAITING DELIVERED
             buttonLabel = "Xác nhận giao hàng thành công";
             onClickAction = () => handleOpenModal(record);
             disabled = false;
@@ -410,6 +426,11 @@ function TrackingOrderStaff() {
           case 4: // REFUND
             buttonLabel = "Hoàn tiền";
             transactionType = 3;
+            onClickAction = () => handleAction(record, transactionType);
+            break;
+          case 24: // COMPENSATION
+            buttonLabel = "Bồi thường";
+            transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);
             break;
           case 25: // COMPENSATION
@@ -676,6 +697,7 @@ function TrackingOrderStaff() {
           {/* REFUND MODAL */}
           <Modal
             open={openRefundModal}
+            title={`Hoàn tiền cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
             onOk={() => {
               createPaymentLink(selectedShipment, 3);
               setOpenRefundModal(false);
@@ -684,7 +706,40 @@ function TrackingOrderStaff() {
             okText="Xác nhận"
             cancelText="Hủy"
           >
-            <p>Xác nhận hoàn tiền cho đơn hàng này?</p>
+            {selectedShipment && (
+              <>
+                {selectedShipment?.parcels?.length > 0 ? (
+                  <Tabs defaultActiveKey="0">
+                    {selectedShipment?.parcels?.map((parcel, index) => (
+                      <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                        <Table
+                          dataSource={[
+                            { key: 'parcelCode', label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                            { key: 'parcelCategory', label: 'Loại hàng', value: parcel.categoryInsurance?.parcelCategory?.categoryName || 'N/A' },
+                            { key: 'weight', label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg} kg` },
+                            { key: 'volume', label: 'Thể tích', value: `${parcel.volumeCm3} cm³` },
+                            { key: 'status', label: 'Trạng thái kiện hàng', value: parcelStatusMap[parcel.status] || 'Không rõ' },
+                            { key: 'price', label: 'Tổng phí', value: formatCurrency(parcel.priceVnd || 0) },
+                          ]}
+                          columns={[
+                            { title: 'Thông tin', dataIndex: 'label', key: 'label' },
+                            { title: 'Chi tiết', dataIndex: 'value', key: 'value' },
+                          ]}
+                          pagination={false}
+                          bordered
+                          showHeader={false}
+                        />
+                      </TabPane>
+                    ))}
+                  </Tabs>
+                ) : (
+                  <Empty description="Không có kiện hàng cần bồi thường" />
+                )}
+                <div style={{ marginTop: "1em", fontWeight: "bold", fontSize: "16px" }}>
+                  Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalRefundedFeeVnd || 0)}
+                </div>
+              </>
+            )}
           </Modal>
 
           {/* SURCHARGE MODAL */}
@@ -704,6 +759,7 @@ function TrackingOrderStaff() {
           {/* COMPENSATION MODAL */}
           <Modal
             open={openCompensationModal}
+            title={`Bồi thường cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
             onOk={() => {
               createPaymentLink(selectedShipment, 4); // Compensation
               setOpenCompensationModal(false);
@@ -712,7 +768,42 @@ function TrackingOrderStaff() {
             okText="Xác nhận"
             cancelText="Hủy"
           >
-            <p>Bồi thường cho đơn hàng bị mất kiện?</p>
+            {selectedShipment && (
+              <>
+                <Title level={5}>Danh sách kiện hàng cần bồi thường</Title>
+                {selectedShipment?.parcels?.length > 0 ? (
+                  <Tabs defaultActiveKey="0">
+                    {selectedShipment?.parcels?.filter(parcel => parcel.status === 3 || parcel.status === 4)
+                      .map((parcel, index) => (
+                        <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                          <Table
+                            dataSource={[
+                              { key: 'parcelCode', label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                              { key: 'parcelCategory', label: 'Loại hàng', value: parcel.categoryInsurance?.parcelCategory?.categoryName || 'N/A' },
+                              { key: 'weight', label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg} kg` },
+                              { key: 'volume', label: 'Thể tích', value: `${parcel.volumeCm3} cm³` },
+                              { key: 'status', label: 'Trạng thái kiện hàng', value: parcelStatusMap[parcel.status] || 'Không rõ' },
+                              { key: 'price', label: 'Tổng phí', value: formatCurrency(parcel.priceVnd || 0) },
+                            ]}
+                            columns={[
+                              { title: 'Thông tin', dataIndex: 'label', key: 'label' },
+                              { title: 'Chi tiết', dataIndex: 'value', key: 'value' },
+                            ]}
+                            pagination={false}
+                            bordered
+                            showHeader={false}
+                          />
+                        </TabPane>
+                      ))}
+                  </Tabs>
+                ) : (
+                  <Empty description="Không có kiện hàng cần bồi thường" />
+                )}
+                <div style={{ marginTop: "1em", fontWeight: "bold", fontSize: "16px" }}>
+                  Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalCompensationFeeVnd || 0)}
+                </div>
+              </>
+            )}
           </Modal>
         </div>
       </div>

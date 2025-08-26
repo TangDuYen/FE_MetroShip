@@ -2,16 +2,23 @@ import "./MetroLineManagement.scss";
 
 import {
   Button,
+  ConfigProvider,
+  Empty,
   Form,
   Input,
   Modal,
   Popconfirm,
   Select,
   Space,
+  Spin,
   Table,
   message,
 } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { getAllStations, getMetroLines } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
@@ -24,6 +31,8 @@ function MetroLineManagement() {
   const [editingLine, setEditingLine] = useState(null);
   const [form] = Form.useForm();
   const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedLine, setSelectedLine] = useState(null);
 
   //API ONE TIME
   useEffect(() => {
@@ -34,6 +43,11 @@ function MetroLineManagement() {
       }
     );
   }, []);
+
+  const filteredLines = selectedLine
+    ? metroLines.filter((line) => line.lineNameVi === selectedLine)
+    : metroLines;
+
   const openAddModal = () => {
     setEditingLine(null);
     form.resetFields();
@@ -80,6 +94,7 @@ function MetroLineManagement() {
         };
 
         try {
+          setLoading(true);
           if (editingLine) {
             // await api.put(`/api/metro-lines/${editingLine.id}`, payload);
             toast.success("Cập nhật thành công!");
@@ -100,6 +115,8 @@ function MetroLineManagement() {
             error.message ||
             "Có lỗi khi gửi dữ liệu!";
           toast.error(errorMessage);
+        } finally {
+          setLoading(false);
         }
       })
       .catch((info) => {
@@ -109,9 +126,9 @@ function MetroLineManagement() {
 
   const columns = [
     {
-      title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
@@ -147,18 +164,51 @@ function MetroLineManagement() {
 
   return (
     <div className="metro-line-management-container">
-      <div style={{ marginBottom: 16 }}>
+      <Space wrap size="middle" style={{marginBottom: 16 }}>
         <Button type="primary" onClick={openAddModal}>
           Thêm tuyến mới
         </Button>
-      </div>
+        <Select
+          allowClear
+          placeholder="Chọn tuyến"
+          style={{ width: 400}}
+          value={selectedLine}
+          onChange={(value) => setSelectedLine(value)}
+        >
+          {[...new Set(metroLines.map((line) => line.lineNameVi))].map(
+            (lineName) => (
+              <Select.Option key={lineName} value={lineName}>
+                {lineName}
+              </Select.Option>
+            )
+          )}
+        </Select>
+        <Button
+          className="clear-filter-button"
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setSelectedLine(null);
+          }}
+        ></Button>
+      </Space>
 
-      <Table
-        columns={columns}
-        dataSource={metroLines}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredLines}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
+      </Spin>
 
       <Modal
         title={editingLine ? "Cập nhật tuyến Metro" : "Thêm tuyến Metro mới"}

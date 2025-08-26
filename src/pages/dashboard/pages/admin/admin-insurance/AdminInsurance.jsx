@@ -1,13 +1,24 @@
 import "./AdminInsurance.scss";
 
-import { Button, Card, Input, Select, Space, Spin, Table, Tag } from "antd";
+import {
+  Button,
+  Card,
+  ConfigProvider,
+  Empty,
+  Input,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
-import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
-import { getAllInsurance } from "../../../../../config/metroApi";
 import { ReloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { getAllInsurance } from "../../../../../config/metroApi";
+import { useNavigate } from "react-router-dom";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -60,7 +71,7 @@ function AdminInsurance() {
       .toLowerCase()
       .includes(searchName.toLowerCase());
     const matchStatus =
-      filteredStatusPolicies === ""
+      !filteredStatusPolicies
         ? true
         : filteredStatusPolicies === "active"
         ? item.isActive
@@ -163,35 +174,47 @@ function AdminInsurance() {
         />
         <Select
           placeholder="Trạng thái"
-          value={filteredStatusPolicies}
-          onChange={(v) => setFilteredStatusPolicies(v)}
+          value={filteredStatusPolicies || undefined}
+          onChange={(v) => setFilteredStatusPolicies(v || "")}
           style={{ width: 400 }}
           allowClear
-        >
-          <Option value="active">
-            <Tag color="green">Đang áp dụng</Tag>
-          </Option>
-          <Option value="inactive">
-            {" "}
-            <Tag color="red">Ngưng hiệu lực</Tag>
-          </Option>
-        </Select>
+          options={[
+            {
+              value: "active",
+              label: <Tag color="green">Đang áp dụng</Tag>,
+            },
+            {
+              value: "inactive",
+              label: <Tag color="red">Ngưng hiệu lực</Tag>,
+            },
+          ]}
+        />
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
           onClick={() => {
-            setFilteredStatusPolicies([]);
+            setFilteredStatusPolicies("");
             setSearchName("");
           }}
         ></Button>
       </Space>
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Table
-          columns={columns}
-          dataSource={filteredPolicies}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredPolicies}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </ConfigProvider>
       </Spin>
     </div>
   );
