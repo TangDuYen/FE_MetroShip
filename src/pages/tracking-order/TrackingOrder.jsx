@@ -16,7 +16,6 @@ import {
   parcelStatusColorMap,
   parcelStatusMap,
   shipmentStatusMap,
-  shipmentStatusSteps,
 } from "../../constants/statusMap";
 
 import L from "leaflet";
@@ -565,7 +564,7 @@ function TrackingOrder() {
                   </div>
                   <div className="detail-value">
                     {p.status === 4 &&
-                      !selectedShipment.isCompensationRequested && (
+                      !selectedShipment.isCompensationRequested && (selectedShipment.shipmentStatus === 24 || selectedShipment.shipmentStatus === 25) && (
                         <Button
                           type="primary"
                           className="insurance-button"

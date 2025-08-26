@@ -442,7 +442,7 @@ function HistoryOrders() {
       // }
 
       //REFUND SHIPMENT
-      if (item.shipmentStatus === 16) {
+      if (item.shipmentStatus === 11) {
         actions.push(
           <Button
             danger

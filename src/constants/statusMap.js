@@ -175,13 +175,6 @@ export const parcelStatusColorMap = {
   5: "#ff6600ff",
 }
 
-export const shipmentStatusSteps = [
-  { id: 0, label: 'Đơn hàng đã được đặt' },
-  { id: 8, label: 'Đơn vị vận chuyển đã lấy hàng' },
-  { id: 10, label: 'Đơn hàng đang được vận chuyển' },
-  { id: 11, label: 'Đơn hàng đang chờ lấy' },
-  { id: 21, label: 'Đơn hàng đã giao thành công' },
-];
 
 // export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
 export const formatCurrency = (v) => {
