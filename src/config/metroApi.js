@@ -99,6 +99,21 @@ export const getAllParcels = async () => {
   }
 };
 
+export const getParcelsByTrackingCode = async (parcelCode) => {
+  try {
+    const res = await api.get(`/parcels/${parcelCode}`);
+    return {
+      data: res.data.data,
+      additionalData: res.data.additionalData,
+    };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng";
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
 //PARCEL-CATEGORY
 export const getAllParcelCategories = async () => {
   try {
