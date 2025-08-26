@@ -1,13 +1,14 @@
 import './TrackingOrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { formatCurrency, parcelStatusMap, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
+import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
 import StaffIcon from '../../../../../assets/profile.webp';
+import TabPane from 'antd/es/tabs/TabPane';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import isBetween from "dayjs/plugin/isBetween";
@@ -62,7 +63,6 @@ function TrackingOrderStaff() {
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [mergedShipments, setMergedShipments] = useState([]);
-
 
   const startIndex = (currentPage - 1) * pageSize;
 
@@ -135,6 +135,23 @@ function TrackingOrderStaff() {
     return parcels.filter(parcel => parcel.shipmentId === shipmentId);
   };
 
+  const getShipmentByCode = async (trackingCode) => {
+    try {
+      const res = await getShipmentByTrackingCode(trackingCode);
+      const shipmentData = res.data;
+      if (shipmentData) {
+        setSelectedShipment(shipmentData);
+      } else {
+        toast.error("Không tìm thấy thông tin đơn hàng");
+      }
+    } catch (error) {
+      console.error(error);
+      const errorMessage = error.response?.data?.message || "Không thể tải lại chi tiết đơn hàng";
+      toast.error(errorMessage);
+    }
+  };
+
+
   const getCurrentShift = (slots) => {
     const now = moment();
     return slots.find(slot => {
@@ -186,7 +203,7 @@ function TrackingOrderStaff() {
     }
 
     filtered.sort((a, b) => dayjs(b.lastUpdatedAt).diff(dayjs(a.lastUpdatedAt)));
-    
+
     setFilteredShipments(filtered);
   };
 
@@ -267,12 +284,15 @@ function TrackingOrderStaff() {
         setOpenSurchargeModal(true);
         break;
       case 4:
+        getShipmentByCode(shipment.trackingCode);
         setOpenRefundModal(true);
         break;
       case 24:
+        getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
         break;
       case 25:
+        getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
         break;
     }
@@ -677,6 +697,7 @@ function TrackingOrderStaff() {
           {/* REFUND MODAL */}
           <Modal
             open={openRefundModal}
+            title={`Hoàn tiền cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
             onOk={() => {
               createPaymentLink(selectedShipment, 3);
               setOpenRefundModal(false);
@@ -685,7 +706,40 @@ function TrackingOrderStaff() {
             okText="Xác nhận"
             cancelText="Hủy"
           >
-            <p>Xác nhận hoàn tiền cho đơn hàng này?</p>
+            {selectedShipment && (
+              <>
+                {selectedShipment?.parcels?.length > 0 ? (
+                  <Tabs defaultActiveKey="0">
+                    {selectedShipment?.parcels?.map((parcel, index) => (
+                      <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                        <Table
+                          dataSource={[
+                            { key: 'parcelCode', label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                            { key: 'parcelCategory', label: 'Loại hàng', value: parcel.categoryInsurance?.parcelCategory?.categoryName || 'N/A' },
+                            { key: 'weight', label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg} kg` },
+                            { key: 'volume', label: 'Thể tích', value: `${parcel.volumeCm3} cm³` },
+                            { key: 'status', label: 'Trạng thái kiện hàng', value: parcelStatusMap[parcel.status] || 'Không rõ' },
+                            { key: 'price', label: 'Tổng phí', value: formatCurrency(parcel.priceVnd || 0) },
+                          ]}
+                          columns={[
+                            { title: 'Thông tin', dataIndex: 'label', key: 'label' },
+                            { title: 'Chi tiết', dataIndex: 'value', key: 'value' },
+                          ]}
+                          pagination={false}
+                          bordered
+                          showHeader={false}
+                        />
+                      </TabPane>
+                    ))}
+                  </Tabs>
+                ) : (
+                  <Empty description="Không có kiện hàng cần bồi thường" />
+                )}
+                <div style={{ marginTop: "1em", fontWeight: "bold", fontSize: "16px" }}>
+                  Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalRefundedFeeVnd || 0)}
+                </div>
+              </>
+            )}
           </Modal>
 
           {/* SURCHARGE MODAL */}
@@ -705,6 +759,7 @@ function TrackingOrderStaff() {
           {/* COMPENSATION MODAL */}
           <Modal
             open={openCompensationModal}
+            title={`Bồi thường cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
             onOk={() => {
               createPaymentLink(selectedShipment, 4); // Compensation
               setOpenCompensationModal(false);
@@ -713,7 +768,42 @@ function TrackingOrderStaff() {
             okText="Xác nhận"
             cancelText="Hủy"
           >
-            <p>Bồi thường cho đơn hàng bị mất kiện?</p>
+            {selectedShipment && (
+              <>
+                <Title level={5}>Danh sách kiện hàng cần bồi thường</Title>
+                {selectedShipment?.parcels?.length > 0 ? (
+                  <Tabs defaultActiveKey="0">
+                    {selectedShipment?.parcels?.filter(parcel => parcel.status === 3 || parcel.status === 4)
+                      .map((parcel, index) => (
+                        <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                          <Table
+                            dataSource={[
+                              { key: 'parcelCode', label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                              { key: 'parcelCategory', label: 'Loại hàng', value: parcel.categoryInsurance?.parcelCategory?.categoryName || 'N/A' },
+                              { key: 'weight', label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg} kg` },
+                              { key: 'volume', label: 'Thể tích', value: `${parcel.volumeCm3} cm³` },
+                              { key: 'status', label: 'Trạng thái kiện hàng', value: parcelStatusMap[parcel.status] || 'Không rõ' },
+                              { key: 'price', label: 'Tổng phí', value: formatCurrency(parcel.priceVnd || 0) },
+                            ]}
+                            columns={[
+                              { title: 'Thông tin', dataIndex: 'label', key: 'label' },
+                              { title: 'Chi tiết', dataIndex: 'value', key: 'value' },
+                            ]}
+                            pagination={false}
+                            bordered
+                            showHeader={false}
+                          />
+                        </TabPane>
+                      ))}
+                  </Tabs>
+                ) : (
+                  <Empty description="Không có kiện hàng cần bồi thường" />
+                )}
+                <div style={{ marginTop: "1em", fontWeight: "bold", fontSize: "16px" }}>
+                  Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalCompensationFeeVnd || 0)}
+                </div>
+              </>
+            )}
           </Modal>
         </div>
       </div>

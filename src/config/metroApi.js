@@ -18,6 +18,21 @@ export const getAllShipments = async () => {
   }
 };
 
+export const getShipmentByTrackingCode = async (trackingCode) => {
+  try {
+    const res = await api.get(`/shipments/${trackingCode}`);
+    return {
+      data: res.data.data,
+      additionalData: res.data.additionalData,
+    };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng";
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
 export const getAllCustomerShipments = async () => {
   try {
     const res = await api.get("/shipments/customer/history?PageSize=1000");

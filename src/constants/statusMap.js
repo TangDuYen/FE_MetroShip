@@ -13,10 +13,10 @@
 //   11: 'Thu phí tồn kho',
 //   13: 'Xuống hàng khỏi tàu',
 //   14: 'Đợi chuyển tàu',
-//   // 15: 'Đợi chuyển tàu',
+//   15: 'Đợi chuyển tàu',
 //   16: 'Quá hạn',
-//   // 17: 'Quá hạn',
-//   // 18: 'Trả đơn',
+//   17: 'Quá hạn',
+//   18: 'Trả đơn',
 //   19: 'Hoàn đơn',
 //   21: 'Đã hoàn thành',
 //   22: 'Delayed',
@@ -24,7 +24,9 @@
 //   24: 'Đơn đã hoàn thành. Đợi bồi thường',
 //   25: 'Đợi bồi thường',
 //   26: 'Đã bồi thường',
+//   27: 'Đã bồi thường',
 // };
+
 export const shipmentStatusMap = {
   0: 'Chờ thanh toán',
   1: 'Từ chối',
@@ -46,7 +48,7 @@ export const shipmentStatusMap = {
   22: 'Trì hoãn',
   23: 'Đến trạm đích',
   24: 'Đã giao. Chờ bồi thường',
-  25: 'Chờ bồi thường',
+  25: 'Chờ bồi thường', 
   26: 'Đã bồi thường',
 };
 
