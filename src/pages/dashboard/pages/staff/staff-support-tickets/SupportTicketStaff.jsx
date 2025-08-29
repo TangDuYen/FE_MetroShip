@@ -2,9 +2,11 @@ import "./SupportTicketStaff.scss";
 
 import { Button, Col, Input, Modal, Row, Select, Space, Table, Tag } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllParcels, getAllShipments, getAllSupportTickets } from "./../../../../../config/metroApi";
+import { getAllParcels, getAllShipments, getAllSupportTickets, getShipmentByTrackingCode } from "./../../../../../config/metroApi";
 import { supportTicketStatus, supportTicketStatusColorMap, supportTicketType } from "../../../../../constants/statusMap";
 
+import { Link } from "react-router-dom";
+import { PATH_NAME } from "../../../../../constants/pathname";
 import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
@@ -54,10 +56,20 @@ function SupportTicketStaff({ stationId }) {
     }
   };
 
+
   const getShipmentCode = (id) => {
     const shipment = shipments.find((s) => s.id === id);
     return shipment ? shipment.trackingCode : id;
   };
+
+  const getShipmentById = async (trackingCode) => {
+    try {
+      const res = await getShipmentByTrackingCode(trackingCode);
+      const shipmentData = res.data;
+    } catch (error) {
+
+    }
+  }
 
   const filteredTickets = tickets.filter((t) => {
     const matchesStatus = filterStatus ? t.status === filterStatus : true;
@@ -130,7 +142,15 @@ function SupportTicketStaff({ stationId }) {
       title: "Phiếu hỗ trợ cho đơn hàng",
       dataIndex: "shipmentId",
       key: "shipmentId",
-      render: (shipmentId) => getShipmentCode(shipmentId),
+      render: (_, record) => (
+        <Link
+          to={PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+            ":trackingCode",
+            getShipmentCode(record.shipmentId)
+          )}
+        >
+          {getShipmentCode(record.shipmentId)}
+        </Link>)
     },
     {
       title: "Loại phiếu",
@@ -152,7 +172,7 @@ function SupportTicketStaff({ stationId }) {
       </Tag>
     },
     {
-      title: "Hành động",
+      title: "Thao tác",
       render: (_, record) => (
         <Space>
           <Button
