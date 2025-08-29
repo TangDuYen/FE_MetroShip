@@ -141,8 +141,6 @@ export const getParcelCategoryById = async (parcelCategoryId) => {
   }
 };
 
-//PRICING
-
 //TRANSACTION
 export const getAllTransactions = async () => {
   try {
@@ -414,6 +412,20 @@ export const getAllPrice = async () => {
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu giá vận chuyển";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+}
+
+//BUSINESS-MEDIA-TYPE
+export const getAllBusinessMediaTypes = async () => {
+  try {
+    const res = await api.get("/media/business-media-type");
+    return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu loại phương tiện kinh doanh";
 
     toast.error(errorMessage);
     throw error;

@@ -1,4 +1,5 @@
 import './OrderStaff.scss'
+import "dayjs/locale/vi";
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined, } from '@ant-design/icons';
@@ -14,6 +15,7 @@ import moment from 'moment';
 import { toast } from 'react-toastify';
 import viVN from 'antd/lib/locale/vi_VN';
 
+dayjs.locale('vi');
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
@@ -456,6 +458,7 @@ function OrderStaff() {
                       value={dateRange}
                       onChange={setDateRange}
                       style={{ width: '100%' }}
+                      placeholder={["Từ ngày", "Đến ngày"]}
                     />
                   </ConfigProvider>
                 </Col>

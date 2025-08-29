@@ -1,4 +1,5 @@
 import './TrackingOrderStaff.scss'
+import "dayjs/locale/vi";
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -19,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
 dayjs.extend(isBetween);
+dayjs.locale('vi');
 
 const { RangePicker } = DatePicker;
 const customizeRenderEmpty = () => (
@@ -597,6 +599,7 @@ function TrackingOrderStaff() {
                       value={dateRange}
                       onChange={setDateRange}
                       style={{ width: '100%' }}
+                      placeholder={["Từ ngày", "Đến ngày"]}
                     />
                   </ConfigProvider>
                 </Col>

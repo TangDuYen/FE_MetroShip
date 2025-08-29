@@ -1,4 +1,5 @@
 import './HandledOrderStaff.scss';
+import "dayjs/locale/vi";
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap } from '../../../../../constants/statusMap';
@@ -17,6 +18,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
+dayjs.locale('vi');
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Title } = Typography;
@@ -441,6 +443,7 @@ function HandledOrderStaff() {
                                             onChange={(v) => setDateRange(v)}
                                             allowClear
                                             style={{ width: '100%' }}
+                                            placeholder={["Từ ngày", "Đến ngày"]}
                                         />
                                     </ConfigProvider>
                                 </Col>

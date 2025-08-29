@@ -22,19 +22,19 @@ import {
   getMetroLinesByStation,
   getMetroTrainsByStation,
 } from "../../../../../config/metroApi";
+import {
+  trainStatusColorMap,
+  trainStatusMap,
+} from "../../../../../constants/statusMap";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
+import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import { jwtDecode } from "jwt-decode";
 import { selectUser } from "../../../../../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import {
-  trainStatusColorMap,
-  trainStatusMap,
-} from "../../../../../constants/statusMap";
-import { ReloadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -145,37 +145,37 @@ function TrainStaff() {
     return station ? station.stationNameVi : "Không xác định";
   };
 
-//   const handleReset = async (train) => {
-//   if (!train) {
-//     toast.error("Chưa chọn tàu để reset lịch.");
-//     return;
-//   }
+  //   const handleReset = async (train) => {
+  //   if (!train) {
+  //     toast.error("Chưa chọn tàu để reset lịch.");
+  //     return;
+  //   }
 
-//   try {
-//     // fetch direction luôn cho chắc chắn
-//     const res = await api.get(`/train/${train.id}/position`);
-//     const { additionalData } = res.data;
-//     const dir = additionalData?.fullPath?.[0]?.direction;
+  //   try {
+  //     // fetch direction luôn cho chắc chắn
+  //     const res = await api.get(`/train/${train.id}/position`);
+  //     const { additionalData } = res.data;
+  //     const dir = additionalData?.fullPath?.[0]?.direction;
 
-//     if (dir !== 0 && dir !== 1) {
-//       toast.error("Không có direction để reset lịch tàu.");
-//       return;
-//     }
+  //     if (dir !== 0 && dir !== 1) {
+  //       toast.error("Không có direction để reset lịch tàu.");
+  //       return;
+  //     }
 
-//     const formData = new FormData();
-//     formData.append("trainIdOrCode", train.id);
+  //     const formData = new FormData();
+  //     formData.append("trainIdOrCode", train.id);
 
-//     await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
-//       headers: { "Content-Type": "multipart/form-data" },
-//     });
+  //     await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
 
-//     toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
-//     await reloadData();
-//   } catch (error) {
-//     console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
-//     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
-//   }
-// };
+  //     toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+  //     await reloadData();
+  //   } catch (error) {
+  //     console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+  //     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+  //   }
+  // };
 
 
   const handleStartTrain = async (train) => {
@@ -401,7 +401,9 @@ function TrainStaff() {
           >
             {Object.keys(trainStatusMap).map((key) => (
               <Option key={key} value={Number(key)}>
-                {trainStatusMap[key]}
+                <Tag color={trainStatusColorMap[key]}>
+                  {trainStatusMap[key]}
+                </Tag>
               </Option>
             ))}
           </Select>

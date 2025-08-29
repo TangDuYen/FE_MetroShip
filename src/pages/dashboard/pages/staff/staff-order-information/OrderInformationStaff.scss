@@ -3,4 +3,9 @@
 .order-info-staff-container {
     padding: 2.5em 2em 0 3em;
     font-family: $font-primary;
+
+    .ant-card-head {
+        background-color: $primary-color;
+        color: white;
+    }
 }

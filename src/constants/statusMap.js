@@ -153,6 +153,17 @@ export const staffRoleMap = {
   Manager: "Quản lý",
 };
 
+//BUSINESS MEDIA TYPE MAPPING
+export const businessMediaType = {
+  1: "Ảnh xác nhận gửi hàng",
+  2: "Ảnh vận chuyển",
+  3: "Ảnh xác nhận giao hàng",
+  4: "Khiếu nại",
+  5: "Ảnh hóa đơn",
+  6: "Xác minh danh tính",
+  7: "Khác",
+}
+
 //UTILITY FUNCTIONS
 // export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
 export const formatCurrency = (v) => {

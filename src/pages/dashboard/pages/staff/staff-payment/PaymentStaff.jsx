@@ -1,6 +1,7 @@
 import "./PaymentStaff.scss";
+import "dayjs/locale/vi";
 
-import { Button, Col, DatePicker, Input, Row, Select, Table, Tag } from "antd";
+import { Button, Col, ConfigProvider, DatePicker, Input, Row, Select, Table, Tag } from "antd";
 import { MinusCircleOutlined, PlusCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { formatCurrency1, paymentStatusColorMap, paymentStatusMap, paymentTransactionTypeColorMap, paymentTransactionTypeMap } from "../../../../../constants/statusMap";
 import { getAllShipments, getAllTransactions } from "../../../../../config/metroApi";
@@ -8,7 +9,9 @@ import { useEffect, useState } from "react";
 
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import viVN from "antd/lib/locale/vi_VN";
 
+dayjs.locale("vi");
 const { RangePicker } = DatePicker;
 const { Search } = Input;
 const { Option } = Select;
@@ -208,11 +211,14 @@ function PaymentStaff() {
       {/* FILTER UI */}
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={6}>
-          <RangePicker
-            style={{ width: "100%" }}
-            value={dateRange}
-            onChange={(val) => setDateRange(val)}
-          />
+          <ConfigProvider locale={viVN}>
+            <RangePicker
+              style={{ width: "100%" }}
+              value={dateRange}
+              onChange={(val) => setDateRange(val)}
+              placeholder={["Từ ngày", "Đến ngày"]}
+            />
+          </ConfigProvider>
         </Col>
         <Col xs={24} md={4}>
           <Search
