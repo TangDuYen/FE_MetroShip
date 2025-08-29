@@ -1,10 +1,10 @@
 import './OrderStaff.scss'
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Pagination, Progress, Row, Segmented, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined, } from '@ant-design/icons';
-import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcelCategories, getAllParcels, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
-import { use, useEffect, useState } from 'react';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap } from '../../../../../constants/statusMap';
+import { getAllParcelCategories, getAllParcels, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { useEffect, useState } from 'react';
 
 import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
@@ -39,7 +39,6 @@ function OrderStaff() {
   const [parcelMap, setParcelMap] = useState(new Map());
   const [metroLines, setMetroLine] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
-  const [metroTrains, setMetroTrains] = useState([]);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyImageMain, setVerifyImageMain] = useState(null); // bắt buộc
   const [verifyImageOptional, setVerifyImageOptional] = useState(null); // optional
@@ -48,12 +47,7 @@ function OrderStaff() {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
   const decodedUser = token ? jwtDecode(token) : null;
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-  const [maxCapacity, setMaxCapacity] = useState(0);
-  const [maxVolume, setMaxVolume] = useState(0);
-  const startIndex = (currentPage - 1) * pageSize;
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
@@ -78,22 +72,13 @@ function OrderStaff() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId), getAllParcelCategories()]).then(
-      ([parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData, parcelCateData]) => {
+    Promise.all([getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getAllParcelCategories()]).then(
+      ([parcelsData, timeSlotsData, stationData, metroLineData, parcelCateData]) => {
         setMetroLine(metroLineData)
         setStations(stationData);
         setParcels(parcelsData);
         setTimeSlots(timeSlotsData);
-        setMetroTrains(metroTrainData.items);
         setParcelCate(parcelCateData);
-
-        //ADDITIONAL TRAIN DATA
-        const additional = metroTrainData.additionalData?.[0] || [];
-        const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
-        const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
-
-        setMaxCapacity(maxCapacityKg);
-        setMaxVolume(maxVolumeM3);
       }
     );
   }, []);
@@ -383,7 +368,7 @@ function OrderStaff() {
                   <div className="metro-line-description">
                     Vai trò
                     <div className="data">
-                      {decodedUser?.AssignmentRole || "N/A"}
+                      {staffRoleMap[decodedUser?.AssignmentRole] || "N/A"}
                     </div>
                   </div>
                   <div className="metro-line-description">
@@ -427,6 +412,7 @@ function OrderStaff() {
                   defaultValue={moment()}
                   onChange={(date) => setDateFilter(date)}
                   style={{ width: '100%' }}
+                  disabled
                 />
               </Col>
               <Col span={18}>
