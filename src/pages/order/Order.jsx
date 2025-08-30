@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import ConfirmPage from './ConfirmPage';
 import L from 'leaflet';
+import { PATH_NAME } from '../../constants/pathname';
 import ParcelInfo from './ParcelInfo';
 import PersonalInfo from './PersonalInfo';
 import api from '../../config/axios';
@@ -526,7 +527,7 @@ function Order() {
             </div>
 
             <Modal
-              title="Xác nhận đơn hàng"
+              title="Điều khoản sử dụng dịch vụ giao hàng MetroShip"
               open={isModalOpen}
               onOk={handleOk}
               onCancel={handleCancel}
@@ -537,7 +538,21 @@ function Order() {
               className="modal-confirm"
             >
               <p>
-                Bạn xác nhận muốn đặt đơn hàng này? Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
+                Hãy kiểm tra toàn bộ thông tin trước khi đặt đơn.
+              </p>
+
+              <div style={{ marginBottom: "1em", paddingLeft: "1em" }}>
+                <ul style={{ listStyleType: "disc", paddingLeft: "1.2em" }}>
+                  <li>MetroShip chỉ nhận hàng trong khoảng thời gian bạn đã đặt, nếu đến sớm nhân viên sẽ không hỗ trợ nhận hàng sớm.</li>
+                  <li>Nếu khách hàng đến trễ hơn giờ đã đặt trong đơn hàng, đơn hàng sẽ bị hủy và khách hàng sẽ hoàn toàn mất 100% phí.</li>
+                  <li>Bạn cần chắc chắn các thông tin về giá trị hàng hóa và hóa đơn bạn cung cấp không có sai phạm. MetroShip có quyền từ chối giải quyết các đơn hàng có sai phạm về việc khai báo thông tin giá trị và hóa đơn.</li>
+                  <li>MetroShip không nhận giao trang sức (vàng, bạc, kim cương).</li>
+                </ul>
+              </div>
+
+              <p style={{ fontSize: "0.9em", color: "#555" }}>
+                Bạn vui lòng đọc các quyền, nghĩa vụ của khách hàng và các nội dung khác liên quan đến
+                chính sách bảo hiểm và bồi thường <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">tại đây</a>.
               </p>
             </Modal>
 

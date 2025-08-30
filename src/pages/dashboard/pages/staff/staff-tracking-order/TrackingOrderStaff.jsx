@@ -1,9 +1,10 @@
 import './TrackingOrderStaff.scss'
+import "dayjs/locale/vi";
 
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { formatCurrency, parcelStatusMap, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
+import { formatCurrency, parcelStatusMap, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap } from '../../../../../constants/statusMap';
+import { getAllParcels, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
@@ -19,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
 dayjs.extend(isBetween);
+dayjs.locale('vi');
 
 const { RangePicker } = DatePicker;
 const customizeRenderEmpty = () => (
@@ -50,21 +52,17 @@ function TrackingOrderStaff() {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
   const decodedUser = token ? jwtDecode(token) : null;
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 2;
   const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
   const [dateRange, setDateRange] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [statusOptions, setStatusOptions] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 13, 14, 16, 19, 23, 25, 24];
+  const ALLOWED_STATUS = [4, 8, 9, 10, 11, 14, 16, 22, 23, 25, 24, 27];
   const [openRefundModal, setOpenRefundModal] = useState(false);
   const [openSurchargeModal, setOpenSurchargeModal] = useState(false);
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [mergedShipments, setMergedShipments] = useState([]);
-
-  const startIndex = (currentPage - 1) * pageSize;
 
   if (!decodedUser?.StationId) {
     return (
@@ -418,7 +416,7 @@ function TrackingOrderStaff() {
             onClickAction = () => handleOpenModal(record);
             disabled = false;
             break;
-          case 12: // APPLY SURCHARGE
+          case 11: // APPLY SURCHARGE
             buttonLabel = "Thu phí tồn kho";
             transactionType = 2;
             onClickAction = () => handleAction(record, transactionType);
@@ -428,12 +426,12 @@ function TrackingOrderStaff() {
             transactionType = 3;
             onClickAction = () => handleAction(record, transactionType);
             break;
-          case 24: // COMPENSATION
+          case 25: // COMPENSATION
             buttonLabel = "Bồi thường";
             transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);
             break;
-          case 25: // COMPENSATION
+          case 27: // COMPENSATION
             buttonLabel = "Bồi thường";
             transactionType = 4;
             onClickAction = () => handleAction(record, transactionType);
@@ -515,7 +513,7 @@ function TrackingOrderStaff() {
                   <div className="metro-line-description">
                     Vai trò
                     <div className="data">
-                      {decodedUser?.AssignmentRole || "N/A"}
+                      {staffRoleMap[decodedUser?.AssignmentRole] || "N/A"}
                     </div>
                   </div>
                   <div className="metro-line-description">
@@ -558,6 +556,7 @@ function TrackingOrderStaff() {
                   value={dateFilter ?? today}
                   onChange={(date) => setDateFilter(date)}
                   style={{ width: '100%' }}
+                  disabled
                 />
               </Col>
               <Col span={18}>
@@ -600,6 +599,7 @@ function TrackingOrderStaff() {
                       value={dateRange}
                       onChange={setDateRange}
                       style={{ width: '100%' }}
+                      placeholder={["Từ ngày", "Đến ngày"]}
                     />
                   </ConfigProvider>
                 </Col>

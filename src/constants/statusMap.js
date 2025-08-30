@@ -1,36 +1,8 @@
-// export const shipmentStatusMap = {
-//   0: 'Chờ thanh toán',
-//   1: 'Từ chối',
-//   2: 'Không thanh toán',
-//   3: 'Đã hủy',
-//   4: 'Chờ hoàn tiền',
-//   5: 'Đã hoàn tiền',
-//   6: 'Không đến gửi hàng',
-//   7: 'Chờ gửi hàng',
-//   8: 'Đã lấy hàng',
-//   9: 'Đang vận chuyển',
-//   10: 'Đợi nhận hàng',
-//   11: 'Thu phí tồn kho',
-//   13: 'Xuống hàng khỏi tàu',
-//   14: 'Đợi chuyển tàu',
-//   15: 'Đợi chuyển tàu',
-//   16: 'Quá hạn',
-//   17: 'Quá hạn',
-//   18: 'Trả đơn',
-//   19: 'Hoàn đơn',
-//   21: 'Đã hoàn thành',
-//   22: 'Delayed',
-//   23: 'Đã đến trạm đích',
-//   24: 'Đơn đã hoàn thành. Đợi bồi thường',
-//   25: 'Đợi bồi thường',
-//   26: 'Đã bồi thường',
-//   27: 'Đã bồi thường',
-// };
-
+//SHIPMENT STATUS MAPPING
 export const shipmentStatusMap = {
   0: 'Chờ thanh toán',
   1: 'Từ chối',
-  2: 'Chưa thanh toán',
+  2: 'Không thanh toán',
   3: 'Đã hủy',
   4: 'Chờ hoàn tiền',
   5: 'Đã hoàn tiền',
@@ -40,49 +12,44 @@ export const shipmentStatusMap = {
   9: 'Đang vận chuyển',
   10: 'Chờ nhận hàng',
   11: 'Thu phụ phí',
-  13: 'Xuống hàng',
   14: 'Chờ chuyển tàu',
   16: 'Quá hạn',
   19: 'Hoàn đơn',
-  21: 'Hoàn thành',
+  21: 'Đã hoàn thành',
   22: 'Trì hoãn',
-  23: 'Đến trạm đích',
-  24: 'Đã giao. Chờ bồi thường',
-  25: 'Chờ bồi thường', 
+  23: 'Đã đến trạm đích',
+  24: 'Đã giao và bồi thường',
+  25: 'Chờ bồi thường',
   26: 'Đã bồi thường',
+  27: 'Đã giao. Chờ bồi thường'
 };
 
 export const shipmentStatusColorMap = {
-  0: "orange",       // Chờ thanh toán
-  1: "red",          // Từ chối
-  2: "volcano",      // Không thanh toán
-  3: "magenta",      // Đã hủy
-  4: "gold",         // Chờ hoàn tiền
-  5: "green",        // Đã hoàn tiền
-  6: "purple",       // Không đến gửi hàng
-  7: "blue",         // Chờ gửi hàng
-  8: "cyan",         // Đã lấy hàng
-  9: "processing",   // Đang lên hàng vào tàu 
-  10: "lime",        // Đang vận chuyển 
-  11: "geekblue",    // Đợi nhận hàng 
-  12: "red",         // Thu phí tồn kho 
-  13: "volcano",     // Xuống hàng khỏi tàu
-  14: "orange",      // Đang lưu kho
-  15: "red",         // Đợi chuyển tàu
-  16: "volcano",      // Đang chuyển tàu
-  17: "volcano",     // Quá hạn
-  18: "blue",        // Trả đơn
-  19: "purple",     // Đang trả đơn
-  20: "green",       // Đã trả đơn
-  21: "green",     // Đã giao
-  22: "volcano",     // Đã hoàn thành
-  23: "blue",      // Delayed - Chậm trễ 
-  24: "pink",        // Đã đến 
-  25: "red",         // Bồi thường 
-  26: "green",       // Đã bồi thường 
+  0: "orange",     // Chờ thanh toán
+  1: "red",        // Từ chối
+  2: "volcano",    // Không thanh toán
+  3: "magenta",    // Đã hủy
+  4: "gold",       // Chờ hoàn tiền
+  5: "green",      // Đã hoàn tiền
+  6: "purple",     // Không gửi hàng
+  7: "blue",       // Chờ gửi hàng
+  8: "cyan",       // Đã lấy hàng
+  9: "lime",       // Đang vận chuyển
+  10: "geekblue",  // Chờ nhận hàng
+  11: "red",       // Thu phụ phí
+  14: "red",       // Chờ chuyển tàu
+  16: "volcano",   // Quá hạn
+  19: "purple",    // Hoàn đơn
+  21: "green",     // Đã hoàn thành
+  22: "volcano",   // Trì hoãn
+  23: "pink",      // Đã đến trạm đích
+  24: "green",     // Đã giao và bồi thường
+  25: "red",       // Chờ bồi thường
+  26: "green",     // Đã bồi thường
+  27: "blue",      // Đã giao. Chờ bồi thường
 };
 
-
+//TRAIN STATUS MAPPING
 export const trainStatusMap = {
   0: "Chưa được lập lịch",             // NotScheduled
   1: "Đã lập lịch",                    // Scheduled
@@ -109,6 +76,7 @@ export const trainStatusColorMap = {
   10: "success", // xanh lá (completed)
 };
 
+//PAYMENT STATUS MAPPING
 export const paymentStatusMap = {
   1: 'Đợi thanh toán',
   2: 'Đã thanh toán',
@@ -128,15 +96,17 @@ export const paymentTransactionTypeMap = {
   2: 'Phí phạt',
   3: 'Hoàn tiền',
   4: 'Phí bồi thường'
-}
+};
 
 export const paymentTransactionTypeColorMap = {
   1: "green",
   2: "red",
   3: "yellow",
   4: "pink"
-}
+};
 
+
+//SUPPORT TICKET STATUS MAPPING
 export const supportTicketType = {
   1: 'Hỗ trợ vấn đề bồi thường',
   2: 'Hỗ trợ vấn đề kỹ thuật',
@@ -145,27 +115,28 @@ export const supportTicketType = {
   5: 'Hỗ trợ vấn đề tài khoản',
   6: 'Hỗ trợ vấn đề đánh giá',
   7: 'Khác',
-}
+};
 
 export const supportTicketStatus = {
   1: 'Đang giải quyết',
   2: 'Đã giải quyết',
   3: 'Từ chối',
-}
+};
 
 export const supportTicketStatusColorMap = {
   1: "yellow",
   2: "green",
   3: "red",
-}
+};
 
+//PARCEL STATUS MAPPING
 export const parcelStatusMap = {
   1: "Đã đặt",
   2: "Bình thường",
   3: "Bị hư hại",
   4: "Bị mất",
   5: "Đã hủy",
-}
+};
 
 export const parcelStatusColorMap = {
   1: "blue",
@@ -173,9 +144,27 @@ export const parcelStatusColorMap = {
   3: "purple",
   4: "red",
   5: "#ff6600ff",
+};
+
+//STAFF ROLE MAPPING 
+export const staffRoleMap = {
+  Checker: "Nhân viên kiểm hàng",
+  CargoLoader: "Nhân viên xếp hàng",
+  Manager: "Quản lý",
+};
+
+//BUSINESS MEDIA TYPE MAPPING
+export const businessMediaType = {
+  1: "Ảnh xác nhận gửi hàng",
+  2: "Ảnh vận chuyển",
+  3: "Ảnh xác nhận giao hàng",
+  4: "Khiếu nại",
+  5: "Ảnh hóa đơn",
+  6: "Xác minh danh tính",
+  7: "Khác",
 }
 
-
+//UTILITY FUNCTIONS
 // export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
 export const formatCurrency = (v) => {
   const n = Number(v);

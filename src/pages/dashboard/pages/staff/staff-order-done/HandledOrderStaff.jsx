@@ -1,12 +1,12 @@
 import './HandledOrderStaff.scss';
+import "dayjs/locale/vi";
 
-import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Pagination, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
-import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap } from '../../../../../constants/statusMap';
-import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getMetroTrainsByStation, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
+import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap } from '../../../../../constants/statusMap';
+import { getAllParcelCategories, getAllParcels, getAllShipments, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffDestinationStation, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { ClockCircleOutlined } from '@ant-design/icons';
-import MetroStation from '../../../../../assets/metro_station.png';
 import { PATH_NAME } from '../../../../../constants/pathname';
 import { ReloadOutlined } from '@ant-design/icons';
 import StaffIcon from '../../../../../assets/profile.webp';
@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
+dayjs.locale('vi');
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Title } = Typography;
@@ -47,17 +48,10 @@ function HandledOrderStaff() {
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const token = localStorage.getItem("token");
     const decodedUser = token ? jwtDecode(token) : null;
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 2;
     const staffAssignments = JSON.parse(localStorage.getItem("staffAssignments") || "[]");
-    const [metroTrains, setMetroTrains] = useState([]);
-    const [maxCapacity, setMaxCapacity] = useState(0);
-    const [maxVolume, setMaxVolume] = useState(0);
-    const startIndex = (currentPage - 1) * pageSize;
-    const currentData = metroTrains.slice(startIndex, startIndex + pageSize);
     const [statusOptions, setStatusOptions] = useState([]);
     const [statusFilter, setStatusFilter] = useState(null);
-    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 21, 22, 26];
+    const ALLOWED_STATUS = [1, 2, 3, 5, 6, 19, 21, 24, 26];
     const [dateRange, setDateRange] = useState([]);
     const [searchCode, setSearchCode] = useState('');
     const getOrderDate = (o) => dayjs(o.createdAt || o.scheduledDateTime);
@@ -90,23 +84,14 @@ function HandledOrderStaff() {
 
     //API ONE TIME
     useEffect(() => {
-        Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getMetroTrainsByStation(decodedUser?.StationId), getAllParcelCategories()]).then(
-            ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, metroTrainData, parcelCateData]) => {
+        Promise.all([getAllShipments(), getAllParcels(), getMetroTimeSlots(), getAllStations(), getMetroLines(), getAllParcelCategories()]).then(
+            ([shipmentsData, parcelsData, timeSlotsData, stationData, metroLineData, parcelCateData]) => {
                 setMetroLine(metroLineData)
                 setStations(stationData);
                 setShipments(shipmentsData.items);
                 setParcels(parcelsData);
                 setTimeSlots(timeSlotsData);
-                setMetroTrains(metroTrainData.items);
                 setParcelCate(parcelCateData);
-
-                //ADDITIONAL DATA TRAIN
-                const additional = metroTrainData.additionalData?.[0] || [];
-                const maxCapacityKg = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_KG")?.configValue || "N/A";
-                const maxVolumeM3 = additional.find(cfg => cfg.configKey === "MAX_CAPACITY_PER_LINE_M3")?.configValue || "N/A";
-
-                setMaxCapacity(maxCapacityKg);
-                setMaxVolume(maxVolumeM3);
             }
         );
     }, []);
@@ -368,7 +353,7 @@ function HandledOrderStaff() {
                                     <div className="metro-line-description">
                                         Vai trò
                                         <div className="data">
-                                            {decodedUser?.AssignmentRole || "N/A"}
+                                            {staffRoleMap[decodedUser?.AssignmentRole] || "N/A"}
                                         </div>
                                     </div>
 
@@ -414,6 +399,7 @@ function HandledOrderStaff() {
                                     value={dateFilter ?? today}
                                     onChange={(date) => setDateFilter(date)}
                                     style={{ width: '100%' }}
+                                    disabled
                                 />
                             </Col>
                             <Col span={18}>
@@ -457,6 +443,7 @@ function HandledOrderStaff() {
                                             onChange={(v) => setDateRange(v)}
                                             allowClear
                                             style={{ width: '100%' }}
+                                            placeholder={["Từ ngày", "Đến ngày"]}
                                         />
                                     </ConfigProvider>
                                 </Col>

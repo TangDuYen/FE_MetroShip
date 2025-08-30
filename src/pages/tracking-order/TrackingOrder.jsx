@@ -157,7 +157,7 @@ function TrackingOrder() {
     if (selectedShipment.shipmentStatus === 9) {
       fetchLivePosition();
     } else {
-      // reset map khi chưa đến trạng thái 10
+      // reset map khi chưa đến trạng thái 9
       setPosition([0, 0]);
       setPath([]);
       setFullPathSegments([]);
