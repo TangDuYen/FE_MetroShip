@@ -1,13 +1,14 @@
 import 'leaflet/dist/leaflet.css';
 
 import { Button, Checkbox, DatePicker, Flex, Form, Input, InputNumber, Modal, Select, Spin, Table } from 'antd';
-import { getAllParcelCategories, getAllRegions, getAllStations, getAllStationsByRegion, getMetroLines, getMetroTimeSlots, getNearbyStations } from '../../config/metroApi';
+import { getAllParcelCategories, getAllRegions, getAllStationsByRegion, getMetroTimeSlots, getNearbyStations } from '../../config/metroApi';
 import { useEffect, useRef, useState } from 'react';
 
 import { PATH_NAME } from '../../constants/pathname';
 import Title from 'antd/es/skeleton/Title';
 import api from '../../config/axios';
 import dayjs from 'dayjs';
+import { formatCurrency } from './../../constants/statusMap';
 import timezone from 'dayjs/plugin/timezone';
 import { toast } from 'react-toastify';
 import utc from 'dayjs/plugin/utc';
@@ -65,12 +66,10 @@ function ParcelInfo({
   const [regions, setRegions] = useState([]);
   const [selectedRegionFrom, setSelectedRegionFrom] = useState(null);
   const [selectedRegionTo, setSelectedRegionTo] = useState(null);
-
+  const [errorMsg, setErrorMsg] = useState('');
   const [stationsFrom, setStationsFrom] = useState([]);
   const [stationsTo, setStationsTo] = useState([]);
   const [nearbyStations, setNearbyStations] = useState([]);
-
-
 
   //MODAL OPERATION
   const showModal = () => {
@@ -80,18 +79,6 @@ function ParcelInfo({
   const handleClose = () => {
     setIsModalOpen(false);
   };
-
-  //API ONE TIME
-  // useEffect(() => {
-  //   Promise.all([getMetroTimeSlots(), getAllStations(), getAllParcelCategories(), getAllRegions()]).then(
-  //     ([timeSlotsData, stationData, parcelCategoryData, regionData]) => {
-  //       setStations(stationData);
-  //       setTimeSlot(timeSlotsData);
-  //       setParcelCategory(parcelCategoryData);
-  //       setRegions(regionData);
-  //     }
-  //   );
-  // }, []);
 
   useEffect(() => {
     (async () => {
@@ -149,44 +136,21 @@ function ParcelInfo({
           }
         }
 
-        //MERGE NEARBY STATIONS WITH STATIONS LIST FROM REGION
-        const stationMap = new Map();
-        nearby.forEach(st => stationMap.set(st.stationId, st));
-        fromStations.forEach(st => stationMap.set(st.stationId, st));
-
-        setStationsFrom(Array.from(stationMap.values()));
+        setStationsFrom(fromStations || []);
         setStationsTo(toStations || []);
-        console.log("Stations From:", stationsFrom);
 
       } catch (err) {
         console.error(err);
       }
     })();
-
   }, []);
-
 
   const handleChangeRegionFrom = async (regionId) => {
     setSelectedRegionFrom(regionId);
     try {
       const stationsOfRegion = await getAllStationsByRegion(regionId);
       setStationsTo(stationsOfRegion);
-      let mergedStations = (stationsOfRegion || []);
-
-      if (userLatitude && userLongitude) {
-        const nearby = await getNearbyStations({ userLatitude, userLongitude });
-        if (Array.isArray(nearby) && nearby.length > 0) {
-          const filteredNearby = nearby
-            .filter(st => st.regionId === regionId);
-          const stationMap = new Map();
-          [...filteredNearby, ...mergedStations].forEach(st =>
-            stationMap.set(st.stationId, st)
-          );
-          mergedStations = Array.from(stationMap.values());
-        }
-      }
-
-      setStationsFrom(mergedStations);
+      setStationsFrom(stationsOfRegion);
 
       if (mergedStations?.length > 0) {
         if (!displayedDepartureStationId) {
@@ -204,21 +168,6 @@ function ParcelInfo({
       console.error(e);
     }
   };
-
-  // const filterValidTimeSlots = (timeSlots, selectedDate) => {
-  //   const now = dayjs();
-  //   const isToday = selectedDate && dayjs(selectedDate).isSame(now, 'day');
-
-  //   return timeSlots.filter(slot => {
-  //     if (!isToday) return true;
-
-  //     const [h, m] = slot.openTime.split(':').map(Number);
-  //     const slotTime = dayjs().hour(h).minute(m).second(0)
-  //       .subtract(slot.scheduleBeforeShiftMinutes || 0, 'minute');
-
-  //     return now.isBefore(slotTime);
-  //   });
-  // };
 
   const filterValidTimeSlots = (timeSlots, selectedDate) => {
     const now = dayjs();
@@ -238,68 +187,17 @@ function ParcelInfo({
     });
   };
 
-  // const getSingleTimeOptions = () => {
-  //   const validSlots = filterValidTimeSlots(timeSlot, selectedDate);
-
-  //   return validSlots.map((slot) => {
-  //     const [h, m] = slot.openTime.split(':').map(Number);
-  //     const baseTime = dayjs().hour(h).minute(m).second(0);
-
-  //     const latestDrop = baseTime.subtract(slot.scheduleBeforeShiftMinutes || 30, 'minute');
-  //     const earliestDrop = baseTime.subtract(slot.maxScheduleBeforeShiftMinutes || 120, 'minute');
-
-  //     return {
-  //       label: `${earliestDrop.format('HH:mm')} - ${latestDrop.format('HH:mm')}`,
-  //       value: slot.id,
-  //     };
-  //   });
-  // };
-
   const getSingleTimeOptions = (timeSlots, selectedDate) => {
     const validSlots = filterValidTimeSlots(timeSlots, selectedDate);
 
     return validSlots.map(slot => ({
-      label: `${slot.startReceivingTime} - ${slot.cutOffTime}`,
+      label: `${dayjs(slot.startReceivingTime, "HH:mm:ss").format("HH:mm")} - ${dayjs(slot.cutOffTime, "HH:mm:ss").format("HH:mm")}`,
       value: slot.id,
     }));
   }
 
   const timeOptions = getSingleTimeOptions(timeSlot || [], selectedDate);
 
-  // useEffect(() => {
-  //   if (selectedDate || selectedTime) {
-  //     setPickedDate(selectedDate);
-  //     setPickedTime(selectedTime);
-
-  //     if (selectedDate && selectedTime) {
-  //       const dateObj = dayjs(selectedDate);
-  //       const selectedSlot = timeSlot.find(slot => slot.id === selectedTime);
-  //       if (selectedSlot) {
-  //         const [hour, minute] = selectedSlot.openTime.split(':').map(Number);
-
-  //         const combinedDateTime = dateObj
-  //           .hour(hour)
-  //           .minute(minute)
-  //           .subtract(selectedSlot.scheduleBeforeShiftMinutes, "minute")
-  //           .second(0)
-  //           .format("YYYY-MM-DDTHH:mm:ss");
-
-  //         const startReceiveAt = dateObj
-  //           .hour(hour)
-  //           .minute(minute)
-  //           .subtract(selectedSlot.maxScheduleBeforeShiftMinutes || 0, "minute")
-  //           .second(0)
-  //           .format("YYYY-MM-DDTHH:mm:ss");
-  //         setTimeSlots(selectedSlot.id);
-  //         setMetroSelector(prev => ({
-  //           ...prev,
-  //           departureDateTime: combinedDateTime,
-  //           startReceiveAt: startReceiveAt,
-  //         }));
-  //       }
-  //     }
-  //   }
-  // }, [selectedDate, selectedTime, timeSlot]);
   useEffect(() => {
     if (selectedDate || selectedTime) {
       setPickedDate(selectedDate);
@@ -552,7 +450,6 @@ function ParcelInfo({
     try {
       const res = await api.post('/shipments/total-price-itinerary', payload);
       const data = res.data?.data;
-      const standardData = data?.standard;
 
       const solutions = [];
 
@@ -692,7 +589,7 @@ function ParcelInfo({
                 ))}
               </Select>
 
-              {/* OPTIONAL INSURANCE */}
+              {/* OPTIONAL INSURANCE (hiển thị checkbox nếu không bắt buộc) */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
                 const policy = selectedCat?.categoryInsurances
@@ -716,50 +613,77 @@ function ParcelInfo({
                       Tính phí bảo hiểm cho hàng này
                       {policy ? ` (${baseFee.toLocaleString('vi-VN')} VND)` : ' (sẽ cộng khi tính giá)'}
                     </Checkbox>
-
                   );
                 }
                 return null;
               })()}
 
-              {/* REQUIRED INSURANCE */}
-              {(() => {
-                const selectedCat = parcelCategory.find(c => c.id === parcel.parcelCategory);
-                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
-                if (selectedCat?.isInsuranceRequired || selectedCat?.insuranceRate) {
-                  return (
-                    <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
-                      ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm. Phí bảo hiểm: {policy.insuranceFeeRateOnValue * 100}% trên giá trị món hàng.
-                      <div>
-                        ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">chính sách gửi hàng</a> trước khi gửi.
-                      </div>
-                      <div>
-                        ⚠️ MetroShip không nhận vận chuyển các loại trang sức (bạc, vàng, kim cương).
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-
-              {/* UPLOAD BILL */}
+              {/* INSURANCE DETAILS (cho cả bắt buộc và optional nếu được chọn) */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
-                const policy = selectedCat?.categoryInsurances?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
-                if (selectedCat?.isInsuranceRequired) {
-                  const insuranceCost = Math.round((parcel.valueVnd || 0) * policy.insuranceFeeRateOnValue);
+                const policy = selectedCat?.categoryInsurances
+                  ?.find(ins => ins.insurancePolicy?.isActive)?.insurancePolicy;
+
+                if (!selectedCat || !policy) return null;
+
+                const isRequired = selectedCat.isInsuranceRequired;
+                const isOptionalChosen = parcel.includeOptionalInsurance;
+
+                // Nếu bắt buộc bảo hiểm HOẶC optional đã được chọn
+                if (isRequired || isOptionalChosen) {
+                  const insuranceCost = isRequired
+                    ? Math.round((parcel.valueVnd || 0) * policy.insuranceFeeRateOnValue)
+                    : (parcel.insuranceFeeVnd || policy.baseFeeVnd || 0);
+
                   return (
                     <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
+                      {/* ⚠️ Warning chỉ hiển thị khi bắt buộc */}
+                      {isRequired && (
+                        <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
+                          ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm.
+                          Phí bảo hiểm: {policy.insuranceFeeRateOnValue * 100}% trên giá trị món hàng.
+                          <div>
+                            ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ{" "}
+                            <a
+                              href={PATH_NAME.PARCEL_RULES}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              chính sách gửi hàng
+                            </a>{" "}
+                            trước khi gửi.
+                          </div>
+                          <div>
+                            ⚠️ MetroShip không nhận vận chuyển các loại trang sức (bạc, vàng, kim cương).
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Input kê khai giá trị hàng hóa */}
                       <InputNumber
                         min={0}
                         style={{ width: '100%' }}
                         value={parcel.valueVnd}
-                        onChange={(value) => updateParcel(index, 'valueVnd', value)}
+                        onChange={(value) => {
+                          updateParcel(index, 'valueVnd', value);
+                          if (value > policy.maxParcelValueVnd) {
+                            setErrorMsg(
+                              `Giá trị món hàng không được vượt quá ${policy.maxParcelValueVnd.toLocaleString('vi-VN')} VND`
+                            );
+                          } else {
+                            setErrorMsg('');
+                          }
+                        }}
                       />
+                      {errorMsg && (
+                        <div style={{ color: 'red', marginTop: 4 }}>{errorMsg}</div>
+                      )}
+
                       <div style={{ marginTop: '0.5em', color: '#888' }}>
                         Phí bảo hiểm: {insuranceCost.toLocaleString('vi-VN')} VND
                       </div>
 
+                      {/* Upload bill */}
                       {parcel.descriptionImageUrl && (
                         <div style={{ marginTop: 10 }}>
                           <strong>Ảnh hóa đơn:</strong>
@@ -785,8 +709,12 @@ function ParcelInfo({
                     </Form.Item>
                   );
                 }
+
+                // Nếu là hàng optional nhưng chưa tick bảo hiểm thì ẩn hẳn
                 return null;
               })()}
+
+
             </Form.Item>
 
             <Form.Item label="Trọng lượng (kg)">
@@ -868,6 +796,43 @@ function ParcelInfo({
             </Select>
           </div>
 
+          {nearbyStations.length > 0 && (
+            <div className="selector-group" style={{ marginBottom: '1em' }}>
+              <label>Trạm gần bạn:</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5em', marginTop: '0.5em' }}>
+                {nearbyStations.slice(0, 3).map(station => (
+                  <Button
+                    key={station.stationId}
+                    type={realDepartureStationId === station.stationId ? "primary" : "default"}
+                    onClick={() => {
+                      setRealDepartureStationId(station.stationId);
+                      setDisplayedDepartureStationId(station.stationId);
+                      setMetroSelector(prev => ({ ...prev, departureStationId: station.stationId }));
+
+                      localStorage.setItem(
+                        "departureStationLocation",
+                        JSON.stringify({
+                          id: station.stationId,
+                          name: station.stationNameVi,
+                          lat: station.latitude,
+                          lng: station.longitude,
+                        })
+                      );
+                      setDepartureStation(station);
+                    }}
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <span>{station.stationNameVi}</span>
+                    <span style={{ fontWeight: 500 }}>
+                      {`${(station.distanceMeters / 1000).toFixed(1)} km`}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
           {/* DEPARTURE STATION */}
           <div className="selector-group">
             <label>Trạm gửi:</label>
@@ -935,7 +900,7 @@ function ParcelInfo({
                   station.stationId !== displayedDepartureStationId)//FILTER NOT SAME AS DEPARTURE
                 .map(station => (
                   <Option key={station.stationId} value={station.stationId}>
-                    {station.stationNameVi} 
+                    {station.stationNameVi}
                   </Option>
                 ))}
             </Select>
@@ -965,7 +930,7 @@ function ParcelInfo({
                     placeholder="Chọn giờ gửi"
                     value={selectedTime}
                     onChange={(value) => setSelectedTime(value)}
-                    style={{ marginBottom: '1em', marginRight: '1em', width: '200px' }}
+                    style={{ marginBottom: '1em', marginRight: '1em'}}
                   >
                     {timeOptions.map((opt) => (
                       <Option key={opt.value} value={opt.value}>
@@ -1170,6 +1135,7 @@ function ParcelInfo({
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) setVerifyImages(file);
+                  e.target.value = null;
                 }}
               />
 

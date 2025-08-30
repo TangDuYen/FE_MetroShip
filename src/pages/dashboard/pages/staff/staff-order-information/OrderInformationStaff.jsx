@@ -88,7 +88,7 @@ function OrderInformationStaff() {
                         key={m.id}
                         src={m.mediaUrl}
                         width={200}
-                        style={{ marginRight: 10, marginBottom: 10 }}
+                        style={{ marginRight: 20, marginBottom: 10 }}
                     />
                 ))}
             </Card>
