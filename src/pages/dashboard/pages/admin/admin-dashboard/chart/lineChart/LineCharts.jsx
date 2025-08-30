@@ -42,11 +42,11 @@ function LineCharts() {
       if (filterType === 0) {
         url += `?FilterType=0`; // default
       } else if (filterType === 1) {
-        url += `?FilterType=1&Year=${year}`;
+        url += `?FilterType=2&Year=${year}`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Year=${year}&Quarter=${quarter}`;
+        url += `?FilterType=3&Year=${year}&Quarter=${quarter}`;
       } else if (filterType === 3) {
-        url += `?FilterType=3&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
+        url += `?FilterType=4&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
       }
 
       const res = await api.get(url);
@@ -77,7 +77,7 @@ function LineCharts() {
 
   useEffect(() => {
     fetchRevenue();
-  }, []);
+  }, [filterType, year, quarter, startMonth, endMonth]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -162,9 +162,9 @@ function LineCharts() {
             </>
           )}
 
-          <Button type="primary" onClick={fetchRevenue}>
+          {/* <Button type="primary" onClick={fetchRevenue}>
             Xem
-          </Button>
+          </Button> */}
         </div>
       </div>
 
