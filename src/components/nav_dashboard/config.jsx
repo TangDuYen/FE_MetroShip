@@ -56,6 +56,11 @@ export const navDashboardConfig = [
     label: "Đơn hàng",
   },
   {
+    key: "14",
+    icon: <TransactionOutlined  style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Giao dịch",
+  },
+  {
     key: "11",
     icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Loại bưu kiện",
@@ -162,6 +167,9 @@ export const navpath = {
   },
   13: {
     path: PATH_NAME.DASHBOARD_ADMIN_PRICE_MANAGEMENT,
+  },
+  14: {
+    path: PATH_NAME.DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,

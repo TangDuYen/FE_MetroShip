@@ -23,7 +23,7 @@ export const PATH_NAME = {
   PAYMENT_SUCCESS: "/payment-success",
   PAYMENT_FAILED: "/payment-fail",
   BOOKING_ORDER: "/booking-order",
-  // TRACKING_ORDER: "/tracking-order", 
+  // TRACKING_ORDER: "/tracking-order",
   PRINT_ORDER: "/print-order",
   POLICY: "/policy",
   CHANGE_PASSWORD: "/change-password",
@@ -60,6 +60,7 @@ export const PATH_NAME = {
   DASHBOARD_ADMIN_METRO_INSURANCE: "/dashboard/admin/metro-insurance",
   DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS:
     "/dashboard/admin/metro-insurance-details/:insuranceId",
-    DASHBOARD_ADMIN_PRICE_MANAGEMENT:
-    "/dashboard/admin/price-management",
+  DASHBOARD_ADMIN_PRICE_MANAGEMENT: "/dashboard/admin/price-management",
+  DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT:
+    "/dashboard/admin/transaction-management",
 };
