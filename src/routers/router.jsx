@@ -559,6 +559,16 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/admin/admin-transaction/TransactionManagement")
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);
