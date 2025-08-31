@@ -4,13 +4,15 @@ import {
   buildStyles,
   CircularProgressbarWithChildren,
 } from "react-circular-progressbar";
-import { Button, DatePicker, InputNumber, Select, Spin } from "antd";
+import { Button, DatePicker, InputNumber, Select, Spin, Typography } from "antd";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import api from "../../../../../../../config/axios";
 
+
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+const { Title } = Typography;
 function ProgressChart() {
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
@@ -18,7 +20,7 @@ function ProgressChart() {
   // filter states
   const [filterType, setFilterType] = useState(0);
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
-  const [year, setYear] = useState(dayjs().year(2025));
+  const [year, setYear] = useState(dayjs().year());
   const [quarter, setQuarter] = useState(1);
   const [startMonth, setStartMonth] = useState(1);
   const [endMonth, setEndMonth] = useState(12);
@@ -68,7 +70,7 @@ function ProgressChart() {
   const satisfactionPercent = Number(chartData?.satisfactionPercent ?? 0);
 
   // vòng tròn hiển thị tổng đơn (theo thiết kế cũ chia 10k để ra % vòng tròn)
-  const circleValuePercent = (totalOrders / 10000) * 100;
+  const circleValuePercent = (totalOrders / 1000) * 100;
 
   // progress bars hiển thị theo % để không bị tràn >100%
   const successRate =
@@ -82,7 +84,7 @@ function ProgressChart() {
   return (
     <div className="sales-record-card">
       <div className="top">
-        <h4>Chỉ số hoạt động</h4>
+        <Title level={4}>Chỉ số hoạt động</Title>
         <div className="filters">
           <Select
             value={filterType}

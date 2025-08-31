@@ -12,7 +12,9 @@ import {
   AreaChart,
 } from "recharts";
 import api from "../../../../../../../config/axios";
-import { Button, InputNumber, message, Select, Spin } from "antd";
+import { Button, InputNumber, message, Select, Spin, Typography } from "antd";
+
+const { Title } = Typography;
 
 function LineCharts() {
   // const lineData = [
@@ -99,7 +101,8 @@ function LineCharts() {
   return (
     <div className="card-line">
       <div className="line-top">
-        <h3>Lịch sử doanh thu</h3>
+        
+        <Title level={4}>Lịch sử doanh thu</Title>
 
         <div className="filter-section">
           <Select

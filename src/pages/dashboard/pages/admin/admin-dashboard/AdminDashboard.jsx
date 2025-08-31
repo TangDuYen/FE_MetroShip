@@ -80,7 +80,7 @@ function AdminDashboard() {
       </div>
       <div className="chart-grid-1">
         <PieCharts />
-        {/* <BarCharts /> */}
+        <BarCharts />
       </div>
     </div>
   );
