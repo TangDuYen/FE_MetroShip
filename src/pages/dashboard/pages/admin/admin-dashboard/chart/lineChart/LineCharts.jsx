@@ -57,13 +57,13 @@ function LineCharts() {
       let chartData;
       if (apiData.length === 0) {
         chartData = Array.from({ length: 12 }, (_, i) => ({
-          month: `Tháng ${i + 1}`,
+          month: `T${i + 1}`,
           revenue: 0,
           growth: 0,
         }));
       } else {
         chartData = apiData.map((item) => ({
-          month: `Tháng ${item.month}`,
+          month: `T${item.month}`,
           revenue: item.totalPaidAmount,
           growth: item.paidAmountGrowthPercent,
         }));
