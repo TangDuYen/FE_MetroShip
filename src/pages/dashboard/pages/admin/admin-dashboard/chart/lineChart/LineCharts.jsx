@@ -58,14 +58,16 @@ function LineCharts() {
       if (apiData.length === 0) {
         chartData = Array.from({ length: 12 }, (_, i) => ({
           month: `T${i + 1}`,
-          revenue: 0,
+          income: 0,
+          outcome: 0,
           growth: 0,
         }));
       } else {
         chartData = apiData.map((item) => ({
           month: `T${item.month}`,
-          revenue: item.totalPaidAmount,
-          growth: item.paidAmountGrowthPercent,
+          income: item.totalIncome,
+          outcome: item.totalOutcome,
+          growth: item.netGrowthPercent,
         }));
       }
 
@@ -83,14 +85,16 @@ function LineCharts() {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const revenue = payload[0]?.payload?.revenue;
+      const income = payload[0]?.payload?.income;
+      const outcome = payload[0]?.payload?.outcome;
       const growth = payload[0]?.payload?.growth;
       return (
         <div className="tooltip-box">
           <p>
             <strong>{label}</strong>
           </p>
-          <p>Doanh thu: {revenue.toLocaleString()} đ</p>
+          <p>Doanh thu: {income.toLocaleString()} đ</p>
+          <p>Hoàn tiền: {outcome.toLocaleString()} đ</p>
           <p>Tăng trưởng: {growth}%</p>
         </div>
       );
@@ -179,6 +183,10 @@ function LineCharts() {
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
               </linearGradient>
+              <linearGradient id="outcomeGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
+        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+      </linearGradient>
             </defs>
             <XAxis dataKey="month" />
             <YAxis />
@@ -186,11 +194,19 @@ function LineCharts() {
             <Tooltip content={CustomTooltip} />
             <Area
               type="monotone"
-              dataKey="revenue"
+              dataKey="income"
               stroke="#3B82F6"
               fillOpacity={1}
               fill="url(#colorRevenue)"
             />
+            <Area
+      type="monotone"
+      dataKey="outcome"
+      stroke="#EF4444"
+      fillOpacity={1}
+      fill="url(#outcomeGradient)"
+      name="Chi phí"
+    />
           </AreaChart>
         </ResponsiveContainer>
       </Spin>
