@@ -111,12 +111,35 @@ function ParcelInfo({
             getAllStationsByRegion(defaultHcm.id),
           ]);
         }
-        
+
+        //GET NEARBY STATIONS
+        let nearby = [];
         if (userLatitude && userLongitude) {
-          const nearby = await getNearbyStations({ userLatitude, userLongitude });
-          setNearbyStations(nearby || []);
+          nearby = await getNearbyStations({ userLatitude, userLongitude });
+          setNearbyStations(nearby);
         }
 
+        //CHECK IF HAS DEPATURE STATION IN SESSION
+        const cached = sessionStorage.getItem("parcelFormData");
+        const cachedDepartureId = cached ? JSON.parse(cached)?.metroSelector?.departureStationId : null;
+
+        //SET NEARBY IF NOT HAS DEPATURE STATION IN SESSION
+        if (!cachedDepartureId && Array.isArray(nearby) && nearby.length > 0) {
+          const nearest = nearby[0];
+
+          setRealDepartureStationId(nearest.stationId);
+          setDisplayedDepartureStationId(nearest.stationId);
+          setMetroSelector(prev => ({ ...prev, departureStationId: nearest.stationId }));
+
+          localStorage.setItem("departureStationLocation", JSON.stringify({
+            id: nearest.stationId,
+            name: nearest.stationNameVi,
+            lat: nearest.latitude,
+            lng: nearest.longitude
+          }));
+
+          setDepartureStation(nearest);
+        }
         setStationsFrom(fromStations || []);
         setStationsTo(toStations || []);
 
