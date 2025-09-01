@@ -12,7 +12,9 @@ import {
   AreaChart,
 } from "recharts";
 import api from "../../../../../../../config/axios";
-import { Button, InputNumber, message, Select, Spin } from "antd";
+import { Button, InputNumber, message, Select, Spin, Typography } from "antd";
+
+const { Title } = Typography;
 
 function LineCharts() {
   // const lineData = [
@@ -42,11 +44,11 @@ function LineCharts() {
       if (filterType === 0) {
         url += `?FilterType=0`; // default
       } else if (filterType === 1) {
-        url += `?FilterType=1&Year=${year}`;
+        url += `?FilterType=2&Year=${year}`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Year=${year}&Quarter=${quarter}`;
+        url += `?FilterType=3&Year=${year}&Quarter=${quarter}`;
       } else if (filterType === 3) {
-        url += `?FilterType=3&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
+        url += `?FilterType=4&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
       }
 
       const res = await api.get(url);
@@ -55,13 +57,13 @@ function LineCharts() {
       let chartData;
       if (apiData.length === 0) {
         chartData = Array.from({ length: 12 }, (_, i) => ({
-          month: `Tháng ${i + 1}`,
+          month: `T${i + 1}`,
           revenue: 0,
           growth: 0,
         }));
       } else {
         chartData = apiData.map((item) => ({
-          month: `Tháng ${item.month}`,
+          month: `T${item.month}`,
           revenue: item.totalPaidAmount,
           growth: item.paidAmountGrowthPercent,
         }));
@@ -77,7 +79,7 @@ function LineCharts() {
 
   useEffect(() => {
     fetchRevenue();
-  }, []);
+  }, [filterType, year, quarter, startMonth, endMonth]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -99,7 +101,8 @@ function LineCharts() {
   return (
     <div className="card-line">
       <div className="line-top">
-        <h3>Lịch sử doanh thu</h3>
+        
+        <Title level={4}>Lịch sử doanh thu</Title>
 
         <div className="filter-section">
           <Select
@@ -162,9 +165,9 @@ function LineCharts() {
             </>
           )}
 
-          <Button type="primary" onClick={fetchRevenue}>
+          {/* <Button type="primary" onClick={fetchRevenue}>
             Xem
-          </Button>
+          </Button> */}
         </div>
       </div>
 
