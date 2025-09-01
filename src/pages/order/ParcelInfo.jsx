@@ -111,29 +111,10 @@ function ParcelInfo({
             getAllStationsByRegion(defaultHcm.id),
           ]);
         }
-
-        let nearby = [];
+        
         if (userLatitude && userLongitude) {
-          nearby = await getNearbyStations({ userLatitude, userLongitude });
-          setNearbyStations(nearby);
-
-          if (Array.isArray(nearby) && nearby.length > 0) {
-            const nearest = nearby[0];
-
-            //PREFILL DEPARTURE STATION ID
-            setRealDepartureStationId(nearest.stationId);
-            setDisplayedDepartureStationId(nearest.stationId);
-            setMetroSelector(prev => ({ ...prev, departureStationId: nearest.stationId }));
-
-            localStorage.setItem("departureStationLocation", JSON.stringify({
-              id: nearest.stationId,
-              name: nearest.stationNameVi,
-              lat: nearest.latitude,
-              lng: nearest.longitude
-            }));
-
-            setDepartureStation(nearest);
-          }
+          const nearby = await getNearbyStations({ userLatitude, userLongitude });
+          setNearbyStations(nearby || []);
         }
 
         setStationsFrom(fromStations || []);
@@ -930,7 +911,7 @@ function ParcelInfo({
                     placeholder="Chọn giờ gửi"
                     value={selectedTime}
                     onChange={(value) => setSelectedTime(value)}
-                    style={{ marginBottom: '1em', marginRight: '1em'}}
+                    style={{ marginBottom: '1em', marginRight: '1em' }}
                   >
                     {timeOptions.map((opt) => (
                       <Option key={opt.value} value={opt.value}>
