@@ -3,14 +3,12 @@
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 16px;
-  
 
-  h4 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #111827;
+  .top{
+    display: flex;
+    justify-content: space-between;
   }
+
 
   .top-section {
     display: flex;
