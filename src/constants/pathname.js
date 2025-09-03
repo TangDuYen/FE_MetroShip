@@ -63,4 +63,6 @@ export const PATH_NAME = {
   DASHBOARD_ADMIN_PRICE_MANAGEMENT: "/dashboard/admin/price-management",
   DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT:
     "/dashboard/admin/transaction-management",
+    DASHBOARD_ADMIN_SYSTEM_CONFIG:
+    "/dashboard/admin/system-config",
 };

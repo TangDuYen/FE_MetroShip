@@ -569,6 +569,16 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_SYSTEM_CONFIG,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/admin/admin-systemconfig/AdminSystemConfig")
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);
