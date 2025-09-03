@@ -77,13 +77,13 @@ function AdminSystemConfig() {
   
   const handleUpdateConfig = async (values) => {
     try {
-      await api.put("/system-configs", {
-        id: editingConfig.id,
-        description: values.description,
-        configType: typeMap[values.configTypeName],
-      });
+      const res = await api.put("/system-configs", {
+      id: editingConfig.id,
+      description: values.description,
+      configType: typeMap[values.configTypeName],
+    });
 
-      toast.success("Cập nhật thành công");
+      toast.success(res.data?.data || "Cập nhật thành công");
       setIsModalOpen(false);
       fetchConfigs();
     } catch (err) {
@@ -99,12 +99,12 @@ function AdminSystemConfig() {
 
   const handleSubmitChangeValue = async (values) => {
     try {
-      await api.post("/system-configs/config-value", {
-        configKey: changingConfig.configKey,
-        configValue: values.configValue,
-      });
+      const res = await api.post("/system-configs/config-value", {
+      configKey: changingConfig.configKey,
+      configValue: values.configValue,
+    });
 
-      toast.success("Đổi giá trị thành công");
+    toast.success(res.data?.data || "Đổi giá trị thành công");
       setIsValueModalOpen(false);
       fetchConfigs();
     } catch (err) {
