@@ -1,9 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
 import "./TransactionManagement.scss";
-import {
-  getAllShipments,
-  getAllTransactions,
-} from "../../../../../config/metroApi";
+
 import {
   Button,
   ConfigProvider,
@@ -17,14 +13,21 @@ import {
   Tabs,
   Tag,
 } from "antd";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
+import { MinusCircleOutlined, PlusCircleOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  formatCurrency1,
   paymentStatusColorMap,
   paymentStatusMap,
   paymentTransactionTypeColorMap,
   paymentTransactionTypeMap,
 } from "../../../../../constants/statusMap";
+import {
+  getAllShipments,
+  getAllTransactions,
+} from "../../../../../config/metroApi";
+
+import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(isBetween);
@@ -165,14 +168,30 @@ function TransactionManagement() {
     {
       title: "Số tiền",
       dataIndex: "paymentAmount",
-      render: (_, record) =>
-        record.paymentAmount
-          ? record.paymentAmount.toLocaleString() +
-            " " +
-            (record.paymentCurrency || "")
-          : "-",
-    },
+      render: (value, record) => {
+        if (!value) return "-";
 
+        const formatted = formatCurrency1(value) + " " + (record.paymentCurrency || "");
+
+        if ([1, 2].includes(record.transactionType)) {
+          return (
+            <span style={{ color: "green" }}>
+              <PlusCircleOutlined /> {formatted}
+            </span>
+          );
+        }
+
+        if ([3, 4].includes(record.transactionType)) {
+          return (
+            <span style={{ color: "red" }}>
+              <MinusCircleOutlined /> {formatted}
+            </span>
+          );
+        }
+
+        return formatted;
+      },
+    },
     {
       title: "Ngày thanh toán",
       dataIndex: "paymentDate",

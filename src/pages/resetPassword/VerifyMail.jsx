@@ -1,19 +1,19 @@
 import './ResetPassword.scss'
 
-import  * as Yup  from 'yup';
+import * as Yup from 'yup';
 
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login1.png';
 import api from '../../config/axios';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 function VerifyMail() {
     const [error, setError] = useState(null);
     const nav = useNavigate();
-    const [isChecked, setIsChecked] = useState(false);
 
     const validationSchema = Yup.object({
         email: Yup.string()
@@ -22,21 +22,28 @@ function VerifyMail() {
     });
 
     const handleSubmit = async (values) => {
-        // console.log(values);
-        // const payload = {
-        //     email: values.email,
-        // };
-        // try {
-        //     const response = await api.post(`/User/ForgotPassword?email=${encodeURIComponent(values.email)}`);
-        //     const data = response.data;
-        //     if (data.error === 0) {
-        //         nav("/recovery-password");
-        //     } else {
-        //         message.error(data.message);
-        //     }
-        // } catch (error) {
-        //     setError(error.message);
-        // }
+        console.log(values);
+        const payload = {
+            email: values.email,
+        };
+        try {
+            const response = await api.post('/auth/password/forgot', payload);
+            const data = response.data;
+            if (response.status === 200) {
+                nav("/recovery-password");
+            } else {
+                toast.error(data?.message || "Có lỗi xảy ra!");
+            }
+        } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                // Lấy tất cả lỗi từ object errors
+                const firstError = Object.values(errData.errors).flat()[0];
+                toast.error(firstError);
+            } else {
+                toast.error(errData?.title || "Lỗi không xác định!");
+            }
+        }
     };
 
     return (
@@ -76,7 +83,6 @@ function VerifyMail() {
                                 <button type="submit" className="register-btn">
                                     Xác nhận
                                 </button>
-                                {error && <p className="error-message">{error}</p>}
                             </Form>
                         )}
                     </Formik>

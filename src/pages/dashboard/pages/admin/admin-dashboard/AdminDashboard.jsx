@@ -75,11 +75,12 @@ function AdminDashboard() {
       </div>
       <div className="chart-grid">
         <LineCharts />
-        <PieCharts />
+        <ProgressChart />
+        
       </div>
       <div className="chart-grid-1">
-        {/* <ProgressChart /> */}
-        {/* <BarCharts /> */}
+        <PieCharts />
+        <BarCharts />
       </div>
     </div>
   );

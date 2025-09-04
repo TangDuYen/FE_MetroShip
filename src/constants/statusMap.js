@@ -164,10 +164,6 @@ export const businessMediaType = {
   7: "Khác",
 }
 
-
-
-
-
 //UTILITY FUNCTIONS
 // export const formatCurrency = (v) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' VND';
 export const formatCurrency = (v) => {

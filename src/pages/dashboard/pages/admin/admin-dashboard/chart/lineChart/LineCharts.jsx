@@ -12,7 +12,9 @@ import {
   AreaChart,
 } from "recharts";
 import api from "../../../../../../../config/axios";
-import { Button, InputNumber, message, Select, Spin } from "antd";
+import { Button, InputNumber, message, Select, Spin, Typography } from "antd";
+
+const { Title } = Typography;
 
 function LineCharts() {
   // const lineData = [
@@ -42,11 +44,11 @@ function LineCharts() {
       if (filterType === 0) {
         url += `?FilterType=0`; // default
       } else if (filterType === 1) {
-        url += `?FilterType=1&Year=${year}`;
+        url += `?FilterType=2&Year=${year}`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Year=${year}&Quarter=${quarter}`;
+        url += `?FilterType=3&Year=${year}&Quarter=${quarter}`;
       } else if (filterType === 3) {
-        url += `?FilterType=3&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
+        url += `?FilterType=4&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
       }
 
       const res = await api.get(url);
@@ -55,15 +57,17 @@ function LineCharts() {
       let chartData;
       if (apiData.length === 0) {
         chartData = Array.from({ length: 12 }, (_, i) => ({
-          month: `Tháng ${i + 1}`,
-          revenue: 0,
+          month: `T${i + 1}`,
+          income: 0,
+          outcome: 0,
           growth: 0,
         }));
       } else {
         chartData = apiData.map((item) => ({
-          month: `Tháng ${item.month}`,
-          revenue: item.totalPaidAmount,
-          growth: item.paidAmountGrowthPercent,
+          month: `T${item.month}`,
+          income: item.totalIncome,
+          outcome: item.totalOutcome,
+          growth: item.netGrowthPercent,
         }));
       }
 
@@ -77,18 +81,20 @@ function LineCharts() {
 
   useEffect(() => {
     fetchRevenue();
-  }, []);
+  }, [filterType, year, quarter, startMonth, endMonth]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const revenue = payload[0]?.payload?.revenue;
+      const income = payload[0]?.payload?.income;
+      const outcome = payload[0]?.payload?.outcome;
       const growth = payload[0]?.payload?.growth;
       return (
         <div className="tooltip-box">
           <p>
             <strong>{label}</strong>
           </p>
-          <p>Doanh thu: {revenue.toLocaleString()} đ</p>
+          <p>Doanh thu: {income.toLocaleString()} đ</p>
+          <p>Hoàn tiền: {outcome.toLocaleString()} đ</p>
           <p>Tăng trưởng: {growth}%</p>
         </div>
       );
@@ -99,7 +105,8 @@ function LineCharts() {
   return (
     <div className="card-line">
       <div className="line-top">
-        <h3>Lịch sử doanh thu</h3>
+        
+        <Title level={4}>Lịch sử doanh thu</Title>
 
         <div className="filter-section">
           <Select
@@ -162,9 +169,9 @@ function LineCharts() {
             </>
           )}
 
-          <Button type="primary" onClick={fetchRevenue}>
+          {/* <Button type="primary" onClick={fetchRevenue}>
             Xem
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -176,6 +183,10 @@ function LineCharts() {
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
               </linearGradient>
+              <linearGradient id="outcomeGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
+        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+      </linearGradient>
             </defs>
             <XAxis dataKey="month" />
             <YAxis />
@@ -183,11 +194,19 @@ function LineCharts() {
             <Tooltip content={CustomTooltip} />
             <Area
               type="monotone"
-              dataKey="revenue"
+              dataKey="income"
               stroke="#3B82F6"
               fillOpacity={1}
               fill="url(#colorRevenue)"
             />
+            <Area
+      type="monotone"
+      dataKey="outcome"
+      stroke="#EF4444"
+      fillOpacity={1}
+      fill="url(#outcomeGradient)"
+      name="Chi phí"
+    />
           </AreaChart>
         </ResponsiveContainer>
       </Spin>

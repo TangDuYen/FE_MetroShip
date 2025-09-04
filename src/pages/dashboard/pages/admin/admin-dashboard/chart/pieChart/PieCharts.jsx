@@ -9,7 +9,9 @@ import {
   Sector,
 } from "recharts";
 import api from "../../../../../../../config/axios";
-import { Select } from "antd";
+import { Select, Typography } from "antd";
+
+const { Title } = Typography;
 
 const COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"];
 
@@ -73,8 +75,7 @@ function PieCharts() {
   return (
     <div className="pie-chart">
       <div className="pie-chart-top">
-        <h3>Biểu đồ doanh số theo loại hàng</h3>
-
+        <Title level={4}>Doanh số theo loại hàng</Title>
         <Select
           value={rangeType}
           style={{ width: 160 }}

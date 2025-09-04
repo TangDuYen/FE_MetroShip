@@ -60,7 +60,7 @@ function Pincode() {
                     value={pin}
                     onChange={onChange}
                     maxLength={6} 
-                    placeholder="Enter 6-digit PIN"
+                    placeholder="Nhập mã OTP gồm 6 mã số"
                     inputMode="numeric"
                     style={{ width: "100%", marginBottom: "10px" }} 
                 />
