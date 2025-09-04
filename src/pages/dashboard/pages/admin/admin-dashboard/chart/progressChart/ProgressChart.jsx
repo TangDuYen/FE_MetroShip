@@ -65,8 +65,9 @@ function ProgressChart() {
   };
 
   const totalOrders = Number(chartData?.totalOrders ?? 0);
-  const successfulOrders = Number(chartData?.successfulOrders ?? 0);
-  const unsuccessfulOrders = Number(chartData?.unsuccessfulOrders ?? 0);
+  const completedOrders = Number(chartData?.completedOrders ?? 0);
+  const refundedOrders = Number(chartData?.refundedOrders ?? 0);
+  const compensatedOrders = Number(chartData?.compensatedOrders ?? 0);
   const satisfactionPercent = Number(chartData?.satisfactionPercent ?? 0);
 
   // vòng tròn hiển thị tổng đơn (theo thiết kế cũ chia 10k để ra % vòng tròn)
@@ -74,7 +75,7 @@ function ProgressChart() {
 
   // progress bars hiển thị theo % để không bị tràn >100%
   const successRate =
-    totalOrders > 0 ? Math.round((successfulOrders / totalOrders) * 100) : 0;
+    totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
   const progressList = [
     { label: "Tỉ lệ giao thành công", value: successRate, color: "#3b82f6" },
@@ -188,12 +189,18 @@ function ProgressChart() {
           <div className="stats">
             <div>
               <span className="label">Đơn thành công</span>
-              <span className="value">{successfulOrders.toLocaleString()}</span>
+              <span className="value">{completedOrders.toLocaleString()}</span>
             </div>
             <div>
               <span className="label">Hoàn đơn</span>
               <span className="value">
-                {unsuccessfulOrders.toLocaleString()}
+                {refundedOrders.toLocaleString()}
+              </span>
+            </div>
+            <div>
+              <span className="label">Đơn bồi thường</span>
+              <span className="value">
+                {compensatedOrders.toLocaleString()}
               </span>
             </div>
           </div>
