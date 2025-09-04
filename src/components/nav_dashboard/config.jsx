@@ -7,6 +7,7 @@ import {
   PayCircleOutlined,
   ProductOutlined,
   ProfileOutlined,
+  SettingOutlined,
   TeamOutlined,
   TransactionOutlined,
   UnorderedListOutlined,
@@ -79,6 +80,12 @@ export const navDashboardConfig = [
     key: "6",
     icon: <ProfileOutlined  style={{ fontSize: "1.4em" }} />,
     label: "Hồ sơ",
+  },
+
+  {
+    key: "15",
+    icon: <SettingOutlined  style={{ fontSize: "1.4em" }} />,
+    label: "Cấu hình hệ thống",
   },
 
   // {
@@ -170,6 +177,9 @@ export const navpath = {
   },
   14: {
     path: PATH_NAME.DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT,
+  },
+  15: {
+    path: PATH_NAME.DASHBOARD_ADMIN_SYSTEM_CONFIG,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,

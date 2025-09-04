@@ -32,21 +32,28 @@ function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.get("/notifications/unread-count");
+      setUnreadCount(res.data.data || 0);
+    } catch (err) {
+      console.error("Lỗi fetch unread count:", err);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
     const loadNotifications = async () => {
       try {
         setLoading(true);
-
         // lấy danh sách thông báo
         const res = await api.get("/notifications?PageSize=1000");
         const items = res.data.data.items || [];
         setNotifications(items);
 
-        // lấy số thông báo chưa đọc từ API
-        const unreadRes = await api.get("/notifications/unread-count");
-        setUnreadCount(unreadRes.data.data || 0);
+        // fetch count
+        await fetchUnreadCount();
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,12 +67,10 @@ function Header() {
   const markAllAsRead = async () => {
     try {
       const res = await api.put("/notifications/read-all");
-
-      // cập nhật local state sau khi BE confirm
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-
-      console.log("Đã đọc thành công:", res.data || res.status);
+      if (res.data?.statusCode === 200) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        await fetchUnreadCount();
+      }
     } catch (err) {
       console.error("Lỗi đọc tất cả:", err);
     }
@@ -75,8 +80,8 @@ function Header() {
     try {
       const res = await api.delete(`/notifications/${id}`);
       if (res.data?.statusCode === 200) {
-        // Xóa thành công thì cập nhật local state
         setNotifications((prev) => prev.filter((x) => x.id !== id));
+        await fetchUnreadCount();
         toast.success("Đã xóa thông báo");
       } else {
         toast.error("Xóa thông báo thất bại");
@@ -88,7 +93,7 @@ function Header() {
   };
 
   useEffect(() => {
-    if (!connection || !user?.id) return; // chỉ check id
+    if (!connection || !user?.id) return;
 
     const handleNotification = (notification) => {
       const newNoti = {
@@ -99,7 +104,7 @@ function Header() {
       };
 
       setNotifications((prev) => [newNoti, ...prev]);
-      setUnreadCount((prev) => prev + 1); // tăng trực tiếp
+      fetchUnreadCount(); // fetch lại count khi hub push noti
       toast.info(notification.message, { autoClose: 3000 });
     };
 
@@ -115,7 +120,7 @@ function Header() {
     });
 
     return () => connection.off("ReceiveNotification", handleNotification);
-  }, [user?.id]); // dùng user?.id thay vì user object
+  }, [user?.id]);
 
   const handleToggleNotification = async () => {
     if (openDropdown === "notification") {
