@@ -4,6 +4,7 @@ import * as Yup from "yup";
 
 import { Checkbox, Spin } from 'antd';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 
 import Logo from '../../assets/logo2.png'
@@ -17,6 +18,9 @@ function Register() {
   const nav = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   //VALIDATION
   const validationSchema = Yup.object({
     userName: Yup.string().required("Tên đăng nhập không được để trống"),
@@ -82,8 +86,8 @@ function Register() {
                 src={Logo}
                 alt="Logo"
                 style={{
-                  width: "18vw",
-                  height: "20vh",
+                  width: "14vw",
+                  height: "14vh",
                   marginBottom: "1em",
                   cursor: "pointer",
                 }}
@@ -101,7 +105,7 @@ function Register() {
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
-              {() => (
+              {({ isValid, dirty }) => (
                 <Form className="register-form">
                   <div className="form-group">
                     <label htmlFor="userName">Tên đăng nhập</label>
@@ -139,23 +143,34 @@ function Register() {
                       className="error-message"
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group password-field">
                     <label htmlFor="password">Mật khẩu</label>
-                    <Field name="password" type="password" />
-                    <ErrorMessage
-                      name="password"
-                      component="div"
-                      className="error-message"
-                    />
+                    <div className="input-with-icon">
+                      <Field name="password" type={showPassword ? "text" : "password"} />
+                      <span
+                        className="toggle-icon"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                      </span>
+                    </div>
+                    <ErrorMessage name="password" component="div" className="error-message" />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group password-field">
                     <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-                    <Field name="confirmPassword" type="password" />
-                    <ErrorMessage
-                      name="confirmPassword"
-                      component="div"
-                      className="error-message"
-                    />
+                    <div className="input-with-icon">
+                      <Field
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                      />
+                      <span
+                        className="toggle-icon"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                      </span>
+                    </div>
+                    <ErrorMessage name="confirmPassword" component="div" className="error-message" />
                   </div>
                   <Checkbox
                     className="privacy-checked"
@@ -170,7 +185,7 @@ function Register() {
                   <button
                     type="submit"
                     className="register-btn"
-                    disabled={!isChecked}
+                    disabled={!(isValid && dirty && isChecked)}
                   >
                     Đăng kí
                   </button>
