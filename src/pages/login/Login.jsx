@@ -2,6 +2,7 @@ import "./Login.scss";
 
 import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 
+import { GoogleLogin } from "@react-oauth/google";
 import LoginPicture from "../../assets/login.jpg";
 import Logo from "../../assets/logo2.png";
 import { Spin } from "antd";
@@ -85,19 +86,19 @@ function Login() {
     }
   };
 
-  // const googleLogin = async (credentialResponse) => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await api.post("/auth/authentication/google", {
-  //       idToken: credentialResponse.credential,
-  //     });
-  //     handleLoginSuccess(response);
-  //   } catch (err) {
-  //     toast.error("Đăng nhập Google thất bại");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const googleLogin = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/authentication/google", {
+        idToken: credentialResponse.credential,
+      });
+      handleLoginSuccess(response);
+    } catch (err) {
+      toast.error("Đăng nhập Google thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Spin spinning={loading} tip="Đang đăng nhập..." size="large">
@@ -174,6 +175,7 @@ function Login() {
                 <GoogleLogin
                   onSuccess={googleLogin}
                   onError={() => toast.error("Đăng nhập Google thất bại")}
+                  locale="vi"
                 />
               </div>
             </div> */}
