@@ -16,10 +16,10 @@ function App() {
     <>
       <Provider store={store}>
         <PersistGate loading={<div className="loading">Đang tải dữ liệu...</div>} persistor={persistor}>
-          {/* <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}> */}
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
             <RouterProvider router={router} />
             <ToastContainer position="top-right" autoClose={3000} />
-          {/* </GoogleOAuthProvider> */}
+          </GoogleOAuthProvider>
         </PersistGate>
       </Provider>
     </>

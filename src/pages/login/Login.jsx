@@ -170,7 +170,7 @@ function Login() {
                 Quên mật khẩu?
               </a>
             </div>
-            {/* <div className="login-options">
+            <div className="login-options">
               <div className="google-login-btn">
                 <GoogleLogin
                   onSuccess={googleLogin}
@@ -178,7 +178,7 @@ function Login() {
                   locale="vi"
                 />
               </div>
-            </div> */}
+            </div>
             <button type="submit" className="login-btn" style={{ marginTop: "1em" }}>
               Đăng nhập
             </button>
