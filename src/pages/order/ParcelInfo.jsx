@@ -593,7 +593,7 @@ function ParcelInfo({
                 ))}
               </Select>
 
-              {/* OPTIONAL INSURANCE (hiển thị checkbox nếu không bắt buộc) */}
+              {/* OPTIONAL INSURANCE (CHECKBOX FOR OPTIONAL INSURANCE) */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
                 const policy = selectedCat?.categoryInsurances
@@ -622,7 +622,7 @@ function ParcelInfo({
                 return null;
               })()}
 
-              {/* INSURANCE DETAILS (cho cả bắt buộc và optional nếu được chọn) */}
+              {/* INSURANCE DETAILS (APPEARS FOR REQUIRED AND OPTIONAL */}
               {(() => {
                 const selectedCat = parcelCategory.find(cat => cat.id === parcel.parcelCategory);
                 const policy = selectedCat?.categoryInsurances
@@ -633,7 +633,7 @@ function ParcelInfo({
                 const isRequired = selectedCat.isInsuranceRequired;
                 const isOptionalChosen = parcel.includeOptionalInsurance;
 
-                // Nếu bắt buộc bảo hiểm HOẶC optional đã được chọn
+                // INSURANCE COST (REQUIRED) OR INSURANCE COST (OPTIONAL)
                 if (isRequired || isOptionalChosen) {
                   const insuranceCost = isRequired
                     ? Math.round((parcel.valueVnd || 0) * policy.insuranceFeeRateOnValue)
@@ -641,7 +641,7 @@ function ParcelInfo({
 
                   return (
                     <Form.Item label="Giá trị món hàng (VND)" style={{ marginTop: '1em' }}>
-                      {/* ⚠️ Warning chỉ hiển thị khi bắt buộc */}
+                      {/* ⚠️ WARNING FOR REQUIRED INSURANCE */}
                       {isRequired && (
                         <div style={{ color: 'red', fontWeight: 500, marginTop: '0.5em' }}>
                           ⚠️ Loại hàng này bắt buộc áp dụng bảo hiểm.
@@ -663,7 +663,7 @@ function ParcelInfo({
                         </div>
                       )}
 
-                      {/* Input kê khai giá trị hàng hóa */}
+                      {/* PARCEL VALUEVND */}
                       <InputNumber
                         min={0}
                         style={{ width: '100%' }}
@@ -687,7 +687,7 @@ function ParcelInfo({
                         Phí bảo hiểm: {insuranceCost.toLocaleString('vi-VN')} VND
                       </div>
 
-                      {/* Upload bill */}
+                      {/* UPLOAD BILL */}
                       {parcel.descriptionImageUrl && (
                         <div style={{ marginTop: 10 }}>
                           <strong>Ảnh hóa đơn:</strong>
@@ -714,7 +714,6 @@ function ParcelInfo({
                   );
                 }
 
-                // Nếu là hàng optional nhưng chưa tick bảo hiểm thì ẩn hẳn
                 return null;
               })()}
 
@@ -804,7 +803,7 @@ function ParcelInfo({
             <div className="selector-group" style={{ marginBottom: '1em' }}>
               <label>Trạm gần bạn:</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5em', marginTop: '0.5em' }}>
-                {nearbyStations.slice(0, 3).map(station => (
+                {nearbyStations.map(station => (
                   <Button
                     key={station.stationId}
                     type={realDepartureStationId === station.stationId ? "primary" : "default"}
