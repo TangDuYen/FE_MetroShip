@@ -125,9 +125,9 @@ function AdminInsurance() {
          ${(record.maxCompensationRateOnValue * 100).toFixed(0)}%`,
     },
     {
-      title: "Bồi thường tối đa phí VC",
-      dataIndex: "maxCompensationRateOnShippingFee",
-      key: "maxCompensationRateOnShippingFee",
+      title: "Bồi thường tối thiểu phí VC",
+      dataIndex: "minCompensationRateOnShippingFee",
+      key: "minCompensationRateOnShippingFee",
       render: (v) => `${v} lần`,
     },
     {

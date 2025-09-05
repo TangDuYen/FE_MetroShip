@@ -18,15 +18,15 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React, { useEffect, useState } from "react";
-
 import {
   MinusCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllPrice } from "../../../../../config/metroApi";
+import React, { useEffect, useState } from "react";
+
 import api from "../../../../../config/axios";
+import { getAllPrice } from "../../../../../config/metroApi";
 import { toast } from "react-toastify";
 
 function AdminPrice() {
@@ -142,7 +142,12 @@ function AdminPrice() {
                 <div>
                   Áp dụng từ ngày{" "}
                   <Tag color="blue">
-                    {new Date(price.effectiveFrom).toLocaleDateString("vi-VN")}
+                    {price.effectiveFrom &&
+                    !isNaN(new Date(price.effectiveFrom).getTime())
+                      ? new Date(price.effectiveFrom).toLocaleDateString(
+                          "vi-VN"
+                        )
+                      : "Chưa xác định"}
                   </Tag>
                 </div>
                 {!price.isActive && price.effectiveTo && (
@@ -234,7 +239,7 @@ function AdminPrice() {
                 <Typography.Text
                   style={{ color: "#1890ff", fontWeight: "bold" }}
                 >
-                  {price.refundRate}%
+                  {price.refundRate * 100}%
                 </Typography.Text>
               </div>
             )}
@@ -300,7 +305,7 @@ function AdminPrice() {
           </Form.Item>
           <Form.Item
             name="refundRate"
-            label="Tỷ lệ hoàn tiền (%)"
+            label="Tỷ lệ hoàn tiền (rate)"
             initialValue={0}
           >
             <InputNumber min={0} max={100} style={{ width: "100%" }} />
@@ -353,24 +358,59 @@ function AdminPrice() {
                           <InputNumber min={0} style={{ width: "100%" }} />
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
+                      <Col span={10}>
                         <Form.Item
-                          {...restField}
-                          name={[name, "basePriceVnd"]}
-                          label="Giá cơ bản (VND)"
+                          shouldUpdate={(prev, cur) =>
+                            prev.weightTiers?.[name]?.isPricePerKmAndKg !==
+                            cur.weightTiers?.[name]?.isPricePerKmAndKg
+                          }
+                          noStyle
                         >
-                          <InputNumber min={0} style={{ width: "100%" }} />
+                          {({ getFieldValue }) => {
+                            const isPerKmKg = getFieldValue([
+                              "weightTiers",
+                              name,
+                              "isPricePerKmAndKg",
+                            ]);
+                            return isPerKmKg ? (
+                              <Form.Item
+                                {...restField}
+                                name={[name, "basePriceVndPerKmPerKg"]}
+                                label="Giá theo Km-Kg (VND)"
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Nhập giá theo Km-Kg",
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={0}
+                                  style={{ width: "100%" }}
+                                />
+                              </Form.Item>
+                            ) : (
+                              <Form.Item
+                                {...restField}
+                                name={[name, "basePriceVnd"]}
+                                label="Giá cơ bản (VND)"
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Nhập giá cơ bản",
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={0}
+                                  style={{ width: "100%" }}
+                                />
+                              </Form.Item>
+                            );
+                          }}
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "basePriceVndPerKmPerKg"]}
-                          label="Giá theo Km-Kg (VND)"
-                        >
-                          <InputNumber min={0} style={{ width: "100%" }} />
-                        </Form.Item>
-                      </Col>
+
                       <Col span={4}>
                         <Form.Item
                           {...restField}
@@ -443,24 +483,59 @@ function AdminPrice() {
                           <InputNumber min={0} style={{ width: "100%" }} />
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
+                      <Col span={10}>
                         <Form.Item
-                          {...restField}
-                          name={[name, "basePriceVnd"]}
-                          label="Giá cơ bản (VND)"
+                          shouldUpdate={(prev, cur) =>
+                            prev.distanceTiers?.[name]?.isPricePerKm !==
+                            cur.distanceTiers?.[name]?.isPricePerKm
+                          }
+                          noStyle
                         >
-                          <InputNumber min={0} style={{ width: "100%" }} />
+                          {({ getFieldValue }) => {
+                            const isPerKm = getFieldValue([
+                              "distanceTiers",
+                              name,
+                              "isPricePerKm",
+                            ]);
+                            return isPerKm ? (
+                              <Form.Item
+                                {...restField}
+                                name={[name, "basePriceVndPerKm"]}
+                                label="Giá theo Km (VND)"
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Nhập giá theo Km",
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={0}
+                                  style={{ width: "100%" }}
+                                />
+                              </Form.Item>
+                            ) : (
+                              <Form.Item
+                                {...restField}
+                                name={[name, "basePriceVnd"]}
+                                label="Giá cơ bản (VND)"
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Nhập giá cơ bản",
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={0}
+                                  style={{ width: "100%" }}
+                                />
+                              </Form.Item>
+                            );
+                          }}
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "basePriceVndPerKm"]}
-                          label="Giá theo Km (VND)"
-                        >
-                          <InputNumber min={0} style={{ width: "100%" }} />
-                        </Form.Item>
-                      </Col>
+
                       <Col span={4}>
                         <Form.Item
                           {...restField}
