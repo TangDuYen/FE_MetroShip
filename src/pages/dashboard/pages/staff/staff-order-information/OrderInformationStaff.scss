@@ -8,4 +8,26 @@
         background-color: $primary-color;
         color: white;
     }
+
+
+}
+
+.preview-wrapper {
+  text-align: center;
+
+  .preview-caption {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+
+    .preview-title {
+      margin-bottom: 4px;
+    }
+
+    .preview-date {
+      font-size: 14px;
+      
+    }
+  }
 }
