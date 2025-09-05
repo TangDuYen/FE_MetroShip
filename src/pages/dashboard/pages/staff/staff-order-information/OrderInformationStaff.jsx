@@ -11,11 +11,13 @@ import {
   Typography,
 } from "antd";
 import {
+  businessMediaType,
   formatCurrency,
   parcelStatusMap,
   shipmentStatusColorMap,
 } from "./../../../../../constants/statusMap";
 import {
+  getAllBusinessMediaTypes,
   getMetroTrainsByStation,
   getParcelsByTrackingCode,
 } from "../../../../../config/metroApi";
@@ -33,7 +35,7 @@ import { jwtDecode } from "jwt-decode";
 import { EnvironmentOutlined } from "@ant-design/icons";
 import MapParcel from "./MapParcel";
 
-const { Title } = Typography;
+const { Title, Link } = Typography;
 
 function OrderInformationStaff() {
   const { trackingCode } = useParams();
@@ -45,6 +47,8 @@ function OrderInformationStaff() {
   const [trains, setTrains] = useState([]);
   const [mapVisible, setMapVisible] = useState(false);
   const [selectedParcel, setSelectedParcel] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [businessMediaTypes, setBusinessMediaTypes] = useState([]);
 
   const fetchDetails = async () => {
     try {
@@ -65,14 +69,28 @@ function OrderInformationStaff() {
     }
   };
 
+  const fetchBusinessMediaTypes = async () => {
+    try {
+      const data = await getAllBusinessMediaTypes();
+      setBusinessMediaTypes(data || []);
+    } catch (err) {
+      console.error("Lỗi lấy businessMediaTypes:", err);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
+    fetchBusinessMediaTypes();
   }, [trackingCode]);
 
   if (!shipment) return <p>Đang tải dữ liệu đơn hàng...</p>;
 
   const trainId = shipment.shipmentItineraries?.[0]?.trainId;
   const train = trains.find((t) => t.id === trainId);
+  const mediaTypeMap = businessMediaTypes.reduce((acc, type) => {
+    acc[type.id] = type.value;
+    return acc;
+  }, {});
 
   return (
     <div className="order-info-staff-container">
@@ -139,15 +157,57 @@ function OrderInformationStaff() {
               {shipmentStatusMap[shipment.shipmentStatus] || "Không xác định"}
             </Tag>
           </Descriptions.Item>
+          <Descriptions.Item span={2}>
+            <Link onClick={() => setPreviewVisible(true)}>Xem hình ảnh</Link>
+          </Descriptions.Item>
         </Descriptions>
-        {shipment.shipmentMedias?.map((m) => (
-          <Image
-            key={m.id}
-            src={m.mediaUrl}
-            width={200}
-            style={{ marginRight: 20, marginBottom: 10 }}
-          />
-        ))}
+        {/* <Image.PreviewGroup
+          preview={{
+            visible: previewVisible,
+            onVisibleChange: (vis) => setPreviewVisible(vis),
+          }}
+        >
+          {shipment.shipmentMedias?.map((m) => (
+            <Image
+              key={m.id}
+              src={m.mediaUrl}
+               title={mediaTypeMap[m.businessMediaType] || "Ảnh"}
+              style={{ display: "none" }}
+            />
+          ))}
+        </Image.PreviewGroup> */}
+        <Image.PreviewGroup
+          preview={{
+            visible: previewVisible,
+            onVisibleChange: (vis) => setPreviewVisible(vis),
+            imageRender: (originalNode, { current }) => {
+              const media = shipment.shipmentMedias[current];
+              return (
+                <div className="preview-wrapper">
+                  {originalNode}
+                  <div className="preview-caption">
+                    <div className="preview-title">
+                      {businessMediaType[media.businessMediaType] || "Ảnh"}
+                    </div>
+                    <div className="preview-date">
+                      {dayjs(media.createdAt).format("DD/MM/YYYY HH:mm")}
+                    </div>
+                  </div>
+                </div>
+              );
+            },
+          }}
+        >
+          {shipment.shipmentMedias?.map((m) => (
+            <Image
+              key={m.id}
+              src={m.mediaUrl}
+              alt={businessMediaType[m.businessMediaType] || "Ảnh"}
+              width={200}
+              style={{ borderRadius: 8, margin: 10, display: "none" }}
+            />
+          ))}
+        </Image.PreviewGroup>
       </Card>
 
       <div
@@ -241,7 +301,7 @@ function OrderInformationStaff() {
         width={800}
       >
         <div style={{ height: 400, background: "#eee" }}>
-          <MapParcel shipmentId={shipment.id} visible={mapVisible}/>
+          <MapParcel shipmentId={shipment.id} visible={mapVisible} />
         </div>
       </Modal>
     </div>
