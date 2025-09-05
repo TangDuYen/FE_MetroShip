@@ -89,7 +89,7 @@ function BarCharts() {
             onChange={(val) => setFilterType(val)}
             style={{ width: 150, marginRight: 10 }}
           >
-            <Option value={0}>Tất cả</Option>
+            <Option value={0}>Tổng quan</Option>
             <Option value={2}>Theo năm</Option>
             <Option value={3}>Theo quý</Option>
             <Option value={4}>Theo khoảng tháng</Option>
