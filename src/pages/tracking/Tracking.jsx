@@ -22,13 +22,13 @@ import {
   shipmentStatusColorMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
-import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/features/counterSlice";
 
 import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
 import { getAllShipments } from "../../config/metroApi";
+import { selectUser } from "../../redux/features/counterSlice";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 function Tracking() {
