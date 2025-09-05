@@ -3,10 +3,10 @@ import "./AdminInsuranceDetails.scss";
 import { Card, Spin, Table, Tag } from "antd";
 import React, { useEffect, useState } from "react";
 
-import dayjs from "dayjs";
-import { useParams } from "react-router-dom";
 import api from "../../../../../config/axios";
+import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -83,8 +83,8 @@ function AdminInsuranceDetails() {
       value: policy.minCompensationRateOnValue * 100 + "%",
     },
     {
-      label: "Tỷ lệ bồi thường tối đa phí ship (%)",
-      value: policy.maxCompensationRateOnShippingFee * 100 + "%",
+      label: "Tỷ lệ bồi thường tối thiểu phí ship (%)",
+      value: policy.minCompensationRateOnShippingFee * 100 + "%",
     },
     {
       label: "Trạng thái",

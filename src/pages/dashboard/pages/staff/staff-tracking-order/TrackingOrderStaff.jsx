@@ -285,11 +285,11 @@ function TrackingOrderStaff() {
         getShipmentByCode(shipment.trackingCode);
         setOpenRefundModal(true);
         break;
-      case 24:
+      case 25:
         getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
         break;
-      case 25:
+      case 27:
         getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
         break;

@@ -18,15 +18,15 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React, { useEffect, useState } from "react";
-
 import {
   MinusCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllPrice } from "../../../../../config/metroApi";
+import React, { useEffect, useState } from "react";
+
 import api from "../../../../../config/axios";
+import { getAllPrice } from "../../../../../config/metroApi";
 import { toast } from "react-toastify";
 
 function AdminPrice() {
@@ -239,7 +239,7 @@ function AdminPrice() {
                 <Typography.Text
                   style={{ color: "#1890ff", fontWeight: "bold" }}
                 >
-                  {price.refundRate}%
+                  {price.refundRate * 100}%
                 </Typography.Text>
               </div>
             )}

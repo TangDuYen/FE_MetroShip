@@ -1,21 +1,23 @@
-import React, { useEffect, useState } from "react";
+import "./AdminProfile.scss";
+
 import {
+  Avatar,
+  Button,
+  Col,
   Form,
   Input,
-  Button,
-  Avatar,
-  Typography,
   Row,
-  Col,
+  Typography,
   Upload,
   message,
 } from "antd";
+import React, { useEffect, useState } from "react";
+
 import { UploadOutlined } from "@ant-design/icons";
-import "./AdminProfile.scss";
-import { useSelector } from "react-redux";
-import { selectUser } from "../../../../../redux/features/counterSlice";
 import api from "../../../../../config/axios";
+import { selectUser } from "../../../../../redux/features/counterSlice";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 const { Title } = Typography;
 

@@ -37,7 +37,6 @@ function VerifyMail() {
         } catch (error) {
             const errData = error.response?.data;
             if (errData?.errors) {
-                // Lấy tất cả lỗi từ object errors
                 const firstError = Object.values(errData.errors).flat()[0];
                 toast.error(firstError);
             } else {
