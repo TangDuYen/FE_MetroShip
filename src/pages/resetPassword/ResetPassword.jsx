@@ -1,12 +1,13 @@
 import './ResetPassword.scss'
 
-import  * as Yup  from 'yup';
+import * as Yup from 'yup';
 
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login1.png';
 import api from '../../config/axios';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -28,28 +29,29 @@ function ResetPassword() {
     });
 
     const handleSubmit = async (values) => {
-        // const formData = new FormData();
-        // formData.append('Token', values.token);
-        // formData.append('Password', values.password);
-        // formData.append('ConfirmPassword', values.confirmPassword);
-
-        // console.log([...formData]);
-        // try {
-        //     const response = await api.post("/User/ResetPassword", formData, {
-        //         headers: {
-        //             'Content-Type': 'multipart/form-data',
-        //         },
-        //     });
-        //     const data = response.data;
-        //     if (data.error === 0) {
-        //         message.success(data.message);
-        //         nav("/login");
-        //     } else {
-        //         message.error(data.message);
-        //     }
-        // } catch (error) {
-        //     setError(error.message);
-        // }
+        const payload = {
+            otp: values.token,
+            password: values.password,
+            confirmPassword: values.confirmPassword,
+        }
+        try {
+            const response = await api.post("/auth/password/reset", payload);
+            const data = response.data;
+            if (response.status === 200) {
+                toast.success(data.message);
+                nav("/login");
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                const firstError = Object.values(errData.errors).flat()[0];
+                toast.error(firstError);
+            } else {
+                toast.error(errData?.title || "Lỗi không xác định!");
+            }
+        }
     };
     return (
         <>
@@ -91,7 +93,7 @@ function ResetPassword() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="password">Password</label>
+                                    <label htmlFor="password">Mật khẩu mới</label>
                                     <Field name="password" type="password" />
                                     <ErrorMessage
                                         name="password"
@@ -100,7 +102,7 @@ function ResetPassword() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="confirmPassword">Confirm Password</label>
+                                    <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
                                     <Field name="confirmPassword" type="password" />
                                     <ErrorMessage
                                         name="confirmPassword"
@@ -110,9 +112,8 @@ function ResetPassword() {
                                 </div>
 
                                 <button type="submit" className="register-btn">
-                                    Recovery Password
+                                    Đặt lại mật khẩu
                                 </button>
-                                {error && <p className="error-message">{error}</p>}
                             </Form>
                         )}
                     </Formik>
