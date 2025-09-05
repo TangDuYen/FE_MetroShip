@@ -59,14 +59,16 @@ function LineCharts() {
         chartData = Array.from({ length: 12 }, (_, i) => ({
           month: `T${i + 1}`,
           income: 0,
-          outcome: 0,
+          refund: 0,
+          compensation: 0,
           growth: 0,
         }));
       } else {
         chartData = apiData.map((item) => ({
           month: `T${item.month}`,
           income: item.totalIncome,
-          outcome: item.totalOutcome,
+          refund: item.refund,
+          compensation: item.compensation,
           growth: item.netGrowthPercent,
         }));
       }
@@ -86,7 +88,8 @@ function LineCharts() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const income = payload[0]?.payload?.income;
-      const outcome = payload[0]?.payload?.outcome;
+      const refund = payload[0]?.payload?.refund;
+      const compensation = payload[0]?.payload?.compensation;
       const growth = payload[0]?.payload?.growth;
       return (
         <div className="tooltip-box">
@@ -94,7 +97,8 @@ function LineCharts() {
             <strong>{label}</strong>
           </p>
           <p>Doanh thu: {income.toLocaleString()} đ</p>
-          <p>Hoàn tiền: {outcome.toLocaleString()} đ</p>
+          <p>Hoàn tiền: {refund.toLocaleString()} đ</p>
+          <p>Bồi thường: {compensation.toLocaleString()} đ</p>
           <p>Tăng trưởng: {growth}%</p>
         </div>
       );
@@ -105,7 +109,6 @@ function LineCharts() {
   return (
     <div className="card-line">
       <div className="line-top">
-        
         <Title level={4}>Lịch sử doanh thu</Title>
 
         <div className="filter-section">
@@ -176,6 +179,23 @@ function LineCharts() {
       </div>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <div className="legend-container">
+          <div className="legend-items">
+            <div className="legend-item revenue">
+              <div className="color-box" />
+              <span>Doanh thu</span>
+            </div>
+            <div className="legend-item refund">
+              <div className="color-box" />
+              <span>Hoàn tiền</span>
+            </div>
+            <div className="legend-item compensation">
+              <div className="color-box" />
+              <span>Bồi thường</span>
+            </div>
+          </div>
+        </div>
+
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={lineData}>
             <defs>
@@ -183,10 +203,20 @@ function LineCharts() {
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
               </linearGradient>
-              <linearGradient id="outcomeGradient" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
-        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-      </linearGradient>
+              <linearGradient id="colorRefund" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient
+                id="colorCompensation"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+              </linearGradient>
             </defs>
             <XAxis dataKey="month" />
             <YAxis />
@@ -200,13 +230,19 @@ function LineCharts() {
               fill="url(#colorRevenue)"
             />
             <Area
-      type="monotone"
-      dataKey="outcome"
-      stroke="#EF4444"
-      fillOpacity={1}
-      fill="url(#outcomeGradient)"
-      name="Chi phí"
-    />
+              type="monotone"
+              dataKey="refund"
+              stroke="#EF4444"
+              fillOpacity={1}
+              fill="url(#colorRefund)"
+            />
+            <Area
+              type="monotone"
+              dataKey="compensation"
+              stroke="#F59E0B"
+              fillOpacity={1}
+              fill="url(#colorCompensation)"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </Spin>

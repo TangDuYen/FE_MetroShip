@@ -21,3 +21,58 @@
   justify-content: space-between;
   margin-bottom: 2em;
 }
+
+.legend-container {
+  margin-bottom: 10px;
+
+  .legend-items {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      .color-box {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      &.revenue {
+        .color-box {
+          background-color: #3B82F6;
+        }
+        span {
+          color: #3B82F6;
+        }
+      }
+
+      &.refund {
+        .color-box {
+          background-color: #EF4444;
+        }
+        span {
+          color: #EF4444;
+        }
+      }
+
+      &.compensation {
+        .color-box {
+          background-color: #F59E0B;
+        }
+        span {
+          color: #F59E0B;
+        }
+      }
+    }
+  }
+}
