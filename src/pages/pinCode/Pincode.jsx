@@ -5,10 +5,11 @@ import { useEffect, useState } from 'react';
 
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../config/axios';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 function Pincode() {
-  const [pin, setPin] = useState(""); 
+    const [pin, setPin] = useState("");
     const [count, setCount] = useState(60);
     const [message1, setMessage] = useState("");
     const nav = useNavigate();
@@ -34,17 +35,22 @@ function Pincode() {
             const response = await api.post('/auth/email/verification', data);
             const responseData = response.data;
             console.log(responseData);
-            
+
             if (responseData.statusCode === 200) {
-                message.success(responseData.data);
+                toast.success(responseData.data);
                 console.log(responseData);
-                nav('/login'); 
+                nav('/login');
             } else {
-                message.error(responseData.message);
+                toast.error(responseData.message);
             }
         } catch (error) {
-            console.error(error);
-            setMessage("Xác nhận OTP thất bại");
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                const firstError = Object.values(errData.errors).flat()[0];
+                toast.error(firstError);
+            } else {
+                toast.error(errData?.title || "Lỗi không xác định!");
+            }
         }
     };
 
@@ -59,10 +65,10 @@ function Pincode() {
                 <Input
                     value={pin}
                     onChange={onChange}
-                    maxLength={6} 
+                    maxLength={6}
                     placeholder="Nhập mã OTP gồm 6 mã số"
                     inputMode="numeric"
-                    style={{ width: "100%", marginBottom: "10px" }} 
+                    style={{ width: "100%", marginBottom: "10px" }}
                 />
                 {message1 && <p className="pin__error">{message1}</p>}
                 <div className="pin__btn" onClick={verifyPin}>

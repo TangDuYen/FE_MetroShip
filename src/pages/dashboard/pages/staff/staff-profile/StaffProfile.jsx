@@ -9,6 +9,7 @@ import {
   Row,
   Col,
   Upload,
+  Spin,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
@@ -20,16 +21,22 @@ const { Title } = Typography;
 function StaffProfile() {
   const user = useSelector(selectUser);
   const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [userData, setUserData] = useState({
     userName: "",
     fullName: "",
     email: "",
     avatar: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false); // cho form thông tin
+  const [savingPassword, setSavingPassword] = useState(false); // cho đổi mật khẩu
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user?.id || !user?.token) return;
+      setLoading(true);
       try {
         const response = await api.get(`users/${user.id}`, {
           headers: {
@@ -50,22 +57,81 @@ function StaffProfile() {
         form.setFieldsValue(newUser);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        toast.error(
+          error.response?.data?.message || "Không thể tải dữ liệu người dùng"
+        );
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
   }, [user, form]);
 
-  const handleSaveInformationUser = (values) => {
-    console.log("Dữ liệu submit:", values);
-  };
+  const handleSaveInformationUser = async (values) => {
+  if (!user?.token) return;
+  setSavingProfile(true);
+  try {
+    await api.put(
+      "/users",
+      {
+        userName: values.userName,
+        fullName: values.fullName,
+        avatar: values.avatar || userData.avatar, // avatar giữ nguyên nếu chưa đổi
+      },
+      {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${user.token}`,
+        },
+      }
+    );
 
-  const handleUpload = (info) => {
-    const newAvatar = URL.createObjectURL(info.file);
-    setUserData({ ...userData, avatar: newAvatar });
+    toast.success("Cập nhật thông tin thành công!");
+    setUserData((prev) => ({
+      ...prev,
+      ...values,
+    }));
+  } catch (error) {
+    console.error("Lỗi cập nhật thông tin:", error);
+    toast.error(error.response?.data?.message || "Cập nhật thất bại!");
+  } finally {
+    setSavingProfile(false);
+  }
+};
+
+
+  const handleAvatarChange = async ({ file }) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+
+    try {
+      const uploadRes = await api.post("/media/image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const imageUrl = uploadRes.data?.data || uploadRes.data?.secure_url;
+      if (!imageUrl) {
+        toast.error("Không lấy được link ảnh sau khi upload.");
+        return;
+      }
+
+      setUserData((prev) => ({ ...prev, avatar: imageUrl }));
+      form.setFieldsValue({ avatar: imageUrl });
+      toast.success("Upload ảnh thành công!");
+    } catch (error) {
+      console.error("Lỗi upload ảnh:", error);
+      toast.error(error.response?.data?.message || "Lỗi khi upload ảnh!");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const changePassword = async (values) => {
+    setSavingPassword(true);
     try {
       await api.post(
         "auth/password/change",
@@ -83,9 +149,16 @@ function StaffProfile() {
         }
       );
       toast.success("Đổi mật khẩu thành công!");
+      passwordForm.resetFields([
+        "oldPassword",
+        "newPassword",
+        "confirmPassword",
+      ]);
     } catch (error) {
       console.error("Lỗi đổi mật khẩu:", error);
-      toast.error("Đổi mật khẩu thất bại!");
+      toast.error(error.response?.data?.message || "Đổi mật khẩu thất bại!");
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -96,11 +169,13 @@ function StaffProfile() {
         <Row gutter={24}>
           {/* Cột trái - Avatar */}
           <Col span={8} style={{ textAlign: "center" }}>
-            <Avatar size={150} src={userData.avatar} />
+            <Spin spinning={uploading}>
+              <Avatar size={150} src={userData.avatar} />
+            </Spin>
             <Upload
               showUploadList={false}
               beforeUpload={() => false}
-              onChange={handleUpload}
+              onChange={handleAvatarChange}
             >
               <Button icon={<UploadOutlined />} style={{ marginTop: 16 }}>
                 Đổi ảnh đại diện
@@ -137,11 +212,11 @@ function StaffProfile() {
                 name="email"
                 rules={[{ type: "email", message: "Email không hợp lệ" }]}
               >
-                <Input />
+                <Input disabled style={{ fontWeight: "600" }} />
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block>
+                <Button type="primary" htmlType="submit" block loading={savingProfile}>
                   Lưu thay đổi
                 </Button>
               </Form.Item>
@@ -151,13 +226,13 @@ function StaffProfile() {
       </div>
       <div className="staff-reset-password">
         <Title level={2}>Đổi mật khẩu</Title>
-        <Form layout="vertical" onFinish={changePassword}>
+        <Form form={passwordForm} layout="vertical" onFinish={changePassword}>
           <Form.Item
             label="Mật khẩu cũ"
             name="oldPassword"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu cũ" />
           </Form.Item>
 
           <Form.Item
@@ -165,7 +240,7 @@ function StaffProfile() {
             name="newPassword"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu mới" />
           </Form.Item>
 
           <Form.Item
@@ -186,11 +261,11 @@ function StaffProfile() {
               }),
             ]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập lại mật khẩu mới" />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={savingPassword}>
               Đổi mật khẩu
             </Button>
           </Form.Item>
