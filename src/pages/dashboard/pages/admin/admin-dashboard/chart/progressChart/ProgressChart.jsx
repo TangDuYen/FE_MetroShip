@@ -4,11 +4,17 @@ import {
   buildStyles,
   CircularProgressbarWithChildren,
 } from "react-circular-progressbar";
-import { Button, DatePicker, InputNumber, Select, Spin, Typography } from "antd";
+import {
+  Button,
+  DatePicker,
+  InputNumber,
+  Select,
+  Spin,
+  Typography,
+} from "antd";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import api from "../../../../../../../config/axios";
-
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -22,8 +28,9 @@ function ProgressChart() {
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [year, setYear] = useState(dayjs().year());
   const [quarter, setQuarter] = useState(1);
-  const [startMonth, setStartMonth] = useState(1);
+  const [startMonth, setStartMonth] = useState(dayjs().month() + 1);
   const [endMonth, setEndMonth] = useState(12);
+  const [week, setWeek] = useState(1);
 
   const fetchData = async () => {
     try {
@@ -35,11 +42,13 @@ function ProgressChart() {
       } else if (filterType === 1) {
         url += `?FilterType=1&Date=${date || dayjs().format("YYYY-MM-DD")}`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Year=${year}`;
+        url += `?FilterType=2&Week=${week}&StartMonth=${startMonth}`;
       } else if (filterType === 3) {
-        url += `?FilterType=3&Year=${year}&Quarter=${quarter}`;
+        url += `?FilterType=3&Year=${year}`;
       } else if (filterType === 4) {
-        url += `?FilterType=4&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
+        url += `?FilterType=4&Year=${year}&Quarter=${quarter}`;
+      } else if (filterType === 5) {
+        url += `?FilterType=5&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
       }
 
       const res = await api.get(url);
@@ -92,11 +101,12 @@ function ProgressChart() {
             onChange={setFilterType}
             style={{ width: 120, marginRight: 10 }}
           >
-            <Option value={0}>Hôm nay</Option>
+            <Option value={0}>Tổng quan</Option>
             <Option value={1}>Theo ngày</Option>
-            <Option value={2}>Theo năm</Option>
-            <Option value={3}>Theo quý</Option>
-            <Option value={4}>Theo khoảng tháng</Option>
+            <Option value={2}>Theo tuần</Option>
+            <Option value={3}>Theo năm</Option>
+            <Option value={4}>Theo quý</Option>
+            <Option value={5}>Theo khoảng tháng</Option>
           </Select>
           {filterType === 1 && (
             <DatePicker
@@ -108,11 +118,31 @@ function ProgressChart() {
               disabledDate={(current) =>
                 current && current > dayjs().endOf("day")
               }
-              style={{width: 120 }}
+              style={{ width: 120 }}
             />
           )}
-
           {filterType === 2 && (
+            <>
+              <InputNumber
+                value={week}
+                min={1}
+                max={4}
+                onChange={(val) => setWeek(val)}
+                style={{ width: 70, marginRight: 10 }}
+                placeholder="Tuần"
+              />
+              <InputNumber
+                value={startMonth}
+                min={1}
+                max={12}
+                onChange={(val) => setStartMonth(val)}
+                style={{ width: 70 }}
+                placeholder="Tháng"
+              />
+            </>
+          )}
+
+          {filterType === 3 && (
             <InputNumber
               value={year}
               onChange={(val) => setYear(val)}
@@ -120,7 +150,7 @@ function ProgressChart() {
             />
           )}
 
-          {filterType === 3 && (
+          {filterType === 4 && (
             <>
               <InputNumber
                 value={year}
@@ -137,7 +167,7 @@ function ProgressChart() {
             </>
           )}
 
-          {filterType === 4 && (
+          {filterType === 5 && (
             <>
               <InputNumber
                 value={year}
@@ -193,9 +223,7 @@ function ProgressChart() {
             </div>
             <div>
               <span className="label">Hoàn đơn</span>
-              <span className="value">
-                {refundedOrders.toLocaleString()}
-              </span>
+              <span className="value">{refundedOrders.toLocaleString()}</span>
             </div>
             <div>
               <span className="label">Đơn bồi thường</span>

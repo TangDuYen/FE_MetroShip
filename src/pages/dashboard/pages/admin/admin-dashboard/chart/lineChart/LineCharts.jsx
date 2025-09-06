@@ -43,12 +43,12 @@ function LineCharts() {
 
       if (filterType === 0) {
         url += `?FilterType=0`; // default
-      } else if (filterType === 1) {
-        url += `?FilterType=2&Year=${year}`;
-      } else if (filterType === 2) {
-        url += `?FilterType=3&Year=${year}&Quarter=${quarter}`;
       } else if (filterType === 3) {
-        url += `?FilterType=4&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
+        url += `?FilterType=3&Year=${year}`;
+      } else if (filterType === 4) {
+        url += `?FilterType=4&Year=${year}&Quarter=${quarter}`;
+      } else if (filterType === 5) {
+        url += `?FilterType=5&Year=${year}&StartMonth=${startMonth}&EndMonth=${endMonth}`;
       }
 
       const res = await api.get(url);
@@ -117,13 +117,13 @@ function LineCharts() {
             onChange={(val) => setFilterType(val)}
             style={{ width: 150, marginRight: 10 }}
           >
-            <Option value={0}>Tất cả</Option>
-            <Option value={1}>Theo năm</Option>
-            <Option value={2}>Theo quý</Option>
-            <Option value={3}>Theo khoảng tháng</Option>
+            <Option value={0}>Tổng quan</Option>
+            <Option value={3}>Theo năm</Option>
+            <Option value={4}>Theo quý</Option>
+            <Option value={5}>Theo khoảng tháng</Option>
           </Select>
 
-          {filterType === 1 && (
+          {filterType === 3 && (
             <InputNumber
               value={year}
               onChange={(val) => setYear(val)}
@@ -131,7 +131,7 @@ function LineCharts() {
             />
           )}
 
-          {filterType === 2 && (
+          {filterType === 4 && (
             <>
               <InputNumber
                 value={year}
@@ -148,7 +148,7 @@ function LineCharts() {
             </>
           )}
 
-          {filterType === 3 && (
+          {filterType === 5 && (
             <>
               <InputNumber
                 value={year}
