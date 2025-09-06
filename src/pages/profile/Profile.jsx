@@ -114,7 +114,7 @@ function Profile() {
       toast.success("Cập nhật thành công!");
     } catch (error) {
       console.error("Lỗi cập nhật người dùng:", error);
-      toast.error("Cập nhật thất bại!");
+      toast.error(error.response?.data?.message || "Cập nhật thất bại!");
     }
   };
 
