@@ -30,7 +30,7 @@ function StaffProfile() {
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false); 
+  const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ function StaffProfile() {
     console.log("Payload update user:", payload);
 
     try {
-      await api.put("/users", payload, {
+      const res = await api.put("/users", payload, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
@@ -88,7 +88,7 @@ function StaffProfile() {
         },
       });
 
-      toast.success("Cập nhật thông tin thành công!");
+      toast.success(res.data?.message || "Cập nhật thành công!");
       setUserData((prev) => ({
         ...prev,
         ...values,
@@ -121,7 +121,7 @@ function StaffProfile() {
 
       setUserData((prev) => ({ ...prev, avatar: imageUrl }));
       form.setFieldsValue({ avatar: imageUrl });
-      toast.success("Upload ảnh thành công!");
+      toast.success(uploadRes.data?.message || "Upload ảnh thành công!");
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
       toast.error(error.response?.data?.message || "Lỗi khi upload ảnh!");
@@ -133,7 +133,7 @@ function StaffProfile() {
   const changePassword = async (values) => {
     setSavingPassword(true);
     try {
-      await api.post(
+      const res = await api.post(
         "auth/password/change",
         {
           oldPassword: values.oldPassword,
@@ -148,7 +148,8 @@ function StaffProfile() {
           },
         }
       );
-      toast.success("Đổi mật khẩu thành công!");
+
+      toast.success(res.data?.message || "Đổi mật khẩu thành công!");
       passwordForm.resetFields([
         "oldPassword",
         "newPassword",

@@ -5,8 +5,19 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/features/counterSlice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
-import { Card, DatePicker, Form, Input, Button, Upload, Avatar, Spin } from "antd";
-import moment from "moment";
+import {
+  Card,
+  DatePicker,
+  Form,
+  Input,
+  Button,
+  Upload,
+  Avatar,
+  Spin,
+} from "antd";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 
 function Profile() {
@@ -16,6 +27,17 @@ function Profile() {
   const [uploading, setUploading] = useState(false);
 
   const [form] = Form.useForm();
+
+  const parseBirthDate = (raw) => {
+    if (!raw) return null;
+    const asIso = dayjs(raw);
+    if (asIso.isValid()) return asIso;
+    const ymd = dayjs(raw, "YYYY-MM-DD", true);
+    if (ymd.isValid()) return ymd;
+    const dmy = dayjs(raw, "DD/MM/YYYY", true);
+    if (dmy.isValid()) return dmy;
+    return null;
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,7 +60,7 @@ function Profile() {
           fullName: data.fullName || "",
           email: data.email || "",
           phoneNumber: data.phoneNumber || "",
-          birthDate: data.birthDate ? moment(data.birthDate) : null,
+          birthDate: parseBirthDate(data.birthDate),
           bankId: data.bankId || "",
           address: data.address || "",
           accountNo: data.accountNo || "",
@@ -78,10 +100,11 @@ function Profile() {
       setAvatarPreview(imageUrl);
       form.setFieldsValue({ avatar: imageUrl });
 
-      toast.success("Upload ảnh thành công!");
+      toast.success(uploadRes.data?.message || "Upload ảnh thành công!");
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
-      toast.error("Lỗi khi upload ảnh!");
+      const errorMsg = error.response?.data?.message || "Lỗi khi upload ảnh!";
+      toast.error(errorMsg);
     } finally {
       setUploading(false);
     }
@@ -93,7 +116,9 @@ function Profile() {
       userName: values.userName,
       fullName: values.fullName,
       email: values.email,
-      birthDate: values.birthDate ? values.birthDate.toISOString() : null,
+      birthDate: values.birthDate
+        ? values.birthDate.format("YYYY-MM-DD")
+        : null,
       bankId: values.bankId,
       address: values.address,
       accountNo: values.accountNo,
@@ -101,17 +126,18 @@ function Profile() {
       avatar: values.avatar,
     };
 
-    console.log("Payload gửi đi:", payload);
+    // console.log("Payload gửi đi:", payload);
 
     try {
-      await api.put("/users", payload, {
+      const res = await api.put("/users", payload, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
       });
-      toast.success("Cập nhật thành công!");
+
+      toast.success(res.data?.message || "Cập nhật thành công!");
     } catch (error) {
       console.error("Lỗi cập nhật người dùng:", error);
       toast.error(error.response?.data?.message || "Cập nhật thất bại!");
@@ -132,14 +158,17 @@ function Profile() {
                   form={form}
                   layout="vertical"
                   onFinish={handleSaveInfomationUser}
+                  initialValues={{ birthDate: null }}
                 >
                   <Form.Item name="avatar" label="Ảnh đại diện">
                     <div className="avatar">
-                      <Avatar
-                        size={64}
-                        src={avatarPreview}
-                        icon={<UserOutlined />}
-                      />
+                      <Spin spinning={uploading}>
+                        <Avatar
+                          size={64}
+                          src={avatarPreview}
+                          icon={<UserOutlined />}
+                        />
+                      </Spin>
                       <Upload
                         showUploadList={false}
                         beforeUpload={() => false}
@@ -170,6 +199,8 @@ function Profile() {
                       format="DD/MM/YYYY"
                       style={{ width: "100%" }}
                       placeholder="Chọn ngày sinh"
+                      showNow
+                      defaultPickerValue={dayjs()}
                     />
                   </Form.Item>
 

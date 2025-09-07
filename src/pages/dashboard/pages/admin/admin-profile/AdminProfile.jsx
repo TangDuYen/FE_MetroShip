@@ -83,7 +83,7 @@ function AdminProfile() {
     console.log("Payload update user:", payload);
 
     try {
-      await api.put("/users", payload, {
+      const res = await api.put("/users", payload, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
@@ -91,7 +91,7 @@ function AdminProfile() {
         },
       });
 
-      toast.success("Cập nhật thông tin thành công!");
+      toast.success(res.data?.message || "Cập nhật thành công!");
       setUserData((prev) => ({
         ...prev,
         ...values,
@@ -124,7 +124,7 @@ function AdminProfile() {
 
       setUserData((prev) => ({ ...prev, avatar: imageUrl }));
       form.setFieldsValue({ avatar: imageUrl });
-      toast.success("Upload ảnh thành công!");
+      toast.success(uploadRes.data?.message || "Upload ảnh thành công!");
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
       toast.error(error.response?.data?.message || "Lỗi khi upload ảnh!");
@@ -136,7 +136,7 @@ function AdminProfile() {
   const changePassword = async (values) => {
     setSavingPassword(true);
     try {
-      await api.post(
+      const res = await api.post(
         "auth/password/change",
         {
           oldPassword: values.oldPassword,
@@ -151,7 +151,8 @@ function AdminProfile() {
           },
         }
       );
-      toast.success("Đổi mật khẩu thành công!");
+
+      toast.success(res.data?.message || "Đổi mật khẩu thành công!");
       passwordForm.resetFields([
         "oldPassword",
         "newPassword",
