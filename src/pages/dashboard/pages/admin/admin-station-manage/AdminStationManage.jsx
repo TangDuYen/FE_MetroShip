@@ -3,17 +3,34 @@ import "./AdminStationManage.scss";
 import {
   Button,
   ConfigProvider,
+  Descriptions,
+  Divider,
   Empty,
+  Modal,
   Select,
   Space,
   Spin,
   Table,
+  Tag,
+  Typography,
 } from "antd";
 import { useEffect, useState } from "react";
 
-import { ReloadOutlined } from "@ant-design/icons";
-import { getAllRegions, getAllStations } from "../../../../../config/metroApi";
+import {
+  BarcodeOutlined,
+  CheckCircleOutlined,
+  EnvironmentOutlined,
+  EyeOutlined,
+  ReloadOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import {
+  getAllRegions,
+  getAllStations,
+  getStationById,
+} from "../../../../../config/metroApi";
 
+const { Title, Text } = Typography;
 function AdminStationManage() {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +38,9 @@ function AdminStationManage() {
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [regions, setRegions] = useState([]);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [stationDetail, setStationDetail] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +67,7 @@ function AdminStationManage() {
 
   const stationsWithLine = stations.map((s) => ({
     ...s,
+    id: s.stationId,
     lineCode: s.stationCode.split("-")[1],
   }));
 
@@ -60,6 +81,20 @@ function AdminStationManage() {
     return matchStation && matchLine && matchRegion;
   });
 
+  const handleShowDetail = async (stationId) => {
+    setStationDetail(null);
+    setDetailLoading(true);
+    try {
+      const data = await getStationById(stationId);
+      setStationDetail(data);
+      setDetailVisible(true);
+    } catch (err) {
+      console.error("Lỗi khi lấy chi tiết trạm:", err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "STT",
@@ -67,6 +102,11 @@ function AdminStationManage() {
       key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
+    },
+    {
+      title: "Mã trạm",
+      dataIndex: "stationCode",
+      key: "stationCode",
     },
     {
       title: "Tên trạm (Tiếng Việt)",
@@ -82,15 +122,24 @@ function AdminStationManage() {
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
-      render: (value) => (
-        <span>{value ? "Đang hoạt động" : "Không hoạt động"}</span>
-      ),
+      render: (value) =>
+        value ? (
+          <Tag color="green">Đang hoạt động</Tag>
+        ) : (
+          <Tag color="red">Không hoạt động</Tag>
+        ),
     },
     {
-      title: "Mã trạm",
-      dataIndex: "stationCode",
-      key: "stationCode",
+      title: "Chi tiết",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          icon={<EyeOutlined />}
+          onClick={() => handleShowDetail(record.id)}
+        ></Button>
+      ),
     },
+
     // {
     //   title: "Đóng trạm",
     //   key: "close",
@@ -180,11 +229,84 @@ function AdminStationManage() {
           <Table
             dataSource={filtered.map((s, i) => ({ ...s, key: s.id || i }))}
             columns={columns}
-            pagination={{ pageSize: 10 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+            }}
             bordered
           />
         </ConfigProvider>
       </Spin>
+
+      {/* Modal chi tiết */}
+      <Modal
+        centered
+        open={detailVisible}
+        onCancel={() => setDetailVisible(false)}
+        footer={null}
+        width={800}
+        title={null} // bỏ title mặc định để custom
+      >
+        <Spin spinning={detailLoading}>
+          {stationDetail ? (
+            <div>
+              {/* Header */}
+              <div style={{ marginBottom: 16 }}>
+                <Title level={4} style={{ marginBottom: 4 }}>
+                  Chi tiết trạm {stationDetail.stationNameVi}
+                </Title>
+              </div>
+
+              <Divider />
+
+              {/* Descriptions */}
+              <Descriptions
+                bordered
+                size="middle"
+                column={2}
+                labelStyle={{ fontWeight: "bold", width: 160 }}
+                contentStyle={{ background: "#fafafa" }}
+              >
+                <Descriptions.Item label="Mã trạm">
+                  {stationDetail.stationCode}
+                </Descriptions.Item>
+                <Descriptions.Item label="Khu vực">
+                  {regionMap[stationDetail.regionId] || stationDetail.regionId}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Địa chỉ" span={2}>
+                  <EnvironmentOutlined style={{ marginRight: 6 }} />
+                  {stationDetail.address}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Trạng thái">
+                  {stationDetail.isActive ? (
+                    <Tag color="green" icon={<CheckCircleOutlined />}>
+                      Đang hoạt động
+                    </Tag>
+                  ) : (
+                    <Tag color="red" icon={<StopOutlined />}>
+                      Không hoạt động
+                    </Tag>
+                  )}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ngầm">
+                  {stationDetail.isUnderground ? "Có" : "Không"}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Nhiều tuyến">
+                  {stationDetail.isMultiLine ? "Có" : "Không"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tọa độ">
+                  {stationDetail.latitude}, {stationDetail.longitude}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+          ) : (
+            <p>Không có dữ liệu</p>
+          )}
+        </Spin>
+      </Modal>
     </div>
   );
 }
