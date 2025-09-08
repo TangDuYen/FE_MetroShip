@@ -30,8 +30,8 @@ function StaffProfile() {
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false); // cho form thông tin
-  const [savingPassword, setSavingPassword] = useState(false); // cho đổi mật khẩu
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -69,37 +69,37 @@ function StaffProfile() {
   }, [user, form]);
 
   const handleSaveInformationUser = async (values) => {
-  if (!user?.token) return;
-  setSavingProfile(true);
-  try {
-    await api.put(
-      "/users",
-      {
-        userName: values.userName,
-        fullName: values.fullName,
-        avatar: values.avatar || userData.avatar, // avatar giữ nguyên nếu chưa đổi
-      },
-      {
+    if (!user?.token) return;
+    setSavingProfile(true);
+
+    const payload = {
+      userName: values.userName,
+      fullName: values.fullName,
+      avatar: values.avatar || userData.avatar,
+    };
+    console.log("Payload update user:", payload);
+
+    try {
+      const res = await api.put("/users", payload, {
         headers: {
           accept: "*/*",
           Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
         },
-      }
-    );
+      });
 
-    toast.success("Cập nhật thông tin thành công!");
-    setUserData((prev) => ({
-      ...prev,
-      ...values,
-    }));
-  } catch (error) {
-    console.error("Lỗi cập nhật thông tin:", error);
-    toast.error(error.response?.data?.message || "Cập nhật thất bại!");
-  } finally {
-    setSavingProfile(false);
-  }
-};
-
+      toast.success(res.data?.message || "Cập nhật thành công!");
+      setUserData((prev) => ({
+        ...prev,
+        ...values,
+      }));
+    } catch (error) {
+      console.error("Lỗi cập nhật thông tin:", error);
+      toast.error(error.response?.data?.message || "Cập nhật thất bại!");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleAvatarChange = async ({ file }) => {
     if (!file) return;
@@ -121,7 +121,7 @@ function StaffProfile() {
 
       setUserData((prev) => ({ ...prev, avatar: imageUrl }));
       form.setFieldsValue({ avatar: imageUrl });
-      toast.success("Upload ảnh thành công!");
+      toast.success(uploadRes.data?.message || "Upload ảnh thành công!");
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
       toast.error(error.response?.data?.message || "Lỗi khi upload ảnh!");
@@ -133,7 +133,7 @@ function StaffProfile() {
   const changePassword = async (values) => {
     setSavingPassword(true);
     try {
-      await api.post(
+      const res = await api.post(
         "auth/password/change",
         {
           oldPassword: values.oldPassword,
@@ -148,7 +148,8 @@ function StaffProfile() {
           },
         }
       );
-      toast.success("Đổi mật khẩu thành công!");
+
+      toast.success(res.data?.message || "Đổi mật khẩu thành công!");
       passwordForm.resetFields([
         "oldPassword",
         "newPassword",
@@ -216,7 +217,12 @@ function StaffProfile() {
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block loading={savingProfile}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={savingProfile}
+                >
                   Lưu thay đổi
                 </Button>
               </Form.Item>
@@ -265,7 +271,12 @@ function StaffProfile() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={savingPassword}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={savingPassword}
+            >
               Đổi mật khẩu
             </Button>
           </Form.Item>

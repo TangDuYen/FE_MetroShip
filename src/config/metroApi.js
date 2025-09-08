@@ -431,3 +431,15 @@ export const getAllBusinessMediaTypes = async () => {
     throw error;
   }
 }
+//STATION BY ID
+export const getStationById = async (stationId) => {
+  try {
+    const res = await api.get(`/stations/${stationId}`);
+    return res.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu chi tiết trạm metro";
+    toast.error(errorMessage);
+    throw error;
+  }
+};

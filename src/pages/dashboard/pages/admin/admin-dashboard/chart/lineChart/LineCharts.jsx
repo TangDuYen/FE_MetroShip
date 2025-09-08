@@ -27,13 +27,14 @@ function LineCharts() {
   //   { month: "Tháng 7", revenue: 5247 },
   //   { month: "Tháng 8", revenue: 7800 },
   // ];
-
+const now = new Date();
   const [lineData, setLineData] = useState([]);
-  const [filterType, setFilterType] = useState(0); // 0=default, 1=year, 2=quarter, 3=monthRange
-  const [year, setYear] = useState(2025);
+  const [filterType, setFilterType] = useState(0);
+  const [year, setYear] = useState(now.getFullYear());
   const [quarter, setQuarter] = useState(1);
-  const [startMonth, setStartMonth] = useState(1);
-  const [endMonth, setEndMonth] = useState(12);
+  const [startMonth, setStartMonth] = useState(now.getMonth() + 1);
+  const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
+  const [week, setWeek] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const fetchRevenue = async () => {
@@ -42,7 +43,9 @@ function LineCharts() {
       let url = "/Report/transaction-chart";
 
       if (filterType === 0) {
-        url += `?FilterType=0`; // default
+        url += `?FilterType=0`;
+      } else if (filterType === 2) {
+        url += `?FilterType=2&Week=${week}&StartMonth=${startMonth}`;
       } else if (filterType === 3) {
         url += `?FilterType=3&Year=${year}`;
       } else if (filterType === 4) {
@@ -64,13 +67,25 @@ function LineCharts() {
           growth: 0,
         }));
       } else {
-        chartData = apiData.map((item) => ({
-          month: `T${item.month}`,
-          income: item.totalIncome,
-          refund: item.refund,
-          compensation: item.compensation,
-          growth: item.netGrowthPercent,
-        }));
+        if (filterType === 2) {
+          // theo tuần → hiển thị từng ngày
+          chartData = apiData.map((item) => ({
+            day: `${item.day}/${item.month}`, // nhãn XAxis
+            income: item.totalIncome,
+            refund: item.refund,
+            compensation: item.compensation,
+            growth: item.netGrowthPercent,
+          }));
+        } else {
+          // mặc định theo tháng
+          chartData = apiData.map((item) => ({
+            month: `T${item.month}`,
+            income: item.totalIncome,
+            refund: item.refund,
+            compensation: item.compensation,
+            growth: item.netGrowthPercent,
+          }));
+        }
       }
 
       setLineData(chartData);
@@ -83,7 +98,7 @@ function LineCharts() {
 
   useEffect(() => {
     fetchRevenue();
-  }, [filterType, year, quarter, startMonth, endMonth]);
+  }, [filterType, year, quarter, startMonth, endMonth, week]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -118,11 +133,32 @@ function LineCharts() {
             style={{ width: 150, marginRight: 10 }}
           >
             <Option value={0}>Tổng quan</Option>
+            <Option value={2}>Theo tuần</Option>
             <Option value={3}>Theo năm</Option>
             <Option value={4}>Theo quý</Option>
             <Option value={5}>Theo khoảng tháng</Option>
           </Select>
 
+          {filterType === 2 && (
+            <>
+              <InputNumber
+                value={week}
+                min={1}
+                max={53}
+                onChange={(val) => setWeek(val)}
+                style={{ width: 100, marginRight: 10 }}
+                placeholder="Tuần"
+              />
+              <InputNumber
+                value={startMonth}
+                min={1}
+                max={12}
+                onChange={(val) => setStartMonth(val)}
+                style={{ width: 100, marginRight: 10 }}
+                placeholder="Tháng"
+              />
+            </>
+          )}
           {filterType === 3 && (
             <InputNumber
               value={year}
@@ -218,7 +254,7 @@ function LineCharts() {
                 <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="month" />
+            <XAxis dataKey={filterType === 2 ? "day" : "month"} />
             <YAxis />
             <CartesianGrid strokeDasharray="3 3" />
             <Tooltip content={CustomTooltip} />
