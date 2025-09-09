@@ -164,14 +164,14 @@ function MetroLineManagement() {
 
   return (
     <div className="metro-line-management-container">
-      <Space wrap size="middle" style={{marginBottom: 16 }}>
+      <Space wrap size="middle" style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={openAddModal}>
-          Thêm tuyến mới
+          + Thêm tuyến mới
         </Button>
         <Select
           allowClear
           placeholder="Chọn tuyến"
-          style={{ width: 400}}
+          style={{ width: 400 }}
           value={selectedLine}
           onChange={(value) => setSelectedLine(value)}
         >
@@ -225,35 +225,35 @@ function MetroLineManagement() {
             name="lineNameVi"
             rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
           </Form.Item>
           <Form.Item
             label="Tên tuyến (Tiếng Anh)"
             name="lineNameEn"
             rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
           </Form.Item>
           <Form.Item
-            label="Region Code"
+            label="Mã vùng"
             name="regionCode"
             rules={[{ required: true, message: "Nhập mã vùng (regionCode)" }]}
           >
-            <Input />
+            <Input placeholder="Nhập mã vùng" />
           </Form.Item>
           <Form.Item
-            label="Line Code"
+            label="Mã tuyến"
             name="lineCode"
             rules={[{ required: true, message: "Nhập mã tuyến (lineCode)" }]}
           >
-            <Input />
+            <Input placeholder="Nhập mã tuyến" />
           </Form.Item>
           <Form.Item
-            label="Line Number"
+            label="Số tuyến"
             name="lineNumber"
             rules={[{ required: true, message: "Nhập số tuyến (lineNumber)" }]}
           >
-            <Input type="number" />
+            <Input type="number" placeholder="Nhập số tuyến" />
           </Form.Item>
 
           <Form.List name="stations">
