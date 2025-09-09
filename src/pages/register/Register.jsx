@@ -59,7 +59,7 @@ function Register() {
       console.log(responseData);
 
       if (responseData.statusCode === 200) {
-        toast.success("Đăng ký thành công!");
+        toast.success(responseData.message);
         sessionStorage.setItem("registrationData", JSON.stringify(payload));
         console.log("registrationData");
         nav("/pin-code");
