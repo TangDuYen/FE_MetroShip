@@ -327,8 +327,8 @@ function MetroTrainManagement() {
   return (
     <div className="metro-train-management-container">
       <Space style={{ marginBottom: 16, marginRight: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
-          Thêm tàu
+        <Button type="primary" onClick={openAddModal}>
+         + Thêm tàu
         </Button>
         <Select
           mode="multiple"

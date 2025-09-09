@@ -1,6 +1,7 @@
 import "./HistoryPayment.scss";
 import React, { useEffect, useState } from "react";
 import {
+  paymentStatusColorMap,
   paymentStatusMap,
   paymentTransactionTypeMap,
 } from "../../constants/statusMap";
@@ -11,7 +12,9 @@ import { getAllCustomerShipments } from "../../config/metroApi";
 import {
   Button,
   Card,
+  ConfigProvider,
   DatePicker,
+  Empty,
   Input,
   Select,
   Space,
@@ -21,7 +24,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import { SearchOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -32,7 +35,7 @@ function HistoryPayment() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [dateRange, setDateRange] = useState([]);
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState(null);
   const [allPayments, setAllPayments] = useState([]);
   const [shipmentsMap, setShipmentsMap] = useState({});
   const [loading, setLoading] = useState(false);
@@ -105,7 +108,7 @@ function HistoryPayment() {
       (item.method?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchStatus =
-      filterStatus === "all" || item.statusEnum === Number(filterStatus);
+      !filterStatus || item.statusEnum === Number(filterStatus);
 
     const matchDateRange =
       dateRange.length === 0 ||
@@ -140,12 +143,11 @@ function HistoryPayment() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      render: (text, record) => {
-        const colorMap = { 1: "orange", 2: "green", 3: "default", 4: "red" };
-        return (
-          <Tag color={colorMap[record.statusEnum] || "default"}>{text}</Tag>
-        );
-      },
+      render: (_, record) => (
+        <Tag color={paymentStatusColorMap[record.statusEnum] || "default"}>
+          {paymentStatusMap[record.statusEnum] || "Không rõ"}
+        </Tag>
+      ),
     },
   ];
 
@@ -159,38 +161,58 @@ function HistoryPayment() {
           <div className="history-payment-right">
             <Card title="DANH SÁCH GIAO DỊCH CỦA BẠN" bordered={false}>
               <Space style={{ marginBottom: 16 }}>
-                <Input
+                <Input.Search
                   placeholder="Nhập mã giao dịch, phương thức"
-                  prefix={<SearchOutlined />}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{ width: 300 }}
                 />
                 <Select
                   style={{ width: 200 }}
+                  placeholder="Trạng thái"
+                  allowClear
                   value={filterStatus}
                   onChange={(val) => setFilterStatus(val)}
                 >
-                  <Option value="all">Tất cả trạng thái</Option>
-                  <Option value="1">Đợi thanh toán</Option>
-                  <Option value="2">Đã thanh toán</Option>
-                  <Option value="3">Đã hủy</Option>
-                  <Option value="4">Thất bại</Option>
+                  {Object.entries(paymentStatusMap).map(([key, label]) => (
+                    <Option key={key} value={key}>
+                      <Tag color={paymentStatusColorMap[key]}>{label}</Tag>
+                    </Option>
+                  ))}
                 </Select>
                 <RangePicker
                   format="DD/MM/YYYY"
                   placeholder={["Từ ngày", "Đến ngày"]}
+                  value={dateRange}
                   onChange={(values) => setDateRange(values || [])}
                   style={{ width: 300 }}
                 />
+                <Button
+                  className="clear-filter-button"
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterStatus(null);
+                    setDateRange([]);
+                  }}
+                ></Button>
               </Space>
               <Spin spinning={loading} tip="Đang tải dữ liệu...">
-                <Table
-                  columns={columns}
-                  dataSource={filteredPayments}
-                  pagination={{ pageSize: 10 }}
-                  bordered
-                />
+                <ConfigProvider
+                  renderEmpty={() => (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_DEFAULT}
+                      description="Không có dữ liệu"
+                    />
+                  )}
+                >
+                  <Table
+                    columns={columns}
+                    dataSource={filteredPayments}
+                    pagination={{ pageSize: 10 }}
+                    bordered
+                  />
+                </ConfigProvider>
               </Spin>
             </Card>
           </div>
