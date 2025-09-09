@@ -65,7 +65,7 @@ function OrderInformationStaff() {
       const trainData = trainRes.items;
       setTrains(trainData);
     } catch (err) {
-      console.error("Lỗi lấy chi tiết đơn:", err);
+      console.error("Lỗi lấy chi tiết đơn:", err.response?.data || err.message);
     }
   };
 
