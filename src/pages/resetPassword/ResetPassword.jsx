@@ -3,18 +3,19 @@ import './ResetPassword.scss'
 import * as Yup from 'yup';
 
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { useEffect, useState } from 'react';
 
 import Logo from '../../assets/logo2.png'
 import RegisterPicture from '../../assets/login1.png';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 
 function ResetPassword() {
     const [error, setError] = useState(null);
     const nav = useNavigate();
     const [isChecked, setIsChecked] = useState(false);
+    const [count, setCount] = useState(60);
 
     const validationSchema = Yup.object({
         token: Yup.string()
@@ -53,6 +54,40 @@ function ResetPassword() {
             }
         }
     };
+
+    const resendOtp = async () => {
+        try {
+            const data = { userName: registrationData.userName };
+            const response = await api.post('/auth/email/resend', data);
+            const responseData = response.data;
+
+            if (responseData.statusCode === 200) {
+                toast.success(responseData.message);
+                setCount(60);
+            } else {
+                toast.error(responseData.message);
+            }
+        } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                const firstError = Object.values(errData.errors).flat()[0];
+                toast.error(firstError);
+            } else {
+                toast.error(errData?.title || "Lỗi không xác định!");
+            }
+        }
+    };
+
+    useEffect(() => {
+        let timer;
+        if (count > 0) {
+            timer = setInterval(() => {
+                setCount((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [count]);
+
     return (
         <>
             <div className="register-container">
@@ -84,12 +119,22 @@ function ResetPassword() {
                         {() => (
                             <Form className="register-form">
                                 <div className="form-group">
-                                    <label htmlFor="token">OTP</label>
+                                    <label htmlFor="token" style={{marginRight: "1em"}}>OTP</label>
+                                    {count > 0 ? (
+                                        <span style={{ color: "gray" }}>
+                                            Gửi lại mã ({count}s)
+                                        </span>
+                                    ) : (
+                                        <a href="#!" onClick={resendOtp}>
+                                            Gửi lại mã
+                                        </a>
+                                    )}
                                     <Field name="token" type="text" />
                                     <ErrorMessage
                                         name="token"
                                         component="div"
                                         className="error-message"
+                                        style={{ marginTop: '0.5em' }}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -99,6 +144,7 @@ function ResetPassword() {
                                         name="password"
                                         component="div"
                                         className="error-message"
+                                        style={{ marginTop: '0.5em' }}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -108,6 +154,7 @@ function ResetPassword() {
                                         name="confirmPassword"
                                         component="div"
                                         className="error-message"
+                                        style={{ marginTop: '0.5em' }}
                                     />
                                 </div>
 
@@ -127,7 +174,7 @@ function ResetPassword() {
                     </div>
                 </div>
                 <div className="introduction-image">
-                    <img src={RegisterPicture} alt="Register" />
+                    <img src={RegisterPicture} alt="Register" onClick={() => nav("/")}/>
                 </div>
             </div>
         </>

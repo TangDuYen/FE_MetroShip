@@ -76,6 +76,7 @@ function VerifyMail() {
                                         name="email"
                                         component="div"
                                         className="error-message"
+                                        style= {{marginTop : '0.5em'}}
                                     />
                                 </div>
 
@@ -95,7 +96,7 @@ function VerifyMail() {
                     </div>
                 </div>
                 <div className="introduction-image">
-                    <img src={RegisterPicture} alt="Register" />
+                    <img src={RegisterPicture} alt="Register" onClick={() => nav("/")}/>
                 </div>
             </div>
         </>
