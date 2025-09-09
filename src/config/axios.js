@@ -93,12 +93,18 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401) {
-      //CHECK IF NOT REFRESH TOKEN EXPIRED
+      const url = originalRequest.url;
+
+      // OTP ERROR
+      if (url.includes("/auth/email/verification")) {
+        return Promise.reject(error);
+      }
+
+      // ANOHER ERROR UNAUTHORIZED
       if (
-        !originalRequest.url.includes("/auth/authentication") &&
-        !originalRequest.url.includes("/auth/register")
+        !url.includes("/auth/authentication") &&
+        !url.includes("/auth/register")
       ) {
-        //REFRESH TOKEN EXPIRED -> REDIRECT TO LOGIN
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("refreshTokenExpiredTime");
