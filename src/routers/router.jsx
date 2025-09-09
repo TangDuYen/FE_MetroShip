@@ -49,7 +49,7 @@ import { useSelector } from "react-redux";
 const lazyLoad = (importFn) => {
   const Component = lazy(importFn);
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Đang tải dữ liệu...</div>}>
       <Component />
     </Suspense>
   );
