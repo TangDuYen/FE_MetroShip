@@ -2,6 +2,7 @@ import {
   CarOutlined,
   DashboardOutlined,
   DollarOutlined,
+  IdcardOutlined,
   InboxOutlined,
   ProductOutlined,
   ProfileOutlined,
@@ -137,7 +138,7 @@ export const navDashboardConfigStaff = [
   },
   {
     key: "10",
-    icon: <ProfileOutlined />,
+    icon: <IdcardOutlined />,
     label: "Hồ sơ",
   },
 ];
