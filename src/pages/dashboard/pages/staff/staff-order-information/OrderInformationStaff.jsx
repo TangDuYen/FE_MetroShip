@@ -28,12 +28,12 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { EnvironmentOutlined } from "@ant-design/icons";
+import MapParcel from "./MapParcel";
 import { PATH_NAME } from "../../../../../constants/pathname";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
-import { EnvironmentOutlined } from "@ant-design/icons";
-import MapParcel from "./MapParcel";
 
 const { Title, Link } = Typography;
 
@@ -49,7 +49,7 @@ function OrderInformationStaff() {
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [businessMediaTypes, setBusinessMediaTypes] = useState([]);
-
+  const [showImages, setShowImages] = useState(false);
   const fetchDetails = async () => {
     try {
       const res = await api.get(`/shipments/${trackingCode}`);
@@ -158,7 +158,11 @@ function OrderInformationStaff() {
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item span={2}>
-            <Link onClick={() => setPreviewVisible(true)}>Xem hình ảnh</Link>
+            {shipment.shipmentMedias && shipment.shipmentMedias.length > 0 ? (
+              <Link onClick={() => setPreviewVisible(true)}>Xem hình ảnh</Link>
+            ) : (
+              <span style={{ color: "gray" }}>Hiện tại không có dữ liệu hình ảnh</span>
+            )}
           </Descriptions.Item>
         </Descriptions>
         {/* <Image.PreviewGroup
@@ -176,39 +180,62 @@ function OrderInformationStaff() {
             />
           ))}
         </Image.PreviewGroup> */}
-        <Image.PreviewGroup
-          preview={{
-            visible: previewVisible,
-            onVisibleChange: (vis) => setPreviewVisible(vis),
-            imageRender: (originalNode, { current }) => {
-              const media = shipment.shipmentMedias[current];
-              return (
-                <div className="preview-wrapper">
-                  {originalNode}
-                  <div className="preview-caption">
-                    <div className="preview-title">
-                      {businessMediaType[media.businessMediaType] || "Ảnh"}
-                    </div>
-                    <div className="preview-date">
-                      {dayjs(media.createdAt).format("DD/MM/YYYY HH:mm")}
+        {shipment.shipmentMedias && shipment.shipmentMedias.length > 0 && (
+          <Image.PreviewGroup
+            preview={{
+              visible: previewVisible,
+              onVisibleChange: (vis) => setPreviewVisible(vis),
+              imageRender: (originalNode, { current }) => {
+                const media = shipment.shipmentMedias[current];
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                      background: "transparent",
+                    }}
+                  >
+                    <img
+                      src={media.mediaUrl}
+                      alt={businessMediaType?.[media?.businessMediaType] || "Ảnh"}
+                      style={{
+                        maxWidth: "90%",  
+                        maxHeight: "90%",
+                        objectFit: "contain",
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 110,
+                        color: "white",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div>
+                        {media?.createdAt
+                          ? dayjs(media.createdAt).format("DD/MM/YYYY HH:mm")
+                          : ""}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            },
-          }}
-        >
-          {shipment.shipmentMedias?.map((m) => (
-            <Image
-              key={m.id}
-              src={m.mediaUrl}
-              alt={businessMediaType[m.businessMediaType] || "Ảnh"}
-              width={200}
-              style={{ borderRadius: 8, margin: 10, display: "none" }}
-            />
-          ))}
-        </Image.PreviewGroup>
-      </Card>
+                );
+              },
+            }}
+          >
+            {shipment.shipmentMedias.map((m) => (
+              <Image
+                key={m.id}
+                src={m.mediaUrl}
+                alt={businessMediaType?.[m.businessMediaType] || "Ảnh"}
+                style={{ display: "none" }}
+              />
+            ))}
+          </Image.PreviewGroup>
+        )}
+      </Card >
 
       <div
         style={{
@@ -224,75 +251,77 @@ function OrderInformationStaff() {
         Thông tin kiện hàng
       </div>
 
-      {parcels.map((res, idx) => {
-        const parcel = res.data;
-        return (
-          <Card
-            title={`Kiện hàng ${idx + 1}`}
-            style={{ marginBottom: 16 }}
-            key={parcel.id}
-            extra={
-              parcel.status !== 4 &&
-              parcel.status !== 5 && (
-                <Button
-                  type="default"
-                  icon={<EnvironmentOutlined />}
-                  onClick={() => {
-                    setSelectedParcel(parcel);
-                    setMapVisible(true);
-                  }}
-                >
-                  Theo dõi kiện hàng
-                </Button>
-              )
-            }
-          >
-            <Descriptions column={2}>
-              <Descriptions.Item label="Mã kiện">
-                {parcel.parcelCode}
-              </Descriptions.Item>
-              <Descriptions.Item label="Loại hàng">
-                {parcel.categoryInsurance?.parcelCategory?.categoryName ||
-                  "Không có loại hàng"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Mô tả">
-                {parcel.categoryInsurance?.parcelCategory?.description ||
-                  "Không có mô tả"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Trọng lượng">
-                {parcel.weightKg} kg
-              </Descriptions.Item>
-              <Descriptions.Item label="Kích thước (D x R x C)">
-                {parcel.lengthCm} cm x {parcel.widthCm} cm x {parcel.heightCm}{" "}
-                cm
-              </Descriptions.Item>
-              <Descriptions.Item label="Thể tích">
-                {parcel.volumeCm3} cm³
-              </Descriptions.Item>
-              <Descriptions.Item label="Trọng lượng quy đổi">
-                {parcel.chargeableWeightKg} kg
-              </Descriptions.Item>
-              <Descriptions.Item label="Phí vận chuyển">
-                {formatCurrency(parcel.shippingFeeVnd)}
-              </Descriptions.Item>
-              {parcel.insuranceFeeVnd > 0 && (
-                <Descriptions.Item label="Phí bảo hiểm">
-                  {formatCurrency(parcel.insuranceFeeVnd)}
+      {
+        parcels.map((res, idx) => {
+          const parcel = res.data;
+          return (
+            <Card
+              title={`Kiện hàng ${idx + 1}`}
+              style={{ marginBottom: 16 }}
+              key={parcel.id}
+              extra={
+                parcel.status !== 4 &&
+                parcel.status !== 5 && (
+                  <Button
+                    type="default"
+                    icon={<EnvironmentOutlined />}
+                    onClick={() => {
+                      setSelectedParcel(parcel);
+                      setMapVisible(true);
+                    }}
+                  >
+                    Theo dõi kiện hàng
+                  </Button>
+                )
+              }
+            >
+              <Descriptions column={2}>
+                <Descriptions.Item label="Mã kiện">
+                  {parcel.parcelCode}
                 </Descriptions.Item>
-              )}
-              <Descriptions.Item label="Tổng phí">
-                {formatCurrency(parcel.priceVnd)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tình trạng">
-                <Tag color={parcelStatusColorMap[parcel.status]}>
-                  {parcelStatusMap[parcel.status]}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        );
-      })}
+                <Descriptions.Item label="Loại hàng">
+                  {parcel.categoryInsurance?.parcelCategory?.categoryName ||
+                    "Không có loại hàng"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Mô tả">
+                  {parcel.categoryInsurance?.parcelCategory?.description ||
+                    "Không có mô tả"}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Trọng lượng">
+                  {parcel.weightKg} kg
+                </Descriptions.Item>
+                <Descriptions.Item label="Kích thước (D x R x C)">
+                  {parcel.lengthCm} cm x {parcel.widthCm} cm x {parcel.heightCm}{" "}
+                  cm
+                </Descriptions.Item>
+                <Descriptions.Item label="Thể tích">
+                  {parcel.volumeCm3} cm³
+                </Descriptions.Item>
+                <Descriptions.Item label="Trọng lượng quy đổi">
+                  {parcel.chargeableWeightKg} kg
+                </Descriptions.Item>
+                <Descriptions.Item label="Phí vận chuyển">
+                  {formatCurrency(parcel.shippingFeeVnd)}
+                </Descriptions.Item>
+                {parcel.insuranceFeeVnd > 0 && (
+                  <Descriptions.Item label="Phí bảo hiểm">
+                    {formatCurrency(parcel.insuranceFeeVnd)}
+                  </Descriptions.Item>
+                )}
+                <Descriptions.Item label="Tổng phí">
+                  {formatCurrency(parcel.priceVnd)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tình trạng">
+                  <Tag color={parcelStatusColorMap[parcel.status]}>
+                    {parcelStatusMap[parcel.status]}
+                  </Tag>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          );
+        })
+      }
       <Modal
         title={`Bản đồ kiện hàng ${selectedParcel?.parcelCode || ""}`}
         open={mapVisible}
@@ -304,7 +333,7 @@ function OrderInformationStaff() {
           <MapParcel shipmentId={shipment.id} visible={mapVisible} />
         </div>
       </Modal>
-    </div>
+    </div >
   );
 }
 
