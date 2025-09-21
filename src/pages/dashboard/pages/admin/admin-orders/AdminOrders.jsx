@@ -143,7 +143,7 @@ function AdminOrders() {
       // if (areaFilter && item.regionId !== areaFilter) match = false;
 
       // FILTER ngày gửi
-      if (sendDateRange.length === 2) {
+      if (sendDateRange && sendDateRange.length === 2) {
         const [start, end] = sendDateRange;
         const sendDate = dayjs(item.scheduledDateTime);
 
