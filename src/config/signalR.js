@@ -3,7 +3,7 @@ import * as signalR from "@microsoft/signalr";
 const getToken = () => localStorage.getItem("token");
 
 const connection = new signalR.HubConnectionBuilder()
-  .withUrl("https://localhost:7085/notificationHub", {
+  .withUrl("https://metroship-cosdy.ondigitalocean.app/notificationHub", {
     withCredentials: true,
     transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
     accessTokenFactory: getToken,
@@ -11,6 +11,15 @@ const connection = new signalR.HubConnectionBuilder()
   .withAutomaticReconnect()
   .configureLogging(signalR.LogLevel.Information)
   .build();
+// const connection = new signalR.HubConnectionBuilder()
+//   .withUrl("https://localhost:7085/notificationHub", {
+//     withCredentials: true,
+//     transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
+//     accessTokenFactory: getToken,
+//   })
+//   .withAutomaticReconnect()
+//   .configureLogging(signalR.LogLevel.Information)
+//   .build();
 
 // let isStarted = false;
 
