@@ -221,36 +221,33 @@ function AdminPrice() {
                 </Typography.Text>
               </div>
             )}
+
             {price.baseSurchargePerDayVnd > 0 && (
               <div>
                 <Typography.Text strong>
                   Phụ thu cơ bản mỗi ngày:{" "}
                 </Typography.Text>
-                <Typography.Text
-                  style={{ color: "#f56a00", fontWeight: "bold" }}
-                >
+                <Typography.Text type="warning" strong>
                   {price.baseSurchargePerDayVnd.toLocaleString()} VND
                 </Typography.Text>
               </div>
             )}
+
             {price.refundRate > 0 && (
               <div>
                 <Typography.Text strong>Tỷ lệ hoàn tiền: </Typography.Text>
-                <Typography.Text
-                  style={{ color: "#1890ff", fontWeight: "bold" }}
-                >
+                <Typography.Text type="success" strong>
                   {price.refundRate * 100}%
                 </Typography.Text>
               </div>
             )}
+
             {price.refundForCancellationBeforeScheduledHours > 0 && (
               <div>
                 <Typography.Text strong>
                   Hoàn tiền khi hủy trước:{" "}
                 </Typography.Text>
-                <Typography.Text
-                  style={{ color: "#52c41a", fontWeight: "bold" }}
-                >
+                <Typography.Text type="success" strong>
                   {price.refundForCancellationBeforeScheduledHours} giờ
                 </Typography.Text>
               </div>

@@ -7,11 +7,11 @@ import {
   Form,
   Input,
   Row,
+  Spin,
   Typography,
-  Upload,
-  message,
+  Upload
 } from "antd";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { UploadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";

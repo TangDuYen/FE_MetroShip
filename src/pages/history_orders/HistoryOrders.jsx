@@ -3,7 +3,9 @@ import "./HistoryOrders.scss";
 import {
   Button,
   Card,
+  ConfigProvider,
   DatePicker,
+  Empty,
   Input,
   Modal,
   Pagination,
@@ -12,7 +14,7 @@ import {
   Space,
   Spin,
   Table,
-  Tag
+  Tag,
 } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
@@ -23,7 +25,7 @@ import {
 } from "../../constants/statusMap";
 
 import { PATH_NAME } from "../../constants/pathname";
-import { SearchOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import dayjs from "dayjs";
@@ -41,15 +43,15 @@ function HistoryOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [feedbackShipmentId, setFeedbackShipmentId] = useState(null);
   const [rating, setRating] = useState(0);
-  const [rejectReason, setRejectReason] = useState('');
-  const [comment, setComment] = useState('');
+  const [rejectReason, setRejectReason] = useState("");
+  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
@@ -168,7 +170,10 @@ function HistoryOrders() {
         cancelUrl: `${currentDomain}/payment-fail`,
       };
 
-      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
+      const res = await api.post(
+        "/shipments/vnpay/payment-url",
+        paymentPayload
+      );
       console.log(res.data);
 
       // statusCode nằm trực tiếp trong res.data
@@ -177,7 +182,6 @@ function HistoryOrders() {
       } else {
         toast.error("Không lấy được link thanh toán!");
         console.log(paymentPayload);
-
       }
     } catch (err) {
       console.error("Lỗi khi thanh toán:", err);
@@ -190,12 +194,12 @@ function HistoryOrders() {
   };
 
   const handleCancelShipment = (shipmentId) => {
-    const order = orders.find(o => o.shipmentId === shipmentId);
+    const order = orders.find((o) => o.shipmentId === shipmentId);
     const deliveryTime = dayjs(order?.deliveryDate);
     const now = dayjs();
 
     //WARNING IF CANCEL IN 24HOURS
-    if (deliveryTime.diff(now, 'hour') < 24) {
+    if (deliveryTime.diff(now, "hour") < 24) {
       setPendingShipment(shipmentId);
       setIsWarningModalOpen(true);
     } else {
@@ -225,7 +229,7 @@ function HistoryOrders() {
     } finally {
       setIsFeedbackModalOpen(false);
       setRating(0);
-      setComment('');
+      setComment("");
       await fetchData();
     }
   };
@@ -254,10 +258,10 @@ function HistoryOrders() {
       toast.error("Đã xảy ra lỗi khi hủy đơn.");
     } finally {
       setIsRejectModalOpen(false);
-      setRejectReason('');
+      setRejectReason("");
       await fetchData();
     }
-  }
+  };
 
   const handleRequestReturn = async (shipmentId) => {
     try {
@@ -272,7 +276,10 @@ function HistoryOrders() {
         cancelUrl: `${currentDomain}/payment-fail`,
       };
 
-      const res = await api.post("/shipments/vnpay/payment-url", paymentPayload);
+      const res = await api.post(
+        "/shipments/vnpay/payment-url",
+        paymentPayload
+      );
       console.log(res.data);
 
       // statusCode nằm trực tiếp trong res.data
@@ -285,19 +292,19 @@ function HistoryOrders() {
       console.log("Yêu cầu hoàn đơn", shipmentId);
     } catch (error) {
       console.log("Lỗi hoàn đơn:", error);
-      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi khi yêu cầu hoàn đơn.";
+      const errorMessage =
+        error.response?.data?.message || "Đã xảy ra lỗi khi yêu cầu hoàn đơn.";
       toast.error(errorMessage);
     }
-  }
+  };
 
   const filteredGoods = orders.filter((item) => {
-    const matchSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (item.trackingCode?.toLowerCase() || "").includes(
+      searchTerm.toLowerCase()
+    );
 
     const matchStatus =
-      filterStatus === "all" ||
-      item.shipmentStatus === parseInt(filterStatus, 10);
+      !filterStatus || item.shipmentStatus === Number(filterStatus);
 
     const matchDateRange =
       (!startDate ||
@@ -308,16 +315,13 @@ function HistoryOrders() {
   });
 
   const getParcelsByShipmentId = (shipmentId) => {
-    return orders.filter(parcel => parcel.shipmentId === shipmentId);
+    return orders.filter((parcel) => parcel.shipmentId === shipmentId);
   };
   const onRowClick = (record) => {
     const relatedParcels = getParcelsByShipmentId(record.id);
     setSelectedOrder({ ...record, relatedParcels });
     navigate(
-      PATH_NAME.TRACKING_ORDER.replace(
-        ":trackingCode",
-        record.trackingCode
-      )
+      PATH_NAME.TRACKING_ORDER.replace(":trackingCode", record.trackingCode)
     );
   };
 
@@ -354,13 +358,16 @@ function HistoryOrders() {
       title: "Hạn chót gửi hàng lúc",
       dataIndex: "deliveryDate",
       key: "deliveryDate",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định"),
+      render: (date) =>
+        date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định",
     },
     {
       title: "Chi tiết",
       key: "detail",
       render: (_, record) => (
-        <Button type="link" onClick={() => onRowClick(record)}>Chi tiết</Button>
+        <Button type="link" onClick={() => onRowClick(record)}>
+          Chi tiết
+        </Button>
       ),
     },
     {
@@ -385,34 +392,23 @@ function HistoryOrders() {
       //PAY SHIPMENT
       if (item.shipmentStatus === 0) {
         actions.push(
-          <Button
-            type="primary"
-            onClick={() => handlePayment(item.shipmentId)}
-          >
+          <Button type="primary" onClick={() => handlePayment(item.shipmentId)}>
             Thanh toán
           </Button>
         );
 
         //CANCEL SHIPMENT - NOT PAY YET
         actions.push(
-          <Button
-            danger
-            onClick={() => handleCancelShipment(item.shipmentId)}
-          >
+          <Button danger onClick={() => handleCancelShipment(item.shipmentId)}>
             Hủy
           </Button>
         );
       }
 
       //CANCEL SHIPMENT - HAS PAID
-      if (
-        [7].includes(item.shipmentStatus)
-      ) {
+      if ([7].includes(item.shipmentStatus)) {
         actions.push(
-          <Button
-            danger
-            onClick={() => handleCancelShipment(item.shipmentId)}
-          >
+          <Button danger onClick={() => handleCancelShipment(item.shipmentId)}>
             Hủy
           </Button>
         );
@@ -444,10 +440,7 @@ function HistoryOrders() {
       //REFUND SHIPMENT
       if (item.shipmentStatus === 11) {
         actions.push(
-          <Button
-            danger
-            onClick={() => handleRequestReturn(item.shipmentId)}
-          >
+          <Button danger onClick={() => handleRequestReturn(item.shipmentId)}>
             Yêu cầu hoàn đơn
           </Button>
         );
@@ -466,9 +459,8 @@ function HistoryOrders() {
           <div className="history-order-right">
             <Card title="DANH SÁCH ĐƠN HÀNG CỦA BẠN" bordered={false}>
               <Space style={{ marginBottom: 16 }}>
-                <Input
-                  placeholder="Nhập mã hàng hóa, tên hàng hóa"
-                  prefix={<SearchOutlined />}
+                <Input.Search
+                  placeholder="Nhập mã hàng hóa"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{ width: 300 }}
@@ -477,8 +469,9 @@ function HistoryOrders() {
                   value={filterStatus}
                   onChange={(value) => setFilterStatus(value)}
                   style={{ width: 300 }}
+                  placeholder="Trạng thái"
+                  allowClear
                 >
-                  <Option value="all">Tất cả trạng thái</Option>
                   {Object.entries(shipmentStatusMap).map(([value, label]) => (
                     <Option key={value} value={value}>
                       <Tag color={shipmentStatusColorMap[value] || "default"}>
@@ -490,23 +483,40 @@ function HistoryOrders() {
                 <RangePicker
                   format="DD/MM/YYYY"
                   placeholder={["Từ ngày", "Đến ngày"]}
+                  value={[startDate, endDate]}
                   onChange={(dates) => {
                     setStartDate(dates?.[0] || null);
                     setEndDate(dates?.[1] || null);
                   }}
                   style={{ width: 300 }}
                 />
+                <Button
+                  className="clear-filter-button"
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterStatus(null);
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                ></Button>
               </Space>
               <Spin spinning={loading} tip="Đang tải dữ liệu...">
-                <Table
-                  columns={columns}
-                  dataSource={filteredGoods}
-                  pagination={{ pageSize: 10 }}
-                  bordered
-                  locale={{
-                    emptyText: "Không có bản ghi nào",
-                  }}
-                />
+                <ConfigProvider
+                  renderEmpty={() => (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_DEFAULT}
+                      description="Không có dữ liệu"
+                    />
+                  )}
+                >
+                  <Table
+                    columns={columns}
+                    dataSource={filteredGoods}
+                    pagination={{ pageSize: 10 }}
+                    bordered
+                  />
+                </ConfigProvider>
               </Spin>
             </Card>
           </div>
@@ -522,7 +532,7 @@ function HistoryOrders() {
         okText="Gửi đánh giá"
         cancelText="Hủy"
       >
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+        <div style={{ textAlign: "center", marginBottom: "1rem" }}>
           <Rate value={rating} onChange={setRating} style={{ fontSize: 36 }} />
         </div>
         <div>
@@ -570,10 +580,11 @@ function HistoryOrders() {
         cancelText="Hủy"
       >
         <p>
-          Nếu bạn hủy, bạn sẽ <strong style={{ color: 'red' }}>không được hoàn tiền</strong>. Bạn có chắc chắn muốn tiếp tục không?
+          Nếu bạn hủy, bạn sẽ{" "}
+          <strong style={{ color: "red" }}>không được hoàn tiền</strong>. Bạn có
+          chắc chắn muốn tiếp tục không?
         </p>
       </Modal>
-
     </div>
   );
 }

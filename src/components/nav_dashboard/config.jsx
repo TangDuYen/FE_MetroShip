@@ -1,17 +1,18 @@
 import {
   CarOutlined,
-  CodeSandboxOutlined,
   DashboardOutlined,
-  InsuranceOutlined,
-  OrderedListOutlined,
-  PayCircleOutlined,
+  DollarOutlined,
+  IdcardOutlined,
+  InboxOutlined,
   ProductOutlined,
   ProfileOutlined,
+  SafetyOutlined,
   SettingOutlined,
+  ShoppingCartOutlined,
   TeamOutlined,
   TransactionOutlined,
   UnorderedListOutlined,
-  UserOutlined
+  UserOutlined,
 } from "@ant-design/icons";
 
 import { PATH_NAME } from "../../constants/pathname";
@@ -24,7 +25,7 @@ export const navDashboardConfig = [
   },
   {
     key: "2",
-    icon: <TeamOutlined style={{ fontSize: "1.4em" }} />,
+    icon: <UserOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Người dùng",
   },
   {
@@ -34,58 +35,63 @@ export const navDashboardConfig = [
   },
   {
     key: "4",
-    icon: <ProductOutlined  style={{ fontSize: "1.4em" }} />,
+    icon: <ProductOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Metro",
     children: [
       {
         key: "41",
-        label: "Danh sách tuyến Metro",
+        label: "Quản lý tuyến Metro",
       },
       {
         key: "42",
-        label: "Danh sách tàu Metro",
+        label: "Quản lý tàu Metro",
       },
       {
         key: "43",
-        label: "Danh sách trạm Metro",
+        label: "Quản lý trạm Metro",
       },
     ],
   },
   {
     key: "3",
-    icon: <OrderedListOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Đơn hàng",
+    icon: <ShoppingCartOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Đơn hàng",
   },
   {
     key: "14",
-    icon: <TransactionOutlined  style={{ fontSize: "1.4em" }} />,
+    icon: <TransactionOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Giao dịch",
   },
   {
     key: "11",
-    icon: <CodeSandboxOutlined style={{ fontSize: "1.4em" }} />,
+    icon: <InboxOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Loại bưu kiện",
   },
   {
     key: "13",
-    icon: <PayCircleOutlined style={{ fontSize: "1.4em" }} />,
+    icon: <DollarOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Giá vận chuyển",
   },
   {
     key: "12",
-    icon: <InsuranceOutlined style={{ fontSize: "1.4em" }} />,
-    label: "Chính sách bảo hiểm",
-  },
-  {
-    key: "6",
-    icon: <ProfileOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Hồ sơ",
+    icon: <SafetyOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Bảo hiểm",
   },
 
   {
-    key: "15",
-    icon: <SettingOutlined  style={{ fontSize: "1.4em" }} />,
-    label: "Cấu hình hệ thống",
+    key: "6",
+    icon: <SettingOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Hệ thống",
+    children: [
+      {
+        key: "61",
+        label: "Thông tin tài khoản",
+      },
+      {
+        key: "62",
+        label: "Cấu hình hệ thông",
+      },
+    ],
   },
 
   // {
@@ -94,10 +100,7 @@ export const navDashboardConfig = [
   //   label: "Người dùng",
   // },
 ];
-export const navDashboardConfigCustomer = [
- 
-  
-];
+export const navDashboardConfigCustomer = [];
 
 export const navDashboardConfigStaff = [
   {
@@ -107,27 +110,27 @@ export const navDashboardConfigStaff = [
     children: [
       {
         key: "71",
-        label: "Đơn hàng cần xử lý"
+        label: "Đơn hàng cần xử lý",
       },
       {
         key: "72",
-        label: "Theo dõi đơn hàng"
+        label: "Theo dõi đơn hàng",
       },
       {
         key: "73",
-        label: "Đơn hàng đã hoàn thành"
+        label: "Đơn hàng đã hoàn thành",
       },
       {
         key: "74",
-        label: "Yêu cầu hỗ trợ"
-      }
-    ]
+        label: "Yêu cầu hỗ trợ",
+      },
+    ],
   },
   {
     key: "8",
     icon: <TransactionOutlined />,
     label: "Giao dịch",
-  },  
+  },
   {
     key: "9",
     icon: <CarOutlined />,
@@ -135,11 +138,10 @@ export const navDashboardConfigStaff = [
   },
   {
     key: "10",
-    icon: <ProfileOutlined />,
+    icon: <IdcardOutlined />,
     label: "Hồ sơ",
-  },  
+  },
 ];
-  
 
 export const navpath = {
   1: {
@@ -163,7 +165,7 @@ export const navpath = {
   5: {
     path: PATH_NAME.DASHBOARD_ADMIN_STAFF_MANAGEMENT,
   },
-  6: {
+  61: {
     path: PATH_NAME.DASHBOARD_ADMIN_PROFILE,
   },
   11: {
@@ -178,7 +180,7 @@ export const navpath = {
   14: {
     path: PATH_NAME.DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT,
   },
-  15: {
+  62: {
     path: PATH_NAME.DASHBOARD_ADMIN_SYSTEM_CONFIG,
   },
   71: {
