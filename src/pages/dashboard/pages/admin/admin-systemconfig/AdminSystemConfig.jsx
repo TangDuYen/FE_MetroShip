@@ -25,7 +25,7 @@ function AdminSystemConfig() {
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [includeDeactivated, setIncludeDeactivated] = useState(false);
-  //Modal update 
+  //Modal update
   const [editingConfig, setEditingConfig] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -38,6 +38,11 @@ function AdminSystemConfig() {
   const [filterDate, setFilterDate] = useState(null);
   const [typeOptions, setTypeOptions] = useState([]);
   const [typeMap, setTypeMap] = useState({});
+
+  const typeNameMap = {
+    System: "Hệ thống",
+    Policy: "Chính sách",
+  };
 
   const fetchConfigs = async () => {
     try {
@@ -74,14 +79,14 @@ function AdminSystemConfig() {
   useEffect(() => {
     fetchConfigs();
   }, [includeDeactivated]);
-  
+
   const handleUpdateConfig = async (values) => {
     try {
       const res = await api.put("/system-configs", {
-      id: editingConfig.id,
-      description: values.description,
-      configType: typeMap[values.configTypeName],
-    });
+        id: editingConfig.id,
+        description: values.description,
+        configType: typeMap[values.configTypeName],
+      });
 
       toast.success(res.data?.data || "Cập nhật thành công");
       setIsModalOpen(false);
@@ -100,11 +105,11 @@ function AdminSystemConfig() {
   const handleSubmitChangeValue = async (values) => {
     try {
       const res = await api.post("/system-configs/config-value", {
-      configKey: changingConfig.configKey,
-      configValue: values.configValue,
-    });
+        configKey: changingConfig.configKey,
+        configValue: values.configValue,
+      });
 
-    toast.success(res.data?.data || "Đổi giá trị thành công");
+      toast.success(res.data?.data || "Đổi giá trị thành công");
       setIsValueModalOpen(false);
       fetchConfigs();
     } catch (err) {
@@ -112,7 +117,6 @@ function AdminSystemConfig() {
       toast.error(err.response?.data?.message || "Đổi giá trị thất bại");
     }
   };
-
 
   const columns = [
     {
@@ -136,6 +140,7 @@ function AdminSystemConfig() {
     {
       title: "Loại",
       dataIndex: "configTypeName",
+      render: (val) => typeNameMap[val] || val,
     },
     {
       title: "Trạng thái",
@@ -224,7 +229,7 @@ function AdminSystemConfig() {
         >
           {typeOptions.map((t) => (
             <Select.Option key={t} value={t}>
-              {t}
+              {typeNameMap[t] || t}
             </Select.Option>
           ))}
         </Select>
