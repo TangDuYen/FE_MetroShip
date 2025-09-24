@@ -2,24 +2,25 @@ import "./MetroLineManagement.scss";
 
 import {
   Button,
+  Col,
   ConfigProvider,
   Empty,
   Form,
   Input,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Spin,
-  Table,
-  message,
+  Table
 } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllStations, getMetroLines } from "../../../../../config/metroApi";
+import { getAllRegions, getAllStationsByRegion, getMetroLines } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
@@ -31,17 +32,21 @@ function MetroLineManagement() {
   const [editingLine, setEditingLine] = useState(null);
   const [form] = Form.useForm();
   const [stations, setStations] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllStations(), getMetroLines()]).then(
-      ([stationData, metroLineData]) => {
+    Promise.all([getAllRegions(), getMetroLines()])
+      .then(([regionData, metroLineData]) => {
+        setRegions(regionData);
         setMetroLines(metroLineData);
-        setStations(stationData);
-      }
-    );
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   const filteredLines = selectedLine
@@ -51,69 +56,102 @@ function MetroLineManagement() {
   const openAddModal = () => {
     setEditingLine(null);
     form.resetFields();
-    setIsModalOpen(true);
+    form.setFieldsValue({ stations: [] });
+    setStations([]);
+    setIsAddModalOpen(true);
   };
 
   const openEditModal = (line) => {
     setEditingLine(line);
-    form.setFieldsValue(line);
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = () => {
-    message.success("Đã xóa tuyến metro.");
+    toast.success("Đã xóa tuyến metro.");
   };
 
-  const handleSubmit = () => {
+  const enrichStations = (values) => {
+    return (values.stations || [])
+      .map((s) => (s.station ? { id: s.station } : null))
+      .filter(Boolean);
+  };
+
+
+
+  const buildPayload = (values) => {
+    const payload = {
+      lineNameVi: values.lineNameVi,
+      lineNameEn: values.lineNameEn,
+      regionId: values.regionId,
+      lineNumber: values.lineNumber ? Number(values.lineNumber) : undefined,
+      lineCode: values.lineCode || undefined,
+      lineType: values.lineType || undefined,
+      lineOwner: values.lineOwner || undefined,
+      colorHex: values.colorHex || undefined,
+      routeTimeMin: values.routeTimeMin ? Number(values.routeTimeMin) : undefined,
+      dwellTimeMin: values.dwellTimeMin ? Number(values.dwellTimeMin) : undefined,
+      stations: enrichStations(values),
+    };
+
+    return Object.fromEntries(
+      Object.entries(payload).filter(
+        ([, v]) => v !== undefined && v !== "" && v !== 0
+      )
+    );
+  };
+
+  //ADD METRO ROUTE
+  const handleAddSubmit = () => {
+    form.validateFields().then(async (values) => {
+      try {
+        setLoading(true);
+        const payload = buildPayload(values);
+        await api.post("/api/metro-lines", payload);
+        toast.success("Đã thêm tuyến mới!");
+
+        const metroLineData = await getMetroLines();
+        setMetroLines(metroLineData);
+
+        setIsAddModalOpen(false);
+        form.resetFields();
+      } catch (error) {
+        console.error("Add failed:", error);
+        toast.error(error.response?.data?.message || "Có lỗi khi thêm tuyến!");
+      } finally {
+        setLoading(false);
+      }
+    });
+  };
+
+
+  //UPDATE METRO ROUTE
+  const handleEditSubmit = () => {
     form
       .validateFields()
       .then(async (values) => {
-        const enrichedStations = (values.stations || []).map((s, index) => {
-          const station = stations.find((st) => st.id === s.stationId);
-          return {
-            id: station?.id,
-            stationNameVi: station?.stationNameVi,
-            stationNameEn: station?.stationNameEn,
-            address: s.address || "N/A",
-            isUnderground: false,
-            isActive: true,
-            regionId: station?.regionId,
-            latitude: 0,
-            longitude: 0,
-            toNextStationKm: 0,
-          };
-        });
-
         const payload = {
           lineNameVi: values.lineNameVi,
           lineNameEn: values.lineNameEn,
-          regionCode: values.regionCode,
-          lineNumber: Number(values.lineNumber),
-          lineCode: values.lineCode,
-          stations: enrichedStations,
+          routeTimeMin: Number(values.routeTimeMin),
+          dwellTimeMin: Number(values.dwellTimeMin),
         };
 
         try {
           setLoading(true);
-          if (editingLine) {
-            // await api.put(`/api/metro-lines/${editingLine.id}`, payload);
-            toast.success("Cập nhật thành công!");
-          } else {
-            await api.post("/api/metro-lines", payload);
-            toast.success("Đã thêm tuyến mới!");
-          }
+          await api.put(`/api/metro-lines/${editingLine.id}`, payload);
+          toast.success("Cập nhật thành công!");
 
           const metroLineData = await getMetroLines();
           setMetroLines(metroLineData);
 
-          setIsModalOpen(false);
+          setIsEditModalOpen(false);
           form.resetFields();
         } catch (error) {
-          console.error("Submit failed:", error);
+          console.error("Edit failed:", error);
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Có lỗi khi gửi dữ liệu!";
+            "Có lỗi khi cập nhật tuyến!";
           toast.error(errorMessage);
         } finally {
           setLoading(false);
@@ -123,6 +161,19 @@ function MetroLineManagement() {
         console.error("Validate Failed:", info);
       });
   };
+
+
+  const handleRegionChange = async (regionId) => {
+    form.setFieldValue("regionId", regionId);
+    try {
+      const stationData = await getAllStationsByRegion(regionId);
+      setStations(stationData);
+      form.setFieldValue("stations", []);
+    } catch (error) {
+      setStations([]);
+    }
+  };
+
 
   const columns = [
     {
@@ -211,95 +262,146 @@ function MetroLineManagement() {
       </Spin>
 
       <Modal
-        title={editingLine ? "Cập nhật tuyến Metro" : "Thêm tuyến Metro mới"}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={handleSubmit}
+        title="Thêm tuyến Metro mới"
+        open={isAddModalOpen}
+        onCancel={() => setIsAddModalOpen(false)}
+        onOk={handleAddSubmit}
         cancelText="Hủy"
         width={900}
-        okText={editingLine ? "Lưu" : "Thêm"}
+        okText="Thêm"
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            label="Tên tuyến (Tiếng Việt)"
-            name="lineNameVi"
-            rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
-          >
-            <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
-          </Form.Item>
-          <Form.Item
-            label="Tên tuyến (Tiếng Anh)"
-            name="lineNameEn"
-            rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
-          >
-            <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
-          </Form.Item>
-          <Form.Item
-            label="Mã vùng"
-            name="regionCode"
-            rules={[{ required: true, message: "Nhập mã vùng (regionCode)" }]}
-          >
-            <Input placeholder="Nhập mã vùng" />
-          </Form.Item>
-          <Form.Item
-            label="Mã tuyến"
-            name="lineCode"
-            rules={[{ required: true, message: "Nhập mã tuyến (lineCode)" }]}
-          >
-            <Input placeholder="Nhập mã tuyến" />
-          </Form.Item>
-          <Form.Item
-            label="Số tuyến"
-            name="lineNumber"
-            rules={[{ required: true, message: "Nhập số tuyến (lineNumber)" }]}
-          >
-            <Input type="number" placeholder="Nhập số tuyến" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Tên tuyến (Tiếng Việt)"
+                name="lineNameVi"
+                rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
+              >
+                <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
+              </Form.Item>
+              <Form.Item
+                label="Tên tuyến (Tiếng Anh)"
+                name="lineNameEn"
+                rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
+              >
+                <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
+              </Form.Item>
+              <Form.Item
+                label="Khu vực"
+                name="regionId"
+                rules={[{ required: true, message: "Chọn khu vực" }]}
+              >
+                <Select
+                  placeholder="Chọn khu vực"
+                  onChange={handleRegionChange}
+                  options={regions.map((region) => ({
+                    label: region.regionName,
+                    value: region.id,
+                  }))}
+                />
+              </Form.Item>
+              <Form.Item label="Mã tuyến" name="lineCode">
+                <Input placeholder="Nhập mã tuyến" />
+              </Form.Item>
+              <Form.Item label="Số tuyến" name="lineNumber">
+                <Input type="number" placeholder="Nhập số tuyến" />
+              </Form.Item>
+            </Col>
 
-          <Form.List name="stations">
-            {(fields, { add, remove }) => (
-              <>
-                <div style={{ marginBottom: 12, fontWeight: 600 }}>
-                  Danh sách ga (stations)
-                </div>
-                {fields.map(({ key, name, ...restField }) => (
-                  <div
-                    key={key}
-                    style={{
-                      display: "flex",
-                      gap: "1rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "stationId"]}
-                      rules={[{ required: true, message: "Chọn ga" }]}
-                      style={{ flex: 2 }}
-                    >
-                      <Select
-                        showSearch
-                        placeholder="Chọn ga"
-                        optionFilterProp="label"
-                        options={stations.map((station) => ({
-                          label: `${station.stationNameVi} (${station.stationNameEn})`,
-                          value: station.id,
-                        }))}
-                      />
+            <Col span={12}>
+              <Form.List name="stations">
+                {(fields, { add, remove }) => (
+                  <>
+                    <div style={{ marginBottom: 12, fontWeight: 600 }}>Danh sách ga (stations)</div>
+                    {fields.map(({ key, name, ...restField }) => (
+                      <div
+                        key={key}
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          marginBottom: "1rem",
+                        }}
+                      >
+                        <Form.Item
+                          {...restField}
+                          name={[name, "station"]}
+                          rules={[{ required: true, message: "Chọn ga" }]}
+                          style={{ flex: 2 }}
+                        >
+                          <Select
+                            placeholder="Chọn ga"
+                            options={stations.map((station) => ({
+                              label: `${station.stationNameVi} (${station.stationNameEn})`,
+                              value: String(station.id), 
+                            }))}
+                          />
+                        </Form.Item>
+                        <Button danger onClick={() => remove(name)}>
+                          Xóa
+                        </Button>
+                      </div>
+                    ))}
+                    <Form.Item>
+                      <Button type="dashed" onClick={() => add()} block>
+                        Thêm ga
+                      </Button>
                     </Form.Item>
-                    <Button danger onClick={() => remove(name)}>
-                      Xóa
-                    </Button>
-                  </div>
-                ))}
-                <Form.Item>
-                  <Button type="dashed" onClick={() => add()} block>
-                    Thêm ga
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
+                  </>
+                )}
+              </Form.List>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Cập nhật tuyến Metro"
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        onOk={handleEditSubmit}
+        cancelText="Hủy"
+        width={600}
+        okText="Lưu"
+      >
+        <Form form={form} layout="vertical">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Tên tuyến (Tiếng Việt)"
+                name="lineNameVi"
+                rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
+              >
+                <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
+              </Form.Item>
+
+              <Form.Item
+                label="Tên tuyến (Tiếng Anh)"
+                name="lineNameEn"
+                rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
+              >
+                <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                label="Tổng thời gian đi hết tuyến (phút)"
+                name="routeTimeMin"
+                rules={[{ required: true, message: "Nhập tổng thời gian" }]}
+              >
+                <Input type="number" min={1} placeholder="Ví dụ: 90" />
+              </Form.Item>
+
+              <Form.Item
+                label="Thời gian dừng bốc dỡ (phút)"
+                name="dwellTimeMin"
+                rules={[{ required: true, message: "Nhập thời gian dừng" }]}
+              >
+                <Input type="number" min={1} placeholder="Ví dụ: 5" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </div>

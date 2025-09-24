@@ -21,15 +21,15 @@ import {
 import L from "leaflet";
 import { PATH_NAME } from "../../constants/pathname";
 import api from "../../config/axios";
-import axios from "axios";
 import dayjs from "dayjs";
-import { getAllParcelCategories } from "../../config/metroApi";
 import locationIconImg from "../../assets/placeholder.webp";
 import metro from "../../assets/metro_station.png";
+import { selectUser } from "../../redux/features/counterSlice";
 import startStation from "../../assets/train.webp";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 function ResizeMapOnShow() {
   const map = useMap();
@@ -48,7 +48,6 @@ function RecenterMap({ position }) {
   }, [position, map]);
   return null;
 }
-
 
 const locationIcon = new L.Icon({
   iconUrl: locationIconImg,
@@ -81,9 +80,9 @@ function TrackingOrder() {
   const [loading, setLoading] = useState(true);
   const [fullPathSegments, setFullPathSegments] = useState([]);
   const intervalRef = useRef(null);
-  const lastDataRef = useRef(null); // lưu lần fetch trước
+  const lastDataRef = useRef(null);
   const [intervalTime, setIntervalTime] = useState(2000);
-
+  const user = useSelector(selectUser);
   const fetchData = async () => {
     try {
       const shipmentRes = await api.get(`/shipments/${trackingCode}`);
@@ -580,37 +579,21 @@ function TrackingOrder() {
               ))}
             </div>
           </Card>
-
-          <Card bordered={false}>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Button
-                  type="primary"
-                  block
-                  onClick={() =>
-                    navigate(PATH_NAME.PRINT_ORDER, {
-                      state: { trackingCode: selectedShipment.trackingCode },
-                    })
-                  }
-                >
-                  In đơn hàng
-                </Button>
-              </Col>
-              <Col span={12}>
-                <Button
-                  type="default"
-                  block
-                  onClick={() =>
-                    navigate(PATH_NAME.PRINT_ORDER, {
-                      state: { trackingCode: selectedShipment.trackingCode },
-                    })
-                  }
-                >
-                  Tải đơn hàng
-                </Button>
-              </Col>
-            </Row>
-          </Card>
+          {user && user.id === selectedShipment.senderId && (
+            <Card bordered={false}>
+              <Button
+                type="default"
+                block
+                onClick={() =>
+                  navigate(PATH_NAME.PRINT_ORDER, {
+                    state: { trackingCode: selectedShipment.trackingCode },
+                  })
+                }
+              >
+                Tải đơn hàng
+              </Button>
+            </Card>
+          )}
         </div>
       </div>
     </div>
