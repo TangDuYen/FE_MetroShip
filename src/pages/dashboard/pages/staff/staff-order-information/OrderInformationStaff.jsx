@@ -25,7 +25,7 @@ import {
   parcelStatusColorMap,
   shipmentStatusMap,
 } from "../../../../../constants/statusMap";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EnvironmentOutlined } from "@ant-design/icons";
@@ -33,6 +33,7 @@ import MapParcel from "./MapParcel";
 import { PATH_NAME } from "../../../../../constants/pathname";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
+import html2pdf from "html2pdf.js";
 import { jwtDecode } from "jwt-decode";
 
 const { Title, Link } = Typography;
@@ -50,6 +51,10 @@ function OrderInformationStaff() {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [businessMediaTypes, setBusinessMediaTypes] = useState([]);
   const [showImages, setShowImages] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const qrRef = useRef();
+  const navigate = useNavigate();
   const fetchDetails = async () => {
     try {
       const res = await api.get(`/shipments/${trackingCode}`);
@@ -87,29 +92,63 @@ function OrderInformationStaff() {
 
   const trainId = shipment.shipmentItineraries?.[0]?.trainId;
   const train = trains.find((t) => t.id === trainId);
-  const mediaTypeMap = businessMediaTypes.reduce((acc, type) => {
-    acc[type.id] = type.value;
-    return acc;
-  }, {});
+
+  const handleDownloadQRAsPDF = () => {
+    if (!qrRef.current) return;
+
+    const opt = {
+      margin: 10,
+      filename: `QR-${selectedParcel?.parcelCode}.pdf`,
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 3, useCORS: true, allowTaint: true },
+      jsPDF: { unit: 'mm', format: 'a7', orientation: 'portrait' },
+    };
+
+    html2pdf().set(opt).from(qrRef.current).save();
+  };
+
+  let trainStatusText = null;
+  if (shipment.shipmentStatus === 9) {
+    trainStatusText = `Đang ở trên tàu: ${shipment.waitingForTrainCode}`;
+  } else if ([7, 8, 14].includes(shipment.shipmentStatus)) {
+    trainStatusText = `Đang chờ tàu: ${shipment.waitingForTrainCode}`;
+  }
+
 
   return (
     <div className="order-info-staff-container">
-      <Title level={2}>Chi tiết đơn hàng: {shipment.trackingCode}</Title>
-      <Typography.Link
-        style={{
-          fontSize: 18,
-          marginBottom: 20,
-          display: "inline-block",
-          fontWeight: "bold",
-        }}
-        onClick={() =>
-          nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP.replace(":trainId", trainId))
-        }
-      >
-        <span style={{ color: "black" }}>Vị trí hiện tại: </span>{" "}
-        {train ? `Tàu ${train.trainCode}` : `Tàu ${trainId}`} - Trạm{" "}
-        {shipment.currentStationName}
-      </Typography.Link>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <Title level={2} style={{ margin: 0 }}>
+          Chi tiết đơn hàng: {shipment.trackingCode}
+        </Title>
+        <Button
+          type="default"
+          style={{ backgroundColor: '#0066CC', color: 'white', border: 'none' }}
+          onClick={() =>
+            navigate(PATH_NAME.DASHBOARD_STAFF_PRINT_ORDER, {
+              state: { trackingCode: shipment.trackingCode },
+            })
+          }
+        >
+          Tải đơn hàng
+        </Button>
+      </div>
+
+      {trainStatusText && (
+        <Typography.Link
+          style={{
+            fontSize: 18,
+            marginBottom: 20,
+            display: "inline-block",
+            fontWeight: "bold",
+          }}
+          onClick={() =>
+            nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP.replace(":trainId", trainId))
+          }
+        >
+          <span style={{ color: "black" }}>{trainStatusText}</span>
+        </Typography.Link>
+      )}
 
       <Card title="Thông tin đơn hàng" style={{ marginBottom: 20 }}>
         <Descriptions column={2} bordered>
@@ -201,7 +240,7 @@ function OrderInformationStaff() {
                       src={media.mediaUrl}
                       alt={businessMediaType?.[media?.businessMediaType] || "Ảnh"}
                       style={{
-                        maxWidth: "90%",  
+                        maxWidth: "90%",
                         maxHeight: "90%",
                         objectFit: "contain",
                       }}
@@ -260,20 +299,42 @@ function OrderInformationStaff() {
               style={{ marginBottom: 16 }}
               key={parcel.id}
               extra={
-                parcel.status !== 4 &&
-                parcel.status !== 5 && (
+                <div style={{ display: "flex", gap: 8 }}>
                   <Button
-                    type="default"
-                    icon={<EnvironmentOutlined />}
-                    onClick={() => {
-                      setSelectedParcel(parcel);
-                      setMapVisible(true);
+                    style={{ backgroundColor: 'white', color: 'black' }}
+                    type="primary"
+                    onClick={async () => {
+                      try {
+                        const res = await api.get(`/parcels/qrcode/${parcel.parcelCode}`);
+                        setSelectedParcel(parcel);
+                        setQrCodeUrl(res.data);
+                        setQrModalVisible(true);
+                      } catch (err) {
+                        console.error("Lỗi lấy QR:", err);
+                      }
                     }}
                   >
-                    Theo dõi kiện hàng
+                    Tải QR
                   </Button>
-                )
+                  {
+                    parcel.status !== 4 &&
+                    parcel.status !== 5 && (
+                      <Button
+                        type="default"
+                        icon={<EnvironmentOutlined />}
+                        onClick={() => {
+                          setSelectedParcel(parcel);
+                          setMapVisible(true);
+                        }}
+                      >
+                        Theo dõi kiện hàng
+                      </Button>
+                    )
+                  }
+                </div>
+
               }
+
             >
               <Descriptions column={2}>
                 <Descriptions.Item label="Mã kiện">
@@ -322,6 +383,7 @@ function OrderInformationStaff() {
           );
         })
       }
+
       <Modal
         title={`Bản đồ kiện hàng ${selectedParcel?.parcelCode || ""}`}
         open={mapVisible}
@@ -333,6 +395,52 @@ function OrderInformationStaff() {
           <MapParcel shipmentId={shipment.id} visible={mapVisible} />
         </div>
       </Modal>
+
+      <Modal
+        open={qrModalVisible}
+        onCancel={() => setQrModalVisible(false)}
+        footer={null}
+        width={400}
+      >
+        <div className="parcel-qr-code" style={{ textAlign: "center" }}>
+          {qrCodeUrl ? (
+            <>
+              <div
+                ref={qrRef}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "100%",
+                  padding: 20,
+                }}
+              >
+                <img
+                  src={qrCodeUrl}
+                  alt={`QR-${selectedParcel?.parcelCode}`}
+                  style={{ width: 200, height: 200 }}
+                />
+                <div style={{ marginTop: 10, fontSize: 14 }}>
+                  {selectedParcel?.parcelCode}
+                </div>
+              </div>
+
+              <Button
+                type="primary"
+                style={{ marginTop: 12 }}
+                onClick={handleDownloadQRAsPDF}
+              >
+                Tải xuống
+              </Button>
+            </>
+          ) : (
+            <p>Đang tải QR...</p>
+          )}
+        </div>
+      </Modal>
+
     </div >
   );
 }

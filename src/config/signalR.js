@@ -30,12 +30,11 @@ export const startConnection = async () => {
       console.log("✅ SignalR Connected");
     } catch (err) {
       console.error("SignalR Connection failed:", err);
-      setTimeout(startConnection, 5000); // thử lại sau 5s nếu fail
+      setTimeout(startConnection, 5000);
     }
   } else {
     console.log("SignalR already connected or connecting:", connection.state);
   }
 };
-
 
 export default connection;
