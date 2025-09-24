@@ -1,6 +1,14 @@
 import "./AdminStationManage.scss";
 
 import {
+  BarcodeOutlined,
+  CheckCircleOutlined,
+  EnvironmentOutlined,
+  EyeOutlined,
+  ReloadOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import {
   Button,
   ConfigProvider,
   Descriptions,
@@ -14,21 +22,14 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useEffect, useState } from "react";
-
-import {
-  BarcodeOutlined,
-  CheckCircleOutlined,
-  EnvironmentOutlined,
-  EyeOutlined,
-  ReloadOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
 import {
   getAllRegions,
   getAllStations,
   getStationById,
 } from "../../../../../config/metroApi";
+import { useEffect, useState } from "react";
+
+import AddStationModal from "./AddStationModal";
 
 const { Title, Text } = Typography;
 function AdminStationManage() {
@@ -41,7 +42,7 @@ function AdminStationManage() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [stationDetail, setStationDetail] = useState(null);
-
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,6 +95,11 @@ function AdminStationManage() {
       setDetailLoading(false);
     }
   };
+
+  const openAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+
 
   const columns = [
     {
@@ -154,6 +160,10 @@ function AdminStationManage() {
   return (
     <div className="admin-station-manage-container">
       <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={openAddModal}>
+          + Thêm trạm mới
+        </Button>
+
         {/* STATIONS */}
         <Select
           mode="multiple"
@@ -307,6 +317,16 @@ function AdminStationManage() {
           )}
         </Spin>
       </Modal>
+
+      <AddStationModal
+        open={isAddModalOpen}
+        onCancel={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          // reload danh sách station sau khi thêm thành công
+          getAllStations().then(setStations).catch(console.error);
+        }}
+      />
+
     </div>
   );
 }

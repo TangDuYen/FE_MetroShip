@@ -242,7 +242,7 @@ export const getMetroTrainsByStation = async (stationId) => {
 //STATION
 export const getAllStations = async () => {
   try {
-    const res = await api.get("/stations");
+    const res = await api.get("/stations?PageSize=1000");
     return res.data.data;
   } catch (error) {
     const errorMessage =
