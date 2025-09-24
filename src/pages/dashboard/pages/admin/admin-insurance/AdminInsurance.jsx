@@ -5,10 +5,14 @@ import {
   Card,
   ConfigProvider,
   Empty,
+  Form,
   Input,
+  InputNumber,
+  Modal,
   Select,
   Space,
   Spin,
+  Switch,
   Table,
   Tag,
 } from "antd";
@@ -16,6 +20,7 @@ import { useEffect, useState } from "react";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
 import { ReloadOutlined } from "@ant-design/icons";
+import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllInsurance } from "../../../../../config/metroApi";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +54,8 @@ function AdminInsurance() {
   const [filteredStatusPolicies, setFilteredStatusPolicies] = useState("");
   const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,11 +81,36 @@ function AdminInsurance() {
       !filteredStatusPolicies
         ? true
         : filteredStatusPolicies === "active"
-        ? item.isActive
-        : !item.isActive;
+          ? item.isActive
+          : !item.isActive;
 
     return matchName && matchStatus;
   });
+
+  const openAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleCreate = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        baseFeeVnd: Number(values.baseFeeVnd || 0),
+        maxParcelValueVnd: Number(values.maxParcelValueVnd || 0),
+        insuranceFeeRateOnValue: Number(values.insuranceFeeRateOnValue || 0),
+        maxCompensationRateOnValue: Number(values.maxCompensationRateOnValue || 0),
+        minCompensationRateOnValue: Number(values.minCompensationRateOnValue || 0),
+        minCompensationRateOnShippingFee: Number(values.minCompensationRateOnShippingFee || 0),
+      };
+
+      await api.post("/insurance-policies", payload); // gọi trực tiếp
+      setIsAddModalOpen(false);
+      form.resetFields();
+      fetchData(); // refresh danh sách
+    } catch (error) {
+      console.error("Lỗi tạo chính sách bảo hiểm:", error);
+    }
+  };
 
   const columns = [
     {
@@ -165,6 +197,9 @@ function AdminInsurance() {
   return (
     <div className="admin-insurance-container">
       <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={openAddModal}>
+          + Tạo chính sách mới
+        </Button>
         <Input.Search
           placeholder="Tìm theo tên chính sách"
           allowClear
@@ -216,6 +251,100 @@ function AdminInsurance() {
           />
         </ConfigProvider>
       </Spin>
+
+      <Modal
+        title="Tạo chính sách bảo hiểm mới"
+        open={isAddModalOpen}
+        onCancel={() => setIsAddModalOpen(false)}
+        footer={null}
+        width={700}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreate}
+          initialValues={{ isActive: true }}
+        >
+          <Form.Item
+            label="Tên chính sách"
+            name="name"
+            rules={[{ required: true, message: "Vui lòng nhập tên chính sách" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item label="Mô tả" name="description">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item
+            label="Phí cơ bản (VND)"
+            name="baseFeeVnd"
+            initialValue={0}
+            rules={[{ required: true, message: "Nhập phí cơ bản" }]}
+          >
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Giá trị hàng tối đa (VND)"
+            name="maxParcelValueVnd"
+            initialValue={0}
+            rules={[{ required: true, message: "Nhập giá trị tối đa" }]}
+          >
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Tỷ lệ phí bảo hiểm (%)"
+            name="insuranceFeeRateOnValue"
+            initialValue={0}
+          >
+            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Tỷ lệ bồi thường tối thiểu theo giá trị (%)"
+            name="minCompensationRateOnValue"
+            initialValue={0}
+          >
+            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Tỷ lệ bồi thường tối đa theo giá trị (%)"
+            name="maxCompensationRateOnValue"
+            initialValue={0}
+          >
+            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Số lần bồi thường tối thiểu phí vận chuyển"
+            name="minCompensationRateOnShippingFee"
+            initialValue={0}
+          >
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Kích hoạt"
+            name="isActive"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
+              <Button type="primary" htmlType="submit">
+                Tạo chính sách
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

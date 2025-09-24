@@ -143,10 +143,10 @@ function AdminPrice() {
                   Áp dụng từ ngày{" "}
                   <Tag color="blue">
                     {price.effectiveFrom &&
-                    !isNaN(new Date(price.effectiveFrom).getTime())
+                      !isNaN(new Date(price.effectiveFrom).getTime())
                       ? new Date(price.effectiveFrom).toLocaleDateString(
-                          "vi-VN"
-                        )
+                        "vi-VN"
+                      )
                       : "Chưa xác định"}
                   </Tag>
                 </div>
@@ -271,7 +271,7 @@ function AdminPrice() {
         open={openModal}
         onCancel={() => setOpenModal(false)}
         footer={null}
-        width={900}
+        width={1800} // tăng rộng để chứa 3 cột
       >
         <Form
           form={form}
@@ -279,302 +279,245 @@ function AdminPrice() {
           onFinish={handleCreatePricing}
           initialValues={{ isActive: false }}
         >
-          <Form.Item
-            name="isActive"
-            label="Kích hoạt ngay"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-          <Form.Item
-            name="freeStoreDays"
-            label="Số ngày lưu kho miễn phí"
-            initialValue={0}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item
-            name="baseSurchargePerDayVnd"
-            label="Phụ phí mỗi ngày (VND)"
-            initialValue={0}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item
-            name="refundRate"
-            label="Tỷ lệ hoàn tiền (rate)"
-            initialValue={0}
-          >
-            <InputNumber min={0} max={100} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item
-            name="refundForCancellationBeforeScheduledHours"
-            label="Hoàn tiền khi hủy trước (giờ)"
-            initialValue={0}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={2} />
-          </Form.Item>
+          <Row gutter={24} align="top">
+            {/* Cột 1 - Thông tin chung */}
+            <Col span={8}>
+              <Form.Item
+                name="isActive"
+                label="Kích hoạt ngay"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
 
-          {/* Weight Tiers */}
-          <Typography.Title level={5}>
-            Bảng giá theo trọng lượng
-          </Typography.Title>
-          <Form.List name="weightTiers">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }, index) => (
-                  <Card
-                    key={key}
-                    size="small"
-                    style={{ marginBottom: 12, background: "#fafafa" }}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "tierOrder"]}
-                      initialValue={index + 1}
-                      hidden
-                    >
-                      <InputNumber />
+              <Form.Item
+                name="freeStoreDays"
+                label="Số ngày lưu kho miễn phí"
+                initialValue={0}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item
+                name="baseSurchargePerDayVnd"
+                label="Phụ phí mỗi ngày (VND)"
+                initialValue={0}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item
+                name="refundRate"
+                label="Tỷ lệ hoàn tiền (%)"
+                initialValue={0}
+              >
+                <InputNumber min={0} max={100} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item
+                name="refundForCancellationBeforeScheduledHours"
+                label="Hoàn tiền khi hủy trước (giờ)"
+                initialValue={0}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item name="description" label="Mô tả">
+                <Input.TextArea rows={3} />
+              </Form.Item>
+            </Col>
+
+            {/* Cột 2 - Bảng giá theo trọng lượng */}
+            <Col span={8}>
+              <Typography.Title level={5}>Bảng giá theo trọng lượng</Typography.Title>
+              <Form.List name="weightTiers">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }, index) => (
+                      <Card
+                        key={key}
+                        size="small"
+                        style={{ marginBottom: 12, background: "#fafafa" }}
+                      >
+                        <Form.Item
+                          {...restField}
+                          name={[name, "tierOrder"]}
+                          initialValue={index + 1}
+                          hidden
+                        >
+                          <InputNumber />
+                        </Form.Item>
+                        <Row gutter={16} align="middle">
+                          <Col span={12}>
+                            <Form.Item
+                              {...restField}
+                              name={[name, "maxWeightKg"]}
+                              label="Trọng lượng tối đa (kg)"
+                              rules={[{ required: true, message: "Nhập trọng lượng tối đa" }]}
+                            >
+                              <InputNumber min={0} style={{ width: "100%" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item noStyle shouldUpdate>
+                              {({ getFieldValue }) => {
+                                const isPerKmKg = getFieldValue(["weightTiers", name, "isPricePerKmAndKg"]);
+                                return isPerKmKg ? (
+                                  <Form.Item
+                                    {...restField}
+                                    name={[name, "basePriceVndPerKmPerKg"]}
+                                    label="Giá theo Km-Kg (VND)"
+                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                  >
+                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                  </Form.Item>
+                                ) : (
+                                  <Form.Item
+                                    {...restField}
+                                    name={[name, "basePriceVnd"]}
+                                    label="Giá cơ bản (VND)"
+                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                  >
+                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                  </Form.Item>
+                                );
+                              }}
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Row justify="space-between" align="middle">
+                          <Form.Item
+                            {...restField}
+                            name={[name, "isPricePerKmAndKg"]}
+                            label="Tính theo Km-Kg"
+                            valuePropName="checked"
+                          >
+                            <Switch />
+                          </Form.Item>
+                          <Button
+                            danger
+                            type="text"
+                            onClick={() => remove(name)}
+                            icon={<MinusCircleOutlined />}
+                          />
+                        </Row>
+                      </Card>
+                    ))}
+                    <Form.Item>
+                      <Button
+                        type="dashed"
+                        onClick={() => add()}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        Thêm giá trọng lượng
+                      </Button>
                     </Form.Item>
-                    <Row gutter={16} align="middle">
-                      <Col span={6}>
+                  </>
+                )}
+              </Form.List>
+            </Col>
+
+            {/* Cột 3 - Bảng giá theo khoảng cách */}
+            <Col span={8}>
+              <Typography.Title level={5}>Bảng giá theo khoảng cách</Typography.Title>
+              <Form.List name="distanceTiers">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }, index) => (
+                      <Card
+                        key={key}
+                        size="small"
+                        style={{ marginBottom: 12, background: "#fafafa" }}
+                      >
                         <Form.Item
                           {...restField}
-                          name={[name, "maxWeightKg"]}
-                          label="Trọng lượng tối đa (kg)"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Nhập trọng lượng tối đa",
-                            },
-                          ]}
+                          name={[name, "tierOrder"]}
+                          initialValue={index + 1}
+                          hidden
                         >
-                          <InputNumber min={0} style={{ width: "100%" }} />
+                          <InputNumber />
                         </Form.Item>
-                      </Col>
-                      <Col span={10}>
-                        <Form.Item
-                          shouldUpdate={(prev, cur) =>
-                            prev.weightTiers?.[name]?.isPricePerKmAndKg !==
-                            cur.weightTiers?.[name]?.isPricePerKmAndKg
-                          }
-                          noStyle
-                        >
-                          {({ getFieldValue }) => {
-                            const isPerKmKg = getFieldValue([
-                              "weightTiers",
-                              name,
-                              "isPricePerKmAndKg",
-                            ]);
-                            return isPerKmKg ? (
-                              <Form.Item
-                                {...restField}
-                                name={[name, "basePriceVndPerKmPerKg"]}
-                                label="Giá theo Km-Kg (VND)"
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: "Nhập giá theo Km-Kg",
-                                  },
-                                ]}
-                              >
-                                <InputNumber
-                                  min={0}
-                                  style={{ width: "100%" }}
-                                />
-                              </Form.Item>
-                            ) : (
-                              <Form.Item
-                                {...restField}
-                                name={[name, "basePriceVnd"]}
-                                label="Giá cơ bản (VND)"
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: "Nhập giá cơ bản",
-                                  },
-                                ]}
-                              >
-                                <InputNumber
-                                  min={0}
-                                  style={{ width: "100%" }}
-                                />
-                              </Form.Item>
-                            );
-                          }}
-                        </Form.Item>
-                      </Col>
-
-                      <Col span={4}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "isPricePerKmAndKg"]}
-                          label="Tính theo Km-Kg"
-                          valuePropName="checked"
-                        >
-                          <Switch />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Button
-                          danger
-                          type="text"
-                          onClick={() => remove(name)}
-                          icon={<MinusCircleOutlined />}
-                        />
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Thêm giá trọng lượng
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-
-          {/* Distance Tiers */}
-          <Typography.Title level={5}>
-            Bảng giá theo khoảng cách
-          </Typography.Title>
-          <Form.List name="distanceTiers">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }, index) => (
-                  <Card
-                    key={key}
-                    size="small"
-                    style={{ marginBottom: 12, background: "#fafafa" }}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "tierOrder"]}
-                      initialValue={index + 1}
-                      hidden
-                    >
-                      <InputNumber />
+                        <Row gutter={16} align="middle">
+                          <Col span={12}>
+                            <Form.Item
+                              {...restField}
+                              name={[name, "maxDistanceKm"]}
+                              label="Khoảng cách tối đa (km)"
+                              rules={[{ required: true, message: "Nhập khoảng cách" }]}
+                            >
+                              <InputNumber min={0} style={{ width: "100%" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item noStyle shouldUpdate>
+                              {({ getFieldValue }) => {
+                                const isPerKm = getFieldValue(["distanceTiers", name, "isPricePerKm"]);
+                                return isPerKm ? (
+                                  <Form.Item
+                                    {...restField}
+                                    name={[name, "basePriceVndPerKm"]}
+                                    label="Giá theo Km (VND)"
+                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                  >
+                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                  </Form.Item>
+                                ) : (
+                                  <Form.Item
+                                    {...restField}
+                                    name={[name, "basePriceVnd"]}
+                                    label="Giá cơ bản (VND)"
+                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                  >
+                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                  </Form.Item>
+                                );
+                              }}
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Row justify="space-between" align="middle">
+                          <Form.Item
+                            {...restField}
+                            name={[name, "isPricePerKm"]}
+                            label="Tính theo Km"
+                            valuePropName="checked"
+                          >
+                            <Switch />
+                          </Form.Item>
+                          <Button
+                            danger
+                            type="text"
+                            onClick={() => remove(name)}
+                            icon={<MinusCircleOutlined />}
+                          />
+                        </Row>
+                      </Card>
+                    ))}
+                    <Form.Item>
+                      <Button
+                        type="dashed"
+                        onClick={() => add()}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        Thêm giá khoảng cách
+                      </Button>
                     </Form.Item>
-                    <Row gutter={16} align="middle">
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "maxDistanceKm"]}
-                          label="Khoảng cách tối đa (km)"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Nhập khoảng cách tối đa",
-                            },
-                          ]}
-                        >
-                          <InputNumber min={0} style={{ width: "100%" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={10}>
-                        <Form.Item
-                          shouldUpdate={(prev, cur) =>
-                            prev.distanceTiers?.[name]?.isPricePerKm !==
-                            cur.distanceTiers?.[name]?.isPricePerKm
-                          }
-                          noStyle
-                        >
-                          {({ getFieldValue }) => {
-                            const isPerKm = getFieldValue([
-                              "distanceTiers",
-                              name,
-                              "isPricePerKm",
-                            ]);
-                            return isPerKm ? (
-                              <Form.Item
-                                {...restField}
-                                name={[name, "basePriceVndPerKm"]}
-                                label="Giá theo Km (VND)"
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: "Nhập giá theo Km",
-                                  },
-                                ]}
-                              >
-                                <InputNumber
-                                  min={0}
-                                  style={{ width: "100%" }}
-                                />
-                              </Form.Item>
-                            ) : (
-                              <Form.Item
-                                {...restField}
-                                name={[name, "basePriceVnd"]}
-                                label="Giá cơ bản (VND)"
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: "Nhập giá cơ bản",
-                                  },
-                                ]}
-                              >
-                                <InputNumber
-                                  min={0}
-                                  style={{ width: "100%" }}
-                                />
-                              </Form.Item>
-                            );
-                          }}
-                        </Form.Item>
-                      </Col>
+                  </>
+                )}
+              </Form.List>
+            </Col>
+          </Row>
 
-                      <Col span={4}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "isPricePerKm"]}
-                          label="Tính theo Km"
-                          valuePropName="checked"
-                        >
-                          <Switch />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Button
-                          danger
-                          type="text"
-                          onClick={() => remove(name)}
-                          icon={<MinusCircleOutlined />}
-                        />
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Thêm giá khoảng cách
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-
-          <Form.Item>
+          <Form.Item style={{ marginTop: 16 }}>
             <Button type="primary" htmlType="submit">
               Tạo bảng giá
             </Button>
           </Form.Item>
         </Form>
       </Modal>
+
     </div>
   );
 }
