@@ -404,6 +404,16 @@ export const router = createBrowserRouter([
           </ProtectedRouteStaff>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_STAFF_PRINT_ORDER,
+        element: (
+          <ProtectedRouteStaff>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/staff/staff-print-order/StaffPrintOrder")
+            )}
+          </ProtectedRouteStaff>
+        ),
+      },
 
       //ADMIN ROUTES
       {
