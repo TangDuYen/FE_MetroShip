@@ -23,7 +23,7 @@ export const PATH_NAME = {
   PAYMENT_SUCCESS: "/payment-success",
   PAYMENT_FAILED: "/payment-fail",
   BOOKING_ORDER: "/booking-order",
-  // TRACKING_ORDER: "/tracking-order",
+  //TRACKING_ORDER: "/tracking-order",
   PRINT_ORDER: "/print-order",
   POLICY: "/policy",
   CHANGE_PASSWORD: "/change-password",
@@ -37,10 +37,10 @@ export const PATH_NAME = {
   DASHBOARD_STAFF_SUPPORT_TICKETS: "/dashboard/staff/support-tickets",
   DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
   DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
-  DASHBOARD_STAFF_ORDER_INFORMATION:
-    "/dashboard/staff/order-information/:trackingCode",
+  DASHBOARD_STAFF_ORDER_INFORMATION: "/dashboard/staff/order-information/:trackingCode",
   DASHBOARD_STAFF_PROFILE: "/dashboard/staff/profile",
   DASHBOARD_STAFF_TRAIN_MAP: "/dashboard/staff/train-map/:trainId",
+  DASHBOARD_STAFF_PRINT_ORDER: "/dashboard/staff/print-order",
 
   //ADMIN
   DASHBOARD_ADMIN: "/dashboard/admin",

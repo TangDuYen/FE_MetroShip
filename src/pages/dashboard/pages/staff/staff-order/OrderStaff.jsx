@@ -7,12 +7,14 @@ import { formatCurrency, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap
 import { getAllParcelCategories, getAllParcels, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffStation } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
+import { PATH_NAME } from '../../../../../constants/pathname';
 import StaffIcon from '../../../../../assets/profile.webp';
 import api from './../../../../../config/axios';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import viVN from 'antd/lib/locale/vi_VN';
 
 dayjs.locale('vi');
@@ -56,6 +58,7 @@ function OrderStaff() {
   const [statusFilter, setStatusFilter] = useState(null);
   const [parcelCate, setParcelCate] = useState([]);
   const ALLOWED_STATUS = [0, 7];
+  const navigate = useNavigate();
 
   if (!decodedUser?.StationId) {
     return (
@@ -335,10 +338,21 @@ function OrderStaff() {
     },
   ];
 
+  // const onRowClick = (record) => {
+  //   const relatedParcels = getParcelsByShipmentId(record.id);
+  //   setSelectedOrder({ ...record, relatedParcels });
+  //   setModalOpen(true);
+  // };
+
   const onRowClick = (record) => {
     const relatedParcels = getParcelsByShipmentId(record.id);
     setSelectedOrder({ ...record, relatedParcels });
-    setModalOpen(true);
+    navigate(
+      PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
+        ":trackingCode",
+        record.trackingCode
+      )
+    );
   };
 
   const handleResetFilters = () => {
