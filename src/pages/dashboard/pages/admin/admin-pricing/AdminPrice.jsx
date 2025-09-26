@@ -17,6 +17,7 @@ import {
   Table,
   Tag,
   Typography,
+  Collapse,
 } from "antd";
 import {
   MinusCircleOutlined,
@@ -29,11 +30,13 @@ import api from "../../../../../config/axios";
 import { getAllPrice } from "../../../../../config/metroApi";
 import { toast } from "react-toastify";
 
+const { Panel } = Collapse;
 function AdminPrice() {
   const [pricing, setPricing] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [form] = Form.useForm();
+  const [editingPrice, setEditingPrice] = useState(null);
 
   const fetchPricing = async () => {
     try {
@@ -79,14 +82,24 @@ function AdminPrice() {
 
   const handleCreatePricing = async (values) => {
     try {
-      await api.post(`/pricing`, values);
-      toast.success("Tạo bảng giá thành công!");
+      if (editingPrice) {
+        await api.post(`/pricing`, {
+          ...values,
+          id: editingPrice.id,
+          isActive: false,
+        });
+        toast.success("Cập nhật bảng giá thành công!");
+      } else {
+        await api.post(`/pricing`, values);
+        toast.success("Tạo bảng giá thành công!");
+      }
       setOpenModal(false);
       form.resetFields();
+      setEditingPrice(null);
       fetchPricing();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || err.message || "Tạo bảng giá thất bại!";
+        err.response?.data?.message || err.message || "Thao tác thất bại!";
       toast.error(errorMessage);
     }
   };
@@ -164,12 +177,11 @@ function AdminPrice() {
           <Card
             key={price.id}
             title={
-              <>
+              <Space direction="vertical" style={{ padding: 10 }}>
                 <div>
                   Áp dụng từ ngày{" "}
-                  <Tag color="blue">
-                    {price.effectiveFrom &&
-                    !isNaN(new Date(price.effectiveFrom).getTime())
+                  <Tag color={price.effectiveFrom ? "blue" : "default"}>
+                    {price.effectiveFrom
                       ? new Date(price.effectiveFrom).toLocaleDateString(
                           "vi-VN"
                         )
@@ -184,7 +196,7 @@ function AdminPrice() {
                     </Tag>
                   </div>
                 )}
-              </>
+              </Space>
             }
             extra={
               <Tag color={price.isActive ? "green" : "red"}>
@@ -193,109 +205,129 @@ function AdminPrice() {
             }
             style={{ marginBottom: 24 }}
           >
-            <Typography.Title
-              level={4}
-              style={{ fontWeight: "bold", marginBottom: 12 }}
-            >
-              Bảng giá theo trọng lượng
-            </Typography.Title>
+            <Typography.Paragraph>
+              {price.description || "Không có mô tả"}
+            </Typography.Paragraph>
 
-            <ConfigProvider renderEmpty={renderEmpty}>
-              <Table
-                columns={weightColumns}
-                dataSource={price.weightTiers
-                  .sort((a, b) => a.maxWeightKg - b.maxWeightKg)
-                  .map((w, i) => ({
-                    ...w,
-                    tierOrder: i + 1,
-                    key: i,
-                  }))}
-                pagination={{ pageSize: 10 }}
-                bordered
-              />
-            </ConfigProvider>
+            {(!price.isActive && !price.effectiveFrom) &&
+              (!price.effectiveTo && (
+                <Button
+                  type="primary"
+                  onClick={() => handleActivatePricing(price.id)}
+                  style={{ marginBottom: 12 }}
+                >
+                  Kích hoạt
+                </Button>
+              ))}
+            {(!price.isActive && !price.effectiveFrom) &&
+              (!price.effectiveTo && (
+                <Button
+                  type="default"
+                  onClick={() => {
+                    setEditingPrice(price);
+                    form.setFieldsValue(price);
+                    setOpenModal(true);
+                  }}
+                  style={{ marginLeft: 12, marginBottom: 12 }}
+                >
+                  Cập nhật
+                </Button>
+              ))}
 
-            <Typography.Title
-              level={4}
-              style={{ fontWeight: "bold", marginBottom: 12 }}
-            >
-              Bảng giá theo khoảng cách
-            </Typography.Title>
-            <ConfigProvider renderEmpty={renderEmpty}>
-              <Table
-                columns={distanceColumns}
-                dataSource={price.distanceTiers
-                  .sort((a, b) => a.maxDistanceKm - b.maxDistanceKm)
-                  .map((d, i) => ({
-                    ...d,
-                    tierOrder: i + 1,
-                    key: i,
-                  }))}
-                pagination={{ pageSize: 5 }}
-                bordered
-              />
-            </ConfigProvider>
+            <Collapse>
+              <Panel header="Chi tiết bảng giá" key="1">
+                <Typography.Title level={5} style={{ fontWeight: "bold" }}>
+                  Bảng giá theo trọng lượng
+                </Typography.Title>
+                <ConfigProvider renderEmpty={renderEmpty}>
+                  <Table
+                    columns={weightColumns}
+                    dataSource={price.weightTiers
+                      .sort((a, b) => a.maxWeightKg - b.maxWeightKg)
+                      .map((w, i) => ({ ...w, tierOrder: i + 1, key: i }))}
+                    pagination={false}
+                    bordered
+                    size="small"
+                  />
+                </ConfigProvider>
 
-            {/* Thông tin bổ sung nếu có */}
-            {price.freeStoreDays > 0 && (
-              <div>
-                <Typography.Text strong>
-                  Ngày lưu kho miễn phí:{" "}
-                </Typography.Text>
-                <Typography.Text type="success" strong>
-                  {price.freeStoreDays} ngày
-                </Typography.Text>
-              </div>
-            )}
+                <Typography.Title
+                  level={5}
+                  style={{ fontWeight: "bold", marginTop: 12 }}
+                >
+                  Bảng giá theo khoảng cách
+                </Typography.Title>
+                <ConfigProvider renderEmpty={renderEmpty}>
+                  <Table
+                    columns={distanceColumns}
+                    dataSource={price.distanceTiers
+                      .sort((a, b) => a.maxDistanceKm - b.maxDistanceKm)
+                      .map((d, i) => ({ ...d, tierOrder: i + 1, key: i }))}
+                    pagination={false}
+                    bordered
+                    size="small"
+                  />
+                </ConfigProvider>
 
-            {price.baseSurchargePerDayVnd > 0 && (
-              <div>
-                <Typography.Text strong>
-                  Phụ thu cơ bản mỗi ngày:{" "}
-                </Typography.Text>
-                <Typography.Text type="warning" strong>
-                  {price.baseSurchargePerDayVnd.toLocaleString()} VND
-                </Typography.Text>
-              </div>
-            )}
+                {/* Các thông tin bổ sung */}
+                <div style={{ marginTop: 10 }}>
+                  {price.freeStoreDays > 0 && (
+                    <div>
+                      <Typography.Text strong>
+                        Ngày lưu kho miễn phí:{" "}
+                      </Typography.Text>
+                      <Typography.Text type="success" strong>
+                        {price.freeStoreDays} ngày
+                      </Typography.Text>
+                    </div>
+                  )}
 
-            {price.refundRate > 0 && (
-              <div>
-                <Typography.Text strong>Tỷ lệ hoàn tiền: </Typography.Text>
-                <Typography.Text type="success" strong>
-                  {price.refundRate * 100}%
-                </Typography.Text>
-              </div>
-            )}
+                  {price.baseSurchargePerDayVnd > 0 && (
+                    <div>
+                      <Typography.Text strong>
+                        Phụ thu cơ bản mỗi ngày:{" "}
+                      </Typography.Text>
+                      <Typography.Text type="warning" strong>
+                        {price.baseSurchargePerDayVnd.toLocaleString()} VND
+                      </Typography.Text>
+                    </div>
+                  )}
 
-            {price.refundForCancellationBeforeScheduledHours > 0 && (
-              <div>
-                <Typography.Text strong>
-                  Hoàn tiền khi hủy trước:{" "}
-                </Typography.Text>
-                <Typography.Text type="success" strong>
-                  {price.refundForCancellationBeforeScheduledHours} giờ
-                </Typography.Text>
-              </div>
-            )}
+                  {price.refundRate > 0 && (
+                    <div>
+                      <Typography.Text strong>
+                        Tỷ lệ hoàn tiền:{" "}
+                      </Typography.Text>
+                      <Typography.Text type="success" strong>
+                        {price.refundRate * 100}%
+                      </Typography.Text>
+                    </div>
+                  )}
 
-            {!price.isActive && (
-              <Button
-                type="primary"
-                onClick={() => handleActivatePricing(price.id)}
-                style={{ marginTop: 16 }}
-              >
-                Kích hoạt
-              </Button>
-            )}
+                  {price.refundForCancellationBeforeScheduledHours > 0 && (
+                    <div>
+                      <Typography.Text strong>
+                        Hoàn tiền khi hủy trước:{" "}
+                      </Typography.Text>
+                      <Typography.Text type="success" strong>
+                        {price.refundForCancellationBeforeScheduledHours} giờ
+                      </Typography.Text>
+                    </div>
+                  )}
+                </div>
+              </Panel>
+            </Collapse>
           </Card>
         ))}
       </Spin>
       {/* Modal tạo bảng giá */}
       <Modal
-        title="Tạo bảng giá"
+        title={editingPrice ? "Cập nhật bảng giá" : "Tạo bảng giá"}
         open={openModal}
-        onCancel={() => setOpenModal(false)}
+        onCancel={() => {
+          setOpenModal(false);
+          form.resetFields();
+        }}
         footer={null}
         width={1800} // tăng rộng để chứa 3 cột
       >
@@ -334,7 +366,7 @@ function AdminPrice() {
 
               <Form.Item
                 name="refundRate"
-                label="Tỷ lệ hoàn tiền (%)"
+                label="Tỷ lệ hoàn tiền (0 to 1)"
                 initialValue={0}
               >
                 <InputNumber min={0} max={100} style={{ width: "100%" }} />
@@ -349,7 +381,7 @@ function AdminPrice() {
               </Form.Item>
 
               <Form.Item name="description" label="Mô tả">
-                <Input.TextArea rows={3} placeholder="Nhập mô tả"/>
+                <Input.TextArea rows={3} placeholder="Nhập mô tả" />
               </Form.Item>
             </Col>
 
@@ -576,9 +608,16 @@ function AdminPrice() {
           </Row>
 
           <Form.Item style={{ marginTop: 16 }}>
-            <Button type="primary" ghost style={{marginRight: 16}} onClick={loadCurrentPricing}>Load bảng giá hiện tại</Button>
+            <Button
+              type="primary"
+              ghost
+              style={{ marginRight: 16 }}
+              onClick={loadCurrentPricing}
+            >
+              Load bảng giá hiện tại
+            </Button>
             <Button type="primary" htmlType="submit">
-              Tạo bảng giá
+              {editingPrice ? "Cập nhật bảng giá" : "Tạo bảng giá"}
             </Button>
           </Form.Item>
         </Form>
