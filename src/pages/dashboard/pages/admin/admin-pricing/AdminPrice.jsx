@@ -51,6 +51,32 @@ function AdminPrice() {
     fetchPricing();
   }, []);
 
+  const loadCurrentPricing = async () => {
+    try {
+      setLoading(true);
+      const list = await getAllPrice();
+      if (!list || list.length === 0) {
+        toast.warning("Không có dữ liệu pricing nào!");
+        return;
+      }
+
+      // lấy cái pricing đang active
+      const current = list.find((p) => p.isActive);
+
+      if (!current) {
+        toast.warning("Chưa có bảng giá nào đang active!");
+        return;
+      }
+
+      form.setFieldsValue(current);
+    } catch (err) {
+      toast.error("Không thể load cấu hình hiện tại!");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreatePricing = async (values) => {
     try {
       await api.post(`/pricing`, values);
@@ -143,10 +169,10 @@ function AdminPrice() {
                   Áp dụng từ ngày{" "}
                   <Tag color="blue">
                     {price.effectiveFrom &&
-                      !isNaN(new Date(price.effectiveFrom).getTime())
+                    !isNaN(new Date(price.effectiveFrom).getTime())
                       ? new Date(price.effectiveFrom).toLocaleDateString(
-                        "vi-VN"
-                      )
+                          "vi-VN"
+                        )
                       : "Chưa xác định"}
                   </Tag>
                 </div>
@@ -323,13 +349,15 @@ function AdminPrice() {
               </Form.Item>
 
               <Form.Item name="description" label="Mô tả">
-                <Input.TextArea rows={3} />
+                <Input.TextArea rows={3} placeholder="Nhập mô tả"/>
               </Form.Item>
             </Col>
 
             {/* Cột 2 - Bảng giá theo trọng lượng */}
             <Col span={8}>
-              <Typography.Title level={5}>Bảng giá theo trọng lượng</Typography.Title>
+              <Typography.Title level={5}>
+                Bảng giá theo trọng lượng
+              </Typography.Title>
               <Form.List name="weightTiers">
                 {(fields, { add, remove }) => (
                   <>
@@ -353,7 +381,12 @@ function AdminPrice() {
                               {...restField}
                               name={[name, "maxWeightKg"]}
                               label="Trọng lượng tối đa (kg)"
-                              rules={[{ required: true, message: "Nhập trọng lượng tối đa" }]}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Nhập trọng lượng tối đa",
+                                },
+                              ]}
                             >
                               <InputNumber min={0} style={{ width: "100%" }} />
                             </Form.Item>
@@ -361,24 +394,38 @@ function AdminPrice() {
                           <Col span={12}>
                             <Form.Item noStyle shouldUpdate>
                               {({ getFieldValue }) => {
-                                const isPerKmKg = getFieldValue(["weightTiers", name, "isPricePerKmAndKg"]);
+                                const isPerKmKg = getFieldValue([
+                                  "weightTiers",
+                                  name,
+                                  "isPricePerKmAndKg",
+                                ]);
                                 return isPerKmKg ? (
                                   <Form.Item
                                     {...restField}
                                     name={[name, "basePriceVndPerKmPerKg"]}
                                     label="Giá theo Km-Kg (VND)"
-                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                    rules={[
+                                      { required: true, message: "Nhập giá" },
+                                    ]}
                                   >
-                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                    <InputNumber
+                                      min={0}
+                                      style={{ width: "100%" }}
+                                    />
                                   </Form.Item>
                                 ) : (
                                   <Form.Item
                                     {...restField}
                                     name={[name, "basePriceVnd"]}
                                     label="Giá cơ bản (VND)"
-                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                    rules={[
+                                      { required: true, message: "Nhập giá" },
+                                    ]}
                                   >
-                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                    <InputNumber
+                                      min={0}
+                                      style={{ width: "100%" }}
+                                    />
                                   </Form.Item>
                                 );
                               }}
@@ -420,7 +467,9 @@ function AdminPrice() {
 
             {/* Cột 3 - Bảng giá theo khoảng cách */}
             <Col span={8}>
-              <Typography.Title level={5}>Bảng giá theo khoảng cách</Typography.Title>
+              <Typography.Title level={5}>
+                Bảng giá theo khoảng cách
+              </Typography.Title>
               <Form.List name="distanceTiers">
                 {(fields, { add, remove }) => (
                   <>
@@ -444,7 +493,9 @@ function AdminPrice() {
                               {...restField}
                               name={[name, "maxDistanceKm"]}
                               label="Khoảng cách tối đa (km)"
-                              rules={[{ required: true, message: "Nhập khoảng cách" }]}
+                              rules={[
+                                { required: true, message: "Nhập khoảng cách" },
+                              ]}
                             >
                               <InputNumber min={0} style={{ width: "100%" }} />
                             </Form.Item>
@@ -452,24 +503,38 @@ function AdminPrice() {
                           <Col span={12}>
                             <Form.Item noStyle shouldUpdate>
                               {({ getFieldValue }) => {
-                                const isPerKm = getFieldValue(["distanceTiers", name, "isPricePerKm"]);
+                                const isPerKm = getFieldValue([
+                                  "distanceTiers",
+                                  name,
+                                  "isPricePerKm",
+                                ]);
                                 return isPerKm ? (
                                   <Form.Item
                                     {...restField}
                                     name={[name, "basePriceVndPerKm"]}
                                     label="Giá theo Km (VND)"
-                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                    rules={[
+                                      { required: true, message: "Nhập giá" },
+                                    ]}
                                   >
-                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                    <InputNumber
+                                      min={0}
+                                      style={{ width: "100%" }}
+                                    />
                                   </Form.Item>
                                 ) : (
                                   <Form.Item
                                     {...restField}
                                     name={[name, "basePriceVnd"]}
                                     label="Giá cơ bản (VND)"
-                                    rules={[{ required: true, message: "Nhập giá" }]}
+                                    rules={[
+                                      { required: true, message: "Nhập giá" },
+                                    ]}
                                   >
-                                    <InputNumber min={0} style={{ width: "100%" }} />
+                                    <InputNumber
+                                      min={0}
+                                      style={{ width: "100%" }}
+                                    />
                                   </Form.Item>
                                 );
                               }}
@@ -511,13 +576,13 @@ function AdminPrice() {
           </Row>
 
           <Form.Item style={{ marginTop: 16 }}>
+            <Button type="primary" ghost style={{marginRight: 16}} onClick={loadCurrentPricing}>Load bảng giá hiện tại</Button>
             <Button type="primary" htmlType="submit">
               Tạo bảng giá
             </Button>
           </Form.Item>
         </Form>
       </Modal>
-
     </div>
   );
 }
