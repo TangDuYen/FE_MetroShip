@@ -447,8 +447,8 @@ export const getStationById = async (stationId) => {
 //TIMESLOT
 export const getAllTimeSlot = async () => {
   try {
-    const res = await api.get("/metro-time-slots/all?PageSize=1000");
-    return res.data.data.items;
+    const res = await api.get("/metro-time-slots");
+    return res.data.data;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu time slot";

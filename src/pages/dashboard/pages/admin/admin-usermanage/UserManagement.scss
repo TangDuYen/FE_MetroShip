@@ -10,4 +10,15 @@
         font-weight: 600;
         text-align: center;
     }
+
+    .ban-user-button {
+        background-color: #ff4d4f;
+        color: white;
+        border: none;
+        transition: all 0.25s ease-out;
+
+        &:hover {
+            transform: scale(1.2);
+        }
+    }
 }
