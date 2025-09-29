@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import "./AdminTimeSlot.scss";
+
 import {
   Button,
   ConfigProvider,
@@ -10,13 +11,14 @@ import {
   Tag,
   TimePicker,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
-import "./AdminTimeSlot.scss";
-import { getAllTimeSlot } from "../../../../../config/metroApi";
-import api from "../../../../../config/axios";
-import { toast } from "react-toastify";
-import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
+
 import { CgEnter } from "react-icons/cg";
+import { ReloadOutlined } from "@ant-design/icons";
+import api from "../../../../../config/axios";
+import dayjs from "dayjs";
+import { getAllTimeSlot } from "../../../../../config/metroApi";
+import { toast } from "react-toastify";
 
 function AdminTimeSlot() {
   const [loading, setLoading] = useState(false);
