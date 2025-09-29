@@ -2,24 +2,29 @@ import "./ParcelCategoryManage.scss";
 
 import {
   Button,
+  Card,
   Checkbox,
+  Col,
   ConfigProvider,
+  Divider,
   Empty,
   Form,
   Input,
   InputNumber,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Spin,
   Switch,
   Table,
-  message,
+  Tag,
 } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
+  EyeOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
@@ -27,6 +32,7 @@ import { useEffect, useState } from "react";
 import api from "../../../../../config/axios";
 import { getAllParcelCategories } from "../../../../../config/metroApi";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 
 function ParcelCategoryManage() {
   const [parcelCategories, setParcelCategories] = useState([]);
@@ -35,10 +41,31 @@ function ParcelCategoryManage() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [form] = Form.useForm();
   const [filterCategory, setFilterCategory] = useState([]);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [insurancePolicies, setInsurancePolicies] = useState([]);
+
+  const formatDate = (dateString) => {
+    return dateString ? dayjs(dateString).format("DD/MM/YYYY") : "—";
+  };
 
   useEffect(() => {
     fetchParcelCategories();
+    fetchInsurancePolicies();
   }, []);
+
+  const fetchInsurancePolicies = async () => {
+    try {
+      const res = await api.get("/insurance-policies/dropdown");
+      setInsurancePolicies(res.data.data || []);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể tải danh sách chính sách bảo hiểm";
+      toast.error(errorMessage);
+    }
+  };
 
   const fetchParcelCategories = async () => {
     try {
@@ -66,8 +93,27 @@ function ParcelCategoryManage() {
 
   const openEditModal = (category) => {
     setEditingCategory(category);
-    form.setFieldsValue(category);
+    form.setFieldsValue({
+      ...category,
+      insurancePolicyId: category.categoryInsurances?.[0]?.insurancePolicy?.id,
+    });
+
     setIsModalOpen(true);
+  };
+
+  const openDetailModal = async (category) => {
+    try {
+      const res = await api.get(`/parcel-category/${category.id}`);
+      setSelectedCategory(res.data.data);
+      setIsDetailModalOpen(true);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Không thể tải thông tin chi tiết!";
+      toast.error(errorMessage);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -149,16 +195,16 @@ function ParcelCategoryManage() {
       title: "Kích thước tổng (cm)",
       dataIndex: "totalSizeLimitCm",
     },
-    {
-      title: "Phí bảo hiểm (vnd)",
-      dataIndex: "insuranceFeeVnd",
-      render: (value) => (value ? value.toLocaleString() : "Không có"),
-    },
-    {
-      title: "Tỷ lệ bảo hiểm",
-      dataIndex: "insuranceRate",
-      render: (value) => (value ? value.toLocaleString() : "0"),
-    },
+    // {
+    //   title: "Phí bảo hiểm (vnd)",
+    //   dataIndex: "insuranceFeeVnd",
+    //   render: (value) => (value ? value.toLocaleString() : "Không có"),
+    // },
+    // {
+    //   title: "Tỷ lệ bảo hiểm",
+    //   dataIndex: "insuranceRate",
+    //   render: (value) => (value ? value.toLocaleString() : "0"),
+    // },
     {
       title: "Bắt buộc bảo hiểm",
       dataIndex: "isInsuranceRequired",
@@ -168,6 +214,10 @@ function ParcelCategoryManage() {
       title: "Hành động",
       render: (_, record) => (
         <Space>
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => openDetailModal(record)}
+          />
           <Button
             icon={<EditOutlined />}
             onClick={() => openEditModal(record)}
@@ -246,11 +296,27 @@ function ParcelCategoryManage() {
               { required: true, message: "Vui lòng nhập tên loại kiện hàng" },
             ]}
           >
-            <Input placeholder="Nhập tên loại kiện hàng"/>
+            <Input placeholder="Nhập tên loại kiện hàng" />
           </Form.Item>
 
           <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} placeholder="Nhập mô tả"/>
+            <Input.TextArea rows={3} placeholder="Nhập mô tả" />
+          </Form.Item>
+
+          <Form.Item
+            name="insurancePolicyId"
+            label="Chính sách bảo hiểm"
+            rules={[
+              { required: true, message: "Vui lòng chọn chính sách bảo hiểm" },
+            ]}
+          >
+            <Select
+              placeholder="Chọn chính sách bảo hiểm"
+              options={insurancePolicies.map((p) => ({
+                label: p.name,
+                value: p.id,
+              }))}
+            />
           </Form.Item>
 
           <Form.Item
@@ -261,60 +327,173 @@ function ParcelCategoryManage() {
             <Switch />
           </Form.Item>
 
-          <Form.Item
-            name="weightLimitKg"
-            label="Khối lượng tối đa (Kg)"
-            rules={[
-              { required: true, message: "Vui lòng nhập khối lượng giới hạn" },
-            ]}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập khối lượng tối đa"/>
+          <Form.Item name="weightLimitKg" label="Khối lượng tối đa (Kg)">
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập khối lượng tối đa (Không bắt buộc)"
+            />
+          </Form.Item>
+
+          <Form.Item name="volumeLimitCm3" label="Thể tích tối đa (cm³)">
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập thể tích tối đa (Không bắt buộc)"
+            />
+          </Form.Item>
+
+          <Form.Item name="lengthLimitCm" label="Chiều dài tối đa (cm)">
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập chiều dài tối đa (Không bắt buộc)"
+            />
+          </Form.Item>
+
+          <Form.Item name="widthLimitCm" label="Chiều rộng tối đa (cm)">
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập chiều rộng tối đa (Không bắt buộc)"
+            />
+          </Form.Item>
+
+          <Form.Item name="heightLimitCm" label="Chiều cao tối đa (cm)">
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập chiều cao tối đa (Không bắt buộc)"
+            />
           </Form.Item>
 
           <Form.Item
-            name="volumeLimitCm3"
-            label="Thể tích tối đa (cm³)"
-            rules={[
-              { required: true, message: "Vui lòng nhập thể tích giới hạn" },
-            ]}
+            name="totalSizeLimitCm"
+            label="Tổng kích thước tối đa (cm)"
           >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập thể tích tối đa"/>
-          </Form.Item>
-
-          <Form.Item
-            name="lengthLimitCm"
-            label="Chiều dài tối đa (cm)"
-            rules={[
-              { required: true, message: "Vui lòng nhập chiều dài tối đa" },
-            ]}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều dài tối đa"/>
-          </Form.Item>
-
-          <Form.Item
-            name="widthLimitCm"
-            label="Chiều rộng tối đa (cm)"
-            rules={[
-              { required: true, message: "Vui lòng nhập chiều rộng tối đa" },
-            ]}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều rộng tối đa"/>
-          </Form.Item>
-
-          <Form.Item
-            name="heightLimitCm"
-            label="Chiều cao tối đa (cm)"
-            rules={[
-              { required: true, message: "Vui lòng nhập chiều cao tối đa" },
-            ]}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập chiều cao tối đa"/>
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập tổng kích thước tối đa (Không bắt buộc)"
+            />
           </Form.Item>
 
           <Form.Item name="isActive" label="Kích hoạt" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Chi tiết loại kiện hàng"
+        open={isDetailModalOpen}
+        onCancel={() => setIsDetailModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedCategory && (
+          <Card bordered={false}>
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <p>
+                  <strong>Tên loại kiện hàng:</strong>
+                  <br />
+                  {selectedCategory.categoryName}
+                </p>
+              </Col>
+              <Col span={12}>
+                <p>
+                  <strong>Mô tả:</strong>
+                  <br />
+                  {selectedCategory.description}
+                </p>
+              </Col>
+              <Col span={12}>
+                <p>
+                  <strong>Kích thước (DxRxC):</strong>
+                  <br />
+                  {selectedCategory.lengthLimitCm} x{" "}
+                  {selectedCategory.widthLimitCm} x{" "}
+                  {selectedCategory.heightLimitCm} cm
+                </p>
+              </Col>
+              <Col span={12}>
+                <p>
+                  <strong>Kích thước tổng:</strong>
+                  <br />
+                  {selectedCategory.totalSizeLimitCm} cm
+                </p>
+              </Col>
+              <Col span={12}>
+                <p>
+                  <strong>Bảo hiểm bắt buộc:</strong>
+                  <br />
+                  {selectedCategory.isInsuranceRequired ? (
+                    <Tag color="green">Có</Tag>
+                  ) : (
+                    <Tag color="red">Không</Tag>
+                  )}
+                </p>
+              </Col>
+              <Col span={12}>
+                <p>
+                  <strong>Phí bảo hiểm mặc định:</strong>
+                  <br />
+                  {selectedCategory.insuranceFeeVnd?.toLocaleString()} VND
+                </p>
+              </Col>
+            </Row>
+
+            {/* render danh sách chính sách bảo hiểm */}
+            {selectedCategory.categoryInsurances?.length > 0 && (
+              <>
+                <Divider />
+                <h3>Lịch sử chính sách bảo hiểm</h3>
+
+                <Table
+                  size="small"
+                  dataSource={selectedCategory.categoryInsurances}
+                  rowKey="id"
+                  pagination={false}
+                  columns={[
+                    {
+                      title: "Tên chính sách",
+                      dataIndex: ["insurancePolicy", "name"],
+                    },
+                    {
+                      title: "Phí cơ bản",
+                      dataIndex: ["insurancePolicy", "baseFeeVnd"],
+                      render: (v) => v?.toLocaleString(),
+                    },
+                    {
+                      title: "Giá trị tối đa",
+                      dataIndex: ["insurancePolicy", "maxParcelValueVnd"],
+                      render: (v) => v?.toLocaleString(),
+                    },
+                    {
+                      title: "Tỷ lệ phí",
+                      dataIndex: ["insurancePolicy", "insuranceFeeRateOnValue"],
+                      render: (v) => v * 100 + "%",
+                    },
+                    {
+                      title: "Bồi thường tiêu chuẩn",
+                      dataIndex: [
+                        "insurancePolicy",
+                        "standardCompensationValueVnd",
+                      ],
+                      render: (v) => v?.toLocaleString(),
+                    },
+                    {
+                      title: "Hiệu lực từ",
+                      dataIndex: ["insurancePolicy", "validFrom"],
+                      render: (v) => formatDate(v),
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </Card>
+        )}
       </Modal>
     </div>
   );

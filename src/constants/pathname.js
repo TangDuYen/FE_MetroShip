@@ -37,7 +37,8 @@ export const PATH_NAME = {
   DASHBOARD_STAFF_SUPPORT_TICKETS: "/dashboard/staff/support-tickets",
   DASHBOARD_STAFF_PAYMENT: "/dashboard/staff/payments",
   DASHBOARD_STAFF_TRAIN_INFORMATION: "/dashboard/staff/train-information",
-  DASHBOARD_STAFF_ORDER_INFORMATION: "/dashboard/staff/order-information/:trackingCode",
+  DASHBOARD_STAFF_ORDER_INFORMATION:
+    "/dashboard/staff/order-information/:trackingCode",
   DASHBOARD_STAFF_PROFILE: "/dashboard/staff/profile",
   DASHBOARD_STAFF_TRAIN_MAP: "/dashboard/staff/train-map/:trainId",
   DASHBOARD_STAFF_PRINT_ORDER: "/dashboard/staff/print-order",
@@ -63,6 +64,6 @@ export const PATH_NAME = {
   DASHBOARD_ADMIN_PRICE_MANAGEMENT: "/dashboard/admin/price-management",
   DASHBOARD_ADMIN_TRANSACTION_MANAGEMENT:
     "/dashboard/admin/transaction-management",
-    DASHBOARD_ADMIN_SYSTEM_CONFIG:
-    "/dashboard/admin/system-config",
+  DASHBOARD_ADMIN_SYSTEM_CONFIG: "/dashboard/admin/system-config",
+  DASHBOARD_ADMIN_TIME_SLOT: "/dashboard/admin/time-slot",
 };

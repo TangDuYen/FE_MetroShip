@@ -589,6 +589,16 @@ export const router = createBrowserRouter([
           </ProtectedRouteAdmin>
         ),
       },
+      {
+        path: PATH_NAME.DASHBOARD_ADMIN_TIME_SLOT,
+        element: (
+          <ProtectedRouteAdmin>
+            {lazyLoad(() =>
+              import("../pages/dashboard/pages/admin/admin-time-slot-management/AdminTimeSlot")
+            )}
+          </ProtectedRouteAdmin>
+        ),
+      },
     ],
   },
 ]);

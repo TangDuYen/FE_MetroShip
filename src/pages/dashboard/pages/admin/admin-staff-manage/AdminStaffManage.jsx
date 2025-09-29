@@ -24,6 +24,7 @@ import { PATH_NAME } from "../../../../../constants/pathname";
 import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
+import { staffRoleMap } from "../../../../../constants/statusMap";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -46,6 +47,9 @@ function AdminStaffManage() {
   const [searchText, setSearchText] = useState("");
   const [filterStations, setFilterStations] = useState([]);
   const [filterRoles, setFilterRoles] = useState([]);
+  const [banStaff, setBanStaff] = useState(null);
+  const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+
 
   const nav = useNavigate();
 
@@ -63,18 +67,19 @@ function AdminStaffManage() {
     console.log("Current assignment:", currentAssignment);
 
     if (currentAssignment) {
+      const matchedRole = assignRole.find(
+        (role) => role.value === currentAssignment.assignedRole
+      );
+
       formAssign.setFieldsValue({
-        role: currentAssignment.assignedRole,
+        role: matchedRole ? matchedRole.id : undefined,  // ✅ set id thay vì string
         stationId: currentAssignment.stationId,
         timeSlotId: currentAssignment.timeSlotId,
-        fromDate: currentAssignment.fromTime
-          ? dayjs(currentAssignment.fromTime)
-          : null,
-        toDate: currentAssignment.toTime
-          ? dayjs(currentAssignment.toTime)
-          : null,
+        fromDate: currentAssignment.fromTime ? dayjs(currentAssignment.fromTime) : null,
+        toDate: currentAssignment.toTime ? dayjs(currentAssignment.toTime) : null,
       });
-    } else {
+    }
+    else {
       formAssign.resetFields();
     }
   }, [assigningStaff]);
@@ -162,6 +167,30 @@ function AdminStaffManage() {
     tomorrow.setDate(today.getDate() + 1);
     return current && current.valueOf() < tomorrow.getTime();
   };
+
+  const onDisable = (staff) => {
+    setBanStaff(staff);
+    setIsBanModalOpen(true);
+  };
+  const handleConfirmBan = async () => {
+    if (!banStaff) return;
+    try {
+      await api.delete(`/users/${banStaff.id}`);
+      toast.success(`Đã cấm nhân viên ${banStaff.fullName}`);
+      setUsers((prev) => prev.filter((u) => u.id !== banStaff.id));
+      setIsBanModalOpen(false);
+      setBanStaff(null);
+    } catch (error) {
+      console.error("Ban staff error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra khi cấm nhân viên.";
+      toast.error(errorMessage);
+    }
+  };
+
+
   const columns = [
     {
       title: "STT",
@@ -195,7 +224,7 @@ function AdminStaffManage() {
       title: "Công việc hiện tại",
       dataIndex: "currentRole",
       key: "currentRole",
-      render: (text) => text || "Chưa phân công",
+      render: (text) => staffRoleMap[text] || "Chưa phân công",
     },
     {
       title: "Trạm hiện tại",
@@ -247,15 +276,17 @@ function AdminStaffManage() {
       title: "Cấm",
       key: "ban",
       render: (_, record) => (
-        <Button className="ban-staff-button" onClick={() => onDisable(record)}>
+        <Button
+          className="ban-staff-button"
+          onClick={() => onDisable(record)}
+        >
           Cấm
         </Button>
       ),
     },
+    ,
   ];
 
-  // const data = users.map((u, index) => ({ ...u, key: index }));
-  // Lấy unique roles
   const uniqueRoles = [
     ...new Set(users.map((u) => u.currentRole).filter(Boolean)),
   ];
@@ -384,7 +415,7 @@ function AdminStaffManage() {
             <Select
               placeholder="Chọn công việc"
               options={assignRole.map((role) => ({
-                label: role.value,
+                label: staffRoleMap[role.value],
                 value: role.id,
               }))}
             />
@@ -427,35 +458,35 @@ function AdminStaffManage() {
             name="userName"
             rules={[{ required: true, message: "Không được để trống tên đăng nhập" }]}
           >
-            <Input placeholder="Nhập tên đăng nhập"/>
+            <Input placeholder="Nhập tên đăng nhập" />
           </Form.Item>
           <Form.Item
             label="Họ tên"
             name="fullName"
             rules={[{ required: true, message: "Không được để trống họ tên" }]}
           >
-            <Input placeholder="Nhập họ và tên"/>
+            <Input placeholder="Nhập họ và tên" />
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
             rules={[{ type: "email", required: true, message: "Không được để trống email" }]}
           >
-            <Input placeholder="Nhập email"/>
+            <Input placeholder="Nhập email" />
           </Form.Item>
           <Form.Item
             label="Số điện thoại"
             name="phoneNumber"
             rules={[{ required: true, message: "Không được để trống số điện thoại" }]}
           >
-            <Input placeholder="Nhập số điện thoại"/>
+            <Input placeholder="Nhập số điện thoại" />
           </Form.Item>
           <Form.Item
             label="Mật khẩu"
             name="password"
             rules={[{ required: true, message: "Không được để trống mật khẩu" }]}
           >
-            <Input.Password placeholder="Nhập mật khẩu"/>
+            <Input.Password placeholder="Nhập mật khẩu" />
           </Form.Item>
           <Form.Item
             label="Xác nhận mật khẩu"
@@ -472,7 +503,7 @@ function AdminStaffManage() {
               }),
             ]}
           >
-            <Input.Password placeholder="Nhập xác nhận mật khẩu"/>
+            <Input.Password placeholder="Nhập xác nhận mật khẩu" />
           </Form.Item>
           <Form.Item
             label="Ngày sinh"
@@ -487,6 +518,26 @@ function AdminStaffManage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Modal
+        open={isBanModalOpen}
+        title="Xác nhận cấm nhân viên"
+        onCancel={() => {
+          setIsBanModalOpen(false);
+          setBanStaff(null);
+        }}
+        okText="Cấm"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true }}
+        onOk={handleConfirmBan}
+      >
+        <p>
+          Bạn có chắc chắn muốn cấm nhân viên{" "}
+          <strong>{banStaff?.fullName}</strong>?
+        </p>
+        <p style={{ color: "red" }}>Hành động này không thể hoàn tác.</p>
+      </Modal>
+
     </div>
   );
 }

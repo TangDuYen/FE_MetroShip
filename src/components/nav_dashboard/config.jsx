@@ -1,5 +1,6 @@
 import {
   CarOutlined,
+  ClockCircleOutlined,
   DashboardOutlined,
   DollarOutlined,
   IdcardOutlined,
@@ -77,7 +78,11 @@ export const navDashboardConfig = [
     icon: <SafetyOutlined style={{ fontSize: "1.4em" }} />,
     label: "Quản lý Bảo hiểm",
   },
-
+  {
+    key: "15",
+    icon: <ClockCircleOutlined style={{ fontSize: "1.4em" }} />,
+    label: "Quản lý Time Slot",
+  },
   {
     key: "6",
     icon: <SettingOutlined style={{ fontSize: "1.4em" }} />,
@@ -182,6 +187,9 @@ export const navpath = {
   },
   62: {
     path: PATH_NAME.DASHBOARD_ADMIN_SYSTEM_CONFIG,
+  },
+  15: {
+    path: PATH_NAME.DASHBOARD_ADMIN_TIME_SLOT,
   },
   71: {
     path: PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER,
