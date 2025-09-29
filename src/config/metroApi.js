@@ -443,3 +443,19 @@ export const getStationById = async (stationId) => {
     throw error;
   }
 };
+
+//TIMESLOT
+export const getAllTimeSlot = async () => {
+  try {
+    const res = await api.get("/metro-time-slots/all?PageSize=1000");
+    return res.data.data.items;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu time slot";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+}
+
+
