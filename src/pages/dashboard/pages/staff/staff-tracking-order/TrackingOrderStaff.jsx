@@ -4,7 +4,7 @@ import "dayjs/locale/vi";
 import { Button, Card, Col, ConfigProvider, DatePicker, Empty, Flex, Input, Modal, Row, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { formatCurrency, parcelStatusMap, shipmentStatusColorMap, shipmentStatusMap, staffRoleMap } from '../../../../../constants/statusMap';
-import { getAllParcels, getAllStations, getMetroLines, getMetroTimeSlots, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
+import { getAllParcels, getAllStations, getBanks, getMetroLines, getMetroTimeSlots, getShipmentByStaffDestinationStation, getShipmentByStaffIncludedStation, getShipmentByStaffStation, getShipmentByTrackingCode } from '../../../../../config/metroApi';
 import { useEffect, useState } from 'react';
 
 import { PATH_NAME } from '../../../../../constants/pathname';
@@ -63,6 +63,21 @@ function TrackingOrderStaff() {
   const [openCompensationModal, setOpenCompensationModal] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [mergedShipments, setMergedShipments] = useState([]);
+  const [bankList, setBankList] = useState([]);
+  const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
+  const [bankInfo, setBankInfo] = useState({
+    bankCode: null,
+    accountNumber: '',
+    accountName: ''
+  });
+  const [openTxnModal, setOpenTxnModal] = useState(false);
+  const [openQrModal, setOpenQrModal] = useState(false);
+  const [txnInfo, setTxnInfo] = useState({
+    bankId: null,
+    accountNo: '',
+    amount: ''
+  });
+  const [qrImageUrl, setQrImageUrl] = useState(null);
 
   if (!decodedUser?.StationId) {
     return (
@@ -131,6 +146,20 @@ function TrackingOrderStaff() {
 
   const getParcelsByShipmentId = (shipmentId) => {
     return parcels.filter(parcel => parcel.shipmentId === shipmentId);
+  };
+
+  useEffect(() => {
+    getBanks().then(data => setBankList(data));
+  }, []);
+
+  const fetchQrByBankAccount = async (bankId, accountNo, amount) => {
+    try {
+      const res = await api.get(`/transactions/vietqr/${bankId}/${accountNo}?amount=${amount}`);
+      return res.data?.data;
+    } catch (err) {
+      console.error("Lỗi fetch QR:", err);
+      throw err;
+    }
   };
 
   const getShipmentByCode = async (trackingCode) => {
@@ -286,12 +315,11 @@ function TrackingOrderStaff() {
         setOpenRefundModal(true);
         break;
       case 25:
-        getShipmentByCode(shipment.trackingCode);
-        setOpenCompensationModal(true);
-        break;
       case 27:
         getShipmentByCode(shipment.trackingCode);
         setOpenCompensationModal(true);
+        break;
+
         break;
     }
   };
@@ -746,14 +774,22 @@ function TrackingOrderStaff() {
           <Modal
             open={openSurchargeModal}
             onOk={() => {
-              createPaymentLink(selectedShipment, 2);
+              setOpenTxnModal(true);
               setOpenSurchargeModal(false);
             }}
             onCancel={() => setOpenSurchargeModal(false)}
             okText="Xác nhận"
             cancelText="Hủy"
           >
-            <p>Thu thêm phí tồn kho do khách nhận trễ?</p>
+            {selectedShipment ? (
+              <div>
+                <p>Mã đơn: {selectedShipment.trackingCode}</p>
+                <p>Phí tồn kho / phạt: {formatCurrency(selectedShipment.surchargeFeeVnd || 0)}</p>
+                {/* Bạn có thể hiển thị thêm thông tin đơn hàng nếu cần */}
+              </div>
+            ) : (
+              <p>Đang tải...</p>
+            )}
           </Modal>
 
           {/* COMPENSATION MODAL */}
@@ -761,8 +797,8 @@ function TrackingOrderStaff() {
             open={openCompensationModal}
             title={`Bồi thường cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
             onOk={() => {
-              createPaymentLink(selectedShipment, 4); // Compensation
               setOpenCompensationModal(false);
+              setBankAccountModalOpen(true);
             }}
             onCancel={() => setOpenCompensationModal(false)}
             okText="Xác nhận"
@@ -803,6 +839,163 @@ function TrackingOrderStaff() {
                   Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalCompensationFeeVnd || 0)}
                 </div>
               </>
+            )}
+          </Modal>
+
+          {/* BANK ACCOUNT MODAL */}
+          <Modal
+            open={bankAccountModalOpen}
+            onCancel={() => {
+              setBankAccountModalOpen(false);
+              setBankInfo({
+                bankCode: null,
+                accountNumber: '',
+                accountName: ''
+              });
+            }}
+            onOk={() => {
+              createPaymentLink(selectedShipment, 4);
+              setBankAccountModalOpen(false);
+              setBankInfo({
+                bankCode: null,
+                accountNumber: '',
+                accountName: ''
+              });
+            }}
+            okText="Tạo giao dịch"
+            cancelText="Hủy"
+            okButtonProps={{
+              disabled: !bankInfo.bankCode || !bankInfo.accountNumber || !bankInfo.accountName
+            }}
+            title={`Nhập thông tin tài khoản nhận bồi thường cho đơn ${selectedShipment?.trackingCode || ''}`}
+          >
+            <div style={{ marginBottom: '1em' }}>
+              <label>Ngân hàng</label>
+              <Select
+                showSearch
+                style={{ width: '100%' }}
+                placeholder="Chọn ngân hàng"
+                optionFilterProp="label"
+                value={bankInfo.bankCode}
+                onChange={(value) => setBankInfo({ ...bankInfo, bankCode: value })}
+                options={bankList.map(bank => ({
+                  value: bank.code,
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <img src={bank.logo} alt="logo" style={{ width: 24, height: 24 }} />
+                      <span>{bank.shortName}</span>
+                    </div>
+                  )
+                }))}
+              />
+            </div>
+            <div style={{ marginBottom: '1em' }}>
+              <label>Số tài khoản</label>
+              <Input
+                value={bankInfo.accountNumber}
+                onChange={e => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+                placeholder="Nhập số tài khoản"
+              />
+            </div>
+            <div>
+              <label>Tên chủ tài khoản (không dấu, IN HOA)</label>
+              <Input
+                value={bankInfo.accountName}
+                onChange={e => setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })}
+                placeholder="Nhập tên chủ tài khoản"
+              />
+            </div>
+          </Modal>
+
+          {/* SURCHARGE TRANSACTION INFO MODAL */}
+          <Modal
+            open={openTxnModal}
+            title="Tạo giao dịch thu phí tồn kho"
+            onCancel={() => {
+              setOpenTxnModal(false);
+              setTxnInfo({ bankId: null, accountNo: '', amount: '' });
+            }}
+            onOk={async () => {
+              try {
+                const imageUrl = await fetchQrByBankAccount(txnInfo.bankId, txnInfo.accountNo, txnInfo.amount);
+                setQrImageUrl(imageUrl);
+                setOpenTxnModal(false);
+                setOpenQrModal(true);
+              } catch (err) {
+                toast.error("Lỗi tạo mã QR");
+              }
+            }}
+            okText="Tạo QR"
+            cancelText="Hủy"
+            okButtonProps={{
+              disabled: !(txnInfo.bankId && txnInfo.accountNo && txnInfo.amount)
+            }}
+          >
+            <div style={{ marginBottom: 16 }}>
+              <label>Ngân hàng</label>
+              <Select
+                showSearch
+                style={{ width: '100%' }}
+                placeholder="Chọn ngân hàng"
+                optionFilterProp="label"
+                value={txnInfo.bankId}
+                onChange={value => setTxnInfo({ ...txnInfo, bankId: value })}
+                options={bankList.map(bank => ({
+                  value: bank.id,
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <img src={bank.logo} alt="" style={{ width: 24, height: 24 }} />
+                      <span>{bank.shortName}</span>
+                    </div>
+                  )
+                }))}
+              />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label>Số tài khoản</label>
+              <Input
+                value={txnInfo.accountNo}
+                onChange={e => setTxnInfo({ ...txnInfo, accountNo: e.target.value })}
+                placeholder="Nhập số tài khoản"
+              />
+            </div>
+            <div>
+              <label>Số tiền</label>
+              <Input
+                type="number"
+                value={txnInfo.amount}
+                onChange={e => setTxnInfo({ ...txnInfo, amount: e.target.value })}
+                placeholder="Nhập số tiền"
+              />
+            </div>
+          </Modal>
+
+          {/* SURCHARGE QR MODAL */}
+          <Modal
+            open={openQrModal}
+            title="Mã QR thanh toán"
+            footer={[
+              <Button key="close" onClick={() => {
+                setOpenQrModal(false);
+                setTxnInfo({ bankId: null, accountNo: '', amount: '' });
+                setQrImageUrl(null);
+                setSelectedShipment(null);
+              }}>Đóng</Button>
+            ]}
+            onCancel={() => {
+              setOpenQrModal(false);
+              setTxnInfo({ bankId: null, accountNo: '', amount: '' });
+              setQrImageUrl(null);
+              setSelectedShipment(null);
+            }}
+          >
+            {qrImageUrl ? (
+              <div style={{ textAlign: 'center' }}>
+                <img src={qrImageUrl} alt="QR code" style={{ maxWidth: '100%' }} />
+                <p>Khách hàng quét mã QR để thanh toán</p>
+              </div>
+            ) : (
+              <p>Đang tạo mã QR...</p>
             )}
           </Modal>
         </div>
