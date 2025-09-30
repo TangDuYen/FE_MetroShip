@@ -1,13 +1,15 @@
 import "./SupportTicketStaff.scss";
 
-import { Button, Col, Input, Modal, Row, Select, Space, Table, Tag } from "antd";
+import { Button, Col, Input, Modal, Row, Select, Space, Table, Tabs, Tag } from "antd";
 import React, { useEffect, useState } from "react";
-import { getAllParcels, getAllShipments, getAllSupportTickets, getShipmentByTrackingCode } from "./../../../../../config/metroApi";
-import { supportTicketStatus, supportTicketStatusColorMap, supportTicketType } from "../../../../../constants/statusMap";
+import { formatCurrency, parcelStatusMap, supportTicketStatus, supportTicketStatusColorMap, supportTicketType } from "../../../../../constants/statusMap";
+import { getAllParcels, getAllShipments, getAllSupportTickets, getBanks, getShipmentByTrackingCode } from "./../../../../../config/metroApi";
 
 import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../../../../constants/pathname";
 import { ReloadOutlined } from "@ant-design/icons";
+import TabPane from "antd/es/tabs/TabPane";
+import Title from "antd/es/skeleton/Title";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -20,6 +22,16 @@ function SupportTicketStaff({ stationId }) {
   const [shipments, setShipments] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const [compensated, setCompensated] = useState(false);
+  const [compensationModalVisible, setCompensationModalVisible] = useState(false);
+  const [bankList, setBankList] = useState([]);
+  const [bankModalVisible, setBankModalVisible] = useState(false);
+  const [bankInfo, setBankInfo] = useState({
+    bankCode: null,
+    accountNumber: '',
+    accountName: ''
+  });
 
   //FILTER STATE
   const [filterStatus, setFilterStatus] = useState(null);
@@ -34,6 +46,7 @@ function SupportTicketStaff({ stationId }) {
 
   useEffect(() => {
     fetchData();
+    getBanks().then(data => setBankList(data || []));
   }, []);
 
   const fetchData = async () => {
@@ -142,15 +155,7 @@ function SupportTicketStaff({ stationId }) {
       title: "Phiếu hỗ trợ cho đơn hàng",
       dataIndex: "shipmentId",
       key: "shipmentId",
-      render: (_, record) => (
-        <Link
-          to={PATH_NAME.DASHBOARD_STAFF_ORDER_INFORMATION.replace(
-            ":trackingCode",
-            getShipmentCode(record.shipmentId)
-          )}
-        >
-          {getShipmentCode(record.shipmentId)}
-        </Link>)
+      render: (_, record) => getShipmentCode(record.shipmentId),
     },
     {
       title: "Loại phiếu",
@@ -175,15 +180,32 @@ function SupportTicketStaff({ stationId }) {
       title: "Thao tác",
       render: (_, record) => (
         <Space>
+          {record.supportType === 1 && record.status === 1 && (
+            <Button
+              danger
+              onClick={async () => {
+                try {
+                  const shipment = await getShipmentByTrackingCode(getShipmentCode(record.shipmentId));
+                  setSelectedShipment(shipment.data);
+                  setCompensationModalVisible(true);
+                } catch (e) {
+                  toast.error("Không thể lấy thông tin đơn hàng");
+                }
+              }}
+              disabled={compensated}
+            >
+              Bồi thường
+            </Button>
+          )}
           <Button
             type="primary"
-            disabled={record.status === 2 || record.status === 3}
             onClick={() => handleOpenModal(record)}
+            disabled={record.supportType === 1 && !compensated}
           >
             Giải quyết
           </Button>
         </Space>
-      ),
+      )
     },
   ];
 
@@ -276,6 +298,132 @@ function SupportTicketStaff({ stationId }) {
           />
         )}
       </Modal>
+
+      {/* MODAL COMPENSATION SHIPMENT */}
+      <Modal
+        open={compensationModalVisible}
+        title={`Bồi thường cho đơn hàng: ${selectedShipment?.trackingCode || ''}`}
+        onOk={() => {
+          setCompensationModalVisible(false);
+          setBankModalVisible(true);
+        }}
+        onCancel={() => setCompensationModalVisible(false)}
+        okText="Xác nhận"
+        cancelText="Hủy"
+      >
+        {selectedShipment && (
+          <>
+            <Title level={5}>Danh sách kiện hàng cần bồi thường</Title>
+            {selectedShipment?.parcels?.filter(p => p.status === 4).length > 0 ? (
+              <Tabs defaultActiveKey="0">
+                {selectedShipment.parcels
+                  .filter(parcel => parcel.status === 4)
+                  .map((parcel, index) => (
+                    <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
+                      <Table
+                        dataSource={[
+                          { key: 'parcelCode', label: 'Mã kiện hàng', value: parcel.parcelCode || 'N/A' },
+                          { key: 'parcelCategory', label: 'Loại hàng', value: parcel.categoryInsurance?.parcelCategory?.categoryName || 'N/A' },
+                          { key: 'weight', label: 'Trọng lượng quy đổi', value: `${parcel.chargeableWeightKg} kg` },
+                          { key: 'volume', label: 'Thể tích', value: `${parcel.volumeCm3} cm³` },
+                          { key: 'status', label: 'Trạng thái kiện hàng', value: parcelStatusMap[parcel.status] || 'Không rõ' },
+                          { key: 'price', label: 'Tổng phí', value: formatCurrency(parcel.priceVnd || 0) },
+                        ]}
+                        columns={[
+                          { title: 'Thông tin', dataIndex: 'label', key: 'label' },
+                          { title: 'Chi tiết', dataIndex: 'value', key: 'value' },
+                        ]}
+                        pagination={false}
+                        bordered
+                        showHeader={false}
+                      />
+                    </TabPane>
+                  ))}
+              </Tabs>
+            ) : (
+              <Empty description="Không có kiện hàng cần bồi thường" />
+            )}
+            <div style={{ marginTop: "1em", fontWeight: "bold", fontSize: "16px" }}>
+              Tổng tiền bồi thường: {formatCurrency(selectedShipment.totalCompensationFeeVnd || 0)}
+            </div>
+          </>
+        )}
+      </Modal>
+
+
+      {/* MODAL BANK INFO */}
+      <Modal
+        open={bankModalVisible}
+        onCancel={() => {
+          setBankModalVisible(false);
+          setBankInfo({ bankCode: null, accountNumber: '', accountName: '' });
+        }}
+        onOk={async () => {
+          try {
+            const res = await api.post("/shipments/vnpay/payment-url", {
+              shipmentId: selectedShipment.id,
+              transactionType: 4,
+              returnUrl: window.location.href,
+              cancelUrl: window.location.href
+            });
+
+            if (res.data?.data) {
+              window.open(res.data.data, "_blank");
+              toast.success("Đã tạo giao dịch bồi thường");
+              setBankModalVisible(false);
+              setCompensated(true);
+            } else {
+              toast.error("Không lấy được link thanh toán!");
+            }
+          } catch (err) {
+            toast.error(err.response?.data?.message || "Lỗi tạo giao dịch bồi thường");
+          }
+        }}
+        okText="Tạo giao dịch"
+        cancelText="Hủy"
+        title="Nhập thông tin ngân hàng bồi thường"
+        okButtonProps={{
+          disabled: !bankInfo.bankCode || !bankInfo.accountNumber || !bankInfo.accountName
+        }}
+      >
+        <div style={{ marginBottom: '1em' }}>
+          <label>Ngân hàng</label>
+          <Select
+            showSearch
+            style={{ width: '100%' }}
+            placeholder="Chọn ngân hàng"
+            optionFilterProp="label"
+            value={bankInfo.bankCode}
+            onChange={(value) => setBankInfo({ ...bankInfo, bankCode: value })}
+            options={bankList.map(bank => ({
+              value: bank.code,
+              label: (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img src={bank.logo} alt="logo" style={{ width: 24, height: 24 }} />
+                  <span>{bank.shortName}</span>
+                </div>
+              )
+            }))}
+          />
+        </div>
+        <div style={{ marginBottom: '1em' }}>
+          <label>Số tài khoản</label>
+          <Input
+            value={bankInfo.accountNumber}
+            onChange={e => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+            placeholder="Nhập số tài khoản"
+          />
+        </div>
+        <div>
+          <label>Tên chủ tài khoản (IN HOA)</label>
+          <Input
+            value={bankInfo.accountName}
+            onChange={e => setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })}
+            placeholder="Tên chủ tài khoản"
+          />
+        </div>
+      </Modal>
+
     </div>
   );
 }
