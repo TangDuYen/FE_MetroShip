@@ -196,11 +196,18 @@ function OrderInformationStaff() {
               {shipmentStatusMap[shipment.shipmentStatus] || "Không xác định"}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item span={2}>
+          <Descriptions.Item label="Hình ảnh của đơn hàng" span={2}>
             {shipment.shipmentMedias && shipment.shipmentMedias.length > 0 ? (
               <Link onClick={() => setPreviewVisible(true)}>Xem hình ảnh</Link>
             ) : (
               <span style={{ color: "gray" }}>Hiện tại không có dữ liệu hình ảnh</span>
+            )}
+          </Descriptions.Item>
+          <Descriptions.Item label="Hành trình đơn hàng" span={2}>
+            {shipment.shipmentItineraries && shipment.shipmentItineraries.length > 0 ? (
+              <Link onClick={() => setPreviewVisible(true)}>Xem hành trình</Link>
+            ) : (
+              <span style={{ color: "gray" }}>Hiện tại không có dữ liệu hành trình đơn hàng</span>
             )}
           </Descriptions.Item>
         </Descriptions>

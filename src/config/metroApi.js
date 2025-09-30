@@ -162,11 +162,22 @@ export const getAllTransactionTypes = async () => {
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu loại thanh toán";
-
     toast.error(errorMessage);
     throw error;
   }
 }
+
+export const getBanks = async () => {
+  try {
+    const res = await api.get('/transactions/vietqr/banks');
+    return res.data?.data || [];
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu loại thanh toán";
+    toast.error(errorMessage);
+    throw error;
+  }
+};
 
 //METROROUTE
 export const getMetroLines = async () => {
@@ -452,7 +463,6 @@ export const getAllTimeSlot = async () => {
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu time slot";
-
     toast.error(errorMessage);
     throw error;
   }
