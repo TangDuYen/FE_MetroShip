@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   Tag,
+  Timeline,
   Typography,
 } from "antd";
 import {
@@ -55,6 +56,9 @@ function OrderInformationStaff() {
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const qrRef = useRef();
   const navigate = useNavigate();
+  const [trackingModalVisible, setTrackingModalVisible] = useState(false);
+  const [trackingParcelModalVisible, setTrackingParcelModalVisible] = useState(false);
+
   const fetchDetails = async () => {
     try {
       const res = await api.get(`/shipments/${trackingCode}`);
@@ -97,21 +101,22 @@ function OrderInformationStaff() {
     if (!qrRef.current) return;
 
     const opt = {
-      margin: 10,
-      filename: `QR-${selectedParcel?.parcelCode}.pdf`,
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 3, useCORS: true, allowTaint: true },
-      jsPDF: { unit: 'mm', format: 'a7', orientation: 'portrait' },
+      margin: 5,
+      filename: `Parcel-${selectedParcel?.parcelCode}.pdf`,
+      image: { type: "jpeg", quality: 1 },
+      html2canvas: { scale: 3, useCORS: true },
+      jsPDF: { unit: "mm", format: "a5", orientation: "portrait" },
     };
 
     html2pdf().set(opt).from(qrRef.current).save();
   };
 
+
   let trainStatusText = null;
   if (shipment.shipmentStatus === 9) {
-    trainStatusText = `Đang ở trên tàu: ${shipment.waitingForTrainCode}`;
+    trainStatusText = "Đang ở trên tàu:";
   } else if ([7, 8, 14].includes(shipment.shipmentStatus)) {
-    trainStatusText = `Đang chờ tàu: ${shipment.waitingForTrainCode}`;
+    trainStatusText = "Đang chờ tàu:";
   }
 
 
@@ -121,17 +126,28 @@ function OrderInformationStaff() {
         <Title level={2} style={{ margin: 0 }}>
           Chi tiết đơn hàng: {shipment.trackingCode}
         </Title>
-        <Button
-          type="default"
-          style={{ backgroundColor: '#0066CC', color: 'white', border: 'none' }}
-          onClick={() =>
-            navigate(PATH_NAME.DASHBOARD_STAFF_PRINT_ORDER, {
-              state: { trackingCode: shipment.trackingCode },
-            })
-          }
-        >
-          Tải đơn hàng
-        </Button>
+        <div className="button-action" style={{ display: "flex", gap: 8 }}>
+          <Button
+            type="default"
+            style={{ backgroundColor: '#0066CC', color: 'white', border: 'none', fontWeight: 'bold' }}
+            onClick={() =>
+              navigate(PATH_NAME.DASHBOARD_STAFF_PRINT_ORDER, {
+                state: { trackingCode: shipment.trackingCode },
+              })
+            }
+          >
+            Tải đơn hàng
+          </Button>
+          <Button
+            type="default"
+            icon={<EnvironmentOutlined />}
+            onClick={() => setMapVisible(true)}
+            style={{ fontWeight: 'bold', color: '#0066CC' }}
+          >
+            Xem vị trí
+          </Button>
+        </div>
+
       </div>
 
       {trainStatusText && (
@@ -141,76 +157,120 @@ function OrderInformationStaff() {
             marginBottom: 20,
             display: "inline-block",
             fontWeight: "bold",
+            color: "black",
           }}
           onClick={() =>
             nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP.replace(":trainId", trainId))
           }
         >
-          <span style={{ color: "black" }}>{trainStatusText}</span>
+          {trainStatusText}{" "}
+          <span style={{ color: "#0066CC" }}>{shipment.waitingForTrainCode}</span>
         </Typography.Link>
       )}
 
       <Card title="Thông tin đơn hàng" style={{ marginBottom: 20 }}>
         <Descriptions column={2} bordered>
           <Descriptions.Item label="Người gửi">
-            {shipment.senderName} ({shipment.senderPhone})
+            <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+              {shipment.senderName} ({shipment.senderPhone})
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Người nhận">
-            {shipment.recipientName} ({shipment.recipientPhone})
+            <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+              {shipment.recipientName} ({shipment.recipientPhone})
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Trạm gửi">
-            {shipment.departureStationName}
+            <span style={{ color: "#0066CC", fontWeight: "bold" }}>{shipment.departureStationName}</span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Trạm nhận">
-            {shipment.destinationStationName}
+            <span style={{ color: "blueviolet", fontWeight: "bold" }}>{shipment.destinationStationName}</span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Thời điểm đặt">
-            {dayjs(shipment.bookedAt).format("YYYY-MM-DD HH:mm")}
+            <span style={{ color: "orangered", fontWeight: "bold" }}>
+              {dayjs(shipment.bookedAt).format("YYYY-MM-DD HH:mm")}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Thời điểm thanh toán">
-            {dayjs(shipment.paidAt).format("YYYY-MM-DD HH:mm")}
+            <span style={{ color: "blueviolet", fontWeight: "bold" }}>
+              {dayjs(shipment.paidAt).format("YYYY-MM-DD HH:mm")}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Hạn chót nhận hàng lúc">
-            {dayjs(shipment.scheduledDateTime).format("YYYY-MM-DD HH:mm")}
+            <span style={{ color: "red", fontWeight: "bold" }}>
+              {dayjs(shipment.scheduledDateTime).format("YYYY-MM-DD HH:mm")}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Tổng trọng lượng (kg)">
-            {shipment.totalWeightKg}
+            <span style={{ fontWeight: "bold" }}>
+              {shipment.totalWeightKg}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Tổng thể tích (M³)">
-            {shipment.totalVolumeM3}
+            <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+              {shipment.totalVolumeM3}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Tổng tiền bảo hiểm">
-            {formatCurrency(shipment.totalInsuranceFeeVnd)}
+            <span style={{ color: "green", fontWeight: "bold" }}>
+              {formatCurrency(shipment.totalInsuranceFeeVnd)}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Tổng phí vận chuyển">
-            {formatCurrency(shipment.totalShippingFeeVnd)}
+            <span style={{ color: "green", fontWeight: "bold" }}>
+              {formatCurrency(shipment.totalShippingFeeVnd)}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Tổng chi phí">
-            {formatCurrency(shipment.totalCostVnd)}
+            <span style={{ color: "green", fontWeight: "bold" }}>
+              {formatCurrency(shipment.totalCostVnd)}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Khách gửi hàng lúc">
-            {dayjs(shipment.pickedUpAt).format("YYYY-MM-DD HH:mm")}
+            <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+              {dayjs(shipment.pickedUpAt).format("YYYY-MM-DD HH:mm")}
+            </span>
           </Descriptions.Item>
+
           <Descriptions.Item label="Trạng thái">
             <Tag color={shipmentStatusColorMap[shipment.shipmentStatus]}>
               {shipmentStatusMap[shipment.shipmentStatus] || "Không xác định"}
             </Tag>
           </Descriptions.Item>
+
           <Descriptions.Item label="Hình ảnh của đơn hàng" span={2}>
             {shipment.shipmentMedias && shipment.shipmentMedias.length > 0 ? (
-              <Link onClick={() => setPreviewVisible(true)}>Xem hình ảnh</Link>
+              <Link onClick={() => setPreviewVisible(true)} style={{ color: "#0066CC", fontWeight: "bold" }}>
+                Xem hình ảnh
+              </Link>
             ) : (
               <span style={{ color: "gray" }}>Hiện tại không có dữ liệu hình ảnh</span>
             )}
           </Descriptions.Item>
+
           <Descriptions.Item label="Hành trình đơn hàng" span={2}>
-            {shipment.shipmentItineraries && shipment.shipmentItineraries.length > 0 ? (
-              <Link onClick={() => setPreviewVisible(true)}>Xem hành trình</Link>
+            {shipment.shipmentTrackings && shipment.shipmentTrackings.length > 0 ? (
+              <Link onClick={() => setTrackingModalVisible(true)} style={{ color: "#0066CC", fontWeight: "bold" }}>
+                Xem hành trình
+              </Link>
             ) : (
               <span style={{ color: "gray" }}>Hiện tại không có dữ liệu hành trình đơn hàng</span>
             )}
           </Descriptions.Item>
         </Descriptions>
+
         {/* <Image.PreviewGroup
           preview={{
             visible: previewVisible,
@@ -323,76 +383,107 @@ function OrderInformationStaff() {
                   >
                     Tải QR
                   </Button>
-                  {
-                    parcel.status !== 4 &&
-                    parcel.status !== 5 && (
-                      <Button
-                        type="default"
-                        icon={<EnvironmentOutlined />}
-                        onClick={() => {
-                          setSelectedParcel(parcel);
-                          setMapVisible(true);
-                        }}
-                      >
-                        Theo dõi kiện hàng
-                      </Button>
-                    )
-                  }
+                  <Button
+                    type="default"
+                    onClick={() => {
+                      setSelectedParcel(parcel);
+                      setTrackingParcelModalVisible(true);
+                    }}
+                  >
+                    Xem hành trình kiện hàng
+                  </Button>
                 </div>
-
               }
 
             >
-              <Descriptions column={2}>
-                <Descriptions.Item label="Mã kiện">
-                  {parcel.parcelCode}
-                </Descriptions.Item>
-                <Descriptions.Item label="Loại hàng">
-                  {parcel.categoryInsurance?.parcelCategory?.categoryName ||
-                    "Không có loại hàng"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Mô tả">
-                  {parcel.categoryInsurance?.parcelCategory?.description ||
-                    "Không có mô tả"}
-                </Descriptions.Item>
+              <div style={{ display: "flex", gap: 24 }}>
+                {/* CỘT TRÁI */}
+                <div style={{ flex: 5 }}>
+                  <Descriptions column={1} bordered size="small">
+                    <Descriptions.Item label="Mã kiện">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.parcelCode}
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Loại hàng">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.categoryInsurance?.parcelCategory?.categoryName || "Không có loại hàng"}
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Mô tả">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.categoryInsurance?.parcelCategory?.description || "Không có mô tả"}
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Trọng lượng">
+                      <span style={{ fontWeight: "bold" }}>{parcel.weightKg} kg</span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Kích thước">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.lengthCm} x {parcel.widthCm} x {parcel.heightCm} cm
+                      </span>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </div>
 
-                <Descriptions.Item label="Trọng lượng">
-                  {parcel.weightKg} kg
-                </Descriptions.Item>
-                <Descriptions.Item label="Kích thước (D x R x C)">
-                  {parcel.lengthCm} cm x {parcel.widthCm} cm x {parcel.heightCm}{" "}
-                  cm
-                </Descriptions.Item>
-                <Descriptions.Item label="Thể tích">
-                  {parcel.volumeCm3} cm³
-                </Descriptions.Item>
-                <Descriptions.Item label="Trọng lượng quy đổi">
-                  {parcel.chargeableWeightKg} kg
-                </Descriptions.Item>
-                <Descriptions.Item label="Phí vận chuyển">
-                  {formatCurrency(parcel.shippingFeeVnd)}
-                </Descriptions.Item>
-                {parcel.insuranceFeeVnd > 0 && (
-                  <Descriptions.Item label="Phí bảo hiểm">
-                    {formatCurrency(parcel.insuranceFeeVnd)}
-                  </Descriptions.Item>
-                )}
-                <Descriptions.Item label="Tổng phí">
-                  {formatCurrency(parcel.priceVnd)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Tình trạng">
-                  <Tag color={parcelStatusColorMap[parcel.status]}>
-                    {parcelStatusMap[parcel.status]}
-                  </Tag>
-                </Descriptions.Item>
-              </Descriptions>
+                {/* CỘT GIỮA */}
+                <div style={{ flex: 5 }}>
+                  <Descriptions column={1} bordered size="small">
+                    <Descriptions.Item label="Thể tích">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.volumeCm3} cm³
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Trọng lượng quy đổi">
+                      <span style={{ color: "#0066CC", fontWeight: "bold" }}>
+                        {parcel.chargeableWeightKg} kg
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Phí vận chuyển">
+                      <span style={{ color: "green", fontWeight: "bold" }}>
+                        {parcel.shippingFeeVnd} VND
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Tổng phí">
+                      <span style={{ color: "green", fontWeight: "bold" }}>
+                        {parcel.priceVnd} VND
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Tình trạng">
+                      <Tag color={parcelStatusColorMap[parcel.status]}>
+                        {parcelStatusMap[parcel.status]}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </div>
+
+                {/* QR CODE */}
+                <div
+                  style={{
+                    flex: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?data=${parcel.parcelCode}&size=200x200`}
+                    alt="QR"
+                    style={{ width: 200, height: 200, marginBottom: 12 }}
+                  />
+                  <div style={{ fontWeight: "bold" }}>{parcel.parcelCode}</div>
+                </div>
+              </div>
+
             </Card>
           );
         })
       }
 
       <Modal
-        title={`Bản đồ kiện hàng ${selectedParcel?.parcelCode || ""}`}
+        title={`Vị trí đơn hàng ${selectedParcel?.parcelCode || ""}`}
         open={mapVisible}
         onCancel={() => setMapVisible(false)}
         footer={null}
@@ -407,45 +498,188 @@ function OrderInformationStaff() {
         open={qrModalVisible}
         onCancel={() => setQrModalVisible(false)}
         footer={null}
-        width={400}
+        width={800}
       >
-        <div className="parcel-qr-code" style={{ textAlign: "center" }}>
-          {qrCodeUrl ? (
-            <>
-              <div
-                ref={qrRef}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
-                  height: "100%",
-                  padding: 20,
-                }}
-              >
-                <img
-                  src={qrCodeUrl}
-                  alt={`QR-${selectedParcel?.parcelCode}`}
-                  style={{ width: 200, height: 200 }}
-                />
-                <div style={{ marginTop: 10, fontSize: 14 }}>
-                  {selectedParcel?.parcelCode}
-                </div>
+        {qrCodeUrl && selectedParcel ? (
+          <div ref={qrRef}>
+            {/* HEADER */}
+            <div style={{ textAlign: "center", marginBottom: 10 }}>
+              <h2 style={{ margin: 0, fontWeight: "bold" }}>MetroShip</h2>
+              <div style={{ marginTop: 4 }}>
+                <strong>Mã đơn hàng:</strong> {shipment.trackingCode}
+              </div>
+            </div>
+
+            {/* GRID CONTENT */}
+            <div
+              style={{
+                border: "2px solid black",
+                display: "grid",
+                gridTemplateColumns: "3fr 1fr",
+                gridTemplateRows: "1fr 1fr 1fr",
+                height: "450px",
+              }}
+            >
+              {/* SENDER */}
+              <div style={{ borderRight: "2px solid black", borderBottom: "2px solid black", padding: "10px" }}>
+                <strong>Thông tin người gửi:</strong>
+                <div>{shipment.senderName} ({shipment.senderPhone})</div>
+                <div>Trạm gửi: {shipment.departureStationName}</div>
               </div>
 
-              <Button
-                type="primary"
-                style={{ marginTop: 12 }}
-                onClick={handleDownloadQRAsPDF}
-              >
-                Tải xuống
-              </Button>
-            </>
-          ) : (
-            <p>Đang tải QR...</p>
-          )}
+              {/* QR CODE */}
+              <div style={{ borderBottom: "2px solid black", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <img src={qrCodeUrl} alt="QR" style={{ width: 120, height: 120 }} />
+              </div>
+
+              {/* RECIPIENT */}
+              <div style={{ borderRight: "2px solid black", borderBottom: "2px solid black", padding: "10px" }}>
+                <strong>Thông tin người nhận:</strong>
+                <div>{shipment.recipientName} ({shipment.recipientPhone})</div>
+                <div>Trạm nhận: {shipment.destinationStationName}</div>
+              </div>
+
+              {/* PAYMENT METHOD */}
+              <div style={{ borderBottom: "2px solid black", justifyContent: "center", alignItems: "center", padding: "10px" }}>
+                <strong>Phương thức thanh toán:</strong>
+                <div>VNPAY</div>
+              </div>
+
+              {/* PARCEL INFO */}
+              <div style={{ borderRight: "2px solid black", padding: "10px" }}>
+                <strong>Thông tin kiện hàng:</strong>
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: "1px solid #000", padding: 4 }}>Mã kiện</th>
+                      <th style={{ border: "1px solid #000", padding: 4 }}>Loại hàng</th>
+                      <th style={{ border: "1px solid #000", padding: 4 }}>Trọng lượng</th>
+                      <th style={{ border: "1px solid #000", padding: 4 }}>Kích thước</th>
+                      <th style={{ border: "1px solid #000", padding: 4 }}>Phí VC</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: "1px solid #000", padding: 4 }}>{selectedParcel.parcelCode}</td>
+                      <td style={{ border: "1px solid #000", padding: 4 }}>{selectedParcel.categoryInsurance?.parcelCategory?.categoryName || "Không có"}</td>
+                      <td style={{ border: "1px solid #000", padding: 4 }}>{selectedParcel.weightKg} kg</td>
+                      <td style={{ border: "1px solid #000", padding: 4 }}>
+                        {selectedParcel.lengthCm}x{selectedParcel.widthCm}x{selectedParcel.heightCm} cm
+                      </td>
+                      <td style={{ border: "1px solid #000", padding: 4 }}>
+                        {formatCurrency(selectedParcel.shippingFeeVnd)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* SIGNATURE */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <i>Chữ ký người nhận</i>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>Đang tải...</p>
+        )}
+
+        {/* DOWNLOAD BUTTON */}
+        <div style={{ marginTop: 16, textAlign: "center" }}>
+          <Button type="primary" onClick={handleDownloadQRAsPDF}>Tải xuống</Button>
         </div>
+      </Modal>
+
+      <Modal
+        title={`Hành trình đơn hàng`}
+        open={trackingModalVisible}
+        onCancel={() => setTrackingModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        {shipment.shipmentTrackings && shipment.shipmentTrackings.length > 0 ? (
+          <Timeline>
+            {shipment.shipmentTrackings
+              .sort(
+                (a, b) =>
+                  new Date(b.eventTime).getTime() - new Date(a.eventTime).getTime()
+              )
+              .map((tracking, idx) => (
+                <Timeline.Item
+                  key={tracking.id}
+                  color={idx === 0 ? "green" : "gray"}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div style={{ color: "#999" }}>
+                      {dayjs(tracking.eventTime).format("DD/MM HH:mm")}
+                    </div>
+                    <div
+                      className={
+                        idx === 0
+                          ? "timeline-description highlight"
+                          : "timeline-description"
+                      }
+                    >
+                      {tracking.status}
+                    </div>
+                  </div>
+                </Timeline.Item>
+              ))}
+          </Timeline>
+        ) : (
+          <p>Chưa có dữ liệu hành trình.</p>
+        )}
+      </Modal>
+
+      <Modal
+        title={`Hành trình kiện hàng ${selectedParcel?.parcelCode || ""}`}
+        open={trackingParcelModalVisible}
+        onCancel={() => setTrackingParcelModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedParcel?.parcelTrackings && selectedParcel.parcelTrackings.length > 0 ? (
+          <Timeline>
+            {selectedParcel.parcelTrackings
+              .sort(
+                (a, b) =>
+                  new Date(b.eventTime).getTime() - new Date(a.eventTime).getTime()
+              )
+              .map((tracking, idx) => (
+                <Timeline.Item
+                  key={tracking.id}
+                  color={idx === 0 ? "green" : "gray"}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div style={{ color: "#999" }}>
+                      {dayjs(tracking.eventTime).format("DD/MM HH:mm")}
+                    </div>
+                    <div
+                      className={
+                        idx === 0
+                          ? "timeline-description highlight"
+                          : "timeline-description"
+                      }
+                    >
+                      {tracking.status}
+                    </div>
+                  </div>
+                </Timeline.Item>
+              ))}
+          </Timeline>
+        ) : (
+          <p>Chưa có dữ liệu hành trình kiện hàng.</p>
+        )}
       </Modal>
 
     </div >
