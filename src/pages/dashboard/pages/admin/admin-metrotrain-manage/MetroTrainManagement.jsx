@@ -54,6 +54,7 @@ function MetroTrainManagement() {
   const [stations, setStations] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [modalMode, setModalMode] = useState("add");
+  const [selectedDirection, setSelectedDirection] = useState(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -189,12 +190,18 @@ function MetroTrainManagement() {
       filtered = filtered.filter((train) => train.status === selectedStatus);
     }
 
+    if (selectedDirection != null) {
+      filtered = filtered.filter(
+        (train) => train.direction === selectedDirection
+      );
+    }
+
     setFilteredTrains(filtered);
   };
 
   useEffect(() => {
     applyFilters();
-  }, [selectedLineId, searchTrainCode, selectedStatus]);
+  }, [selectedLineId, searchTrainCode, selectedStatus, selectedDirection]);
 
   const getStationName = (currentStationId) => {
     if (!currentStationId) return "Không xác định";
@@ -270,6 +277,16 @@ function MetroTrainManagement() {
     {
       title: "Dung tích tàu (m³)",
       render: () => maxVolume,
+    },
+    {
+      title: "Chiều chạy",
+      dataIndex: "direction",
+      render: (value) =>
+        value === 0 ? (
+          <Tag color="gold">Chiều đi</Tag>
+        ) : (
+          <Tag color="purple">Chiều về</Tag>
+        ),
     },
     {
       title: "Vị trí hiện tại",
@@ -362,7 +379,7 @@ function MetroTrainManagement() {
           }
           placeholder="Lọc theo tuyến"
           allowClear
-          style={{ width: 400 }}
+          style={{ width: 300 }}
           value={selectedLineId}
           onChange={setSelectedLineId}
         >
@@ -374,14 +391,14 @@ function MetroTrainManagement() {
         </Select>
         <Input.Search
           placeholder="Tìm mã tàu"
-          style={{ width: 300 }}
+          style={{ width: 250 }}
           value={searchTrainCode}
           onChange={(e) => setSearchTrainCode(e.target.value)}
         />
         <Select
           placeholder="Trạng thái"
           allowClear
-          style={{ width: 300 }}
+          style={{ width: 200 }}
           value={selectedStatus}
           onChange={setSelectedStatus}
         >
@@ -394,6 +411,21 @@ function MetroTrainManagement() {
           ))}
         </Select>
 
+        <Select
+          placeholder="Chiều chạy"
+          allowClear
+          style={{ width: 200 }}
+          value={selectedDirection}
+          onChange={setSelectedDirection}
+        >
+          <Select.Option value={0}>
+            <Tag color="gold">Chiều đi</Tag>
+          </Select.Option>
+          <Select.Option value={1}>
+            <Tag color="purple">Chiều về</Tag>
+          </Select.Option>
+        </Select>
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
@@ -402,6 +434,7 @@ function MetroTrainManagement() {
             setSelectedLineId([]);
             setSelectedStatus(null);
             setFilteredTrains(allTrains);
+            setSelectedDirection(null);
           }}
         ></Button>
       </Space>
