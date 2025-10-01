@@ -24,6 +24,7 @@ import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllInsurance } from "../../../../../config/metroApi";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -57,21 +58,23 @@ function AdminInsurance() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllInsurance();
-        setPolicies(data || []);
-      } catch (error) {
-        console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+  try {
+    setLoading(true);
+    const data = await getAllInsurance();
+    setPolicies(data || []);
+  } catch (error) {
+    console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
+    const errorMessage = error.response?.data?.message || "Không thể tải dữ liệu bảo hiểm";
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    fetchData();
-  }, []);
+useEffect(() => {
+  fetchData();
+}, []);
 
   const filteredPolicies = policies.filter((item) => {
     const matchName = item.name
@@ -103,12 +106,20 @@ function AdminInsurance() {
         minCompensationRateOnShippingFee: Number(values.minCompensationRateOnShippingFee || 0),
       };
 
-      await api.post("/insurance-policies", payload); // gọi trực tiếp
+      const res = await api.post("/insurance-policies", payload); // gọi trực tiếp
+      if (res.data?.statusCode === 200) {
+      toast.success(res.data?.message || "Tạo chính sách thành công");
+      setIsAddModalOpen(false);
+      form.resetFields();
+      fetchData();
+    }
       setIsAddModalOpen(false);
       form.resetFields();
       fetchData(); // refresh danh sách
     } catch (error) {
       console.error("Lỗi tạo chính sách bảo hiểm:", error);
+      const errorMessage = error.response?.data?.message || "Có lỗi xảy ra khi tạo chính sách";
+    toast.error(errorMessage);
     }
   };
 
@@ -147,7 +158,7 @@ function AdminInsurance() {
       title: "Tỷ lệ phí bảo hiểm",
       dataIndex: "insuranceFeeRateOnValue",
       key: "insuranceFeeRateOnValue",
-      render: (v) => `${(v * 100).toFixed(2)}%`,
+      render: (v) => `${(v * 100)}%`,
     },
     {
       title: "Bồi thường (min-max)",
@@ -178,7 +189,7 @@ function AdminInsurance() {
       key: "action",
       render: (_, record) => (
         <Button
-          type="link"
+          type="primary"
           onClick={() =>
             navigate(
               PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS.replace(
@@ -270,11 +281,11 @@ function AdminInsurance() {
             name="name"
             rules={[{ required: true, message: "Vui lòng nhập tên chính sách" }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên chính sách" />
           </Form.Item>
 
           <Form.Item label="Mô tả" name="description">
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} placeholder="Nhập mô tả"/>
           </Form.Item>
 
           <Form.Item
