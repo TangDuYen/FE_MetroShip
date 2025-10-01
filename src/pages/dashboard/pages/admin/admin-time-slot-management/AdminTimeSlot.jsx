@@ -134,9 +134,23 @@ function AdminTimeSlot() {
       title: "Hành động",
       width: 120,
       render: (_, record) => (
-        <Button type="primary" onClick={() => handleUpdate(record)}>
-          Cập nhật
-        </Button>
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#52c41a",
+                defaultBorderColor: "#52c41a",
+                defaultHoverBorderColor: "#52c41a",
+                defaultHoverColor: "#52c41a",
+                defaultActiveBorderColor: "#52c41a",
+                defaultActiveColor: "#52c41a",
+              },
+            },
+          }}
+        >
+          <Button onClick={() => handleUpdate(record)}>Cập nhật</Button>
+        </ConfigProvider>
       ),
     },
   ];

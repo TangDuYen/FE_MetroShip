@@ -59,33 +59,33 @@ function AdminInsurance() {
   const [form] = Form.useForm();
 
   const fetchData = async () => {
-  try {
-    setLoading(true);
-    const data = await getAllInsurance();
-    setPolicies(data || []);
-  } catch (error) {
-    console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
-    const errorMessage = error.response?.data?.message || "Không thể tải dữ liệu bảo hiểm";
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const data = await getAllInsurance();
+      setPolicies(data || []);
+    } catch (error) {
+      console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
+      const errorMessage =
+        error.response?.data?.message || "Không thể tải dữ liệu bảo hiểm";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-useEffect(() => {
-  fetchData();
-}, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredPolicies = policies.filter((item) => {
     const matchName = item.name
       .toLowerCase()
       .includes(searchName.toLowerCase());
-    const matchStatus =
-      !filteredStatusPolicies
-        ? true
-        : filteredStatusPolicies === "active"
-          ? item.isActive
-          : !item.isActive;
+    const matchStatus = !filteredStatusPolicies
+      ? true
+      : filteredStatusPolicies === "active"
+      ? item.isActive
+      : !item.isActive;
 
     return matchName && matchStatus;
   });
@@ -101,25 +101,32 @@ useEffect(() => {
         baseFeeVnd: Number(values.baseFeeVnd || 0),
         maxParcelValueVnd: Number(values.maxParcelValueVnd || 0),
         insuranceFeeRateOnValue: Number(values.insuranceFeeRateOnValue || 0),
-        maxCompensationRateOnValue: Number(values.maxCompensationRateOnValue || 0),
-        minCompensationRateOnValue: Number(values.minCompensationRateOnValue || 0),
-        minCompensationRateOnShippingFee: Number(values.minCompensationRateOnShippingFee || 0),
+        maxCompensationRateOnValue: Number(
+          values.maxCompensationRateOnValue || 0
+        ),
+        minCompensationRateOnValue: Number(
+          values.minCompensationRateOnValue || 0
+        ),
+        minCompensationRateOnShippingFee: Number(
+          values.minCompensationRateOnShippingFee || 0
+        ),
       };
 
       const res = await api.post("/insurance-policies", payload); // gọi trực tiếp
       if (res.data?.statusCode === 200) {
-      toast.success(res.data?.message || "Tạo chính sách thành công");
-      setIsAddModalOpen(false);
-      form.resetFields();
-      fetchData();
-    }
+        toast.success(res.data?.message || "Tạo chính sách thành công");
+        setIsAddModalOpen(false);
+        form.resetFields();
+        fetchData();
+      }
       setIsAddModalOpen(false);
       form.resetFields();
       fetchData(); // refresh danh sách
     } catch (error) {
       console.error("Lỗi tạo chính sách bảo hiểm:", error);
-      const errorMessage = error.response?.data?.message || "Có lỗi xảy ra khi tạo chính sách";
-    toast.error(errorMessage);
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi tạo chính sách";
+      toast.error(errorMessage);
     }
   };
 
@@ -158,7 +165,7 @@ useEffect(() => {
       title: "Tỷ lệ phí bảo hiểm",
       dataIndex: "insuranceFeeRateOnValue",
       key: "insuranceFeeRateOnValue",
-      render: (v) => `${(v * 100)}%`,
+      render: (v) => `${v * 100}%`,
     },
     {
       title: "Bồi thường (min-max)",
@@ -188,19 +195,30 @@ useEffect(() => {
       title: "Hành động",
       key: "action",
       render: (_, record) => (
-        <Button
-          type="primary"
-          onClick={() =>
-            navigate(
-              PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS.replace(
-                ":insuranceId",
-                record.id
-              )
-            )
-          }
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+              },
+            },
+          }}
         >
-          Xem chi tiết
-        </Button>
+          <Button
+            onClick={() =>
+              navigate(
+                PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS.replace(
+                  ":insuranceId",
+                  record.id
+                )
+              )
+            }
+          >
+            Xem chi tiết
+          </Button>
+        </ConfigProvider>
       ),
     },
   ];
@@ -279,13 +297,15 @@ useEffect(() => {
           <Form.Item
             label="Tên chính sách"
             name="name"
-            rules={[{ required: true, message: "Vui lòng nhập tên chính sách" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập tên chính sách" },
+            ]}
           >
             <Input placeholder="Nhập tên chính sách" />
           </Form.Item>
 
           <Form.Item label="Mô tả" name="description">
-            <Input.TextArea rows={2} placeholder="Nhập mô tả"/>
+            <Input.TextArea rows={2} placeholder="Nhập mô tả" />
           </Form.Item>
 
           <Form.Item
@@ -311,7 +331,12 @@ useEffect(() => {
             name="insuranceFeeRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -319,7 +344,12 @@ useEffect(() => {
             name="minCompensationRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -327,7 +357,12 @@ useEffect(() => {
             name="maxCompensationRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -338,11 +373,7 @@ useEffect(() => {
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item
-            label="Kích hoạt"
-            name="isActive"
-            valuePropName="checked"
-          >
+          <Form.Item label="Kích hoạt" name="isActive" valuePropName="checked">
             <Switch />
           </Form.Item>
 

@@ -209,20 +209,43 @@ function AdminPrice() {
               {price.description || "Không có mô tả"}
             </Typography.Paragraph>
 
-            {(!price.isActive && !price.effectiveFrom) &&
-              (!price.effectiveTo && (
+            {!price.isActive && !price.effectiveFrom && !price.effectiveTo && (
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Button: {
+                      defaultColor: "white",
+                      defaultBg: "#0066CC",
+                      defaultBorderColor: "#0066CC",
+                    },
+                  },
+                }}
+              >
                 <Button
-                  type="primary"
                   onClick={() => handleActivatePricing(price.id)}
                   style={{ marginBottom: 12 }}
                 >
                   Kích hoạt
                 </Button>
-              ))}
-            {(!price.isActive && !price.effectiveFrom) &&
-              (!price.effectiveTo && (
+              </ConfigProvider>
+            )}
+            {!price.isActive && !price.effectiveFrom && !price.effectiveTo && (
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Button: {
+                      defaultColor: "white",
+                      defaultBg: "#52c41a",
+                      defaultBorderColor: "#52c41a",
+                      defaultHoverBorderColor: "#52c41a",
+                      defaultHoverColor: "#52c41a",
+                      defaultActiveBorderColor: "#52c41a",
+                      defaultActiveColor: "#52c41a",
+                    },
+                  },
+                }}
+              >
                 <Button
-                  type="default"
                   onClick={() => {
                     setEditingPrice(price);
                     form.setFieldsValue(price);
@@ -232,7 +255,8 @@ function AdminPrice() {
                 >
                   Cập nhật
                 </Button>
-              ))}
+              </ConfigProvider>
+            )}
 
             <Collapse>
               <Panel header="Chi tiết bảng giá" key="1">
@@ -614,7 +638,7 @@ function AdminPrice() {
               style={{ marginRight: 16 }}
               onClick={loadCurrentPricing}
             >
-              Load bảng giá hiện tại
+              Tải bảng giá hiện tại
             </Button>
             <Button type="primary" htmlType="submit">
               {editingPrice ? "Cập nhật bảng giá" : "Tạo bảng giá"}

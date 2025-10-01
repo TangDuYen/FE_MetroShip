@@ -1,26 +1,43 @@
 import "./UserManagement.scss";
 
-import { Button, ConfigProvider, Empty, Input, Modal, Space, Table } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  Empty,
+  Input,
+  Modal,
+  Space,
+  Spin,
+  Table,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import { getAllCustomer } from "../../../../../config/metroApi";
+import { toast } from "react-toastify";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [banUser, setBanUser] = useState(null);
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getAllCustomer()
-      .then((data) => {
-        setUsers(data);
-      })
-      .catch((error) => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllCustomer();
+        setUsers(data || []);
+      } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng", error);
-      });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   const filteredData = users.filter((u) => {
@@ -43,7 +60,7 @@ function UserManagement() {
       toast.success(`Đã cấm người dùng ${banUser.fullName}`);
       setUsers((prev) => prev.filter((u) => u.id !== banUser.id));
       setIsBanModalOpen(false);
-      setBanStaff(null);
+      setBanUser(null);
     } catch (error) {
       console.error("Ban user error:", error);
       const errorMessage =
@@ -85,6 +102,7 @@ function UserManagement() {
     {
       title: "Cấm",
       key: "ban",
+      align: "center",
       render: (_, record) => (
         <Button
           className="ban-user-button"
@@ -95,7 +113,6 @@ function UserManagement() {
         </Button>
       ),
     },
-
   ];
 
   const data = filteredData.map((user, index) => ({
@@ -125,21 +142,23 @@ function UserManagement() {
           }}
         ></Button>
       </Space>
-      <ConfigProvider
-        renderEmpty={() => (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_DEFAULT}
-            description="Không có dữ liệu"
+      <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={data}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
           />
-        )}
-      >
-        <Table
-          columns={columns}
-          dataSource={data}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
-      </ConfigProvider>
+        </ConfigProvider>
+      </Spin>
 
       <Modal
         open={isBanModalOpen}

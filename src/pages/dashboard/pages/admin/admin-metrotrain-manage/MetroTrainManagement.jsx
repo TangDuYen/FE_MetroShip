@@ -129,7 +129,7 @@ function MetroTrainManagement() {
   // };
 
   //KHI NÀO METRO-TRAIN THÊM DIRECTION. THÌ SỬ DỤNG NÀY
-    const handleReset = async (train) => {
+  const handleReset = async (train) => {
     if (!train) {
       toast.error("Chưa chọn tàu để reset lịch.");
       return;
@@ -291,25 +291,48 @@ function MetroTrainManagement() {
       title: "Hành động",
       render: (_, record) => (
         <Space>
-          <Button
-            className="assign-train-button"
-            style={{
-              backgroundColor: "#0066CC",
-              color: "white",
-              border: "#0066CC",
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#0066CC",
+                  defaultBorderColor: "#0066CC",
+                },
+              },
             }}
-            onClick={() => openAssignModal(record)}
           >
-            {" "}
-            Phân tàu{" "}
-          </Button>
-          <Button
-            className="edit-train-button"
-            onClick={() => openEditModal(record)}
+            <Button
+              className="assign-train-button"
+              onClick={() => openAssignModal(record)}
+            >
+              {" "}
+              Phân tàu{" "}
+            </Button>
+          </ConfigProvider>
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#52c41a",
+                  defaultBorderColor: "#52c41a",
+                  defaultHoverBorderColor: "#389e0d",
+                  defaultHoverColor: "#389e0d",
+                  defaultActiveBorderColor: "#52c41a",
+                  defaultActiveColor: "#52c41a",
+                },
+              },
+            }}
           >
-            {" "}
-            Cập nhật{" "}
-          </Button>
+            <Button
+              className="edit-train-button"
+              onClick={() => openEditModal(record)}
+            >
+              {" "}
+              Cập nhật{" "}
+            </Button>
+          </ConfigProvider>
           <Button
             danger
             onClick={() => {
@@ -328,7 +351,7 @@ function MetroTrainManagement() {
     <div className="metro-train-management-container">
       <Space style={{ marginBottom: 16, marginRight: 16 }}>
         <Button type="primary" onClick={openAddModal}>
-         + Thêm tàu
+          + Thêm tàu
         </Button>
         <Select
           mode="multiple"
@@ -436,7 +459,10 @@ function MetroTrainManagement() {
             label="Model tàu"
             rules={[{ required: true, message: "Vui lòng nhập model tàu" }]}
           >
-            <Input placeholder="Nhập model tàu" disabled={modalMode !== "add"} />
+            <Input
+              placeholder="Nhập model tàu"
+              disabled={modalMode !== "add"}
+            />
           </Form.Item>
 
           <Form.Item
