@@ -13,14 +13,20 @@ import {
   Select,
   Space,
   Spin,
-  Table
+  Table,
+  Tag,
 } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllRegions, getAllStationsByRegion, getMetroLinesAdmin } from "../../../../../config/metroApi";
+import {
+  getAllRegions,
+  getAllStationsByRegion,
+  getMetroLines,
+  getMetroLinesAdmin,
+} from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
@@ -36,8 +42,9 @@ function MetroLineManagement() {
   const [selectedLine, setSelectedLine] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-
+  const [searchLineCode, setSearchLineCode] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   //API ONE TIME
   useEffect(() => {
@@ -49,9 +56,26 @@ function MetroLineManagement() {
       .catch((err) => console.error(err));
   }, []);
 
-  const filteredLines = selectedLine
-    ? metroLines.filter((line) => line.lineNameVi === selectedLine)
-    : metroLines;
+  const filteredLines = metroLines.filter((line) => {
+    // lọc theo lineCode
+    const matchCode = searchLineCode
+      ? line.lineCode?.toLowerCase().includes(searchLineCode.toLowerCase())
+      : true;
+
+    // lọc theo region
+    const matchRegion = selectedRegion
+      ? line.regionId === selectedRegion
+      : true;
+
+    // lọc theo status
+    const matchStatus =
+      selectedStatus == null ? true : line.isActive === selectedStatus;
+
+    // lọc theo tên tuyến
+    const matchName = selectedLine ? line.lineNameVi === selectedLine : true;
+
+    return matchCode && matchRegion && matchStatus && matchName;
+  });
 
   const openAddModal = () => {
     setEditingLine(null);
@@ -76,8 +100,6 @@ function MetroLineManagement() {
       .filter(Boolean);
   };
 
-
-
   const buildPayload = (values) => {
     const payload = {
       lineNameVi: values.lineNameVi,
@@ -88,8 +110,12 @@ function MetroLineManagement() {
       lineType: values.lineType || undefined,
       lineOwner: values.lineOwner || undefined,
       colorHex: values.colorHex || undefined,
-      routeTimeMin: values.routeTimeMin ? Number(values.routeTimeMin) : undefined,
-      dwellTimeMin: values.dwellTimeMin ? Number(values.dwellTimeMin) : undefined,
+      routeTimeMin: values.routeTimeMin
+        ? Number(values.routeTimeMin)
+        : undefined,
+      dwellTimeMin: values.dwellTimeMin
+        ? Number(values.dwellTimeMin)
+        : undefined,
       stations: enrichStations(values),
     };
 
@@ -122,7 +148,6 @@ function MetroLineManagement() {
       }
     });
   };
-
 
   //UPDATE METRO ROUTE
   const handleEditSubmit = () => {
@@ -162,7 +187,6 @@ function MetroLineManagement() {
       });
   };
 
-
   const handleRegionChange = async (regionId) => {
     form.setFieldValue("regionId", regionId);
     try {
@@ -174,7 +198,6 @@ function MetroLineManagement() {
     }
   };
 
-
   const columns = [
     {
       title: "STT",
@@ -182,6 +205,11 @@ function MetroLineManagement() {
       key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
+    },
+    {
+      title: "Mã tuyến",
+      dataIndex: "lineCode",
+      key: "lineCode",
     },
     {
       title: "Tên tuyến Vi",
@@ -192,12 +220,28 @@ function MetroLineManagement() {
       dataIndex: "lineNameEn",
     },
     {
+      title: "Khu vực",
+      dataIndex: ["region", "regionName"],
+      key: "regionName",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (value) =>
+        value ? (
+          <Tag color="green">Đang hoạt động</Tag>
+        ) : (
+          <Tag color="red">Ngừng hoạt động</Tag>
+        ),
+    },
+    {
       title: "Hành động",
       dataIndex: "actions",
       align: "center",
       render: (_, record) => (
         <Space>
-        <ConfigProvider
+          <ConfigProvider
             theme={{
               components: {
                 Button: {
@@ -212,10 +256,10 @@ function MetroLineManagement() {
               },
             }}
           >
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => openEditModal(record)}
-          />
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+            />
           </ConfigProvider>
           <Popconfirm
             title="Xác nhận xoá tàu này?"
@@ -236,10 +280,17 @@ function MetroLineManagement() {
         <Button type="primary" onClick={openAddModal}>
           + Thêm tuyến mới
         </Button>
+        <Input.Search
+          placeholder="Tìm theo mã tuyến"
+          allowClear
+          style={{ width: 200 }}
+          value={searchLineCode}
+          onChange={(e) => setSearchLineCode(e.target.value)}
+        />
         <Select
           allowClear
           placeholder="Chọn tuyến"
-          style={{ width: 400 }}
+          style={{ width: 350 }}
           value={selectedLine}
           onChange={(value) => setSelectedLine(value)}
         >
@@ -251,11 +302,42 @@ function MetroLineManagement() {
             )
           )}
         </Select>
+        <Select
+          allowClear
+          placeholder="Chọn khu vực"
+          style={{ width: 200 }}
+          value={selectedRegion}
+          onChange={(value) => setSelectedRegion(value)}
+        >
+          {regions.map((r) => (
+            <Select.Option key={r.id} value={r.id}>
+              {r.regionName}
+            </Select.Option>
+          ))}
+        </Select>
+        <Select
+          allowClear
+          placeholder="Chọn trạng thái"
+          style={{ width: 200 }}
+          value={selectedStatus}
+          onChange={(value) => setSelectedStatus(value)}
+        >
+          <Select.Option value={true}>
+            <Tag color="green">Đang hoạt động</Tag>
+          </Select.Option>
+          <Select.Option value={false}>
+            <Tag color="red">Ngừng hoạt động</Tag>
+          </Select.Option>
+        </Select>
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
           onClick={() => {
             setSelectedLine(null);
+            setSearchLineCode("");
+            setSelectedRegion(null);
+            setSelectedStatus(null);
           }}
         ></Button>
       </Space>
@@ -293,14 +375,18 @@ function MetroLineManagement() {
               <Form.Item
                 label="Tên tuyến (Tiếng Việt)"
                 name="lineNameVi"
-                rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
+                rules={[
+                  { required: true, message: "Nhập tên tuyến tiếng Việt" },
+                ]}
               >
                 <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
               </Form.Item>
               <Form.Item
                 label="Tên tuyến (Tiếng Anh)"
                 name="lineNameEn"
-                rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
+                rules={[
+                  { required: true, message: "Nhập tên tuyến tiếng Anh" },
+                ]}
               >
                 <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
               </Form.Item>
@@ -330,7 +416,9 @@ function MetroLineManagement() {
               <Form.List name="stations">
                 {(fields, { add, remove }) => (
                   <>
-                    <div style={{ marginBottom: 12, fontWeight: 600 }}>Danh sách ga (stations)</div>
+                    <div style={{ marginBottom: 12, fontWeight: 600 }}>
+                      Danh sách ga (stations)
+                    </div>
                     {fields.map(({ key, name, ...restField }) => (
                       <div
                         key={key}
@@ -350,7 +438,7 @@ function MetroLineManagement() {
                             placeholder="Chọn ga"
                             options={stations.map((station) => ({
                               label: `${station.stationNameVi} (${station.stationNameEn})`,
-                              value: String(station.id), 
+                              value: String(station.id),
                             }))}
                           />
                         </Form.Item>
@@ -387,7 +475,9 @@ function MetroLineManagement() {
               <Form.Item
                 label="Tên tuyến (Tiếng Việt)"
                 name="lineNameVi"
-                rules={[{ required: true, message: "Nhập tên tuyến tiếng Việt" }]}
+                rules={[
+                  { required: true, message: "Nhập tên tuyến tiếng Việt" },
+                ]}
               >
                 <Input placeholder="Nhập tên tuyến bằng tiếng Việt" />
               </Form.Item>
@@ -395,7 +485,9 @@ function MetroLineManagement() {
               <Form.Item
                 label="Tên tuyến (Tiếng Anh)"
                 name="lineNameEn"
-                rules={[{ required: true, message: "Nhập tên tuyến tiếng Anh" }]}
+                rules={[
+                  { required: true, message: "Nhập tên tuyến tiếng Anh" },
+                ]}
               >
                 <Input placeholder="Nhập tên tuyến bằng tiếng Anh" />
               </Form.Item>
