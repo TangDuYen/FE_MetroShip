@@ -180,27 +180,34 @@ function SupportTicketStaff({ stationId }) {
       title: "Thao tác",
       render: (_, record) => (
         <Space>
-          {record.supportType === 1 && record.status === 1 && (
-            <Button
-              danger
-              onClick={async () => {
-                try {
-                  const shipment = await getShipmentByTrackingCode(getShipmentCode(record.shipmentId));
-                  setSelectedShipment(shipment.data);
-                  setCompensationModalVisible(true);
-                } catch (e) {
-                  toast.error("Không thể lấy thông tin đơn hàng");
-                }
-              }}
-              disabled={compensated}
-            >
-              Bồi thường
-            </Button>
-          )}
+          {record.supportType === 1 && record.status === 1 && (() => {
+            const shipment = shipments.find(s => s.id === record.shipmentId);
+
+            // Check nếu shipment đã bồi thường (status 24 hoặc 25)
+            const isCompensated = shipment && [24, 25].includes(shipment.shipmentStatus);
+
+            return !isCompensated && (
+              <Button
+                style={{ color: 'white', backgroundColor: "red" }}
+                onClick={async () => {
+                  try {
+                    const shipment = await getShipmentByTrackingCode(getShipmentCode(record.shipmentId));
+                    setSelectedShipment(shipment.data);
+                    setCompensationModalVisible(true);
+                  } catch (e) {
+                    toast.error("Không thể lấy thông tin đơn hàng");
+                  }
+                }}
+              >
+                Bồi thường
+              </Button>
+            );
+          })()}
+
           <Button
             type="primary"
             onClick={() => handleOpenModal(record)}
-            disabled={record.supportType === 1 && !compensated}
+            disabled={record.status === 2 || record.status === 3}
           >
             Giải quyết
           </Button>
@@ -363,13 +370,11 @@ function SupportTicketStaff({ stationId }) {
             const res = await api.post("/shipments/vnpay/payment-url", {
               shipmentId: selectedShipment.id,
               transactionType: 4,
-              returnUrl: window.location.href,
-              cancelUrl: window.location.href
+              returnUrl: window.location.origin + "/dashboard/staff/support-tickets",
+              cancelUrl: window.location.origin + "/dashboard/staff/support-tickets",
             });
-
-            if (res.data?.data) {
-              window.open(res.data.data, "_blank");
-              toast.success("Đã tạo giao dịch bồi thường");
+            if (res.data?.statusCode === 200 && res.data.data) {
+              window.location.href = res.data.data; // Redirect to VNPay
               setBankModalVisible(false);
               setCompensated(true);
             } else {
@@ -423,7 +428,6 @@ function SupportTicketStaff({ stationId }) {
           />
         </div>
       </Modal>
-
     </div>
   );
 }
