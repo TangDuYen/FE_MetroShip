@@ -24,7 +24,7 @@ import {
 } from "antd";
 import {
   getAllRegions,
-  getAllStations,
+  getAllStationsAdmin,
   getStationById,
 } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
@@ -48,10 +48,11 @@ function AdminStationManage() {
       try {
         setLoading(true);
         const [stationsRes, regionsRes] = await Promise.all([
-          getAllStations(),
+          getAllStationsAdmin(), 
           getAllRegions(),
         ]);
-        setStations(stationsRes);
+
+        setStations(stationsRes); 
         setRegions(regionsRes);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -61,6 +62,7 @@ function AdminStationManage() {
     };
     fetchData();
   }, []);
+
 
   const regionMap = Object.fromEntries(
     regions.map((r) => [r.id, r.regionName])
@@ -145,16 +147,6 @@ function AdminStationManage() {
         ></Button>
       ),
     },
-
-    // {
-    //   title: "Đóng trạm",
-    //   key: "close",
-    //   render: (_, record) => (
-    //     <Button className="close-station-button" onClick={() => { }}>
-    //       Đóng trạm
-    //     </Button>
-    //   ),
-    // },
   ];
 
   return (
