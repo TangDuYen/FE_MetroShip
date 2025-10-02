@@ -72,7 +72,7 @@ function AdminStaffManage() {
       );
 
       formAssign.setFieldsValue({
-        role: matchedRole ? matchedRole.id : undefined,  // ✅ set id thay vì string
+        role: matchedRole ? matchedRole.id : undefined,
         stationId: currentAssignment.stationId,
         timeSlotId: currentAssignment.timeSlotId,
         fromDate: currentAssignment.fromTime ? dayjs(currentAssignment.fromTime) : null,
