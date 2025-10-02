@@ -136,6 +136,9 @@ export const parcelStatusMap = {
   3: "Bị hư hại",
   4: "Bị mất",
   5: "Đã hủy",
+  6: "Đã hoàn",
+  7: "Đã giao",
+  8: "Bị từ chối",
 };
 
 export const parcelStatusColorMap = {
@@ -144,6 +147,9 @@ export const parcelStatusColorMap = {
   3: "purple",
   4: "red",
   5: "#ff6600ff",
+  6: "#ad28b9ff",
+  7: "#30ec17ff",
+  8: "#ff3c00ff",
 };
 
 //STAFF ROLE MAPPING 
