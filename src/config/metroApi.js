@@ -2,6 +2,20 @@ import api from "./axios";
 import { toast } from "react-toastify";
 
 //SHIPMENT
+export const getShipmentGuest = async (trackingCode) => {
+  try {
+    const res = await api.get(`/shipments/guest/${trackingCode}`);
+    return {
+      data: res.data.data,
+      additionalData: res.data.additionalData,
+    };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message || "Không thể lấy dữ liệu đơn hàng";
+    toast.error(errorMessage);
+    throw error;
+  }
+}
+
 export const getAllShipments = async () => {
   try {
     const res = await api.get("/shipments?PageSize=1000");
@@ -182,8 +196,20 @@ export const getBanks = async () => {
 //METROROUTE
 export const getMetroLines = async () => {
   try {
-    const res = await api.get("/metro-lines/dropdown");
+    const res = await api.get("/metro-lines");
     return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tuyến metro";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+export const getMetroLinesAdmin = async () => {
+  try {
+    const res = await api.get("/metro-lines?PageSize=1000");
+    return res.data.data.items;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tuyến metro";
@@ -220,6 +246,18 @@ export const getMetroTimeSlots = async () => {
   }
 };
 
+export const getAllTimeSlot = async () => {
+  try {
+    const res = await api.get("/metro-time-slots/all?PageSize=1000");
+    return res.data.data.items;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu time slot";
+    toast.error(errorMessage);
+    throw error;
+  }
+}
+
 //TRAIN
 export const getAllMetroTrains = async () => {
   try {
@@ -253,8 +291,21 @@ export const getMetroTrainsByStation = async (stationId) => {
 //STATION
 export const getAllStations = async () => {
   try {
-    const res = await api.get("/stations?PageSize=1000");
+    const res = await api.get("/stations");
     return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các trạm metro";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
+export const getAllStationsAdmin = async () => {
+  try {
+    const res = await api.get("/stations/all?PageSize=1000");
+    return res.data.data.items;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || error.message || "Không thể lấy dữ liệu các trạm metro";
@@ -455,17 +506,5 @@ export const getStationById = async (stationId) => {
   }
 };
 
-//TIMESLOT
-export const getAllTimeSlot = async () => {
-  try {
-    const res = await api.get("/metro-time-slots");
-    return res.data.data;
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.message || error.message || "Không thể lấy dữ liệu time slot";
-    toast.error(errorMessage);
-    throw error;
-  }
-}
 
 

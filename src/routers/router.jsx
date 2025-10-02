@@ -115,34 +115,10 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: PATH_NAME.HOME,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/homepage/Homepage"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
         path: "/test/:trackingCode",
         element: (
           <ProtectedRouteCustomer>
             {lazyLoad(() => import("../pages/testMap/TestMap"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.ABOUT_US,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/about_us/AboutUs"))}
-          </ProtectedRouteCustomer>
-        ),
-      },
-      {
-        path: PATH_NAME.POLICY,
-        element: (
-          <ProtectedRouteCustomer>
-            {lazyLoad(() => import("../pages/policy/Policy"))}
           </ProtectedRouteCustomer>
         ),
       },
@@ -233,6 +209,18 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        path: PATH_NAME.HOME,
+        element: lazyLoad(() => import("../pages/homepage/Homepage")),
+      },
+      {
+        path: PATH_NAME.ABOUT_US,
+        element: lazyLoad(() => import("../pages/about_us/AboutUs")),
+      },
+      {
+        path: PATH_NAME.POLICY,
+        element: lazyLoad(() => import("../pages/policy/Policy")),
+      },
+      {
         path: PATH_NAME.SERVICE,
         element: lazyLoad(() => import("../pages/services/Service")),
       },
@@ -258,7 +246,7 @@ export const router = createBrowserRouter([
           import("../pages/services/parcelRules/ParcelRules")
         ),
       },
-      
+
       {
         path: PATH_NAME.SUPPORT,
         element: lazyLoad(() => import("../pages/support/Support")),

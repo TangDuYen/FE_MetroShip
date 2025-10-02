@@ -24,7 +24,7 @@ import {
 } from "antd";
 import {
   getAllRegions,
-  getAllStations,
+  getAllStationsAdmin,
   getStationById,
 } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
@@ -48,9 +48,10 @@ function AdminStationManage() {
       try {
         setLoading(true);
         const [stationsRes, regionsRes] = await Promise.all([
-          getAllStations(),
+          getAllStationsAdmin(),
           getAllRegions(),
         ]);
+
         setStations(stationsRes);
         setRegions(regionsRes);
       } catch (error) {
@@ -62,6 +63,7 @@ function AdminStationManage() {
     fetchData();
   }, []);
 
+
   const regionMap = Object.fromEntries(
     regions.map((r) => [r.id, r.regionName])
   );
@@ -69,7 +71,7 @@ function AdminStationManage() {
   const stationsWithLine = stations.map((s) => ({
     ...s,
     id: s.stationId,
-    lineCode: s.stationCode.split("-")[1],
+    lineCode: s.stationCode ? s.stationCode.split("-")[1] : "N/A",
   }));
 
   const filtered = stationsWithLine.filter((s) => {
@@ -158,16 +160,6 @@ function AdminStationManage() {
         </ConfigProvider>
       ),
     },
-
-    // {
-    //   title: "Đóng trạm",
-    //   key: "close",
-    //   render: (_, record) => (
-    //     <Button className="close-station-button" onClick={() => { }}>
-    //       Đóng trạm
-    //     </Button>
-    //   ),
-    // },
   ];
 
   return (
@@ -205,13 +197,15 @@ function AdminStationManage() {
           onChange={setSelectedLine}
           optionFilterProp="children"
         >
-          {[...new Set(stations.map((s) => s.stationCode.split("-")[1]))].map(
-            (line) => (
-              <Select.Option key={line} value={line}>
-                {line}
-              </Select.Option>
-            )
-          )}
+          {[...new Set(
+            stations
+              .map((s) => (s.stationCode ? s.stationCode.split("-")[1] : null))
+              .filter(Boolean) // bỏ null
+          )].map((line) => (
+            <Select.Option key={line} value={line}>
+              {line}
+            </Select.Option>
+          ))}
         </Select>
 
         {/* REGIONS */}

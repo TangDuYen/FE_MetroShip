@@ -25,16 +25,17 @@ import {
   getAllMetroTrains,
   getAllStations,
   getMetroLines,
+  getMetroLinesAdmin,
   getMetroTimeSlots,
 } from "../../../../../config/metroApi";
-import { useEffect, useState } from "react";
-
-import api from "../../../../../config/axios";
-import { toast } from "react-toastify";
 import {
   trainStatusColorMap,
   trainStatusMap,
 } from "../../../../../constants/statusMap";
+import { useEffect, useState } from "react";
+
+import api from "../../../../../config/axios";
+import { toast } from "react-toastify";
 
 function MetroTrainManagement() {
   const [metroTrains, setMetroTrains] = useState([]);
@@ -58,7 +59,7 @@ function MetroTrainManagement() {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const lines = await getMetroLines();
+      const lines = await getMetroLinesAdmin();
       const map = {};
       lines.forEach((line) => {
         map[line.id] = { lineNameVi: line.lineNameVi };
@@ -130,33 +131,33 @@ function MetroTrainManagement() {
   // };
 
   //KHI NÀO METRO-TRAIN THÊM DIRECTION. THÌ SỬ DỤNG NÀY
-  const handleReset = async (train) => {
-    if (!train) {
-      toast.error("Chưa chọn tàu để reset lịch.");
-      return;
-    }
+  // const handleReset = async (train) => {
+  //   if (!train) {
+  //     toast.error("Chưa chọn tàu để reset lịch.");
+  //     return;
+  //   }
 
-    const dir = train.direction;
+  //   const dir = train.direction;
 
-    if (dir !== 0 && dir !== 1) {
-      toast.error("Không có direction để reset lịch tàu.");
-      return;
-    }
+  //   if (dir !== 0 && dir !== 1) {
+  //     toast.error("Không có direction để reset lịch tàu.");
+  //     return;
+  //   }
 
-    try {
-      const formData = new FormData();
-      formData.append("trainIdOrCode", train.id);
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("trainIdOrCode", train.id);
 
-      await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+  //     await api.post(`/train/schedule?startFromEnd=${dir}`, formData, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
 
-      toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
-    } catch (error) {
-      console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
-      toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
-    }
-  };
+  //     toast.success(`Đặt lại lịch cho tàu ${train.trainCode} thành công.`);
+  //   } catch (error) {
+  //     console.error("Lỗi khi reset lịch tàu:", error.response?.data || error);
+  //     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
+  //   }
+  // };
 
   // const handleFilterByLine = (lineId) => {
   //   setSelectedLineId(lineId);
@@ -235,12 +236,11 @@ function MetroTrainManagement() {
     try {
       const values = await form.validateFields();
       const payload = {
-        trainId: editingTrain.id,
-        timeSlotId: values.timeSlotId,
-        date: values.date.format("YYYY-MM-DD"),
-        direction: values.direction,
+        trainIdOrCode: editingTrain.id,
       };
-      await api.post("/metro-trains/itineraries", payload);
+      await api.post(`/train/schedule?startFromEnd=${values.startFromEnd}`, payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
       toast.success("Đã phân tàu vào ca thành công!");
       setIsModalOpen(false);
       form.resetFields();
@@ -251,6 +251,26 @@ function MetroTrainManagement() {
       toast.error(errorMessage);
     }
   };
+  // const handleSubmit = async () => {
+  //   try {
+  //     const values = await form.validateFields();
+  //     const payload = {
+  //       trainId: editingTrain.id,
+  //       timeSlotId: values.timeSlotId,
+  //       date: values.date.format("YYYY-MM-DD"),
+  //       direction: values.direction,
+  //     };
+  //     await api.post("/metro-trains/itineraries", payload);
+  //     toast.success("Đã phân tàu vào ca thành công!");
+  //     setIsModalOpen(false);
+  //     form.resetFields();
+  //   } catch (err) {
+  //     console.error(err);
+  //     const errorMessage =
+  //       err.response?.data?.message || err.message || "Phân tàu thất bại!";
+  //     toast.error(errorMessage);
+  //   }
+  // };
 
   const columns = [
     {
@@ -350,7 +370,7 @@ function MetroTrainManagement() {
               Cập nhật{" "}
             </Button>
           </ConfigProvider>
-          <Button
+         {/* <Button
             danger
             onClick={() => {
               // setSelectedTrain(record);
@@ -358,7 +378,7 @@ function MetroTrainManagement() {
             }}
           >
             Reset
-          </Button>
+          </Button> */}
         </Space>
       ),
     },
@@ -462,8 +482,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm tàu"
             : modalMode === "edit"
-            ? "Cập nhật tàu"
-            : "Phân tàu"
+              ? "Cập nhật tàu"
+              : "Phân tàu"
         }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
@@ -472,8 +492,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm"
             : modalMode === "edit"
-            ? "Cập nhật"
-            : "Phân tàu"
+              ? "Cập nhật"
+              : "Phân tàu"
         }
         cancelText="Hủy"
       >
@@ -497,8 +517,7 @@ function MetroTrainManagement() {
               disabled={modalMode !== "add"}
             />
           </Form.Item>
-
-          <Form.Item
+          {/* <Form.Item
             name="timeSlotId"
             label="Ca hoạt động"
             rules={[{ required: true, message: "Vui lòng chọn ca hoạt động" }]}
@@ -529,7 +548,18 @@ function MetroTrainManagement() {
               <Select.Option value={0}>Chiều đi</Select.Option>
               <Select.Option value={1}>Chiều về</Select.Option>
             </Select>
+          </Form.Item> */}
+          <Form.Item
+            name="startFromEnd"
+            label="Định hướng chạy"
+            rules={[{ required: true, message: "Vui lòng chọn hướng chạy" }]}
+          >
+            <Select placeholder="Chọn hướng chạy">
+              <Select.Option value={0}>Bắt đầu từ trạm đầu tuyến</Select.Option>
+              <Select.Option value={1}>Bắt đầu từ trạm cuối tuyến</Select.Option>
+            </Select>
           </Form.Item>
+
         </Form>
       </Modal>
     </div>

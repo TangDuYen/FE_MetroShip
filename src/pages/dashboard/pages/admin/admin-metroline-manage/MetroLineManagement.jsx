@@ -20,7 +20,7 @@ import {
   EditOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllRegions, getAllStationsByRegion, getMetroLines } from "../../../../../config/metroApi";
+import { getAllRegions, getAllStationsByRegion, getMetroLinesAdmin } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
@@ -41,7 +41,7 @@ function MetroLineManagement() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllRegions(), getMetroLines()])
+    Promise.all([getAllRegions(), getMetroLinesAdmin()])
       .then(([regionData, metroLineData]) => {
         setRegions(regionData);
         setMetroLines(metroLineData);
