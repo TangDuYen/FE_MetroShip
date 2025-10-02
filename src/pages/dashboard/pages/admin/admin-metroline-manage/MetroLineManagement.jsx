@@ -20,7 +20,7 @@ import {
   EditOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getAllRegions, getAllStationsByRegion, getMetroLines } from "../../../../../config/metroApi";
+import { getAllRegions, getAllStationsByRegion, getMetroLinesAdmin } from "../../../../../config/metroApi";
 import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
@@ -28,7 +28,6 @@ import { toast } from "react-toastify";
 
 function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLine, setEditingLine] = useState(null);
   const [form] = Form.useForm();
   const [stations, setStations] = useState([]);
@@ -41,7 +40,7 @@ function MetroLineManagement() {
 
   //API ONE TIME
   useEffect(() => {
-    Promise.all([getAllRegions(), getMetroLines()])
+    Promise.all([getAllRegions(), getMetroLinesAdmin()])
       .then(([regionData, metroLineData]) => {
         setRegions(regionData);
         setMetroLines(metroLineData);

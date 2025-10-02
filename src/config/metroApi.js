@@ -196,6 +196,18 @@ export const getBanks = async () => {
 //METROROUTE
 export const getMetroLines = async () => {
   try {
+    const res = await api.get("/metro-lines");
+    return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các tuyến metro";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+export const getMetroLinesAdmin = async () => {
+  try {
     const res = await api.get("/metro-lines?PageSize=1000");
     return res.data.data.items;
   } catch (error) {
@@ -278,6 +290,19 @@ export const getMetroTrainsByStation = async (stationId) => {
 
 //STATION
 export const getAllStations = async () => {
+  try {
+    const res = await api.get("/stations");
+    return res.data.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Không thể lấy dữ liệu các trạm metro";
+
+    toast.error(errorMessage);
+    throw error;
+  }
+};
+
+export const getAllStationsAdmin = async () => {
   try {
     const res = await api.get("/stations/all?PageSize=1000");
     return res.data.data.items;
