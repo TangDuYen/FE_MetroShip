@@ -18,6 +18,7 @@ import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
+import { getAllShipments, getShipmentGuest } from "../../config/metroApi";
 import {
   shipmentStatusColorMap,
   shipmentStatusMap,
@@ -25,49 +26,39 @@ import {
 
 import { Link } from "react-router-dom";
 import { PATH_NAME } from "../../constants/pathname";
-import { getAllShipments } from "../../config/metroApi";
 import { selectUser } from "../../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 function Tracking() {
-  const [shipments, setShipments] = useState([]);
-  const [statuses, setStatuses] = useState([]);
   const [code, setTrackingCode] = useState("");
   const [result, setResult] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const user = useSelector(selectUser);
+  const handleSearch = async () => {
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      toast.warn("Vui lòng nhập đầy đủ mã vận đơn!");
+      return;
+    }
 
-  useEffect(() => {
-    const fetchDataShipment = async () => {
-      try {
-        const res = await getAllShipments();
-        setShipments(res.items || []);
-        setStatuses(res.additionalData || []);
-      } catch (err) {
-        toast.error("Không thể tải danh sách vận đơn");
-      }
-    };
-    fetchDataShipment();
-  }, []);
-
-  const handleSearch = () => {
     setHasSearched(true);
-    const found = shipments.find(
-      (s) => s.trackingCode?.trim().toLowerCase() === code.trim().toLowerCase()
-    );
-
-    setResult(found || null);
+    try {
+      const res = await getShipmentGuest(trimmedCode);
+      setResult(res.data || null);
+    } catch {
+      setResult(null); // Đảm bảo reset khi lỗi
+    }
   };
   return (
     <div className="tracking-container">
       <div className="tracking-search">
         <Title level={2}>Tra cứu vận đơn</Title>
         <Row justify="center">
-          <Col xs={24} sm={18} md={12} lg={10} xl={8}>
+          <Col xs={24} sm={20} md={16} lg={14} xl={12}>
             <Input.Search
-              placeholder="Nhập mã vận đơn (VD: MSHCMC123)"
+              placeholder="Nhập mã vận đơn (VD: MSHCMC12345678901A1B)"
               value={code}
               onChange={(e) => setTrackingCode(e.target.value)}
               onSearch={handleSearch}
@@ -127,9 +118,9 @@ function Tracking() {
             <Descriptions.Item label="Người nhận">
               {result.recipientName}
             </Descriptions.Item>
-            <Descriptions.Item label="Ngày gửi">
+            {/* <Descriptions.Item label="Ngày gửi">
               {new Date(result.scheduledDateTime).toLocaleString()}
-            </Descriptions.Item>
+            </Descriptions.Item> */}
             <Descriptions.Item>
               {user ? (
                 <Link
@@ -152,73 +143,6 @@ function Tracking() {
               )}
             </Descriptions.Item>
           </Descriptions>
-
-          {/* <Link to={`${PATH_NAME.TRACKING_ORDER}/${result.trackingCode}`} className="detail-btn">
-              Xem chi tiết
-            </Link> */}
-
-          {/* {Array.isArray(result.history) && result.history.length > 0 ? (
-            <Timeline style={{ marginTop: 24 }}>
-              {result.history.map((item, idx) => (
-                <Timeline.Item
-                  key={idx}
-                  color={item.cancelled ? "red" : "blue"}
-                  dot={item.cancelled ? <FaTimesCircle /> : <FaShippingFast />}
-                >
-                  <Text strong>{item.status}</Text> <br />
-                  <Text type="secondary">{item.time}</Text>
-                  {item.detail && <div>{item.detail}</div>}
-                  {item.location && <div>{item.location}</div>}
-                </Timeline.Item>
-              ))}
-            </Timeline>
-          ) : (
-            <Alert
-              message="Không có lịch sử vận đơn"
-              type="info"
-              showIcon
-              style={{ maxWidth: 600, margin: "0 auto" }}
-            />
-          )} */}
-
-          {/* <div className="tracking-history">
-            {result.history.map((item, idx) => (
-              <div
-                className={`history-item ${item.cancelled ? "cancelled" : ""}`}
-                key={idx}
-              >
-                <div className="title">{item.status}</div>
-                <p>{item.time}</p>
-                {item.detail && <p>{item.detail}</p>}
-                {item.location && <p>{item.location}</p>}
-              </div>
-            ))}
-          </div> */}
-          {/* {Array.isArray(result.history) && result.history.length > 0 ? (
-            <VerticalTimeline>
-              {result.history.map((item, idx) => (
-                <VerticalTimelineElement
-                  key={idx}
-                  date={item.time}
-                  iconStyle={{
-                    background: item.cancelled ? "#dc3545" : "#007bff",
-                    color: "#fff",
-                  }}
-                  icon={item.cancelled ? <FaTimesCircle /> : <FaShippingFast />}
-                >
-                  <h4 className={item.cancelled ? "text-danger" : ""}>
-                    {item.status}
-                  </h4>
-                  {item.detail && <p>{item.detail}</p>}
-                  {item.location && <p>{item.location}</p>}
-                </VerticalTimelineElement>
-              ))}
-            </VerticalTimeline>
-          ) : (
-            <div className="no-history">
-              <p>Không có lịch sử vận đơn.</p>
-            </div>
-          )} */}
         </div>
       )}
     </div>

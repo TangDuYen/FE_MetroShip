@@ -368,7 +368,7 @@ function OrderInformationStaff() {
               extra={
                 <div style={{ display: "flex", gap: 8 }}>
                   <Button
-                    style={{ backgroundColor: 'white', color: 'black' }}
+                    style={{ backgroundColor: 'white', color: '#0066CC', fontWeight: "bold" }}
                     type="primary"
                     onClick={async () => {
                       try {
@@ -384,6 +384,7 @@ function OrderInformationStaff() {
                     Tải QR
                   </Button>
                   <Button
+                    style={{ backgroundColor: 'white', color: '#0066CC', fontWeight: "bold" }}
                     type="default"
                     onClick={() => {
                       setSelectedParcel(parcel);
@@ -397,7 +398,7 @@ function OrderInformationStaff() {
 
             >
               <div style={{ display: "flex", gap: 24 }}>
-                {/* CỘT TRÁI */}
+                {/* LEFT COLUMN */}
                 <div style={{ flex: 5 }}>
                   <Descriptions column={1} bordered size="small">
                     <Descriptions.Item label="Mã kiện">
@@ -426,7 +427,7 @@ function OrderInformationStaff() {
                   </Descriptions>
                 </div>
 
-                {/* CỘT GIỮA */}
+                {/* MIDDLE COLUMN */}
                 <div style={{ flex: 5 }}>
                   <Descriptions column={1} bordered size="small">
                     <Descriptions.Item label="Thể tích">
