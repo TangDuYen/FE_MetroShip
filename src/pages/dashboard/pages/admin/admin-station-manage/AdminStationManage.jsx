@@ -48,11 +48,11 @@ function AdminStationManage() {
       try {
         setLoading(true);
         const [stationsRes, regionsRes] = await Promise.all([
-          getAllStationsAdmin(), 
+          getAllStationsAdmin(),
           getAllRegions(),
         ]);
 
-        setStations(stationsRes); 
+        setStations(stationsRes);
         setRegions(regionsRes);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -71,7 +71,7 @@ function AdminStationManage() {
   const stationsWithLine = stations.map((s) => ({
     ...s,
     id: s.stationId,
-    lineCode: s.stationCode.split("-")[1],
+    lineCode: s.stationCode ? s.stationCode.split("-")[1] : "N/A",
   }));
 
   const filtered = stationsWithLine.filter((s) => {
@@ -184,13 +184,15 @@ function AdminStationManage() {
           onChange={setSelectedLine}
           optionFilterProp="children"
         >
-          {[...new Set(stations.map((s) => s.stationCode.split("-")[1]))].map(
-            (line) => (
-              <Select.Option key={line} value={line}>
-                {line}
-              </Select.Option>
-            )
-          )}
+          {[...new Set(
+            stations
+              .map((s) => (s.stationCode ? s.stationCode.split("-")[1] : null))
+              .filter(Boolean) // bỏ null
+          )].map((line) => (
+            <Select.Option key={line} value={line}>
+              {line}
+            </Select.Option>
+          ))}
         </Select>
 
         {/* REGIONS */}
