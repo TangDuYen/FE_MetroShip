@@ -563,7 +563,7 @@ function TrackingOrder() {
                   </div>
                   <div className="detail-value">
                     {p.status === 4 &&
-                      !selectedShipment.isCompensationRequested && (selectedShipment.shipmentStatus === 24 || selectedShipment.shipmentStatus === 25) && (
+                      !selectedShipment.isCompensationRequested && (selectedShipment.shipmentStatus === 24 || selectedShipment.shipmentStatus === 25 || selectedShipment.shipmentStatus === 27) && (
                         <Button
                           type="primary"
                           className="insurance-button"
