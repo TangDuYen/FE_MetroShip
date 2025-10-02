@@ -260,15 +260,43 @@ function TrainStaff() {
       render: () => maxVolume, // Show max volume
     },
     {
-      title: "Vị trí hiện tại",
-      dataIndex: "currentStationId",
-      key: "currentStationId",
-      render: (currentStationId) => getStationName(currentStationId),
+      title: "Chiều chạy",
+      dataIndex: "direction",
+      render: (value) =>
+        value === 0 ? (
+          <Tag color="gold">Chiều đi</Tag>
+        ) : (
+          <Tag color="purple">Chiều về</Tag>
+        ),
+    },
+    {
+      title: "Ga hiện tại",
+      dataIndex: "currentStationName",
+      key: "currentStationName",
+      render: (value) =>
+    value ? (
+      <Tag color="green">{value}</Tag>
+      //value
+    ) : (
+      <Tag color="default">Chưa xác định</Tag>
+    ),
+    },
+    {
+      title: "Ga kế tiếp",
+      dataIndex: "nextStationName",
+      key: "nextStationName",
+      render: (value, record) => {
+        if (record.status === 3 && value) {
+          return <Tag color="blue">{value}</Tag>;
+        }
+        return <Tag color="default">Chưa xác định</Tag>;
+      },
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: (status) => (
         <Tag color={trainStatusColorMap[status]}>
           {trainStatusMap[status] || "Không xác định"}
@@ -279,6 +307,7 @@ function TrainStaff() {
     {
       title: "Hành động",
       key: "actions",
+      width: 510,
       render: (_, record) => {
         const isAtCurrentStation =
           String(record.currentStationId) === String(user?.StationId);

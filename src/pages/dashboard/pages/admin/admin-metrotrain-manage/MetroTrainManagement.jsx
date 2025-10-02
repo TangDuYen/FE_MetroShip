@@ -204,13 +204,13 @@ function MetroTrainManagement() {
     applyFilters();
   }, [selectedLineId, searchTrainCode, selectedStatus, selectedDirection]);
 
-  const getStationName = (currentStationId) => {
-    if (!currentStationId) return "Không xác định";
-    const station = stations.find(
-      (s) => String(s.stationId) === String(currentStationId)
-    );
-    return station ? station.stationNameVi : "Không xác định";
-  };
+  // const getStationName = (currentStationId) => {
+  //   if (!currentStationId) return "Không xác định";
+  //   const station = stations.find(
+  //     (s) => String(s.stationId) === String(currentStationId)
+  //   );
+  //   return station ? station.stationNameVi : "Không xác định";
+  // };
   const openAddModal = () => {
     form.resetFields();
     setEditingTrain(null);
@@ -238,9 +238,13 @@ function MetroTrainManagement() {
       const payload = {
         trainIdOrCode: editingTrain.id,
       };
-      await api.post(`/train/schedule?startFromEnd=${values.startFromEnd}`, payload, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      await api.post(
+        `/train/schedule?startFromEnd=${values.startFromEnd}`,
+        payload,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       toast.success("Đã phân tàu vào ca thành công!");
       setIsModalOpen(false);
       form.resetFields();
@@ -297,6 +301,7 @@ function MetroTrainManagement() {
     {
       title: "Dung tích tàu (m³)",
       render: () => maxVolume,
+      width: 100,
     },
     {
       title: "Chiều chạy",
@@ -309,15 +314,35 @@ function MetroTrainManagement() {
         ),
     },
     {
-      title: "Vị trí hiện tại",
-      dataIndex: "currentStationId",
-      key: "currentStationId",
-      render: (currentStationId) => getStationName(currentStationId),
+      title: "Ga hiện tại",
+      dataIndex: "currentStationName",
+      key: "currentStationName",
+      width: 120,
+      render: (value) =>
+    value ? (
+      <Tag color="green">{value}</Tag>
+      //value
+    ) : (
+      <Tag color="default">Chưa xác định</Tag>
+    ),
+    },
+    {
+      title: "Ga kế tiếp",
+      dataIndex: "nextStationName",
+      key: "nextStationName",
+      width: 120,
+      render: (value, record) => {
+        if (record.status === 3 && value) {
+          return <Tag color="blue">{value}</Tag>;
+        }
+        return <Tag color="default">Chưa xác định</Tag>;
+      },
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: (status) => (
         <Tag color={trainStatusColorMap[status]}>
           {trainStatusMap[status] || "Không xác định"}
@@ -370,7 +395,7 @@ function MetroTrainManagement() {
               Cập nhật{" "}
             </Button>
           </ConfigProvider>
-         {/* <Button
+          {/* <Button
             danger
             onClick={() => {
               // setSelectedTrain(record);
@@ -482,8 +507,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm tàu"
             : modalMode === "edit"
-              ? "Cập nhật tàu"
-              : "Phân tàu"
+            ? "Cập nhật tàu"
+            : "Phân tàu"
         }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
@@ -492,8 +517,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm"
             : modalMode === "edit"
-              ? "Cập nhật"
-              : "Phân tàu"
+            ? "Cập nhật"
+            : "Phân tàu"
         }
         cancelText="Hủy"
       >
@@ -556,10 +581,11 @@ function MetroTrainManagement() {
           >
             <Select placeholder="Chọn hướng chạy">
               <Select.Option value={0}>Bắt đầu từ trạm đầu tuyến</Select.Option>
-              <Select.Option value={1}>Bắt đầu từ trạm cuối tuyến</Select.Option>
+              <Select.Option value={1}>
+                Bắt đầu từ trạm cuối tuyến
+              </Select.Option>
             </Select>
           </Form.Item>
-
         </Form>
       </Modal>
     </div>
