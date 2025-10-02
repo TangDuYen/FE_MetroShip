@@ -25,6 +25,7 @@ import {
   getAllMetroTrains,
   getAllStations,
   getMetroLines,
+  getMetroLinesAdmin,
   getMetroTimeSlots,
 } from "../../../../../config/metroApi";
 import {
@@ -57,7 +58,7 @@ function MetroTrainManagement() {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const lines = await getMetroLines();
+      const lines = await getMetroLinesAdmin();
       const map = {};
       lines.forEach((line) => {
         map[line.id] = { lineNameVi: line.lineNameVi };
