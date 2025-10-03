@@ -143,13 +143,13 @@ export const parcelStatusMap = {
 
 export const parcelStatusColorMap = {
   1: "blue",
-  2: "green",
+  2: "geekblue",
   3: "purple",
   4: "red",
-  5: "#ff6600ff",
-  6: "#ad28b9ff",
-  7: "#30ec17ff",
-  8: "#ff3c00ff",
+  5: "orange",
+  6: "violet",
+  7: "green",
+  8: "volcano",
 };
 
 //STAFF ROLE MAPPING 
