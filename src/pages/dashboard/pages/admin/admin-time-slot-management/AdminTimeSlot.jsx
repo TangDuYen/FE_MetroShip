@@ -202,6 +202,19 @@ function AdminTimeSlot() {
                 format="HH:mm"
                 style={{ width: "100%" }}
                 placeholder="Chọn giờ"
+                onChange={(value) => {
+                  if (value) {
+                    // Lấy giờ mở - 30 phút
+                    const cutOff = value.subtract(30, "minute");
+                    form.setFieldsValue({
+                      cutOffTime: cutOff,
+                    });
+                  } else {
+                    form.setFieldsValue({
+                      cutOffTime: null,
+                    });
+                  }
+                }}
               />
             </Form.Item>
 

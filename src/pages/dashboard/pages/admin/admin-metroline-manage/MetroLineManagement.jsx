@@ -4,6 +4,8 @@ import {
   Button,
   Col,
   ConfigProvider,
+  Descriptions,
+  Divider,
   Empty,
   Form,
   Input,
@@ -45,6 +47,8 @@ function MetroLineManagement() {
   const [searchLineCode, setSearchLineCode] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [detailData, setDetailData] = useState(null);
 
   //API ONE TIME
   useEffect(() => {
@@ -77,6 +81,24 @@ function MetroLineManagement() {
     return matchCode && matchRegion && matchStatus && matchName;
   });
 
+  const fetchLineDetail = async (lineId) => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/metro-lines/${lineId}`);
+      setDetailData(res.data.data); // dữ liệu trả về như ảnh bạn gửi
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Không thể tải chi tiết tuyến metro";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openAddModal = () => {
     setEditingLine(null);
     form.resetFields();
@@ -90,9 +112,9 @@ function MetroLineManagement() {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = () => {
-    toast.success("Đã xóa tuyến metro.");
-  };
+  // const handleDelete = () => {
+  //   toast.success("Đã xóa tuyến metro.");
+  // };
 
   const enrichStations = (values) => {
     return (values.stations || [])
@@ -245,30 +267,42 @@ function MetroLineManagement() {
             theme={{
               components: {
                 Button: {
-                  defaultColor: "#52c41a",
-                  defaultBg: "white",
+                  defaultColor: "white",
+                  defaultBg: "#52c41a",
                   defaultBorderColor: "#52c41a",
-                  defaultHoverBorderColor: "#389e0d",
-                  defaultHoverColor: "#389e0d",
+                  defaultHoverBorderColor: "#52c41a",
+                  defaultHoverColor: "#52c41a",
                   defaultActiveBorderColor: "#52c41a",
                   defaultActiveColor: "#52c41a",
                 },
               },
             }}
           >
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(record)}
-            />
+            <Button onClick={() => openEditModal(record)}>Cập nhật</Button>
           </ConfigProvider>
-          <Popconfirm
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#0066CC",
+                  defaultBorderColor: "#0066CC",
+                },
+              },
+            }}
+          >
+            <Button onClick={() => fetchLineDetail(record.id)}>
+              Xem chi tiết
+            </Button>
+          </ConfigProvider>
+          {/* <Popconfirm
             title="Xác nhận xoá tàu này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Xoá"
             cancelText="Hủy"
           >
             <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          </Popconfirm> */}
         </Space>
       ),
     },
@@ -512,6 +546,75 @@ function MetroLineManagement() {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      <Modal
+        title={
+          <div style={{ textAlign: "center", width: "100%" }}>
+            {detailData?.lineNameVi || "Chi tiết tuyến Metro"}
+          </div>
+        }
+        open={isDetailModalOpen}
+        onCancel={() => setIsDetailModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        {loading ? (
+          <Spin tip="Đang tải dữ liệu..." />
+        ) : detailData ? (
+          <div>
+            <Descriptions
+              bordered
+              column={2}
+              size="middle"
+              labelStyle={{ fontWeight: "bold", width: 160 }}
+            >
+              <Descriptions.Item label="Tên tuyến (VI)">
+                {detailData.lineNameVi}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tên tuyến (EN)">
+                {detailData.lineNameEn}
+              </Descriptions.Item>
+              <Descriptions.Item label="Mã tuyến">
+                {detailData.lineCode}
+              </Descriptions.Item>
+              <Descriptions.Item label="Khu vực">
+                {detailData.region?.regionName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Loại tuyến" span={2}>
+                {detailData.lineType}
+              </Descriptions.Item>
+              <Descriptions.Item label="Chủ quản lý" span={2}>
+                {detailData.lineOwner}
+              </Descriptions.Item>
+              <Descriptions.Item label="Số trạm">
+                {detailData.totalStations}
+              </Descriptions.Item>
+              <Descriptions.Item label="Chiều dài">
+                {detailData.totalKm} km
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Divider />
+            <h3 style={{ marginBottom: 16, textAlign: "center" }}>
+              Danh sách tàu
+            </h3>
+            <Table
+              dataSource={detailData.trains}
+              rowKey="id"
+              pagination={false}
+              columns={[
+                { title: "Mã tàu", dataIndex: "trainCode" },
+                { title: "Model", dataIndex: "modelName" },
+                // { title: "Trạng thái", dataIndex: "statusName" },
+                { title: "Kinh độ", dataIndex: "longitude" },
+                { title: "Vĩ độ", dataIndex: "latitude" },
+              ]}
+            />
+          </div>
+        ) : (
+          <Empty description="Không có dữ liệu chi tiết" />
+        )}
       </Modal>
     </div>
   );
