@@ -10,6 +10,7 @@ import {
   Modal,
   Select,
   Space,
+  Spin,
   Table,
 } from "antd";
 import {
@@ -49,7 +50,7 @@ function AdminStaffManage() {
   const [filterRoles, setFilterRoles] = useState([]);
   const [banStaff, setBanStaff] = useState(null);
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState(false);
 
   const nav = useNavigate();
 
@@ -75,18 +76,23 @@ function AdminStaffManage() {
         role: matchedRole ? matchedRole.id : undefined,
         stationId: currentAssignment.stationId,
         timeSlotId: currentAssignment.timeSlotId,
-        fromDate: currentAssignment.fromTime ? dayjs(currentAssignment.fromTime) : null,
-        toDate: currentAssignment.toTime ? dayjs(currentAssignment.toTime) : null,
+        fromDate: currentAssignment.fromTime
+          ? dayjs(currentAssignment.fromTime)
+          : null,
+        toDate: currentAssignment.toTime
+          ? dayjs(currentAssignment.toTime)
+          : null,
       });
-    }
-    else {
+    } else {
       formAssign.resetFields();
     }
   }, [assigningStaff]);
 
   useEffect(() => {
-    getAllStaff()
-      .then((data) => {
+    const fetchStaff = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllStaff();
         const mapped = data.map((staff) => {
           const currentAssignment = staff.staffAssignments?.find(
             (a) => a.isActive === true
@@ -100,10 +106,14 @@ function AdminStaffManage() {
           };
         });
         setUsers(mapped);
-      })
-      .catch((error) => {
-        console.error("Lỗi khi lấy dữ liệu người dùng", error);
-      });
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu nhân viên:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaff();
   }, []);
 
   useEffect(() => {
@@ -135,9 +145,9 @@ function AdminStaffManage() {
         prev.map((user) =>
           user.id === assigningStaff.id
             ? {
-              ...user,
-              assignedStation: station?.stationNameVi || "Đã phân công",
-            }
+                ...user,
+                assignedStation: station?.stationNameVi || "Đã phân công",
+              }
             : user
         )
       );
@@ -189,7 +199,6 @@ function AdminStaffManage() {
       toast.error(errorMessage);
     }
   };
-
 
   const columns = [
     {
@@ -278,13 +287,13 @@ function AdminStaffManage() {
       render: (_, record) => (
         <Button
           className="ban-staff-button"
+          danger
           onClick={() => onDisable(record)}
         >
           Cấm
         </Button>
       ),
     },
-    ,
   ];
 
   const uniqueRoles = [
@@ -343,21 +352,23 @@ function AdminStaffManage() {
           ></Button>
         </Space>
       </div>
-      <ConfigProvider
-        renderEmpty={() => (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_DEFAULT}
-            description="Không có dữ liệu"
+      <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có dữ liệu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
           />
-        )}
-      >
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
-      </ConfigProvider>
+        </ConfigProvider>
+      </Spin>
       <Modal
         title={`Giao việc cho ${assigningStaff?.fullName || ""}`}
         open={isAssignModalOpen}
@@ -446,9 +457,7 @@ function AdminStaffManage() {
           } catch (error) {
             console.error("Add staff error:", error);
             const errorMessage = error.response?.data?.message || error.message;
-            toast.error(
-              errorMessage
-            );
+            toast.error(errorMessage);
           }
         }}
       >
@@ -456,7 +465,9 @@ function AdminStaffManage() {
           <Form.Item
             label="Tên đăng nhập"
             name="userName"
-            rules={[{ required: true, message: "Không được để trống tên đăng nhập" }]}
+            rules={[
+              { required: true, message: "Không được để trống tên đăng nhập" },
+            ]}
           >
             <Input placeholder="Nhập tên đăng nhập" />
           </Form.Item>
@@ -470,21 +481,31 @@ function AdminStaffManage() {
           <Form.Item
             label="Email"
             name="email"
-            rules={[{ type: "email", required: true, message: "Không được để trống email" }]}
+            rules={[
+              {
+                type: "email",
+                required: true,
+                message: "Không được để trống email",
+              },
+            ]}
           >
             <Input placeholder="Nhập email" />
           </Form.Item>
           <Form.Item
             label="Số điện thoại"
             name="phoneNumber"
-            rules={[{ required: true, message: "Không được để trống số điện thoại" }]}
+            rules={[
+              { required: true, message: "Không được để trống số điện thoại" },
+            ]}
           >
             <Input placeholder="Nhập số điện thoại" />
           </Form.Item>
           <Form.Item
             label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: "Không được để trống mật khẩu" }]}
+            rules={[
+              { required: true, message: "Không được để trống mật khẩu" },
+            ]}
           >
             <Input.Password placeholder="Nhập mật khẩu" />
           </Form.Item>
@@ -537,7 +558,6 @@ function AdminStaffManage() {
         </p>
         <p style={{ color: "red" }}>Hành động này không thể hoàn tác.</p>
       </Modal>
-
     </div>
   );
 }

@@ -102,7 +102,6 @@ function AdminStationManage() {
     setIsAddModalOpen(true);
   };
 
-
   const columns = [
     {
       title: "STT",
@@ -130,6 +129,8 @@ function AdminStationManage() {
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
+      align: "center",
+
       render: (value) =>
         value ? (
           <Tag color="green">Đang hoạt động</Tag>
@@ -140,11 +141,23 @@ function AdminStationManage() {
     {
       title: "Chi tiết",
       key: "action",
+      align: "center",
       render: (_, record) => (
-        <Button
-          icon={<EyeOutlined />}
-          onClick={() => handleShowDetail(record.id)}
-        ></Button>
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+              },
+            },
+          }}
+        >
+          <Button onClick={() => handleShowDetail(record.id)}>
+            Xem chi tiết
+          </Button>
+        </ConfigProvider>
       ),
     },
   ];
@@ -320,7 +333,6 @@ function AdminStationManage() {
           getAllStations().then(setStations).catch(console.error);
         }}
       />
-
     </div>
   );
 }

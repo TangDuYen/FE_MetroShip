@@ -24,6 +24,7 @@ import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getAllInsurance } from "../../../../../config/metroApi";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // const fakeInsurancePolicies = [
 //   {
@@ -57,19 +58,22 @@ function AdminInsurance() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllInsurance();
-        setPolicies(data || []);
-      } catch (error) {
-        console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllInsurance();
+      setPolicies(data || []);
+    } catch (error) {
+      console.error("Lỗi fetch dữ liệu bảo hiểm:", error);
+      const errorMessage =
+        error.response?.data?.message || "Không thể tải dữ liệu bảo hiểm";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -77,12 +81,11 @@ function AdminInsurance() {
     const matchName = item.name
       .toLowerCase()
       .includes(searchName.toLowerCase());
-    const matchStatus =
-      !filteredStatusPolicies
-        ? true
-        : filteredStatusPolicies === "active"
-          ? item.isActive
-          : !item.isActive;
+    const matchStatus = !filteredStatusPolicies
+      ? true
+      : filteredStatusPolicies === "active"
+      ? item.isActive
+      : !item.isActive;
 
     return matchName && matchStatus;
   });
@@ -98,17 +101,32 @@ function AdminInsurance() {
         baseFeeVnd: Number(values.baseFeeVnd || 0),
         maxParcelValueVnd: Number(values.maxParcelValueVnd || 0),
         insuranceFeeRateOnValue: Number(values.insuranceFeeRateOnValue || 0),
-        maxCompensationRateOnValue: Number(values.maxCompensationRateOnValue || 0),
-        minCompensationRateOnValue: Number(values.minCompensationRateOnValue || 0),
-        minCompensationRateOnShippingFee: Number(values.minCompensationRateOnShippingFee || 0),
+        maxCompensationRateOnValue: Number(
+          values.maxCompensationRateOnValue || 0
+        ),
+        minCompensationRateOnValue: Number(
+          values.minCompensationRateOnValue || 0
+        ),
+        minCompensationRateOnShippingFee: Number(
+          values.minCompensationRateOnShippingFee || 0
+        ),
       };
 
-      await api.post("/insurance-policies", payload); // gọi trực tiếp
+      const res = await api.post("/insurance-policies", payload); // gọi trực tiếp
+      if (res.data?.statusCode === 200) {
+        toast.success(res.data?.message || "Tạo chính sách thành công");
+        setIsAddModalOpen(false);
+        form.resetFields();
+        fetchData();
+      }
       setIsAddModalOpen(false);
       form.resetFields();
       fetchData(); // refresh danh sách
     } catch (error) {
       console.error("Lỗi tạo chính sách bảo hiểm:", error);
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi tạo chính sách";
+      toast.error(errorMessage);
     }
   };
 
@@ -147,7 +165,7 @@ function AdminInsurance() {
       title: "Tỷ lệ phí bảo hiểm",
       dataIndex: "insuranceFeeRateOnValue",
       key: "insuranceFeeRateOnValue",
-      render: (v) => `${(v * 100).toFixed(2)}%`,
+      render: (v) => `${v * 100}%`,
     },
     {
       title: "Bồi thường (min-max)",
@@ -177,19 +195,30 @@ function AdminInsurance() {
       title: "Hành động",
       key: "action",
       render: (_, record) => (
-        <Button
-          type="link"
-          onClick={() =>
-            navigate(
-              PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS.replace(
-                ":insuranceId",
-                record.id
-              )
-            )
-          }
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                defaultColor: "white",
+                defaultBg: "#0066CC",
+                defaultBorderColor: "#0066CC",
+              },
+            },
+          }}
         >
-          Xem chi tiết
-        </Button>
+          <Button
+            onClick={() =>
+              navigate(
+                PATH_NAME.DASHBOARD_ADMIN_METRO_INSURANCE_DETAILS.replace(
+                  ":insuranceId",
+                  record.id
+                )
+              )
+            }
+          >
+            Xem chi tiết
+          </Button>
+        </ConfigProvider>
       ),
     },
   ];
@@ -268,13 +297,15 @@ function AdminInsurance() {
           <Form.Item
             label="Tên chính sách"
             name="name"
-            rules={[{ required: true, message: "Vui lòng nhập tên chính sách" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập tên chính sách" },
+            ]}
           >
-            <Input />
+            <Input placeholder="Nhập tên chính sách" />
           </Form.Item>
 
           <Form.Item label="Mô tả" name="description">
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} placeholder="Nhập mô tả" />
           </Form.Item>
 
           <Form.Item
@@ -300,7 +331,12 @@ function AdminInsurance() {
             name="insuranceFeeRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -308,7 +344,12 @@ function AdminInsurance() {
             name="minCompensationRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -316,7 +357,12 @@ function AdminInsurance() {
             name="maxCompensationRateOnValue"
             initialValue={0}
           >
-            <InputNumber min={0} max={1} step={0.01} style={{ width: "100%" }} />
+            <InputNumber
+              min={0}
+              max={1}
+              step={0.01}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -327,11 +373,7 @@ function AdminInsurance() {
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item
-            label="Kích hoạt"
-            name="isActive"
-            valuePropName="checked"
-          >
+          <Form.Item label="Kích hoạt" name="isActive" valuePropName="checked">
             <Switch />
           </Form.Item>
 

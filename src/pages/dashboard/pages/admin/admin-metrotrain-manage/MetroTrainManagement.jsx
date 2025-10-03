@@ -55,6 +55,7 @@ function MetroTrainManagement() {
   const [stations, setStations] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [modalMode, setModalMode] = useState("add");
+  const [selectedDirection, setSelectedDirection] = useState(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -190,12 +191,18 @@ function MetroTrainManagement() {
       filtered = filtered.filter((train) => train.status === selectedStatus);
     }
 
+    if (selectedDirection != null) {
+      filtered = filtered.filter(
+        (train) => train.direction === selectedDirection
+      );
+    }
+
     setFilteredTrains(filtered);
   };
 
   useEffect(() => {
     applyFilters();
-  }, [selectedLineId, searchTrainCode, selectedStatus]);
+  }, [selectedLineId, searchTrainCode, selectedStatus, selectedDirection]);
 
   const getStationName = (currentStationId) => {
     if (!currentStationId) return "Không xác định";
@@ -292,6 +299,16 @@ function MetroTrainManagement() {
       render: () => maxVolume,
     },
     {
+      title: "Chiều chạy",
+      dataIndex: "direction",
+      render: (value) =>
+        value === 0 ? (
+          <Tag color="gold">Chiều đi</Tag>
+        ) : (
+          <Tag color="purple">Chiều về</Tag>
+        ),
+    },
+    {
       title: "Vị trí hiện tại",
       dataIndex: "currentStationId",
       key: "currentStationId",
@@ -311,26 +328,49 @@ function MetroTrainManagement() {
       title: "Hành động",
       render: (_, record) => (
         <Space>
-          <Button
-            className="assign-train-button"
-            style={{
-              backgroundColor: "#0066CC",
-              color: "white",
-              border: "#0066CC",
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#0066CC",
+                  defaultBorderColor: "#0066CC",
+                },
+              },
             }}
-            onClick={() => openAssignModal(record)}
           >
-            {" "}
-            Phân tàu{" "}
-          </Button>
-          <Button
-            className="edit-train-button"
-            onClick={() => openEditModal(record)}
+            <Button
+              className="assign-train-button"
+              onClick={() => openAssignModal(record)}
+            >
+              {" "}
+              Phân tàu{" "}
+            </Button>
+          </ConfigProvider>
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#52c41a",
+                  defaultBorderColor: "#52c41a",
+                  defaultHoverBorderColor: "#389e0d",
+                  defaultHoverColor: "#389e0d",
+                  defaultActiveBorderColor: "#52c41a",
+                  defaultActiveColor: "#52c41a",
+                },
+              },
+            }}
           >
-            {" "}
-            Cập nhật{" "}
-          </Button>
-          {/* <Button
+            <Button
+              className="edit-train-button"
+              onClick={() => openEditModal(record)}
+            >
+              {" "}
+              Cập nhật{" "}
+            </Button>
+          </ConfigProvider>
+         {/* <Button
             danger
             onClick={() => {
               // setSelectedTrain(record);
@@ -359,7 +399,7 @@ function MetroTrainManagement() {
           }
           placeholder="Lọc theo tuyến"
           allowClear
-          style={{ width: 400 }}
+          style={{ width: 300 }}
           value={selectedLineId}
           onChange={setSelectedLineId}
         >
@@ -371,14 +411,14 @@ function MetroTrainManagement() {
         </Select>
         <Input.Search
           placeholder="Tìm mã tàu"
-          style={{ width: 300 }}
+          style={{ width: 250 }}
           value={searchTrainCode}
           onChange={(e) => setSearchTrainCode(e.target.value)}
         />
         <Select
           placeholder="Trạng thái"
           allowClear
-          style={{ width: 300 }}
+          style={{ width: 200 }}
           value={selectedStatus}
           onChange={setSelectedStatus}
         >
@@ -391,6 +431,21 @@ function MetroTrainManagement() {
           ))}
         </Select>
 
+        <Select
+          placeholder="Chiều chạy"
+          allowClear
+          style={{ width: 200 }}
+          value={selectedDirection}
+          onChange={setSelectedDirection}
+        >
+          <Select.Option value={0}>
+            <Tag color="gold">Chiều đi</Tag>
+          </Select.Option>
+          <Select.Option value={1}>
+            <Tag color="purple">Chiều về</Tag>
+          </Select.Option>
+        </Select>
+
         <Button
           className="clear-filter-button"
           icon={<ReloadOutlined />}
@@ -399,6 +454,7 @@ function MetroTrainManagement() {
             setSelectedLineId([]);
             setSelectedStatus(null);
             setFilteredTrains(allTrains);
+            setSelectedDirection(null);
           }}
         ></Button>
       </Space>
@@ -456,7 +512,10 @@ function MetroTrainManagement() {
             label="Model tàu"
             rules={[{ required: true, message: "Vui lòng nhập model tàu" }]}
           >
-            <Input placeholder="Nhập model tàu" disabled={modalMode !== "add"} />
+            <Input
+              placeholder="Nhập model tàu"
+              disabled={modalMode !== "add"}
+            />
           </Form.Item>
           {/* <Form.Item
             name="timeSlotId"
