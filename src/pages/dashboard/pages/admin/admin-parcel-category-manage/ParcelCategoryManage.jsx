@@ -44,6 +44,8 @@ function ParcelCategoryManage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [insurancePolicies, setInsurancePolicies] = useState([]);
+  const [isModalConfirmOpen, setIsModalConfirmOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const formatDate = (dateString) => {
     return dateString ? dayjs(dateString).format("DD/MM/YYYY") : "—";
@@ -101,6 +103,31 @@ function ParcelCategoryManage() {
     setIsModalOpen(true);
   };
 
+  const openModalConfirm = (id) => {
+    setSelectedId(id);
+    setIsModalConfirmOpen(true);
+  };
+  const handleOk = async () => {
+    if (!selectedId) return;
+    try {
+      await api.delete(`/parcel-category/${selectedId}`);
+      toast.success("Đã xoá thành công!");
+      fetchParcelCategories();
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || err.message || "Xoá thất bại!";
+      toast.error(errorMessage);
+    } finally {
+      setIsModalConfirmOpen(false);
+      setSelectedId(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalConfirmOpen(false);
+    setSelectedId(null);
+  };
+
   const openDetailModal = async (category) => {
     try {
       const res = await api.get(`/parcel-category/${category.id}`);
@@ -112,18 +139,6 @@ function ParcelCategoryManage() {
         err.response?.data?.error ||
         err.message ||
         "Không thể tải thông tin chi tiết!";
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/parcel-category/${id}`);
-      toast.success("Đã xoá thành công!");
-      fetchParcelCategories();
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "Xoá thất bại!";
       toast.error(errorMessage);
     }
   };
@@ -214,22 +229,48 @@ function ParcelCategoryManage() {
       title: "Hành động",
       render: (_, record) => (
         <Space>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => openDetailModal(record)}
-          />
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => openEditModal(record)}
-          />
-          <Popconfirm
-            title="Xác nhận xoá loại này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Xoá"
-            cancelText="Hủy"
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "#0066CC",
+                  defaultBg: "white",
+                  defaultBorderColor: "#0066CC",
+                },
+              },
+            }}
           >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => openDetailModal(record)}
+            />
+          </ConfigProvider>
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "#52c41a",
+                  defaultBg: "white",
+                  defaultBorderColor: "#52c41a",
+                  defaultHoverBorderColor: "#389e0d",
+                  defaultHoverColor: "#389e0d",
+                  defaultActiveBorderColor: "#52c41a",
+                  defaultActiveColor: "#52c41a",
+                },
+              },
+            }}
+          >
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+            />
+          </ConfigProvider>
+
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => openModalConfirm(record.id)}
+          />
         </Space>
       ),
     },
@@ -494,6 +535,18 @@ function ParcelCategoryManage() {
             )}
           </Card>
         )}
+      </Modal>
+
+      <Modal
+        title="Xác nhận xoá loại này?"
+        open={isModalConfirmOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        okText="Xoá"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Bạn có chắc chắn muốn xoá loại kiện hàng này không?</p>
       </Modal>
     </div>
   );

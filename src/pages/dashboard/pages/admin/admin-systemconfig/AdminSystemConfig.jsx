@@ -15,6 +15,7 @@ import {
   Spin,
   Switch,
   Table,
+  Tag,
 } from "antd";
 import api from "../../../../../config/axios";
 import { EditOutlined, ReloadOutlined, SyncOutlined } from "@ant-design/icons";
@@ -147,9 +148,9 @@ function AdminSystemConfig() {
       dataIndex: "isActive",
       render: (isActive) =>
         isActive ? (
-          <span style={{ color: "green" }}>Hoạt động</span>
+          <Tag color="green">Hoạt động</Tag>
         ) : (
-          <span style={{ color: "red" }}>Vô hiệu hóa</span>
+          <Tag color="red">Vô hiệu hóa</Tag>
         ),
     },
     {
@@ -161,21 +162,31 @@ function AdminSystemConfig() {
       title: "Thao tác",
       render: (_, record) => (
         <div style={{ display: "flex", gap: 8 }}>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingConfig(record);
-              setIsModalOpen(true);
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: "#52c41a",
+                  defaultBorderColor: "#52c41a",
+                  defaultHoverBorderColor: "#52c41a",
+                  defaultHoverColor: "#52c41a",
+                  defaultActiveBorderColor: "#52c41a",
+                  defaultActiveColor: "#52c41a",
+                },
+              },
             }}
           >
-            Sửa
-          </Button>
-          <Button
-            icon={<SyncOutlined />}
-            onClick={() => handleChangeValue(record)}
-            danger
-          >
+            <Button
+              onClick={() => {
+                setEditingConfig(record);
+                setIsModalOpen(true);
+              }}
+            >
+              Cập nhật
+            </Button>
+          </ConfigProvider>
+          <Button onClick={() => handleChangeValue(record)} danger>
             Đổi giá trị
           </Button>
         </div>
@@ -306,7 +317,7 @@ function AdminSystemConfig() {
               <Select placeholder="Chọn loại">
                 {typeOptions.map((t) => (
                   <Select.Option key={t} value={t}>
-                    {t}
+                    {typeNameMap[t] || t}
                   </Select.Option>
                 ))}
               </Select>
@@ -332,7 +343,7 @@ function AdminSystemConfig() {
               name="configValue"
               rules={[{ required: true, message: "Vui lòng nhập giá trị mới" }]}
             >
-              <Input />
+              <Input placeholder="Nhập giá trị mới" />
             </Form.Item>
             <Button type="primary" htmlType="submit" block>
               Xác nhận thay đổi

@@ -81,7 +81,7 @@ export const navDashboardConfig = [
   {
     key: "15",
     icon: <ClockCircleOutlined style={{ fontSize: "1.4em" }} />,
-    label: "Quản lý Time Slot",
+    label: "Quản lý Khung giờ",
   },
   {
     key: "6",

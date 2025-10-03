@@ -33,13 +33,15 @@ function Header() {
   const [loading, setLoading] = useState(false);
 
   const fetchUnreadCount = async () => {
-    try {
-      const res = await api.get("/notifications/unread-count");
-      setUnreadCount(res.data.data || 0);
-    } catch (err) {
-      console.error("Lỗi fetch unread count:", err);
-    }
-  };
+  try {
+    const res = await api.get("/notifications/unread-count");
+    setUnreadCount(res.data?.data || 0);
+  } catch (err) {
+    console.error("Lỗi fetch unread count:", err);
+    const errorMessage = err.response?.data?.message || err.message || "Không thể tải số thông báo chưa đọc";
+    toast.error(errorMessage);
+  }
+};
 
   useEffect(() => {
     if (!user) return;
@@ -64,33 +66,61 @@ function Header() {
     loadNotifications();
   }, [user?.id]);
 
-  const markAllAsRead = async () => {
-    try {
-      const res = await api.put("/notifications/read-all");
-      if (res.data?.statusCode === 200) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-        await fetchUnreadCount();
-      }
-    } catch (err) {
-      console.error("Lỗi đọc tất cả:", err);
+ const markAllAsRead = async () => {
+  try {
+    const res = await api.put("/notifications/read-all");
+    if (res.data?.statusCode === 200) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      await fetchUnreadCount();
+
+      const successMessage = res.data?.message || "Đã đánh dấu tất cả là đã đọc";
+      toast.success(successMessage);
     }
-  };
+  } catch (err) {
+    console.error("Lỗi đọc tất cả:", err);
+    const errorMessage = err.response?.data?.message || err.message || "Đánh dấu tất cả thất bại";
+    toast.error(errorMessage);
+  }
+};
 
   const deleteNotification = async (id) => {
-    try {
-      const res = await api.delete(`/notifications/${id}`);
-      if (res.data?.statusCode === 200) {
-        setNotifications((prev) => prev.filter((x) => x.id !== id));
-        await fetchUnreadCount();
-        toast.success("Đã xóa thông báo");
-      } else {
-        toast.error("Xóa thông báo thất bại");
-      }
-    } catch (err) {
-      console.error("Lỗi xóa thông báo:", err);
-      toast.error("Có lỗi xảy ra khi xóa");
+  try {
+    const res = await api.delete(`/notifications/${id}`);
+    if (res.data?.statusCode === 200) {
+      setNotifications((prev) => prev.filter((x) => x.id !== id));
+      await fetchUnreadCount();
+
+      const successMessage = res.data?.message || "Đã xóa thông báo";
+      toast.success(successMessage);
+    } else {
+      const failMessage = res.data?.message || "Xóa thông báo thất bại";
+      toast.error(failMessage);
     }
-  };
+  } catch (err) {
+    console.error("Lỗi xóa thông báo:", err);
+    const errorMessage = err.response?.data?.message || err.message || "Có lỗi xảy ra khi xóa";
+    toast.error(errorMessage);
+  }
+};
+
+  const deleteAllNotifications = async () => {
+  try {
+    const res = await api.delete("/notifications/delete-all");
+
+    if (res.data?.statusCode === 200) {
+      setNotifications([]);
+      await fetchUnreadCount();
+
+      const successMessage = res.data?.message || "Đã xóa tất cả thông báo";
+      toast.success(successMessage);
+    }
+  } catch (err) {
+    console.error("Lỗi xóa tất cả:", err);
+    const errorMessage = err.response?.data?.message || err.message || "Xóa tất cả thất bại";
+    toast.error(errorMessage);
+  }
+};
+
 
   useEffect(() => {
     if (!connection || !user?.id) return;
@@ -157,6 +187,7 @@ function Header() {
     localStorage.removeItem("staffAssignments");
     sessionStorage.removeItem("parcelFormData");
     dispatch(logout());
+    toast.success("Đăng xuất thành công");
     navigate(PATH_NAME.HOME);
   };
 
@@ -293,7 +324,7 @@ function Header() {
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setNotifications([]);
+                        deleteAllNotifications();
                       }}
                     >
                       Xóa tất cả

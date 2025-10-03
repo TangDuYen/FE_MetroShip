@@ -36,6 +36,7 @@ function MetroLineManagement() {
   const [selectedLine, setSelectedLine] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
 
 
   //API ONE TIME
@@ -193,12 +194,29 @@ function MetroLineManagement() {
     {
       title: "Hành động",
       dataIndex: "actions",
+      align: "center",
       render: (_, record) => (
         <Space>
+        <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "#52c41a",
+                  defaultBg: "white",
+                  defaultBorderColor: "#52c41a",
+                  defaultHoverBorderColor: "#389e0d",
+                  defaultHoverColor: "#389e0d",
+                  defaultActiveBorderColor: "#52c41a",
+                  defaultActiveColor: "#52c41a",
+                },
+              },
+            }}
+          >
           <Button
             icon={<EditOutlined />}
             onClick={() => openEditModal(record)}
           />
+          </ConfigProvider>
           <Popconfirm
             title="Xác nhận xoá tàu này?"
             onConfirm={() => handleDelete(record.id)}
