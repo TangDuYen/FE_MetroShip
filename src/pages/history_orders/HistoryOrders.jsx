@@ -18,6 +18,7 @@ import {
 } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   formatCurrency1,
   shipmentStatusColorMap,
@@ -25,7 +26,6 @@ import {
 } from "../../constants/statusMap";
 
 import { PATH_NAME } from "../../constants/pathname";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/sidebar_profile/Sidebar";
 import api from "../../config/axios";
 import dayjs from "dayjs";
@@ -437,8 +437,8 @@ function HistoryOrders() {
       //   );
       // }
 
-      //REFUND SHIPMENT
-      if (item.shipmentStatus === 11) {
+      //RETURN SHIPMENT
+      if (item.shipmentStatus === 10) {
         actions.push(
           <Button danger onClick={() => handleRequestReturn(item.shipmentId)}>
             Yêu cầu hoàn đơn
