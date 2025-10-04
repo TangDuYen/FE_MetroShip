@@ -4,6 +4,7 @@ import "./Sidebar.scss";
 import { NavLink } from "react-router-dom";
 import { MdAccountCircle, MdChangeCircle, MdPayments } from "react-icons/md";
 import { BsFillBoxSeamFill } from "react-icons/bs";
+import { FaTicket } from 'react-icons/fa6';
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/features/counterSlice";
 import api from "../../config/axios";
@@ -82,6 +83,15 @@ function Sidebar() {
             >
               <NavLink to={PATH_NAME.HISTORY_PAYMENT}>
                 <MdPayments className="icon" /> Lịch sử giao dịch
+              </NavLink>
+            </li>
+            <li
+              className={
+                location.pathname === PATH_NAME.HISTORY_TICKET ? "active" : ""
+              }
+            >
+              <NavLink to={PATH_NAME.HISTORY_TICKET}>
+                <FaTicket className="icon" /> Yêu cầu đã gửi
               </NavLink>
             </li>
             <li

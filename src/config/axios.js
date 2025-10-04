@@ -111,7 +111,6 @@ api.interceptors.response.use(
         localStorage.removeItem("userId");
         localStorage.removeItem("userData");
         localStorage.removeItem("staffAssignments");
-        window.location.href = PATH_NAME.LOGIN;
       }
     }
 

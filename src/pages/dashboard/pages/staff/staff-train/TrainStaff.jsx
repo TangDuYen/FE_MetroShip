@@ -3,8 +3,11 @@ import "leaflet/dist/leaflet.css";
 
 import {
   Button,
+  Card,
   Col,
+  ConfigProvider,
   DatePicker,
+  Empty,
   Input,
   Modal,
   Row,
@@ -20,6 +23,7 @@ import {
   getAllStations,
   getMetroLines,
   getMetroLinesByStation,
+  getMetroTimeSlots,
   getMetroTrainsByStation,
 } from "../../../../../config/metroApi";
 import {
@@ -28,13 +32,15 @@ import {
 } from "../../../../../constants/statusMap";
 
 import { PATH_NAME } from "../../../../../constants/pathname";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import { jwtDecode } from "jwt-decode";
 import { selectUser } from "../../../../../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import dayjs from "dayjs";
+import moment from "moment";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -57,7 +63,10 @@ function TrainStaff() {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  const [direction, setDirection] = useState(null);
+  const [dateFilter, setDateFilter] = useState(null);
+  const today = dayjs();
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [trainDetails, setTrainDetails] = useState({});
 
   // useEffect(() => {
   //   setLoading(true);
@@ -108,6 +117,9 @@ function TrainStaff() {
           getMetroTrainsByStation(decodedUser.StationId),
         ]);
 
+      const slotData = await getMetroTimeSlots();
+      setTimeSlots(slotData);
+
       setRegions(regionsData);
       setMetroLines(metroLinesData);
       setStations(stationsData);
@@ -137,14 +149,29 @@ function TrainStaff() {
     reloadData(); // load lần đầu
   }, []);
 
-  const getStationName = (currentStationId) => {
-    if (!currentStationId) return "Không xác định";
-    const station = stations.find(
-      (s) => String(s.stationId) === String(currentStationId)
-    );
-    return station ? station.stationNameVi : "Không xác định";
+  const fetchTrainDetail = async (trainId) => {
+    try {
+      const res = await api.get(`/train/${trainId}/position`);
+      setTrainDetails((prev) => ({ ...prev, [trainId]: res.data }));
+    } catch (err) {
+      console.error("Lỗi khi fetch chi tiết tàu:", err);
+    }
   };
 
+  const getCurrentShift = (slots) => {
+    const now = moment();
+    return slots.find((slot) => {
+      const start = moment(slot.openTime, "HH:mm:ss");
+      const end = moment(slot.closeTime, "HH:mm:ss");
+      if (end.isBefore(start)) {
+        // NIGHT SHIFT
+        return now.isAfter(start) || now.isBefore(end);
+      }
+      return now.isBetween(start, end);
+    });
+  };
+
+  const currentShift = getCurrentShift(timeSlots);
   //   const handleReset = async (train) => {
   //   if (!train) {
   //     toast.error("Chưa chọn tàu để reset lịch.");
@@ -176,7 +203,6 @@ function TrainStaff() {
   //     toast.error(error.response?.data?.message || "Không thể reset lịch tàu.");
   //   }
   // };
-
 
   const handleStartTrain = async (train) => {
     try {
@@ -229,6 +255,15 @@ function TrainStaff() {
     navigate(mapPath);
   };
 
+  const parcelColumns = [
+    {
+      title: "STT",
+      render: (_, __, index) => index + 1,
+      width: 60,
+    },
+    { title: "Mã bưu kiện", dataIndex: "parcelCode", key: "parcelCode" },
+  ];
+
   const columns = [
     {
       title: "STT",
@@ -260,15 +295,43 @@ function TrainStaff() {
       render: () => maxVolume, // Show max volume
     },
     {
-      title: "Vị trí hiện tại",
-      dataIndex: "currentStationId",
-      key: "currentStationId",
-      render: (currentStationId) => getStationName(currentStationId),
+      title: "Chiều chạy",
+      dataIndex: "direction",
+      render: (value) =>
+        value === 0 ? (
+          <Tag color="gold">Chiều đi</Tag>
+        ) : (
+          <Tag color="purple">Chiều về</Tag>
+        ),
+    },
+    {
+      title: "Ga hiện tại",
+      dataIndex: "currentStationName",
+      key: "currentStationName",
+      render: (value) =>
+        value ? (
+          <Tag color="green">{value}</Tag>
+        ) : (
+          //value
+          <Tag color="default">Chưa xác định</Tag>
+        ),
+    },
+    {
+      title: "Ga kế tiếp",
+      dataIndex: "nextStationName",
+      key: "nextStationName",
+      render: (value, record) => {
+        if (record.status === 3 && value) {
+          return <Tag color="blue">{value}</Tag>;
+        }
+        return <Tag color="default">Chưa xác định</Tag>;
+      },
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: (status) => (
         <Tag color={trainStatusColorMap[status]}>
           {trainStatusMap[status] || "Không xác định"}
@@ -279,6 +342,7 @@ function TrainStaff() {
     {
       title: "Hành động",
       key: "actions",
+      width: 510,
       render: (_, record) => {
         const isAtCurrentStation =
           String(record.currentStationId) === String(user?.StationId);
@@ -357,11 +421,39 @@ function TrainStaff() {
     maxVolume,
   }));
 
+  const expandedRowRender = (train) => {
+    const detail = trainDetails[train.id];
+    const parcels = detail?.additionalData?.parcels || [];
+    if (!detail) return <Spin />;
+    return (
+      <div>
+        <Spin spinning={loading} tip="Đang tải dữ liệu...">
+          <ConfigProvider
+            renderEmpty={() => (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_DEFAULT}
+                description="Không có bưu kiện"
+              />
+            )}
+          >
+            <Table
+              columns={parcelColumns}
+              dataSource={parcels}
+              rowKey="parcelId"
+              pagination={false}
+              size="small"
+              className="parcel-table"
+            />
+          </ConfigProvider>
+        </Spin>
+      </div>
+    );
+  };
+
   return (
     <div className="staff-train-container">
-      <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <div style={{ marginBottom: 16, display: "flex", gap: 12 }}>
-          {/* <Select
+      <div style={{ marginBottom: 16, display: "flex", gap: 12 }}>
+        {/* <Select
             showSearch
             optionFilterProp="children"
             placeholder="Chọn khu vực"
@@ -377,52 +469,107 @@ function TrainStaff() {
             ))}
           </Select> */}
 
-          <Select
-            showSearch
-            optionFilterProp="children"
-            placeholder="Chọn tuyến metro"
-            allowClear
-            style={{ width: 500 }}
-            value={selectedLine}
-            onChange={(value) => setSelectedLine(value)}
-          >
-            {metroLines?.map((line) => (
-              <Option key={line.id} value={line.id}>
-                {line.lineNameVi}
-              </Option>
-            ))}
-          </Select>
-          <Select
-            placeholder="Chọn trạng thái tàu"
-            allowClear
-            style={{ width: 250 }}
-            value={selectedStatus}
-            onChange={(value) => setSelectedStatus(value)}
-          >
-            {Object.keys(trainStatusMap).map((key) => (
-              <Option key={key} value={Number(key)}>
-                <Tag color={trainStatusColorMap[key]}>
-                  {trainStatusMap[key]}
-                </Tag>
-              </Option>
-            ))}
-          </Select>
-          <Button
-            className="clear-filter-button"
-            icon={<ReloadOutlined />}
-            onClick={() => {
-              setSelectedLine(null);
-              setSelectedStatus(null);
+        <Select
+          showSearch
+          optionFilterProp="children"
+          placeholder="Chọn tuyến metro"
+          allowClear
+          style={{ width: 500 }}
+          value={selectedLine}
+          onChange={(value) => setSelectedLine(value)}
+        >
+          {metroLines?.map((line) => (
+            <Option key={line.id} value={line.id}>
+              {line.lineNameVi}
+            </Option>
+          ))}
+        </Select>
+        <Select
+          placeholder="Chọn trạng thái tàu"
+          allowClear
+          style={{ width: 250 }}
+          value={selectedStatus}
+          onChange={(value) => setSelectedStatus(value)}
+        >
+          {Object.keys(trainStatusMap).map((key) => (
+            <Option key={key} value={Number(key)}>
+              <Tag color={trainStatusColorMap[key]}>{trainStatusMap[key]}</Tag>
+            </Option>
+          ))}
+        </Select>
+        <Button
+          className="clear-filter-button"
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setSelectedLine(null);
+            setSelectedStatus(null);
+          }}
+        ></Button>
+      </div>
+      <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <Card style={{ marginBottom: "1em" }}>
+          <Title level={3}>Ngày và ca của tàu Metro</Title>
+          <Row gutter={16}>
+            <Col span={6}>
+              <DatePicker
+                value={dateFilter ?? today}
+                onChange={(date) => setDateFilter(date)}
+                style={{ width: "100%" }}
+                disabled
+                format="DD/MM/YYYY"
+              />
+            </Col>
+            <Col span={18}>
+              <div style={{ display: "flex", gap: "0.5em", flexWrap: "wrap" }}>
+                {timeSlots.map((slot) => {
+                  const isActive = currentShift?.shift === slot.shift;
+                  return (
+                    <div
+                      key={slot.id}
+                      style={{
+                        padding: "0.5em 1em",
+                        borderRadius: "8px",
+                        background: isActive ? "#0066CC" : "#f0f0f0",
+                        color: isActive ? "white" : "#000",
+                        fontWeight: isActive ? 600 : 400,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5em",
+                      }}
+                    >
+                      <ClockCircleOutlined />
+                      Ca {slot.shift} ({slot.openTime.slice(0, 5)} -{" "}
+                      {slot.closeTime.slice(0, 5)})
+                    </div>
+                  );
+                })}
+              </div>
+            </Col>
+          </Row>
+        </Card>
+        <ConfigProvider
+          renderEmpty={() => (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_DEFAULT}
+              description="Không có tàu"
+            />
+          )}
+        >
+          <Table
+            columns={columns}
+            dataSource={data} // Pass the correctly mapped data to `dataSource`
+            rowKey="id" // Ensure `id` is used as the unique key for each row
+            pagination={{ pageSize: 10 }}
+            expandable={{
+              expandedRowRender,
+              onExpand: (expanded, record) => {
+                if (expanded && !trainDetails[record.id]) {
+                  fetchTrainDetail(record.id);
+                }
+              },
             }}
-          ></Button>
-        </div>
-
-        <Table
-          columns={columns}
-          dataSource={data} // Pass the correctly mapped data to `dataSource`
-          rowKey="id" // Ensure `id` is used as the unique key for each row
-          pagination={{ pageSize: 10 }}
-        />
+          />
+        </ConfigProvider>
       </Spin>
     </div>
   );

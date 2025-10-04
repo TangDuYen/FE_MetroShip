@@ -27,14 +27,27 @@ function LineCharts() {
   //   { month: "Tháng 7", revenue: 5247 },
   //   { month: "Tháng 8", revenue: 7800 },
   // ];
-const now = new Date();
+  const now = new Date();
+  const getWeekNumber = (date) => {
+    const d = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  };
+
+  const getCurrentQuarter = (month) => {
+    return Math.floor((month - 1) / 3) + 1;
+  };
   const [lineData, setLineData] = useState([]);
   const [filterType, setFilterType] = useState(0);
   const [year, setYear] = useState(now.getFullYear());
-  const [quarter, setQuarter] = useState(1);
+  const [quarter, setQuarter] = useState(getCurrentQuarter(now.getMonth() + 1));
   const [startMonth, setStartMonth] = useState(now.getMonth() + 1);
   const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
-  const [week, setWeek] = useState(1);
+  const [week, setWeek] = useState(getWeekNumber(now));
   const [loading, setLoading] = useState(false);
 
   const fetchRevenue = async () => {
@@ -45,7 +58,7 @@ const now = new Date();
       if (filterType === 0) {
         url += `?FilterType=0`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Week=${week}&StartMonth=${startMonth}`;
+        url += `?FilterType=2&Week=${week}&Year=${year}`;
       } else if (filterType === 3) {
         url += `?FilterType=3&Year=${year}`;
       } else if (filterType === 4) {
@@ -100,6 +113,13 @@ const now = new Date();
     fetchRevenue();
   }, [filterType, year, quarter, startMonth, endMonth, week]);
 
+  const handleFilterChange = (val) => {
+    setFilterType(val);
+    if (val === 2) {
+      setWeek(getWeekNumber(new Date())); // cập nhật tuần hiện tại
+      setYear(new Date().getFullYear()); // cập nhật năm hiện tại
+    }
+  };
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const income = payload[0]?.payload?.income;
@@ -129,14 +149,14 @@ const now = new Date();
         <div className="filter-section">
           <Select
             value={filterType}
-            onChange={(val) => setFilterType(val)}
-            style={{ width: 150, marginRight: 10 }}
+            onChange={handleFilterChange}
+            style={{ width: 170, marginRight: 10 }}
           >
             <Option value={0}>Tổng quan</Option>
             <Option value={2}>Theo tuần</Option>
-            <Option value={3}>Theo năm</Option>
+            <Option value={5}>Theo tháng</Option>
             <Option value={4}>Theo quý</Option>
-            <Option value={5}>Theo khoảng tháng</Option>
+            <Option value={3}>Theo năm</Option>
           </Select>
 
           {filterType === 2 && (
@@ -150,12 +170,10 @@ const now = new Date();
                 placeholder="Tuần"
               />
               <InputNumber
-                value={startMonth}
-                min={1}
-                max={12}
-                onChange={(val) => setStartMonth(val)}
+                value={year}
+                onChange={(val) => setYear(val)}
                 style={{ width: 100, marginRight: 10 }}
-                placeholder="Tháng"
+                placeholder="Năm"
               />
             </>
           )}
@@ -164,22 +182,25 @@ const now = new Date();
               value={year}
               onChange={(val) => setYear(val)}
               style={{ width: 100, marginRight: 10 }}
+              placeholder="Năm"
             />
           )}
 
           {filterType === 4 && (
             <>
               <InputNumber
-                value={year}
-                onChange={(val) => setYear(val)}
-                style={{ width: 100, marginRight: 10 }}
-              />
-              <InputNumber
                 value={quarter}
                 min={1}
                 max={4}
                 onChange={(val) => setQuarter(val)}
                 style={{ width: 100, marginRight: 10 }}
+                placeholder="Quý"
+              />
+              <InputNumber
+                value={year}
+                onChange={(val) => setYear(val)}
+                style={{ width: 100, marginRight: 10 }}
+                placeholder="Năm"
               />
             </>
           )}
@@ -187,16 +208,12 @@ const now = new Date();
           {filterType === 5 && (
             <>
               <InputNumber
-                value={year}
-                onChange={(val) => setYear(val)}
-                style={{ width: 100, marginRight: 10 }}
-              />
-              <InputNumber
                 value={startMonth}
                 min={1}
                 max={12}
                 onChange={(val) => setStartMonth(val)}
                 style={{ width: 100, marginRight: 10 }}
+                placeholder="Từ"
               />
               <InputNumber
                 value={endMonth}
@@ -204,6 +221,13 @@ const now = new Date();
                 max={12}
                 onChange={(val) => setEndMonth(val)}
                 style={{ width: 100, marginRight: 10 }}
+                placeholder="Đến"
+              />
+              <InputNumber
+                value={year}
+                onChange={(val) => setYear(val)}
+                style={{ width: 100, marginRight: 10 }}
+                placeholder="Năm"
               />
             </>
           )}
