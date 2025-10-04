@@ -3,6 +3,7 @@ import "./Service.scss";
 import Banner from "./banner/Banner";
 import { PATH_NAME } from "../../constants/pathname";
 import React from "react";
+import ParcelRules from "./parcelRules/ParcelRules";
 
 function Service() {
   const services = [
@@ -30,12 +31,12 @@ function Service() {
     //     "I. Mức giới hạn trách nhiệm bồi thường khi mất Bưu gửi. 1. Đối với bưu gửi là vật phẩm, hàng hóa sử dụng dịch vụ bưu chính trong nước...",
     //   link: "#",
     // },
-    {
-      title: "Chính sách gửi hàng",
-      description:
-        "Quý khách vui lòng tải và đăng ký tài khoản trên ứng dụng MetroShip. Sau khi hoàn tất đăng ký, đội ngũ MetroShip sẽ liên hệ hỗ trợ, tư vấn dịch vụ và kích hoạt tài khoản cho quý khách...",
-      link: PATH_NAME.PARCEL_RULES,
-    },
+    // {
+    //   title: "Chính sách gửi hàng",
+    //   description:
+    //     "Quý khách vui lòng tải và đăng ký tài khoản trên ứng dụng MetroShip. Sau khi hoàn tất đăng ký, đội ngũ MetroShip sẽ liên hệ hỗ trợ, tư vấn dịch vụ và kích hoạt tài khoản cho quý khách...",
+    //   link: PATH_NAME.PARCEL_RULES,
+    // },
     // {
     //   title: "Quy định về điều kiện cung ứng dịch vụ bưu chính",
     //   description:
@@ -58,7 +59,7 @@ function Service() {
   return (
     <div className="service-container">
       <Banner />
-      <div className="service-grid">
+      {/* <div className="service-grid">
         {services.map((service, index) => (
           <div className="service" key={index}>
             <h3>{service.title}</h3>
@@ -68,7 +69,8 @@ function Service() {
             </a>
           </div>
         ))}
-      </div>
+      </div> */}
+      <ParcelRules/>
     </div>
   );
 }

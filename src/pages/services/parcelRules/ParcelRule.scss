@@ -1,10 +1,10 @@
 @use "../../../styles/variables.scss" as *;
 .parcel-rules-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0% auto;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
+  // background-color: #fff;
+  // border-radius: 12px;
+  // box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
 
   // Cách 1: dùng selector mạnh hơn
   .main-title.ant-typography {
@@ -13,6 +13,16 @@
     margin-bottom: 1.5rem;
     color: $primary-color;
     text-align: center;
+  }
+
+  h4:where(.css-dev-only-do-not-override-ut69n1).ant-typography{
+    font-size: 24px !important;
+    font-weight: 700;
+    margin-top: 1.8rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   ul {
@@ -26,8 +36,4 @@
     font-size: 16px;
     line-height: 1.7;
   }
-}
-
-.parcel-rule-container {
-  margin-top: 5.7% !important;
 }
