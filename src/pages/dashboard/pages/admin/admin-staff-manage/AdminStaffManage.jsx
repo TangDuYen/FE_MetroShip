@@ -88,31 +88,31 @@ function AdminStaffManage() {
     }
   }, [assigningStaff]);
 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllStaff();
-        const mapped = data.map((staff) => {
-          const currentAssignment = staff.staffAssignments?.find(
-            (a) => a.isActive === true
-          );
-          return {
-            ...staff,
-            assignedStation: currentAssignment?.stationName || "Chưa phân công",
-            currentRole: currentAssignment?.assignedRole || null,
-            assignedStationId: currentAssignment?.stationId || null,
-            currentRoleId: currentAssignment?.assignedRoleId || null,
-          };
-        });
-        setUsers(mapped);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu nhân viên:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllStaff();
+      const mapped = data.map((staff) => {
+        const currentAssignment = staff.staffAssignments?.find(
+          (a) => a.isActive === true
+        );
+        return {
+          ...staff,
+          assignedStation: currentAssignment?.stationName || "Chưa phân công",
+          currentRole: currentAssignment?.assignedRole || null,
+          assignedStationId: currentAssignment?.stationId || null,
+          currentRoleId: currentAssignment?.assignedRoleId || null,
+        };
+      });
+      setUsers(mapped);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu nhân viên:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchStaff();
   }, []);
 
@@ -139,15 +139,15 @@ function AdminStaffManage() {
       toast.success("Phân công thành công!");
       setIsAssignModalOpen(false);
       setAssigningStaff(null);
-
+      await fetchStaff();
       const station = stations.find((s) => s.stationId === values.stationId);
       setUsers((prev) =>
         prev.map((user) =>
           user.id === assigningStaff.id
             ? {
-                ...user,
-                assignedStation: station?.stationNameVi || "Đã phân công",
-              }
+              ...user,
+              assignedStation: station?.stationNameVi || "Đã phân công",
+            }
             : user
         )
       );
@@ -453,7 +453,7 @@ function AdminStaffManage() {
             toast.success("Thêm nhân viên thành công!");
             setShowAdd(false);
             formAdd.resetFields();
-            await getAllStaff();
+            await fetchStaff();
           } catch (error) {
             console.error("Add staff error:", error);
             const errorMessage = error.response?.data?.message || error.message;
