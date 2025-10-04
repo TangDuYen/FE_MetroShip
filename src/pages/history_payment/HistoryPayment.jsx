@@ -39,6 +39,8 @@ function HistoryPayment() {
   const [allPayments, setAllPayments] = useState([]);
   const [shipmentsMap, setShipmentsMap] = useState({});
   const [loading, setLoading] = useState(false);
+  const [quickDateFilter, setQuickDateFilter] = useState(null);
+  const [showRangePicker, setShowRangePicker] = useState(false);
 
   useEffect(() => {
     async function fetchShipments() {
@@ -119,6 +121,38 @@ function HistoryPayment() {
     return matchSearch && matchStatus && matchDateRange;
   });
 
+  const getDateRange = (filter) => {
+    const today = dayjs();
+    switch (filter) {
+      case "today": {
+        return [today.startOf("day"), today.endOf("day")];
+      }
+      case "yesterday": {
+        const yesterday = today.subtract(1, "day");
+        return [yesterday.startOf("day"), yesterday.endOf("day")];
+      }
+      case "7days": {
+        return [today.subtract(6, "day").startOf("day"), today.endOf("day")];
+      }
+      case "14days": {
+        return [today.subtract(13, "day").startOf("day"), today.endOf("day")];
+      }
+      case "30days": {
+        return [today.subtract(29, "day").startOf("day"), today.endOf("day")];
+      }
+      case "thisMonth": {
+        return [today.startOf("month"), today.endOf("month")];
+      }
+      case "lastMonth": {
+        const lastMonth = today.subtract(1, "month");
+        return [lastMonth.startOf("month"), lastMonth.endOf("month")];
+      }
+      default: {
+        return [];
+      }
+    }
+  };
+
   const columns = [
     {
       title: "STT",
@@ -180,13 +214,43 @@ function HistoryPayment() {
                     </Option>
                   ))}
                 </Select>
-                <RangePicker
-                  format="DD/MM/YYYY"
-                  placeholder={["Từ ngày", "Đến ngày"]}
-                  value={dateRange}
-                  onChange={(values) => setDateRange(values || [])}
-                  style={{ width: 300 }}
-                />
+                <Select
+                  style={{ width: 200 }}
+                  placeholder="Chọn khoảng thời gian"
+                  allowClear
+                  value={quickDateFilter}
+                  onChange={(val) => {
+                    setQuickDateFilter(val);
+
+                    if (val === "custom") {
+                      setShowRangePicker(true);
+                      setDateRange([]);
+                    } else {
+                      setDateRange(getDateRange(val));
+                      setShowRangePicker(true);
+                    }
+                  }}
+                >
+                  <Option value="today">Hôm nay</Option>
+                  <Option value="yesterday">Hôm qua</Option>
+                  <Option value="7days">7 ngày trước</Option>
+                  <Option value="14days">14 ngày trước</Option>
+                  <Option value="30days">30 ngày trước</Option>
+                  <Option value="thisMonth">Tháng này</Option>
+                  <Option value="lastMonth">Tháng trước</Option>
+                  <Option value="custom">Tùy chọn</Option>
+                </Select>
+
+                {showRangePicker && (
+                  <RangePicker
+                    format="DD/MM/YYYY"
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                    value={dateRange}
+                    onChange={(values) => setDateRange(values || [])}
+                    style={{ width: 300, marginLeft: 8 }}
+                  />
+                )}
+
                 <Button
                   className="clear-filter-button"
                   icon={<ReloadOutlined />}
@@ -194,6 +258,8 @@ function HistoryPayment() {
                     setSearchTerm("");
                     setFilterStatus(null);
                     setDateRange([]);
+                    setQuickDateFilter(null);
+                    setShowRangePicker(false);
                   }}
                 ></Button>
               </Space>

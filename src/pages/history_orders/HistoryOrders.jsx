@@ -58,6 +58,9 @@ function HistoryOrders() {
   const [rejectShipmentId, setRejectShipmentId] = useState(null);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
   const [pendingShipment, setPendingShipment] = useState(null);
+  const [quickDateFilter, setQuickDateFilter] = useState(null);
+  const [showRangePicker, setShowRangePicker] = useState(false);
+  const [dateRange, setDateRange] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -298,6 +301,38 @@ function HistoryOrders() {
     }
   };
 
+  const getDateRange = (filter) => {
+    const today = dayjs();
+    switch (filter) {
+      case "today": {
+        return [today.startOf("day"), today.endOf("day")];
+      }
+      case "yesterday": {
+        const yesterday = today.subtract(1, "day");
+        return [yesterday.startOf("day"), yesterday.endOf("day")];
+      }
+      case "7days": {
+        return [today.subtract(6, "day").startOf("day"), today.endOf("day")];
+      }
+      case "14days": {
+        return [today.subtract(13, "day").startOf("day"), today.endOf("day")];
+      }
+      case "30days": {
+        return [today.subtract(29, "day").startOf("day"), today.endOf("day")];
+      }
+      case "thisMonth": {
+        return [today.startOf("month"), today.endOf("month")];
+      }
+      case "lastMonth": {
+        const lastMonth = today.subtract(1, "month");
+        return [lastMonth.startOf("month"), lastMonth.endOf("month")];
+      }
+      default: {
+        return [];
+      }
+    }
+  };
+
   const filteredGoods = orders.filter((item) => {
     const matchSearch = (item.trackingCode?.toLowerCase() || "").includes(
       searchTerm.toLowerCase()
@@ -307,9 +342,10 @@ function HistoryOrders() {
       !filterStatus || item.shipmentStatus === Number(filterStatus);
 
     const matchDateRange =
-      (!startDate ||
-        dayjs(item.deliveryDate).isSameOrAfter(startDate, "day")) &&
-      (!endDate || dayjs(item.deliveryDate).isSameOrBefore(endDate, "day"));
+    dateRange.length === 0 ||
+    (item.deliveryDate &&
+      dayjs(item.deliveryDate).isSameOrAfter(dateRange[0], "day") &&
+      dayjs(item.deliveryDate).isSameOrBefore(dateRange[1], "day"));
 
     return matchSearch && matchStatus && matchDateRange;
   });
@@ -480,24 +516,51 @@ function HistoryOrders() {
                     </Option>
                   ))}
                 </Select>
-                <RangePicker
-                  format="DD/MM/YYYY"
-                  placeholder={["Từ ngày", "Đến ngày"]}
-                  value={[startDate, endDate]}
-                  onChange={(dates) => {
-                    setStartDate(dates?.[0] || null);
-                    setEndDate(dates?.[1] || null);
+                <Select
+                  style={{ width: 200 }}
+                  placeholder="Chọn khoảng thời gian"
+                  allowClear
+                  value={quickDateFilter}
+                  onChange={(val) => {
+                    setQuickDateFilter(val);
+
+                    if (val === "custom") {
+                      setShowRangePicker(true);
+                      setDateRange([]);
+                    } else {
+                      setDateRange(getDateRange(val));
+                      setShowRangePicker(true);
+                    }
                   }}
-                  style={{ width: 300 }}
-                />
+                >
+                  <Option value="today">Hôm nay</Option>
+                  <Option value="yesterday">Hôm qua</Option>
+                  <Option value="7days">7 ngày trước</Option>
+                  <Option value="14days">14 ngày trước</Option>
+                  <Option value="30days">30 ngày trước</Option>
+                  <Option value="thisMonth">Tháng này</Option>
+                  <Option value="lastMonth">Tháng trước</Option>
+                  <Option value="custom">Tùy chọn</Option>
+                </Select>
+
+                {showRangePicker && (
+                  <RangePicker
+                    format="DD/MM/YYYY"
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                    value={dateRange}
+                    onChange={(values) => setDateRange(values || [])}
+                    style={{ width: 300, marginLeft: 8 }}
+                  />
+                )}
                 <Button
                   className="clear-filter-button"
                   icon={<ReloadOutlined />}
                   onClick={() => {
                     setSearchTerm("");
                     setFilterStatus(null);
-                    setStartDate("");
-                    setEndDate("");
+                    setDateRange([]);
+                    setQuickDateFilter(null);
+                    setShowRangePicker(false);
                   }}
                 ></Button>
               </Space>
