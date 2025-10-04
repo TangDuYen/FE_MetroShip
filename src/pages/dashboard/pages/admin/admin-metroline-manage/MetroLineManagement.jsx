@@ -447,48 +447,69 @@ function MetroLineManagement() {
             </Col>
 
             <Col span={12}>
-              <Form.List name="stations">
+              <Form.List name="stations" rules={[{ required: true, message: "Vui lòng thêm ít nhất một trạm" }]}>
                 {(fields, { add, remove }) => (
                   <>
-                    <div style={{ marginBottom: 12, fontWeight: 600 }}>
-                      Danh sách ga (stations)
-                    </div>
-                    {fields.map(({ key, name, ...restField }) => (
-                      <div
-                        key={key}
-                        style={{
-                          display: "flex",
-                          gap: "1rem",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        <Form.Item
-                          {...restField}
-                          name={[name, "station"]}
-                          rules={[{ required: true, message: "Chọn ga" }]}
-                          style={{ flex: 2 }}
-                        >
-                          <Select
-                            placeholder="Chọn ga"
-                            options={stations.map((station) => ({
-                              label: `${station.stationNameVi} (${station.stationNameEn})`,
-                              value: String(station.id),
-                            }))}
-                          />
-                        </Form.Item>
-                        <Button danger onClick={() => remove(name)}>
-                          Xóa
-                        </Button>
-                      </div>
-                    ))}
-                    <Form.Item>
-                      <Button type="dashed" onClick={() => add()} block>
-                        Thêm ga
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <strong>Danh sách ga (stations)</strong>
+                      <Button type="dashed" onClick={() => add()}>
+                        Thêm trạm
                       </Button>
-                    </Form.Item>
+                    </div>
+
+                    {fields.map(({ key, name, ...restField }) => (
+                      <Row key={key} gutter={12} align="middle" style={{ marginBottom: 8 }}>
+                        <Col span={11}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "station"]}
+                            label={fields.length === 1 ? "Trạm" : ""}
+                            rules={[{ required: true, message: "Chọn trạm" }]}
+                          >
+                            <Select
+                              placeholder="Chọn ga"
+                              showSearch
+                              allowClear
+                              optionFilterProp="label"
+                              filterOption={(input, option) =>
+                                option.label.toLowerCase().includes(input.toLowerCase())
+                              }
+                              options={stations.map((station) => ({
+                                label: `${station.stationNameVi} (${station.stationNameEn})`,
+                                value: station.id, // 👈 gửi nguyên object station
+                              }))}
+                            />
+                          </Form.Item>
+                        </Col>
+
+                        <Col span={9}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "distanceKm"]}
+                            label={fields.length === 1 ? "Khoảng cách (km)" : ""}
+                            tooltip="Khoảng cách đến trạm kế tiếp (tùy chọn)"
+                          >
+                            <Input type="number" min={0} placeholder="Ví dụ: 2.5" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col span={4} style={{ display: "flex", justifyContent: "center" }}>
+                          <Button danger onClick={() => remove(name)}>
+                            Xóa
+                          </Button>
+                        </Col>
+                      </Row>
+                    ))}
+
+                    {fields.length === 0 && (
+                      <Button type="dashed" onClick={() => add()} block>
+                        + Thêm trạm đầu tiên
+                      </Button>
+                    )}
                   </>
                 )}
               </Form.List>
+
             </Col>
           </Row>
         </Form>

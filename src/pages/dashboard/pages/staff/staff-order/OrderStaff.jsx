@@ -271,6 +271,7 @@ function OrderStaff() {
       title: 'Xác nhận',
       key: 'confirm',
       render: (_, record) => {
+        if (record.shipmentStatus !== 7) return null;
         return (
           <ConfigProvider
             theme={{
@@ -339,12 +340,6 @@ function OrderStaff() {
       }
     },
   ];
-
-  // const onRowClick = (record) => {
-  //   const relatedParcels = getParcelsByShipmentId(record.id);
-  //   setSelectedOrder({ ...record, relatedParcels });
-  //   setModalOpen(true);
-  // };
 
   const onRowClick = (record) => {
     const relatedParcels = getParcelsByShipmentId(record.id);
@@ -520,102 +515,7 @@ function OrderStaff() {
                 style={{ cursor: 'pointer' }}
               />
             </ConfigProvider>
-            <Modal
-              title={`Chi tiết đơn hàng: ${selectedOrder?.trackingCode || ''}`}
-              open={modalOpen}
-              onCancel={() => setModalOpen(false)}
-              footer={null}
-              width={700}
-            >
-              {selectedOrder && selectedOrder.relatedParcels && (
-                <Tabs defaultActiveKey="0">
-                  {selectedOrder.relatedParcels.map((parcel, index) => (
-                    <TabPane tab={`Kiện hàng ${index + 1}`} key={index}>
-                      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                        <Table
-                          dataSource={[
-                            {
-                              key: 'parcelCode',
-                              label: 'Mã kiện hàng',
-                              value: parcel.parcelCode || 'N/A',
-                            },
-                            {
-                              key: 'parcelCategory',
-                              label: 'Loại hàng',
-                              value:
-                                parcel.parcelCategory?.categoryName ||
-                                (parcelCate.find(c => c.id === parcel.parcelCategoryId)?.categoryName) ||
-                                'N/A',
-                            },
-                            {
-                              key: 'chargeableWeightKg',
-                              label: 'Trọng lượng quy đổi',
-                              value: `${parcel.chargeableWeightKg || 'N/A'} kg`,
-                            },
-                            {
-                              key: 'volumeCm3',
-                              label: 'Thể tích',
-                              value: `${parcel.volumeCm3 || 'N/A'} cm³`,
-                            },
-                            {
-                              key: 'departureStationName',
-                              label: 'Trạm gửi',
-                              value: selectedOrder.departureStationName || 'N/A',
-                            },
-                            {
-                              key: 'destinationStationName',
-                              label: 'Trạm nhận',
-                              value: selectedOrder.destinationStationName || 'N/A',
-                            },
-                            {
-                              key: 'departureDate',
-                              label: 'Ngày gửi',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('YYYY-MM-DD') || 'N/A',
-                            },
-                            {
-                              key: 'departureTime',
-                              label: 'Hạn chót nhận hàng lúc',
-                              value: dayjs(selectedOrder.scheduledDateTime).format('HH:mm') || 'N/A',
-                            },
-                            {
-                              key: 'createdAt',
-                              label: 'Thời điểm tạo yêu cầu',
-                              value: dayjs(selectedOrder.createdAt).format('YYYY-MM-DD HH:mm:ss') || 'N/A',
-                            },
-                            {
-                              key: 'totalCost',
-                              label: 'Tổng chi phí',
-                              value: formatCurrency(parcel.priceVnd || 0),
-                            },
-                            {
-                              key: 'parcelStatus',
-                              label: 'Trạng thái kiện hàng',
-                              value: shipmentStatusMap[selectedOrder.shipmentStatus] || 'Không xác nhận',
-                            }
-                          ]}
-                          columns={[
-                            {
-                              title: 'Thông tin',
-                              dataIndex: 'label',
-                              key: 'label',
-                            },
-                            {
-                              title: 'Chi tiết',
-                              dataIndex: 'value',
-                              key: 'value',
-                            },
-                          ]}
-                          pagination={false}
-                          bordered
-                          showHeader={false}
-                          rowClassName="order-detail-row"
-                        />
-                      </Space>
-                    </TabPane>
-                  ))}
-                </Tabs>
-              )}
-            </Modal>
+            
             <Modal
               title={'Từ chối đơn hàng'}
               open={rejectModalOpen}
