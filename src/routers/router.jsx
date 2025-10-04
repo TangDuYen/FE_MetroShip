@@ -1,5 +1,5 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
@@ -9,42 +9,6 @@ import ScrollToTop from "../components/ScrollToTop";
 import { selectUser } from "../redux/features/counterSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-
-// import AboutUs from "../pages/about_us/AboutUs";
-// import Additional from "../pages/services/additionalService/Additional";
-// import AdminDashboard from "../pages/dashboard/pages/admin/admin-dashboard/AdminDashboard";
-// import ExpressDelivery from "../pages/services/expressDelivery/ExpressDelivery";
-
-// import HistoryOrders from "../pages/history_orders/HistoryOrders";
-// import HistoryPayment from "../pages/history_payment/HistoryPayment";
-// import Homepage from "../pages/homepage/Homepage";
-// import Login from "../pages/login/Login";
-// import Main from "../pages/dashboard/layout/main-dashboard/Main";
-// import MetroLineManagement from "../pages/dashboard/pages/admin/admin-metroline-manage/MetroLineManagement";
-// import MetroTrainManagement from "../pages/dashboard/pages/admin/admin-metrotrain-manage/MetroTrainManagement";
-
-// import Order from "../pages/order/Order";
-// import OrderStaff from "../pages/dashboard/pages/staff/staff-order/OrderStaff";
-
-// import Page404 from "../pages/page404/Page404";
-// import PaymentFail from "../pages/payment_fail/PaymentFail";
-// import PaymentStaff from "../pages/dashboard/pages/staff/staff-payment/PaymentStaff";
-// import PaymentSuccess from "../pages/payment_success/PaymentSuccess";
-// import Pincode from "../pages/pinCode/Pincode";
-// import Policy from './../pages/policy/Policy';
-// import Profile from "../pages/profile/Profile";
-// import Register from "../pages/register/Register";
-// import ResetPassword from "../pages/resetPassword/ResetPassword";
-// import RouteStaff from "../pages/dashboard/pages/staff/staff-route/RouteStaff";
-
-// import Service from "../pages/services/Service";
-// import Support from "../pages/support/Support";
-// import Tracking from "../pages/tracking/Tracking";
-// import TrackingOrder from "../pages/tracking-order/TrackingOrder";
-// import TrackingOrderStaff from "../pages/dashboard/pages/staff/staff-tracking-order/TrackingOrderStaff";
-// import UserManagement from "../pages/dashboard/pages/admin/admin-usermanage/UserManagement";
-// import VerifyMail from "../pages/resetPassword/VerifyMail";
-// import { element } from "prop-types";
 
 const lazyLoad = (importFn) => {
   const Component = lazy(importFn);
@@ -57,6 +21,22 @@ const lazyLoad = (importFn) => {
 
 const ProtectedRouteCustomer = ({ children }) => {
   const user = useSelector(selectUser);
+  const [redirect, setRedirect] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để tiếp tục");
+      const timer = setTimeout(() => {
+        setRedirect(true);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  if (redirect) {
+    return <Navigate to={PATH_NAME.LOGIN} replace />;
+  }
   if (user?.role?.includes("Admin")) {
     toast.error("Bạn không có quyền truy cập vào trang này.");
     return <Navigate to={PATH_NAME.DASHBOARD_ADMIN} replace />;
@@ -70,30 +50,60 @@ const ProtectedRouteCustomer = ({ children }) => {
 
 const ProtectedDashboard = ({ children }) => {
   const user = useSelector(selectUser);
-  console.log(user);
+  const [redirect, setRedirect] = useState(false);
 
-  const validRoles = ["Admin", "Staff"];
+  useEffect(() => {
+    if (user === null) return;
+    const validRoles = ["Admin", "Staff"];
+    if (!validRoles.includes(user?.role)) {
+      toast.error("Bạn không có quyền truy cập vào trang này.");
+      const timer = setTimeout(() => setRedirect(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
-  if (!validRoles.includes(user?.role)) {
-    return <Navigate to={PATH_NAME.PAGE404} replace />;
+  if (redirect) {
+    return <Navigate to={PATH_NAME.HOME} replace />;
   }
   return children;
 };
 
 const ProtectedRouteAdmin = ({ children }) => {
   const user = useSelector(selectUser);
-  if (!user?.role?.includes("Admin")) {
-    toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to={PATH_NAME.DASHBOARD_ADMIN} replace />;
+  const [redirect, setRedirect] = useState(false);
+  const hasShownToast = useRef(false);
+
+  useEffect(() => {
+    if (user === null) return;
+    if (!user?.role?.includes("Admin") && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.error("Bạn cần đăng nhập với vai trò Quản trị viên để truy cập trang này.");
+      const timer = setTimeout(() => setRedirect(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+
+  if (redirect) {
+    return <Navigate to={PATH_NAME.LOGIN} replace />;
   }
+
   return children;
 };
 
 const ProtectedRouteStaff = ({ children }) => {
   const user = useSelector(selectUser);
-  if (!user?.role?.includes("Staff")) {
-    toast.error("Bạn không có quyền truy cập vào trang này.");
-    return <Navigate to={PATH_NAME.DASHBOARD_STAFF_PENDING_ORDER} replace />;
+  const [redirect, setRedirect] = useState(false);
+
+  useEffect(() => {
+    if (user === null) return;
+    if (!user?.role?.includes("Staff")) {
+      toast.error("Bạn cần đăng nhập với vai trò Nhân viên để truy cập trang này.");
+      const timer = setTimeout(() => setRedirect(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  if (redirect) {
+    return <Navigate to={PATH_NAME.LOGIN} replace />;
   }
   return children;
 };
