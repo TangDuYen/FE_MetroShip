@@ -40,9 +40,9 @@ import {
 import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
-import { toast } from "react-toastify";
-import moment from "moment";
 import dayjs from "dayjs";
+import moment from "moment";
+import { toast } from "react-toastify";
 
 const { Title } = Typography;
 function MetroTrainManagement() {
@@ -69,45 +69,46 @@ function MetroTrainManagement() {
 
   const [trainDetails, setTrainDetails] = useState({});
 
+
+  const fetchInitialData = async () => {
+    const lines = await getMetroLinesAdmin();
+    const map = {};
+    lines.forEach((line) => {
+      map[line.id] = { lineNameVi: line.lineNameVi };
+    });
+    setMetroLines(lines);
+    setLineMap(map);
+
+    const slotData = await getMetroTimeSlots();
+    setTimeSlots(slotData);
+
+    const data = await getAllMetroTrains();
+    const trains = data.data.items;
+    const trainsWithLine = trains.map((train) => ({
+      ...train,
+      lineNameVi: map[train.lineId]?.lineNameVi || "Không xác định",
+    }));
+    setAllTrains(trainsWithLine);
+    setFilteredTrains(trainsWithLine);
+
+    const additionalData = data.additionalData[0];
+    const capacity = additionalData.find(
+      (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
+    );
+    const volume = additionalData.find(
+      (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
+    );
+
+    setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
+    setMaxVolume(volume ? volume.configValue : "Không xác định");
+
+    const stationRes = await getAllStations();
+    setStations(stationRes || []);
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchInitialData = async () => {
-      const lines = await getMetroLinesAdmin();
-      const map = {};
-      lines.forEach((line) => {
-        map[line.id] = { lineNameVi: line.lineNameVi };
-      });
-      setMetroLines(lines);
-      setLineMap(map);
-
-      const slotData = await getMetroTimeSlots();
-      setTimeSlots(slotData);
-
-      const data = await getAllMetroTrains();
-      const trains = data.data.items;
-      const trainsWithLine = trains.map((train) => ({
-        ...train,
-        lineNameVi: map[train.lineId]?.lineNameVi || "Không xác định",
-      }));
-      setAllTrains(trainsWithLine);
-      setFilteredTrains(trainsWithLine);
-
-      const additionalData = data.additionalData[0];
-      const capacity = additionalData.find(
-        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_KG"
-      );
-      const volume = additionalData.find(
-        (item) => item.configKey === "MAX_CAPACITY_PER_LINE_M3"
-      );
-
-      setMaxCapacity(capacity ? capacity.configValue : "Không xác định");
-      setMaxVolume(volume ? volume.configValue : "Không xác định");
-
-      const stationRes = await getAllStations();
-      setStations(stationRes || []);
-
-      setLoading(false);
-    };
-
     fetchInitialData();
   }, []);
 
@@ -281,6 +282,7 @@ function MetroTrainManagement() {
         }
       );
       toast.success("Đã phân tàu vào ca thành công!");
+      await fetchInitialData();
       setIsModalOpen(false);
       form.resetFields();
     } catch (err) {
@@ -415,7 +417,7 @@ function MetroTrainManagement() {
               Phân tàu{" "}
             </Button>
           </ConfigProvider>
-          <ConfigProvider
+          {/* <ConfigProvider
             theme={{
               components: {
                 Button: {
@@ -437,7 +439,7 @@ function MetroTrainManagement() {
               {" "}
               Cập nhật{" "}
             </Button>
-          </ConfigProvider>
+          </ConfigProvider> */}
           {/* <Button
             danger
             onClick={() => {
@@ -627,8 +629,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm tàu"
             : modalMode === "edit"
-            ? "Cập nhật tàu"
-            : "Phân tàu"
+              ? "Cập nhật tàu"
+              : "Phân tàu"
         }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
@@ -637,8 +639,8 @@ function MetroTrainManagement() {
           modalMode === "add"
             ? "Thêm"
             : modalMode === "edit"
-            ? "Cập nhật"
-            : "Phân tàu"
+              ? "Cập nhật"
+              : "Phân tàu"
         }
         cancelText="Hủy"
       >
