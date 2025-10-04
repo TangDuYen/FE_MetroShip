@@ -336,7 +336,7 @@ function AdminStaffManage() {
           >
             {uniqueRoles.map((role) => (
               <Option key={role} value={role}>
-                {role}
+                {staffRoleMap[role] || role}
               </Option>
             ))}
           </Select>
