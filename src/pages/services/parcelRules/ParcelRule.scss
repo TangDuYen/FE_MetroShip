@@ -1,7 +1,7 @@
 @use "../../../styles/variables.scss" as *;
 .parcel-rules-container {
   max-width: 900px;
-  margin: 7% auto;
+  margin: 0% auto;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
@@ -26,4 +26,8 @@
     font-size: 16px;
     line-height: 1.7;
   }
+}
+
+.parcel-rule-container {
+  margin-top: 5.7% !important;
 }
