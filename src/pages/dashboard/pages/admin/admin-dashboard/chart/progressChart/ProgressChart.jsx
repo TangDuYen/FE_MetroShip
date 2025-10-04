@@ -20,17 +20,31 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 function ProgressChart() {
+  const now = new Date();
+  const getWeekNumber = (date) => {
+    const d = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  };
+
+  const getCurrentQuarter = (month) => {
+    return Math.floor((month - 1) / 3) + 1;
+  };
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
 
   // filter states
   const [filterType, setFilterType] = useState(0);
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
-  const [year, setYear] = useState(dayjs().year());
-  const [quarter, setQuarter] = useState(1);
-  const [startMonth, setStartMonth] = useState(dayjs().month() + 1);
-  const [endMonth, setEndMonth] = useState(12);
-  const [week, setWeek] = useState(1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [quarter, setQuarter] = useState(getCurrentQuarter(now.getMonth() + 1));
+  const [startMonth, setStartMonth] = useState(now.getMonth() + 1);
+  const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
+  const [week, setWeek] = useState(getWeekNumber(now));
 
   const fetchData = async () => {
     try {
@@ -42,7 +56,7 @@ function ProgressChart() {
       } else if (filterType === 1) {
         url += `?FilterType=1&Date=${date || dayjs().format("YYYY-MM-DD")}`;
       } else if (filterType === 2) {
-        url += `?FilterType=2&Week=${week}&StartMonth=${startMonth}`;
+        url += `?FilterType=2&Week=${week}&Year=${year}`;
       } else if (filterType === 3) {
         url += `?FilterType=3&Year=${year}`;
       } else if (filterType === 4) {
@@ -62,7 +76,7 @@ function ProgressChart() {
 
   useEffect(() => {
     fetchData();
-  }, [filterType, date, year, quarter, startMonth, endMonth]);
+  }, [filterType, date, year, quarter, startMonth, endMonth, week]);
 
   const handleReset = () => {
     setFilterType(0);
@@ -104,9 +118,9 @@ function ProgressChart() {
             <Option value={0}>Tổng quan</Option>
             <Option value={1}>Theo ngày</Option>
             <Option value={2}>Theo tuần</Option>
-            <Option value={3}>Theo năm</Option>
+            <Option value={5}>Theo tháng</Option>
             <Option value={4}>Theo quý</Option>
-            <Option value={5}>Theo khoảng tháng</Option>
+            <Option value={3}>Theo năm</Option>
           </Select>
           {filterType === 1 && (
             <DatePicker
@@ -126,18 +140,16 @@ function ProgressChart() {
               <InputNumber
                 value={week}
                 min={1}
-                max={4}
+                max={53}
                 onChange={(val) => setWeek(val)}
                 style={{ width: 70, marginRight: 10 }}
                 placeholder="Tuần"
               />
               <InputNumber
-                value={startMonth}
-                min={1}
-                max={12}
-                onChange={(val) => setStartMonth(val)}
-                style={{ width: 70 }}
-                placeholder="Tháng"
+                value={year}
+                onChange={(val) => setYear(val)}
+                style={{ width: 100, marginRight: 10 }}
+                placeholder="Năm"
               />
             </>
           )}
@@ -147,39 +159,38 @@ function ProgressChart() {
               value={year}
               onChange={(val) => setYear(val)}
               style={{ width: 100, marginRight: 10 }}
+              placeholder="Năm"
             />
           )}
 
           {filterType === 4 && (
             <>
               <InputNumber
-                value={year}
-                onChange={(val) => setYear(val)}
-                style={{ width: 70, marginRight: 10 }}
-              />
-              <InputNumber
                 value={quarter}
                 min={1}
                 max={4}
                 onChange={(val) => setQuarter(val)}
                 style={{ width: 50 }}
+                placeholder="Quý"
+              />
+              <InputNumber
+                value={year}
+                onChange={(val) => setYear(val)}
+                style={{ width: 70, marginRight: 10 }}
+                placeholder="Năm"
               />
             </>
           )}
 
           {filterType === 5 && (
             <>
-              <InputNumber
-                value={year}
-                onChange={(val) => setYear(val)}
-                style={{ width: 60, marginRight: 10 }}
-              />
-              <InputNumber
+            <InputNumber
                 value={startMonth}
                 min={1}
                 max={12}
                 onChange={(val) => setStartMonth(val)}
                 style={{ width: 40, marginRight: 4 }}
+                placeholder="Từ"
               />
               <InputNumber
                 value={endMonth}
@@ -187,7 +198,15 @@ function ProgressChart() {
                 max={12}
                 onChange={(val) => setEndMonth(val)}
                 style={{ width: 40 }}
+                placeholder="Đến"
               />
+              <InputNumber
+                value={year}
+                onChange={(val) => setYear(val)}
+                style={{ width: 60, marginRight: 10 }}
+                placeholder="Năm"
+              />
+              
             </>
           )}
 

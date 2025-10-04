@@ -14,6 +14,7 @@ import {
   Space,
   Spin,
   Table,
+  Tabs,
   Tag,
 } from "antd";
 import { Link, useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ dayjs.extend(isSameOrBefore);
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+const { TabPane } = Tabs;
 function HistoryOrders() {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,12 +63,18 @@ function HistoryOrders() {
   const [quickDateFilter, setQuickDateFilter] = useState(null);
   const [showRangePicker, setShowRangePicker] = useState(false);
   const [dateRange, setDateRange] = useState([]);
+  const [activeTab, setActiveTab] = useState("sent");
 
   const fetchData = async () => {
     try {
+      const shipmentsUrl =
+        activeTab === "sent"
+          ? "/shipments/customer/history?pageSize=1000"
+          : "/shipments/customer/history?pageSize=1000&isRecipient=true";
+
       const [parcelsRes, shipmentsRes] = await Promise.all([
         api.get("/parcels?PageSize=1000"),
-        api.get("/shipments/customer/history?PageSize=1000"),
+        api.get(shipmentsUrl),
       ]);
 
       const parcelItems = parcelsRes.data?.data?.items || [];
@@ -117,6 +125,7 @@ function HistoryOrders() {
           rating: shipment.rating || 0,
           departureStationName: shipment.departureStationName || "",
           destinationStationName: shipment.destinationStationName || "",
+          createAt: shipment.createdAt || null,
         };
       });
 
@@ -134,7 +143,7 @@ function HistoryOrders() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   // const [countdowns, setCountdowns] = useState({});
 
@@ -342,10 +351,10 @@ function HistoryOrders() {
       !filterStatus || item.shipmentStatus === Number(filterStatus);
 
     const matchDateRange =
-    dateRange.length === 0 ||
-    (item.deliveryDate &&
-      dayjs(item.deliveryDate).isSameOrAfter(dateRange[0], "day") &&
-      dayjs(item.deliveryDate).isSameOrBefore(dateRange[1], "day"));
+      dateRange.length === 0 ||
+      (item.createAt &&
+        dayjs(item.createAt).isSameOrAfter(dateRange[0], "day") &&
+        dayjs(item.createAt).isSameOrBefore(dateRange[1], "day"));
 
     return matchSearch && matchStatus && matchDateRange;
   });
@@ -361,7 +370,7 @@ function HistoryOrders() {
     );
   };
 
-  const columns = [
+  const receiveColumns = [
     {
       title: "STT",
       dataIndex: "index",
@@ -388,18 +397,27 @@ function HistoryOrders() {
       title: "Tổng chi phí (VND)",
       dataIndex: "price",
       key: "price",
+      align: "center",
       render: (price) => formatCurrency1(price),
     },
     {
-      title: "Hạn chót gửi hàng lúc",
-      dataIndex: "deliveryDate",
-      key: "deliveryDate",
+      title: "Ngày tạo đơn",
+      dataIndex: "createAt",
+      key: "createAt",
       render: (date) =>
         date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định",
     },
+    // {
+    //   title: "Hạn chót gửi hàng lúc",
+    //   dataIndex: "deliveryDate",
+    //   key: "deliveryDate",
+    //   render: (date) =>
+    //     date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định",
+    // },
     {
       title: "Chi tiết",
       key: "detail",
+      align: "center",
       render: (_, record) => (
         <Button type="link" onClick={() => onRowClick(record)}>
           Chi tiết
@@ -410,6 +428,7 @@ function HistoryOrders() {
       title: "Trạng thái",
       dataIndex: "shipmentStatus",
       key: "shipmentStatus",
+      align: "center",
       render: (status) => (
         <Tag color={shipmentStatusColorMap[status] || "default"}>
           {shipmentStatusMap[status] || "Không xác định"}
@@ -418,7 +437,74 @@ function HistoryOrders() {
     },
   ];
 
-  columns.push({
+  const sentColumns = [
+    {
+      title: "STT",
+      dataIndex: "index",
+      key: "index",
+      render: (_, __, index) => (currentPage - 1) * itemsPerPage + index + 1,
+      width: 60,
+    },
+    {
+      title: "Mã vận đơn",
+      dataIndex: "trackingCode",
+      key: "trackingCode",
+    },
+    {
+      title: "Trạm gửi",
+      dataIndex: "departureStationName",
+      key: "departureStationName",
+    },
+    {
+      title: "Trạm nhận",
+      dataIndex: "destinationStationName",
+      key: "destinationStationName",
+    },
+    {
+      title: "Tổng chi phí (VND)",
+      dataIndex: "price",
+      key: "price",
+      align: "center",
+      render: (price) => formatCurrency1(price),
+    },
+    {
+      title: "Hạn chót gửi hàng lúc",
+      dataIndex: "deliveryDate",
+      key: "deliveryDate",
+      render: (date) =>
+        date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định",
+    },
+    {
+      title: "Ngày tạo đơn",
+      dataIndex: "createAt",
+      key: "createAt",
+      render: (date) =>
+        date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "Không xác định",
+    },
+    {
+      title: "Chi tiết",
+      key: "detail",
+      align: "center",
+      render: (_, record) => (
+        <Button type="link" onClick={() => onRowClick(record)}>
+          Chi tiết
+        </Button>
+      ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "shipmentStatus",
+      key: "shipmentStatus",
+      align: "center",
+      render: (status) => (
+        <Tag color={shipmentStatusColorMap[status] || "default"}>
+          {shipmentStatusMap[status] || "Không xác định"}
+        </Tag>
+      ),
+    },
+  ];
+
+  sentColumns.push({
     title: "Hành động",
     key: "actions",
     render: (_, item) => {
@@ -494,93 +580,209 @@ function HistoryOrders() {
           </div>
           <div className="history-order-right">
             <Card title="DANH SÁCH ĐƠN HÀNG CỦA BẠN" bordered={false}>
-              <Space style={{ marginBottom: 16 }}>
-                <Input.Search
-                  placeholder="Nhập mã hàng hóa"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ width: 300 }}
-                />
-                <Select
-                  value={filterStatus}
-                  onChange={(value) => setFilterStatus(value)}
-                  style={{ width: 300 }}
-                  placeholder="Trạng thái"
-                  allowClear
-                >
-                  {Object.entries(shipmentStatusMap).map(([value, label]) => (
-                    <Option key={value} value={value}>
-                      <Tag color={shipmentStatusColorMap[value] || "default"}>
-                        {shipmentStatusMap[value] || "Không xác định"}
-                      </Tag>
-                    </Option>
-                  ))}
-                </Select>
-                <Select
-                  style={{ width: 200 }}
-                  placeholder="Chọn khoảng thời gian"
-                  allowClear
-                  value={quickDateFilter}
-                  onChange={(val) => {
-                    setQuickDateFilter(val);
+              <div className="tab-buttons">
+  <button
+    className={`tab-btn ${activeTab === "sent" ? "active" : ""}`}
+    onClick={() => setActiveTab("sent")}
+  >
+    Đơn gửi
+  </button>
+  <button
+    className={`tab-btn ${activeTab === "received" ? "active" : ""}`}
+    onClick={() => setActiveTab("received")}
+  >
+    Đơn nhận
+  </button>
+</div>
 
-                    if (val === "custom") {
-                      setShowRangePicker(true);
-                      setDateRange([]);
-                    } else {
-                      setDateRange(getDateRange(val));
-                      setShowRangePicker(true);
-                    }
-                  }}
-                >
-                  <Option value="today">Hôm nay</Option>
-                  <Option value="yesterday">Hôm qua</Option>
-                  <Option value="7days">7 ngày trước</Option>
-                  <Option value="14days">14 ngày trước</Option>
-                  <Option value="30days">30 ngày trước</Option>
-                  <Option value="thisMonth">Tháng này</Option>
-                  <Option value="lastMonth">Tháng trước</Option>
-                  <Option value="custom">Tùy chọn</Option>
-                </Select>
 
-                {showRangePicker && (
-                  <RangePicker
-                    format="DD/MM/YYYY"
-                    placeholder={["Từ ngày", "Đến ngày"]}
-                    value={dateRange}
-                    onChange={(values) => setDateRange(values || [])}
-                    style={{ width: 300, marginLeft: 8 }}
-                  />
-                )}
-                <Button
-                  className="clear-filter-button"
-                  icon={<ReloadOutlined />}
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilterStatus(null);
-                    setDateRange([]);
-                    setQuickDateFilter(null);
-                    setShowRangePicker(false);
-                  }}
-                ></Button>
-              </Space>
-              <Spin spinning={loading} tip="Đang tải dữ liệu...">
-                <ConfigProvider
-                  renderEmpty={() => (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_DEFAULT}
-                      description="Không có dữ liệu"
+              {activeTab === "sent" ? (
+                <>
+                  <Space style={{ marginBottom: 16 }}>
+                    <Input.Search
+                      placeholder="Nhập mã hàng hóa"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{ width: 300 }}
                     />
-                  )}
-                >
-                  <Table
-                    columns={columns}
-                    dataSource={filteredGoods}
-                    pagination={{ pageSize: 10 }}
-                    bordered
-                  />
-                </ConfigProvider>
-              </Spin>
+                    <Select
+                      value={filterStatus}
+                      onChange={(value) => setFilterStatus(value)}
+                      style={{ width: 300 }}
+                      placeholder="Trạng thái"
+                      allowClear
+                    >
+                      {Object.entries(shipmentStatusMap).map(
+                        ([value, label]) => (
+                          <Option key={value} value={value}>
+                            <Tag
+                              color={shipmentStatusColorMap[value] || "default"}
+                            >
+                              {label}
+                            </Tag>
+                          </Option>
+                        )
+                      )}
+                    </Select>
+                    <Select
+                      style={{ width: 200 }}
+                      placeholder="Chọn khoảng thời gian"
+                      allowClear
+                      value={quickDateFilter}
+                      onChange={(val) => {
+                        setQuickDateFilter(val);
+                        if (val === "custom") {
+                          setShowRangePicker(true);
+                          setDateRange([]);
+                        } else {
+                          setDateRange(getDateRange(val));
+                          setShowRangePicker(true);
+                        }
+                      }}
+                    >
+                      <Option value="today">Hôm nay</Option>
+                      <Option value="yesterday">Hôm qua</Option>
+                      <Option value="7days">7 ngày trước</Option>
+                      <Option value="14days">14 ngày trước</Option>
+                      <Option value="30days">30 ngày trước</Option>
+                      <Option value="thisMonth">Tháng này</Option>
+                      <Option value="lastMonth">Tháng trước</Option>
+                      <Option value="custom">Tùy chọn</Option>
+                    </Select>
+                    {showRangePicker && (
+                      <RangePicker
+                        format="DD/MM/YYYY"
+                        placeholder={["Từ ngày", "Đến ngày"]}
+                        value={dateRange}
+                        onChange={(values) => setDateRange(values || [])}
+                        style={{ width: 300, marginLeft: 8 }}
+                      />
+                    )}
+                    <Button
+                      className="clear-filter-button"
+                      icon={<ReloadOutlined />}
+                      onClick={() => {
+                        setSearchTerm("");
+                        setFilterStatus(null);
+                        setDateRange([]);
+                        setQuickDateFilter(null);
+                        setShowRangePicker(false);
+                      }}
+                    ></Button>
+                  </Space>
+
+                  <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                    <ConfigProvider
+                      renderEmpty={() => (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_DEFAULT}
+                          description="Không có đơn hàng"
+                        />
+                      )}
+                    >
+                      <Table
+                        columns={sentColumns}
+                        dataSource={filteredGoods}
+                        pagination={{ pageSize: 10 }}
+                        bordered
+                      />
+                    </ConfigProvider>
+                  </Spin>
+                </>
+              ) : (
+                <>
+                  <Space style={{ marginBottom: 16 }}>
+                    <Input.Search
+                      placeholder="Nhập mã hàng hóa"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{ width: 300 }}
+                    />
+                    <Select
+                      value={filterStatus}
+                      onChange={(value) => setFilterStatus(value)}
+                      style={{ width: 300 }}
+                      placeholder="Trạng thái"
+                      allowClear
+                    >
+                      {Object.entries(shipmentStatusMap).map(
+                        ([value, label]) => (
+                          <Option key={value} value={value}>
+                            <Tag
+                              color={shipmentStatusColorMap[value] || "default"}
+                            >
+                              {label}
+                            </Tag>
+                          </Option>
+                        )
+                      )}
+                    </Select>
+                    <Select
+                      style={{ width: 200 }}
+                      placeholder="Chọn khoảng thời gian"
+                      allowClear
+                      value={quickDateFilter}
+                      onChange={(val) => {
+                        setQuickDateFilter(val);
+                        if (val === "custom") {
+                          setShowRangePicker(true);
+                          setDateRange([]);
+                        } else {
+                          setDateRange(getDateRange(val));
+                          setShowRangePicker(true);
+                        }
+                      }}
+                    >
+                      <Option value="today">Hôm nay</Option>
+                      <Option value="yesterday">Hôm qua</Option>
+                      <Option value="7days">7 ngày trước</Option>
+                      <Option value="14days">14 ngày trước</Option>
+                      <Option value="30days">30 ngày trước</Option>
+                      <Option value="thisMonth">Tháng này</Option>
+                      <Option value="lastMonth">Tháng trước</Option>
+                      <Option value="custom">Tùy chọn</Option>
+                    </Select>
+                    {showRangePicker && (
+                      <RangePicker
+                        format="DD/MM/YYYY"
+                        placeholder={["Từ ngày", "Đến ngày"]}
+                        value={dateRange}
+                        onChange={(values) => setDateRange(values || [])}
+                        style={{ width: 300, marginLeft: 8 }}
+                      />
+                    )}
+                    <Button
+                      className="clear-filter-button"
+                      icon={<ReloadOutlined />}
+                      onClick={() => {
+                        setSearchTerm("");
+                        setFilterStatus(null);
+                        setDateRange([]);
+                        setQuickDateFilter(null);
+                        setShowRangePicker(false);
+                      }}
+                    ></Button>
+                  </Space>
+
+                  <Spin spinning={loading} tip="Đang tải dữ liệu...">
+                    <ConfigProvider
+                      renderEmpty={() => (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_DEFAULT}
+                          description="Không có đơn hàng"
+                        />
+                      )}
+                    >
+                      <Table
+                        columns={receiveColumns}
+                        dataSource={filteredGoods}
+                        pagination={{ pageSize: 10 }}
+                        bordered
+                      />
+                    </ConfigProvider>
+                  </Spin>
+                </>
+              )}
             </Card>
           </div>
         </div>
