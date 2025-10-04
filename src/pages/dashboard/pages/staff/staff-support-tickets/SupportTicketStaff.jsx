@@ -186,7 +186,7 @@ function SupportTicketStaff({ stationId }) {
             // Check nếu shipment đã bồi thường (status 24 hoặc 25)
             const isCompensated = shipment && [24, 25].includes(shipment.shipmentStatus);
 
-            return !isCompensated && (
+            return isCompensated && (
               <Button
                 style={{ color: 'white', backgroundColor: "red" }}
                 onClick={async () => {

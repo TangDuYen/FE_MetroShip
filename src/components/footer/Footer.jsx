@@ -25,9 +25,9 @@ function Footer() {
               <a href="#" className="footer_link">
                 Cá nhân
               </a>
-              <a href="#" className="footer_link">
+              {/* <a href="#" className="footer_link">
                 Bảng giá dịch vụ
-              </a>
+              </a> */}
               <a href="#" className="footer_link">
                 Ưu đãi
               </a>
@@ -43,16 +43,16 @@ function Footer() {
           <div className="footer_container">
             <h4>Thông tin</h4>
             <div className="footer_link_container">
-              <a href="#" className="footer_link">
+              <a href={PATH_NAME.ABOUT_US} className="footer_link">
                 Về chúng tôi
               </a>
-              <a href="#" className="footer_link">
+              {/* <a href="#" className="footer_link">
                 Deliver care
-              </a>
-              <a href="#" className="footer_link">
+              </a> */}
+              {/* <a href="#" className="footer_link">
                 Blog
-              </a>
-              <a href="#" className="footer_link">
+              </a> */}
+              <a href={PATH_NAME.SUPPORT} className="footer_link">
                 Liên hệ hỗ trợ
               </a>
             </div>
@@ -61,8 +61,8 @@ function Footer() {
           <div className="footer_container">
             <h4>Pháp lý</h4>
             <div className="footer_link_container">
-              <a href="#" className="footer_link">
-                Chính sách quyền riêng tư
+              <a href={PATH_NAME.SERVICE} className="footer_link">
+                Chính sách
               </a>
               <a href="#" className="footer_link">
                 Điều khoản và điều kiện

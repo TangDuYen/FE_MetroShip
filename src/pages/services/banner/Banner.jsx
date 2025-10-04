@@ -5,7 +5,7 @@ function Banner() {
   return (
      <div className="banner">
       <div className="banner-content">
-        <h1>DỊCH VỤ CỦA METROSHIP</h1>
+        <h1>CHÍNH SÁCH GỬI HÀNG - METROSHIP</h1>
         
       </div>
     </div>

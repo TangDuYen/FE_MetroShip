@@ -1,3 +1,4 @@
+import Banner from '../banner/Banner';
 import './ParcelRule.scss';
 
 import { Divider, Typography } from 'antd';
@@ -6,10 +7,11 @@ const { Title, Paragraph } = Typography;
 
 function ParcelRules() {
   return (
+    
     <div className="parcel-rules-container" style={{ padding: '20px' }}>
-      <Title level={1} className="main-title">Chính Sách Gửi Hàng – MetroShip</Title>
+      {/* <Title level={3} className="main-title">Chính Sách Gửi Hàng – MetroShip</Title> */}
 
-      <Divider />
+      {/* <Divider /> */}
 
       <Title level={4}>📱 Đăng ký sử dụng dịch vụ</Title>
       <Paragraph>
