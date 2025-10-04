@@ -296,13 +296,16 @@ function TrainStaff() {
     },
     {
       title: "Chiều chạy",
-      dataIndex: "direction",
-      render: (value) =>
-        value === 0 ? (
+      dataIndex: "currentTrainScheduleDirection",
+      key: "currentTrainScheduleDirection",
+      render: (value, record) => {
+        const dir = Number(value);
+        return dir === 0 ? (
           <Tag color="gold">Chiều đi</Tag>
         ) : (
           <Tag color="purple">Chiều về</Tag>
-        ),
+        );
+      },
     },
     {
       title: "Ga hiện tại",
@@ -416,6 +419,10 @@ function TrainStaff() {
     trainCode: train.trainCode,
     modelName: train.modelName,
     currentStationId: train.currentStationId,
+    currentStationName: train.currentStationName,
+    nextStationId: train.nextStationId,
+    nextStationName: train.nextStationName,
+    currentTrainScheduleDirection: train.currentTrainScheduleDirection,
     status: train.status,
     maxCapacity,
     maxVolume,

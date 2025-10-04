@@ -348,7 +348,7 @@ function MetroTrainManagement() {
     },
     {
       title: "Chiều chạy",
-      dataIndex: "direction",
+      dataIndex: "currentTrainScheduleDirection",
       render: (value) =>
         value === 0 ? (
           <Tag color="gold">Chiều đi</Tag>
