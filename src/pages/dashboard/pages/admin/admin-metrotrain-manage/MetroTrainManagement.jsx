@@ -2,6 +2,8 @@ import "./MetroTrainManagement.scss";
 
 import {
   Button,
+  Card,
+  Col,
   ConfigProvider,
   DatePicker,
   Empty,
@@ -9,13 +11,16 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Spin,
   Table,
   Tag,
+  Typography,
 } from "antd";
 import {
+  ClockCircleOutlined,
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
@@ -36,7 +41,10 @@ import { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
 import { toast } from "react-toastify";
+import moment from "moment";
+import dayjs from "dayjs";
 
+const { Title } = Typography;
 function MetroTrainManagement() {
   const [metroTrains, setMetroTrains] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +64,10 @@ function MetroTrainManagement() {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [modalMode, setModalMode] = useState("add");
   const [selectedDirection, setSelectedDirection] = useState(null);
+  const [dateFilter, setDateFilter] = useState(null);
+  const today = dayjs();
+
+  const [trainDetails, setTrainDetails] = useState({});
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -99,6 +111,14 @@ function MetroTrainManagement() {
     fetchInitialData();
   }, []);
 
+  const fetchTrainDetail = async (trainId) => {
+    try {
+      const res = await api.get(`/train/${trainId}/position`);
+      setTrainDetails((prev) => ({ ...prev, [trainId]: res.data }));
+    } catch (err) {
+      console.error("Lỗi khi fetch chi tiết tàu:", err);
+    }
+  };
   // const handleReset = async (train) => {
   //   if (!train) {
   //     toast.error("Chưa chọn tàu để reset lịch.");
@@ -168,6 +188,21 @@ function MetroTrainManagement() {
   //   const filtered = allTrains.filter((train) => train.lineId === lineId);
   //   setFilteredTrains(filtered);
   // };
+
+  const getCurrentShift = (slots) => {
+    const now = moment();
+    return slots.find((slot) => {
+      const start = moment(slot.openTime, "HH:mm:ss");
+      const end = moment(slot.closeTime, "HH:mm:ss");
+      if (end.isBefore(start)) {
+        // NIGHT SHIFT
+        return now.isAfter(start) || now.isBefore(end);
+      }
+      return now.isBetween(start, end);
+    });
+  };
+
+  const currentShift = getCurrentShift(timeSlots);
 
   const applyFilters = () => {
     let filtered = [...allTrains];
@@ -275,6 +310,14 @@ function MetroTrainManagement() {
   //     toast.error(errorMessage);
   //   }
   // };
+  const parcelColumns = [
+    {
+      title: "STT",
+      render: (_, __, index) => index + 1,
+      width: 60,
+    },
+    { title: "Mã bưu kiện", dataIndex: "parcelCode", key: "parcelCode" },
+  ];
 
   const columns = [
     {
@@ -319,12 +362,12 @@ function MetroTrainManagement() {
       key: "currentStationName",
       width: 120,
       render: (value) =>
-    value ? (
-      <Tag color="green">{value}</Tag>
-      //value
-    ) : (
-      <Tag color="default">Chưa xác định</Tag>
-    ),
+        value ? (
+          <Tag color="green">{value}</Tag>
+        ) : (
+          //value
+          <Tag color="default">Chưa xác định</Tag>
+        ),
     },
     {
       title: "Ga kế tiếp",
@@ -409,6 +452,35 @@ function MetroTrainManagement() {
     },
   ];
 
+  const expandedRowRender = (train) => {
+    const detail = trainDetails[train.id];
+    const parcels = detail?.additionalData?.parcels || [];
+    if (!detail) return <Spin />;
+    return (
+      <div>
+        <Spin spinning={loading} tip="Đang tải dữ liệu...">
+          <ConfigProvider
+            renderEmpty={() => (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_DEFAULT}
+                description="Không có bưu kiện"
+              />
+            )}
+          >
+            <Table
+              columns={parcelColumns}
+              dataSource={parcels}
+              rowKey="parcelId"
+              pagination={false}
+              size="small"
+              className="parcel-table"
+            />
+          </ConfigProvider>
+        </Spin>
+      </div>
+    );
+  };
+
   return (
     <div className="metro-train-management-container">
       <Space style={{ marginBottom: 16, marginRight: 16 }}>
@@ -485,6 +557,46 @@ function MetroTrainManagement() {
       </Space>
 
       <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <Card style={{ marginBottom: "1em" }}>
+          <Title level={3}>Ngày và ca của tàu Metro</Title>
+          <Row gutter={16}>
+            <Col span={6}>
+              <DatePicker
+                value={dateFilter ?? today}
+                onChange={(date) => setDateFilter(date)}
+                style={{ width: "100%" }}
+                disabled
+                format="DD/MM/YYYY"
+              />
+            </Col>
+            <Col span={18}>
+              <div style={{ display: "flex", gap: "0.5em", flexWrap: "wrap" }}>
+                {timeSlots.map((slot) => {
+                  const isActive = currentShift?.shift === slot.shift;
+                  return (
+                    <div
+                      key={slot.id}
+                      style={{
+                        padding: "0.5em 1em",
+                        borderRadius: "8px",
+                        background: isActive ? "#0066CC" : "#f0f0f0",
+                        color: isActive ? "white" : "#000",
+                        fontWeight: isActive ? 600 : 400,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5em",
+                      }}
+                    >
+                      <ClockCircleOutlined />
+                      Ca {slot.shift} ({slot.openTime.slice(0, 5)} -{" "}
+                      {slot.closeTime.slice(0, 5)})
+                    </div>
+                  );
+                })}
+              </div>
+            </Col>
+          </Row>
+        </Card>
         <ConfigProvider
           renderEmpty={() => (
             <Empty
@@ -498,6 +610,14 @@ function MetroTrainManagement() {
             dataSource={filteredTrains}
             rowKey="id"
             pagination={{ pageSize: 10 }}
+            expandable={{
+              expandedRowRender,
+              onExpand: (expanded, record) => {
+                if (expanded && !trainDetails[record.id]) {
+                  fetchTrainDetail(record.id);
+                }
+              },
+            }}
           />
         </ConfigProvider>
       </Spin>
