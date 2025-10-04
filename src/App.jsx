@@ -18,7 +18,11 @@ function App() {
         <PersistGate loading={<div className="loading">Đang tải dữ liệu...</div>} persistor={persistor}>
           <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
             <RouterProvider router={router} />
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ToastContainer position="top-right"
+              autoClose={3000}
+              newestOnTop={false}
+              closeOnClick
+              pauseOnHover />
           </GoogleOAuthProvider>
         </PersistGate>
       </Provider>
