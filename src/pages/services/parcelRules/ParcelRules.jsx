@@ -1,122 +1,155 @@
-import Banner from '../banner/Banner';
 import './ParcelRule.scss';
 
-import { Divider, Typography } from 'antd';
+import { Anchor, Col, Divider, Row, Typography } from 'antd';
 
 const { Title, Paragraph } = Typography;
+const { Link } = Anchor;
 
 function ParcelRules() {
   return (
-    
-    <div className="parcel-rules-container" style={{ padding: '20px' }}>
-      {/* <Title level={3} className="main-title">Chính Sách Gửi Hàng – MetroShip</Title> */}
+    <div className="parcel-rules-layout">
+      <Row gutter={24}>
+        {/* LEFT CONTENT AREA */}
+        <Col xs={24} md={16}>
+          <div className="parcel-rules-content" style={{ padding: '10px' }}>
+            <div id="section1">
+              <Title level={4}>1. Đăng ký sử dụng dịch vụ</Title>
+              <Paragraph>
+                Khách hàng cần tạo tài khoản trên ứng dụng <strong>MetroShip</strong> trước khi sử dụng dịch vụ. Tên đăng nhập, email và số điện thoại phải là duy nhất. Hệ thống sẽ xác thực email trước khi tài khoản được kích hoạt.
+              </Paragraph>
+            </div>
 
-      {/* <Divider /> */}
+            <Divider />
 
-      <Title level={4}>📱 Đăng ký sử dụng dịch vụ</Title>
-      <Paragraph>
-        Quý khách vui lòng tải và đăng ký tài khoản trên ứng dụng <strong>MetroShip</strong>. Sau khi hoàn tất đăng ký, đội ngũ MetroShip sẽ liên hệ hỗ trợ, tư vấn dịch vụ và kích hoạt tài khoản cho quý khách.
-      </Paragraph>
+            <div id="section2">
+              <Title level={4}>2. Hình thức tiếp nhận đơn hàng</Title>
+              <Paragraph>
+                MetroShip tiếp nhận đơn hàng thông qua:
+                <ul>
+                  <li>Website chính thức</li>
+                </ul>
+                Khách hàng cần hoàn tất việc tạo đơn trước thời gian hẹn. Liên hệ hỗ trợ: <strong>1900 9999</strong>.
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>📩 Hình thức tiếp nhận đơn hàng</Title>
-      <Paragraph>
-        MetroShip tiếp nhận đơn hàng thông qua các kênh:
-        <ul>
-          <li>Đăng đơn trực tiếp trên website</li>
-          <li>Ứng dụng MetroShip trên điện thoại</li>
-          <li>Tại các điểm gửi hàng của MetroShip</li>
-        </ul>
-        Nếu gặp sự cố khi đăng ký, vui lòng liên hệ hotline: <strong>1900 9999</strong> hoặc tới điểm giao dịch MetroShip gần nhất để được hỗ trợ.
-      </Paragraph>
+            <div id="section3">
+              <Title level={4}>3. Quy định gửi và lấy hàng</Title>
+              <Paragraph>
+                Trong giai đoạn đầu, khách hàng cần mang kiện hàng đến điểm gửi và người nhận đến điểm nhận.
+                <br />
+                Các khung giờ vận chuyển:
+                <ul>
+                  <li>Sáng: 08:00 – 11:00</li>
+                  <li>Chiều: 13:00 – 16:00</li>
+                  <li>Tối: 18:00 – 21:00</li>
+                  <li>Đêm: 23:00 – 02:00</li>
+                </ul>
+                Vui lòng mang hàng đến trước ít nhất 30 phút.
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>🚚 Quy định lấy hàng</Title>
-      <Paragraph>
-        MetroShip không giới hạn số lượng đơn. Dù chỉ có 1 đơn, MetroShip vẫn phục vụ.
-        <br />
-        Để đảm bảo đơn hàng được vận chuyển chính xác, an toàn, quý khách cần:
-        <ul>
-          <li>In và dán mã vận đơn lên kiện hàng</li>
-          <li>Hoặc ghi rõ mã vận đơn bằng tay</li>
-        </ul>
-      </Paragraph>
+            <div id="section4">
+              <Title level={4}>4. Trách nhiệm khi giao nhận</Title>
+              <Paragraph>
+                Người nhận cần đến lấy hàng trong vòng 1 ngày. Quá thời gian miễn phí sẽ bị tính phí lưu kho. Sau 5 ngày, hàng sẽ được hoàn về.
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>📦 Quy định giao hàng</Title>
-      <Paragraph>
-        MetroShip giao hàng bằng tàu điện với thùng hàng chứa nhiều đơn có giá trị. Vì vậy:
-        <ul>
-          <li>Khuyến khích người nhận chủ động nhận hàng đúng thời hạn</li>
-          <li>MetroShip có hỗ trợ giữ hàng lại theo khung giờ hẹn nếu người nhận bận</li>
-          <li>Trường hợp người nhận trễ hẹn quá 5 ngày, đơn sẽ chuyển trạng thái "Không giao được" và hoàn về</li>
-        </ul>
-      </Paragraph>
+            <div id="section5">
+              <Title level={4}>5. Các mặt hàng được chấp nhận</Title>
+              <Paragraph>
+                MetroShip chấp nhận các hàng hóa hợp pháp:
+                <ul>
+                  <li>Thời trang, phụ kiện</li>
+                  <li>Thiết bị điện tử không pin rời</li>
+                  <li>Thực phẩm khô, đồ gia dụng</li>
+                  <li>Có nguồn gốc, chứng từ rõ ràng</li>
+                </ul>
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>💰 Đối soát & chuyển tiền thu hộ</Title>
-      <Paragraph>
-        MetroShip tiến hành đối soát và chuyển khoản tiền thu hộ các đơn hoàn tất theo lịch do quý khách lựa chọn:
-        <ul>
-          <li>Đối soát hàng tuần (VD: thứ 6 hàng tuần)</li>
-          <li>Hoặc hàng tháng (VD: ngày 30 hàng tháng)</li>
-        </ul>
-        Công thức đối soát:
-        <br />
-        <strong>Tiền đối soát = Tiền thu hộ – phí dịch vụ – phí bảo hiểm (nếu có)</strong>
-      </Paragraph>
+            <div id="section6">
+              <Title level={4}>6. Các mặt hàng bị cấm gửi</Title>
+              <Paragraph>
+                Không chấp nhận vận chuyển:
+                <ul>
+                  <li>Chất nổ, hóa chất độc hại</li>
+                  <li>Thực phẩm tươi sống</li>
+                  <li>Tiền, vàng, trang sức</li>
+                  <li>Động vật sống, bộ phận cơ thể</li>
+                  <li>Hàng giả, không rõ nguồn gốc</li>
+                </ul>
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>✔️ Các mặt hàng được chấp nhận gửi</Title>
-      <Paragraph>
-        Quý khách có thể gửi các hàng hóa hợp pháp sau:
-        <ul>
-          <li>Thời trang: quần áo, giày dép, phụ kiện</li>
-          <li>Đồ điện tử tiêu dùng như điện thoại, laptop, tai nghe (không chứa pin rời)</li>
-          <li>Thực phẩm khô đóng gói, sách, văn phòng phẩm, đồ gia dụng</li>
-          <li>Hàng có hóa đơn, nguồn gốc rõ ràng, không thuộc danh mục cấm</li>
-        </ul>
-      </Paragraph>
+            <div id="section7">
+              <Title level={4}>7. Hàng dễ vỡ hoặc có giá trị cao</Title>
+              <Paragraph>
+                Khách hàng cần:
+                <ul>
+                  <li>Khai báo đúng giá trị hàng</li>
+                  <li>Dán nhãn phù hợp</li>
+                  <li>Đính kèm hóa đơn/chứng từ</li>
+                </ul>
+                MetroShip có quyền kiểm tra và từ chối nếu vi phạm quy định.
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>❌ Các mặt hàng bị cấm gửi</Title>
-      <Paragraph>
-        MetroShip không chấp nhận vận chuyển các mặt hàng sau:
-        <ul>
-          <li>Chất nổ, chất cháy, hóa chất độc hại</li>
-          <li>Thực phẩm tươi sống, dễ hỏng</li>
-          <li>Tiền mặt, vàng bạc, trang sức, kim loại quý</li>
-          <li>Động vật sống, bộ phận cơ thể người</li>
-          <li>Hàng giả, hàng không rõ nguồn gốc</li>
-        </ul>
-      </Paragraph>
+            <div id="section8">
+              <Title level={4}>8. Bảo hiểm hàng hóa</Title>
+              <Paragraph>
+                Hàng dễ vỡ hoặc có giá trị cao phải mua bảo hiểm. Phí được tính theo giá trị khai báo và hiển thị trên hóa đơn.
+              </Paragraph>
+            </div>
 
-      <Divider />
+            <Divider />
 
-      <Title level={4}>📦 Hàng dễ vỡ & có giá trị cao</Title>
-      <Paragraph>
-        Khi gửi hàng dễ vỡ hoặc giá trị cao, quý khách cần:
-        <ul>
-          <li>Khai báo chính xác giá trị đơn</li>
-          <li>Dán nhãn "Hàng dễ vỡ", "Hàng giá trị cao" bên ngoài</li>
-          <li>Đính kèm hóa đơn hoặc chứng từ hợp lệ</li>
-        </ul>
-      </Paragraph>
-      <Paragraph strong>
-        Nhân viên MetroShip có quyền <span style={{ color: 'red' }}>kiểm tra đơn hàng</span> và <span style={{ color: 'red' }}>từ chối nhận</span> nếu:
-        <ul>
-          <li>Đóng gói không đúng quy định</li>
-          <li>Khai báo sai thông tin</li>
-        </ul>
-        <br />
-        Trường hợp này, đơn hàng <span style={{ color: 'red' }}>không được hoàn tiền</span>.
-      </Paragraph>
+            <div id="section9">
+              <Title level={4}>9. Hoàn, hủy và bồi thường</Title>
+              <Paragraph>
+                <ul>
+                  <li>Hoàn 80% nếu hủy trước 24h</li>
+                  <li>Không đến gửi đúng lịch: không hoàn phí</li>
+                  <li>Chỉ xử lý bồi thường với đơn ở trạng thái “Chờ bồi thường”</li>
+                  <li>Vi phạm quy định: không được bồi thường</li>
+                </ul>
+              </Paragraph>
+            </div>
+          </div>
+        </Col>
+
+        {/* RIGHT MENU */}
+        <Col xs={24} md={8}>
+          <div className="parcel-rules-menu" style={{ padding: '20px' }}>
+            <Anchor
+              affix={false}
+              offsetTop={80}
+            >
+              <Link href="#section1" title="1. Đăng ký sử dụng" />
+              <Link href="#section2" title="2. Tiếp nhận đơn hàng" />
+              <Link href="#section3" title="3. Gửi và lấy hàng" />
+              <Link href="#section4" title="4. Trách nhiệm giao nhận" />
+              <Link href="#section5" title="5. Hàng hợp lệ" />
+              <Link href="#section6" title="6. Hàng cấm gửi" />
+              <Link href="#section7" title="7. Hàng dễ vỡ / giá trị cao" />
+              <Link href="#section8" title="8. Bảo hiểm hàng hóa" />
+              <Link href="#section9" title="9. Chính sách bồi thường" />
+            </Anchor>
+          </div>
+        </Col>
+      </Row>
     </div>
   );
 }
