@@ -454,16 +454,16 @@ function TrackingOrderStaff() {
             transactionType = 3;
             onClickAction = () => handleAction(record, transactionType);
             break;
-          case 25: // COMPENSATION
-            buttonLabel = "Bồi thường";
-            transactionType = 4;
-            onClickAction = () => handleAction(record, transactionType);
-            break;
-          case 27: // COMPENSATION
-            buttonLabel = "Bồi thường";
-            transactionType = 4;
-            onClickAction = () => handleAction(record, transactionType);
-            break;
+          // case 25: // COMPENSATION
+          //   buttonLabel = "Bồi thường";
+          //   transactionType = 4;
+          //   onClickAction = () => handleAction(record, transactionType);
+          //   break;
+          // case 27: // COMPENSATION
+          //   buttonLabel = "Bồi thường";
+          //   transactionType = 4;
+          //   onClickAction = () => handleAction(record, transactionType);
+          //   break;
           default:
             buttonLabel = "Xác nhận giao hàng thành công";
             onClickAction = () => { };

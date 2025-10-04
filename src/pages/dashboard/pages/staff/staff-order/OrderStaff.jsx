@@ -292,6 +292,8 @@ function OrderStaff() {
             <Button
               className='booking-table-staff_button'
               onClick={() => {
+                setVerifyImageMain(null);
+                setVerifyImageOptional(null);
                 setShipmentBeingVerified(record);
                 setVerifyModalOpen(true);
               }}
@@ -647,6 +649,7 @@ function OrderStaff() {
               }}
               okText="Xác nhận"
               cancelText="Huỷ"
+              destroyOnClose
             >
               <Spin spinning={loading} tip="Đang từ chối đơn hàng" size="large">
                 <textarea
@@ -739,6 +742,7 @@ function OrderStaff() {
               }}
               okText="Xác nhận"
               cancelText="Huỷ"
+              destroyOnClose
             >
               <Spin spinning={loading} tip="Đang xác nhận đơn hàng" size="large">
                 <div style={{ marginBottom: "1em", display: "flex", flexDirection: "column" }}>
@@ -782,7 +786,6 @@ function OrderStaff() {
                 </div>
               </Spin>
             </Modal>
-
           </Card>
         </div>
       </div>

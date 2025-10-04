@@ -1,7 +1,19 @@
 import "./TrackingOrder.scss";
 import "leaflet/dist/leaflet.css";
 
-import { Badge, Button, Card, Col, Divider, Row, Tag, Timeline } from "antd";
+import {
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Spin,
+  Tag,
+  Timeline,
+} from "antd";
 import {
   MapContainer,
   Marker,
@@ -17,6 +29,7 @@ import {
   parcelStatusMap,
   shipmentStatusMap,
 } from "../../constants/statusMap";
+import { useNavigate, useParams } from "react-router-dom";
 
 import L from "leaflet";
 import { PATH_NAME } from "../../constants/pathname";
@@ -27,9 +40,9 @@ import metro from "../../assets/metro_station.png";
 import { selectUser } from "../../redux/features/counterSlice";
 import startStation from "../../assets/train.webp";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+const { Option } = Select;
 
 function ResizeMapOnShow() {
   const map = useMap();
@@ -49,20 +62,19 @@ function RecenterMap({ position }) {
   return null;
 }
 
+// icons
 const locationIcon = new L.Icon({
   iconUrl: locationIconImg,
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40],
 });
-
-const startMetro = L.icon({
+const startMetro = new L.Icon({
   iconUrl: startStation,
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40],
 });
-
 const metroIcon = new L.Icon({
   iconUrl: metro,
   iconSize: [25, 25],
@@ -72,81 +84,112 @@ function TrackingOrder() {
   const [selectedShipment, setSelectedShipment] = useState(null);
   const { trackingCode } = useParams();
   const navigate = useNavigate();
+
   const [position, setPosition] = useState([0, 0]);
-  const [path, setPath] = useState([]);
-  const [fromStation, setFromStation] = useState("");
-  const [toStation, setToStation] = useState("");
-  const [trainCode, setTrainCode] = useState("");
-  const [loading, setLoading] = useState(true);
   const [fullPathSegments, setFullPathSegments] = useState([]);
+
   const intervalRef = useRef(null);
   const lastDataRef = useRef(null);
   const [intervalTime, setIntervalTime] = useState(2000);
+
   const user = useSelector(selectUser);
+  const [userInfo, setUserInfo] = useState(null);
+
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [bankConfirmModalVisible, setBankConfirmModalVisible] = useState(false);
+  const [bankUpdateModalVisible, setBankUpdateModalVisible] = useState(false);
+
+  const [bankForm] = Form.useForm();
+  useEffect(() => {
+    if (bankUpdateModalVisible && userInfo) {
+      bankForm.setFieldsValue({
+        bankId: userInfo.bankId,
+        accountNo: userInfo.accountNo,
+        accountName: userInfo.accountName,
+      });
+    }
+  }, [bankUpdateModalVisible, userInfo, bankForm]);
+
+  const [bankSubmitting, setBankSubmitting] = useState(false);
+  const [currentShipmentIdForCompensation, setCurrentShipmentIdForCompensation] = useState(null);
+
+  const [banksList, setBanksList] = useState([]);
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await api.get(`/users/${user.id}`, {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+        setUserInfo(res.data?.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error);
+        toast.error("Không thể tải thông tin người dùng");
+      }
+    };
+
+    fetchUserInfo();
+  }, [user?.id, user?.token]);
+
+  // fetch shipment detail
   const fetchData = async () => {
     try {
-      const shipmentRes = await api.get(`/shipments/${trackingCode}`);
+      const shipmentRes = await api.get(`/shipments/${trackingCode}`, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
       const shipment = shipmentRes.data.data;
       setSelectedShipment(shipment);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
+      toast.error("Không thể lấy thông tin đơn hàng");
     }
   };
 
   useEffect(() => {
-    if (!trackingCode) return;
+    if (!trackingCode || !user?.token) return;
     fetchData();
-  }, [trackingCode]);
+  }, [trackingCode, user?.token]);
 
+  // Fetch live position when appropriate
   const fetchLivePosition = async () => {
     try {
-      const res = await api.get(`/${trackingCode}/position`);
+      const res = await api.get(`/${trackingCode}/position`, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
       const {
         latitude,
         longitude,
-        path,
-        fromStation,
-        toStation,
-        trainCode,
         additionalData,
       } = res.data;
 
       const newData = {
         latitude,
         longitude,
-        path,
-        fromStation,
-        toStation,
-        trainCode,
-        additionalData,
+        fullPath: additionalData?.shipment?.fullPath,
       };
 
       if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
         setPosition([latitude, longitude]);
-        setFromStation(fromStation);
-        setToStation(toStation);
-        setTrainCode(trainCode || ""); // có thì set, không thì để rỗng
-
-        if (path && Array.isArray(path)) {
-          setPath(path.map((p) => [p.latitude, p.longitude]));
-        }
 
         const fullPath = additionalData?.shipment?.fullPath || [];
-        if (Array.isArray(fullPath)) {
-          setFullPathSegments(fullPath);
-        }
+        setFullPathSegments(fullPath);
 
-        // lưu dữ liệu để lần sau so sánh
         lastDataRef.current = newData;
-        setIntervalTime(2000); // có thay đổi → fetch nhanh
+        setIntervalTime(2000);
       } else {
-        setIntervalTime(5000); // không đổi → fetch chậm
+        setIntervalTime(5000);
       }
-
-      setLoading(false);
     } catch (err) {
-      console.error("Lỗi lấy dữ liệu tàu:", err);
-      setLoading(false);
+      console.error("Lỗi lấy dữ liệu vị trí:", err);
     }
   };
 
@@ -155,34 +198,51 @@ function TrackingOrder() {
 
     if (selectedShipment.shipmentStatus === 9) {
       fetchLivePosition();
-    } else {
-      // reset map khi chưa đến trạng thái 9
-      setPosition([0, 0]);
-      setPath([]);
-      setFullPathSegments([]);
     }
   }, [selectedShipment]);
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    if (selectedShipment?.shipmentStatus === 9 && intervalTime) {
+    if (selectedShipment?.shipmentStatus === 9) {
       intervalRef.current = setInterval(fetchLivePosition, intervalTime);
     }
 
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [intervalTime, selectedShipment]);
 
-  const getCurrentSegmentIndex = (position, segments) => {
-    if (!segments.length) return 0;
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const res = await api.get("/transactions/vietqr/banks", {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+        const list = res.data?.data || [];
+        setBanksList(list);
+      } catch (err) {
+        console.error("Lỗi lấy danh sách ngân hàng:", err);
+      }
+    };
+
+    if (user?.token) {
+      fetchBanks();
+    }
+  }, [user?.token]);
+
+  const getCurrentSegmentIndex = (positionArr, segments) => {
+    if (!segments || !segments.length) return 0;
     let minIndex = 0;
     let minDist = Infinity;
-
     segments.forEach((seg, i) => {
-      seg.polyline.forEach((p) => {
+      seg.polyline?.forEach((p) => {
         const dist = Math.sqrt(
-          Math.pow(p.latitude - position[0], 2) +
-          Math.pow(p.longitude - position[1], 2)
+          Math.pow(p.latitude - positionArr[0], 2) +
+          Math.pow(p.longitude - positionArr[1], 2)
         );
         if (dist < minDist) {
           minDist = dist;
@@ -190,45 +250,96 @@ function TrackingOrder() {
         }
       });
     });
-
     return minIndex;
   };
 
-  const currentSegmentIndex = getCurrentSegmentIndex(
-    position,
-    fullPathSegments
-  );
+  const currentSegmentIndex = getCurrentSegmentIndex(position, fullPathSegments);
 
-  if (!selectedShipment) return <div>Đang tải đơn...</div>;
+  const handleInsuranceRequest = (shipmentId) => {
+    setCurrentShipmentIdForCompensation(shipmentId);
+    setConfirmModalVisible(true);
+  };
 
-  const currentStatus = selectedShipment.shipmentStatus;
-  const shipmentParcels = selectedShipment.parcels || [];
+  const onConfirmCompensation = () => {
+    setConfirmModalVisible(false);
+    const hasBankInfo =
+      userInfo?.bankId && userInfo?.accountNo && userInfo?.accountName;
 
-  const handleInsuranceRequest = async (shipmentId) => {
+    if (hasBankInfo) {
+      setBankConfirmModalVisible(true);
+    } else {
+      setBankUpdateModalVisible(true);
+    }
+  };
+
+  const handleBankUpdateFinish = async (values) => {
+    setBankSubmitting(true);
+    try {
+      const res = await api.put(
+        "/users/bank-info",
+        {
+          bankId: values.bankId,
+          accountNo: values.accountNo,
+          accountName: values.accountName,
+        },
+        {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user?.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      toast.success(res.data?.message || "Cập nhật thông tin ngân hàng thành công!");
+      setBankUpdateModalVisible(false);
+      setBankConfirmModalVisible(true);
+    } catch (err) {
+      console.error("Lỗi cập nhật bank info:", err);
+      toast.error("Cập nhật thông tin ngân hàng thất bại!");
+    } finally {
+      setBankSubmitting(false);
+    }
+  };
+
+  const handleConfirmBankAndSubmitCompensation = async () => {
     try {
       const payload = {
-        shipmentId,
+        shipmentId: currentShipmentIdForCompensation,
         subject: "Yêu cầu bồi thường",
         description: "Khách hàng yêu cầu bồi thường vì kiện hàng bị mất.",
         supportType: 1,
       };
-
-      const res = await api.post("/support-tickets", payload);
-
+      const res = await api.post("/support-tickets", payload, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
       if (res.status === 200 || res.status === 201) {
         toast.success("Yêu cầu bồi thường đã được gửi thành công!");
+        // fetch lại đơn nếu bạn muốn cập nhật trạng thái
         fetchData();
       } else {
-        toast.error("Không thể gửi yêu cầu bồi thường. Vui lòng thử lại!");
+        toast.error("Gửi yêu cầu bồi thường thất bại");
       }
     } catch (error) {
-      console.error(
-        "Lỗi khi gửi yêu cầu bồi thường: ",
-        error.response.data.message
-      );
-      toast.error("Gửi yêu cầu thất bại: " + error.response.data.message);
+      console.error("Lỗi gửi yêu cầu bồi thường:", error);
+      const msg = error.response?.data?.message || "Có lỗi xảy ra";
+      toast.error(msg);
     }
+    setBankConfirmModalVisible(false);
   };
+
+  if (!selectedShipment) {
+    return (
+      <div className="tracking-order-container">
+        <Spin tip="Đang tải đơn..." />
+      </div>
+    );
+  }
+
+  const currentStatus = selectedShipment.shipmentStatus;
+  const shipmentParcels = selectedShipment.parcels || [];
 
   return (
     <div className="tracking-order-container">
@@ -246,116 +357,61 @@ function TrackingOrder() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap contributors"
               />
-
-              {fullPathSegments.map((segment, index) => {
-                if (!segment.polyline?.length) return null;
-
-                const pts = segment.polyline.map((p) => [
+              {fullPathSegments.map((segment, idx) => {
+                const pts = segment.polyline?.map((p) => [
                   p.latitude,
                   p.longitude,
                 ]);
+                if (!pts || !pts.length) return null;
 
-                // Segment trước đoạn hiện tại => xám
-                if (index < currentSegmentIndex) {
+                if (idx < currentSegmentIndex) {
                   return (
                     <Polyline
-                      key={index}
+                      key={idx}
                       positions={pts}
                       color="gray"
                       weight={5}
                     />
                   );
                 }
-
-                // Segment sau đoạn hiện tại => xanh
-                if (index > currentSegmentIndex) {
+                if (idx > currentSegmentIndex) {
                   return (
                     <Polyline
-                      key={index}
+                      key={idx}
                       positions={pts}
                       color="blue"
                       weight={5}
                     />
                   );
                 }
-
-                // Segment hiện tại => tách đôi (xám + xanh)
+                // segment hiện tại → split
                 let nearestIdx = 0;
                 let minDist = Infinity;
                 segment.polyline.forEach((p, i) => {
-                  const dist =
+                  const d =
                     Math.pow(p.latitude - position[0], 2) +
                     Math.pow(p.longitude - position[1], 2);
-                  if (dist < minDist) {
-                    minDist = dist;
+                  if (d < minDist) {
+                    minDist = d;
                     nearestIdx = i;
                   }
                 });
+                const firstPart = pts.slice(0, nearestIdx + 1);
+                const secondPart = pts.slice(nearestIdx);
                 return (
-                  <React.Fragment key={index}>
-                    {nearestIdx > 0 && (
-                      <Polyline
-                        positions={pts.slice(0, nearestIdx + 1)}
-                        color="gray"
-                        weight={5}
-                      />
+                  <React.Fragment key={idx}>
+                    {firstPart.length > 1 && (
+                      <Polyline positions={firstPart} color="gray" weight={5} />
                     )}
-                    <Polyline
-                      positions={pts.slice(nearestIdx)}
-                      color="blue"
-                      weight={5}
-                    />
+                    {secondPart.length > 1 && (
+                      <Polyline positions={secondPart} color="blue" weight={5} />
+                    )}
                   </React.Fragment>
                 );
               })}
-
-              {(() => {
-                const allStations = [];
-                fullPathSegments.forEach((segment, index) => {
-                  if (index === 0) {
-                    allStations.push({
-                      name: segment.from.name,
-                      lat: segment.from.latitude,
-                      lng: segment.from.longitude,
-                      type: "start",
-                    });
-                  }
-                  if (index === fullPathSegments.length - 1) {
-                    allStations.push({
-                      name: segment.to.name,
-                      lat: segment.to.latitude,
-                      lng: segment.to.longitude,
-                      type: "end",
-                    });
-                  } else {
-                    allStations.push({
-                      name: segment.to.name,
-                      lat: segment.to.latitude,
-                      lng: segment.to.longitude,
-                      type: "middle",
-                    });
-                  }
-                });
-                return allStations.map((station, idx) => (
-                  <Marker
-                    key={idx}
-                    position={[station.lat, station.lng]}
-                    icon={
-                      station.type === "start"
-                        ? startMetro
-                        : station.type === "end"
-                          ? locationIcon
-                          : locationIcon
-                    }
-                  >
-                    <Popup>{station.name}</Popup>
-                  </Marker>
-                ));
-              })()}
-
               {position[0] !== 0 && (
                 <Marker position={position} icon={metroIcon}>
-                  <Popup>Shipment hiện tại</Popup>
+                  <Popup>Vị trí hiện tại</Popup>
                 </Marker>
               )}
             </MapContainer>
@@ -367,48 +423,39 @@ function TrackingOrder() {
                 className={`status-badge ${currentStatus >= 20 ? "delivered" : "in-transit"
                   }`}
               >
-                {shipmentStatusMap[selectedShipment.shipmentStatus] ||
-                  "Không rõ trạng thái"}
+                {shipmentStatusMap[currentStatus] || "Không rõ trạng thái"}
               </Badge>
             }
             bordered={false}
           >
             <div className="custom-progress">
-              {[
-                { id: 8, label: "Đã lấy hàng" },
-                { id: 9, label: "Đang giao hàng" },
-                { id: 21, label: "Đã giao hàng" },
-              ].map((step, idx, arr) => {
-                const isLast = idx === arr.length - 1;
-                const isCompleted = isLast
-                  ? currentStatus === 21 ||
-                  currentStatus === 24 ||
-                  currentStatus === 26
-                  : currentStatus >= step.id;
-                const nextStep = arr[idx + 1];
-                const isLineCompleted = nextStep
-                  ? nextStep.id === 21
-                    ? currentStatus === 21 ||
-                    currentStatus === 24 ||
-                    currentStatus === 26
-                    : currentStatus >= nextStep.id
-                  : false;
-                return (
-                  <div key={step.id} className="progress-step">
-                    <div className={`dot ${isCompleted ? "completed" : ""}`}>
-                      {isLast && isCompleted ? "" : ""}
+              {[{ id: 8, label: "Đã lấy hàng" }, { id: 9, label: "Đang giao hàng" }, { id: 21, label: "Đã giao hàng" }].map(
+                (step, idx, arr) => {
+                  const isLast = idx === arr.length - 1;
+                  const isCompleted = isLast
+                    ? [21, 24, 26].includes(currentStatus)
+                    : currentStatus >= step.id;
+                  const nextStep = arr[idx + 1];
+                  const isLineCompleted = nextStep
+                    ? nextStep.id === 21
+                      ? [21, 24, 26].includes(currentStatus)
+                      : currentStatus >= nextStep.id
+                    : false;
+                  return (
+                    <div key={step.id} className="progress-step">
+                      <div className={`dot ${isCompleted ? "completed" : ""}`} />
+                      {!isLast && (
+                        <div
+                          className={`line ${isLineCompleted ? "completed" : ""}`}
+                        />
+                      )}
+                      <div className={`label ${isCompleted ? "active" : ""}`}>
+                        {step.label}
+                      </div>
                     </div>
-                    {!isLast && (
-                      <div
-                        className={`line ${isLineCompleted ? "completed" : ""}`}
-                      />
-                    )}
-                    <div className={`label ${isCompleted ? "active" : ""}`}>
-                      {step.label}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
             </div>
           </Card>
 
@@ -416,29 +463,18 @@ function TrackingOrder() {
             <Timeline>
               {selectedShipment.shipmentTrackings
                 .sort((a, b) => new Date(b.eventTime) - new Date(a.eventTime))
-                .map((track, idx) => (
+                .map((track) => (
                   <Timeline.Item
                     key={track.id}
-                    color={idx === 0 ? "green" : "gray"}
+                    color={track === selectedShipment.shipmentTrackings[0] ? "green" : "gray"}
                   >
                     <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
+                      style={{ display: "flex", justifyContent: "space-between" }}
                     >
                       <div style={{ color: "#999" }}>
                         {dayjs(track.eventTime).format("DD/MM HH:mm")}
                       </div>
-                      <div
-                        className={
-                          idx === 0
-                            ? "timeline-description highlight"
-                            : "timeline-description"
-                        }
-                      >
-                        {track.status}
-                      </div>
+                      <div className="timeline-description">{track.status}</div>
                     </div>
                   </Timeline.Item>
                 ))}
@@ -464,8 +500,7 @@ function TrackingOrder() {
               <div className="detail-item">
                 <span className="detail-label">Người nhận</span>
                 <span className="detail-value">
-                  {selectedShipment.recipientName} –{" "}
-                  {selectedShipment.recipientPhone}
+                  {selectedShipment.recipientName} – {selectedShipment.recipientPhone}
                 </span>
               </div>
               <div className="detail-item">
@@ -500,6 +535,7 @@ function TrackingOrder() {
                   )}
                 </span>
               </div>
+
               {shipmentParcels.map((p, i) => (
                 <React.Fragment key={p.id || i}>
                   <Divider />
@@ -533,9 +569,7 @@ function TrackingOrder() {
                   )}
                   <div className="detail-item">
                     <span className="detail-label">Tổng phí</span>
-                    <span className="detail-value">
-                      {formatCurrency(p.priceVnd)}
-                    </span>
+                    <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
                   </div>
                   {p.parcelCategory && (
                     <>
@@ -561,9 +595,10 @@ function TrackingOrder() {
                       </Tag>
                     </span>
                   </div>
-                  <div className="detail-value">
+                  <div className="detail-item">
                     {p.status === 4 &&
-                      !selectedShipment.isCompensationRequested && (selectedShipment.shipmentStatus === 24 || selectedShipment.shipmentStatus === 25 || selectedShipment.shipmentStatus === 27) && (
+                      !selectedShipment.isCompensationRequested &&
+                      [24, 25, 27].includes(selectedShipment.shipmentStatus) && (
                         <Button
                           type="primary"
                           className="insurance-button"
@@ -579,6 +614,7 @@ function TrackingOrder() {
               ))}
             </div>
           </Card>
+
           {user && user.id === selectedShipment.senderId && (
             <Card bordered={false}>
               <Button
@@ -596,6 +632,108 @@ function TrackingOrder() {
           )}
         </div>
       </div>
+
+      <Modal
+        title="Xác nhận yêu cầu bồi thường"
+        visible={confirmModalVisible}
+        onCancel={() => setConfirmModalVisible(false)}
+        onOk={onConfirmCompensation}
+        okText="Xác nhận"
+        cancelText="Hủy"
+      >
+        <p>Bạn muốn yêu cầu bồi thường cho kiện hàng?</p>
+      </Modal>
+
+      <Modal
+        title="Xác nhận thông tin ngân hàng"
+        visible={bankConfirmModalVisible}
+        onCancel={() => setBankConfirmModalVisible(false)}
+        onOk={handleConfirmBankAndSubmitCompensation}
+        okText="Xác nhận"
+        cancelText="Hủy"
+      >
+        <p>Số tiền sẽ được hoàn vào tài khoản này:</p>
+        <p>
+          Ngân hàng:{" "}
+          {banksList.find(b => b.id === userInfo?.bankId)?.shortName ||
+            banksList.find(b => b.code === userInfo?.bankId)?.shortName ||
+            "-"}
+          <br />
+          Số tài khoản: {userInfo?.accountNo || "-"} <br />
+          Tên chủ tài khoản: {userInfo?.accountName || "-"}
+        </p>
+      </Modal>
+
+      <Modal
+        title="Cập nhật thông tin ngân hàng"
+        visible={bankUpdateModalVisible}
+        onCancel={() => setBankUpdateModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={bankForm}
+          layout="vertical"
+          onFinish={handleBankUpdateFinish}
+        >
+          <Form.Item
+            name="bankId"
+            label="Ngân hàng"
+            rules={[{ required: true, message: "Chọn ngân hàng" }]}
+          >
+            <Select
+              placeholder="Chọn ngân hàng"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {banksList.map((bank) => (
+                <Option key={bank.id} value={bank.id}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    {bank.logo && (
+                      <img
+                        src={bank.logo}
+                        alt={bank.shortName}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          marginRight: 8,
+                        }}
+                      />
+                    )}
+                    <span>{bank.shortName}</span>
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="accountNo"
+            label="Số tài khoản"
+            rules={[{ required: true, message: "Nhập số tài khoản" }]}
+          >
+            <Input placeholder="Nhập số tài khoản" />
+          </Form.Item>
+          <Form.Item
+            name="accountName"
+            label="Tên chủ tài khoản"
+            rules={[{ required: true, message: "Nhập tên chủ tài khoản" }]}
+          >
+            <Input placeholder="Nhập tên chủ tài khoản" />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={bankSubmitting}
+              style={{ width: "100%" }}
+            >
+              Lưu & tiếp tục
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
