@@ -649,7 +649,7 @@ function ParcelInfo({
                           <div>
                             ⚠️ Đây là loại hàng đặc biệt, vui lòng đọc kỹ{" "}
                             <a
-                              href={PATH_NAME.PARCEL_RULES}
+                              href={PATH_NAME.SERVICE}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

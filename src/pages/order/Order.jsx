@@ -552,7 +552,7 @@ function Order() {
 
               <p style={{ fontSize: "0.9em", color: "#555" }}>
                 Bạn vui lòng đọc các quyền, nghĩa vụ của khách hàng và các nội dung khác liên quan đến
-                chính sách bảo hiểm và bồi thường <a href={PATH_NAME.PARCEL_RULES} target="_blank" rel="noopener noreferrer">tại đây</a>.
+                chính sách bảo hiểm và bồi thường <a href={PATH_NAME.SERVICE} target="_blank" rel="noopener noreferrer">tại đây</a>.
               </p>
             </Modal>
 
