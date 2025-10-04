@@ -128,8 +128,10 @@ function AddStationModal({ open, onCancel, onSuccess }) {
       setLoading(true);
       await api.post("/stations", payload);
       toast.success("Thêm trạm mới thành công!");
-      onSuccess?.();
-      onCancel();
+
+      if (onSuccess) await onSuccess(); 
+      onCancel(); 
+
     } catch (err) {
       console.error(err);
       toast.error("Có lỗi xảy ra khi thêm trạm!");

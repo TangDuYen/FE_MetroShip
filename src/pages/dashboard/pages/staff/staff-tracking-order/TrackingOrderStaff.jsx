@@ -784,8 +784,6 @@ function TrackingOrderStaff() {
             {selectedShipment ? (
               <div>
                 <p>Mã đơn: {selectedShipment.trackingCode}</p>
-                <p>Phí tồn kho / phạt: {formatCurrency(selectedShipment.surchargeFeeVnd || 0)}</p>
-                {/* Bạn có thể hiển thị thêm thông tin đơn hàng nếu cần */}
               </div>
             ) : (
               <p>Đang tải...</p>

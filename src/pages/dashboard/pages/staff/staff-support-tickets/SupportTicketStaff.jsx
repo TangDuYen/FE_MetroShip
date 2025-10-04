@@ -142,6 +142,43 @@ function SupportTicketStaff({ stationId }) {
     fetchData();
   };
 
+  const handleOpenCompensation = async (record) => {
+    try {
+      const shipmentRes = await getShipmentByTrackingCode(getShipmentCode(record.shipmentId));
+      const shipmentData = shipmentRes.data;
+
+      if (!shipmentData?.senderId) {
+        toast.error("Không tìm thấy thông tin người gửi trong đơn hàng!");
+        return;
+      }
+
+      const userRes = await api.get(`/users/${shipmentData.senderId}`);
+      const senderData = userRes.data?.data || userRes.data;
+
+      const { bankId, accountNo, accountName } = senderData;
+
+      if (!bankId || !accountNo || !accountName) {
+        toast.error("Người gửi chưa cập nhật thông tin ngân hàng!");
+        return;
+      }
+
+      const matchedBank = bankList.find((b) => b.id === bankId || b.code === bankId);
+      const bankShortName = matchedBank ? matchedBank.shortName : `Ngân hàng #${bankId}`;
+
+      setSelectedShipment(shipmentData);
+      setBankInfo({
+        bankCode: bankShortName,
+        accountNumber: accountNo,
+        accountName: accountName,
+      });
+
+      setCompensationModalVisible(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Không thể lấy thông tin người gửi hoặc đơn hàng!");
+    }
+  };
+
 
   const columns = [
     {
@@ -182,22 +219,13 @@ function SupportTicketStaff({ stationId }) {
         <Space>
           {record.supportType === 1 && record.status === 1 && (() => {
             const shipment = shipments.find(s => s.id === record.shipmentId);
-
-            // Check nếu shipment đã bồi thường (status 24 hoặc 25)
-            const isCompensated = shipment && [24, 25].includes(shipment.shipmentStatus);
+            const isCompensated = shipment && [25, 27].includes(shipment.shipmentStatus);
 
             return isCompensated && (
               <Button
                 style={{ color: 'white', backgroundColor: "red" }}
                 onClick={async () => {
-                  try {
-                    const shipment = await getShipmentByTrackingCode(getShipmentCode(record.shipmentId));
-                    setSelectedShipment(shipment.data);
-                    setCompensationModalVisible(true);
-                  } catch (e) {
-                    toast.error("Không thể lấy thông tin đơn hàng");
-                  }
-                }}
+                  handleOpenCompensation(record)}}
               >
                 Bồi thường
               </Button>
@@ -361,10 +389,7 @@ function SupportTicketStaff({ stationId }) {
       {/* MODAL BANK INFO */}
       <Modal
         open={bankModalVisible}
-        onCancel={() => {
-          setBankModalVisible(false);
-          setBankInfo({ bankCode: null, accountNumber: '', accountName: '' });
-        }}
+        onCancel={() => setBankModalVisible(false)}
         onOk={async () => {
           try {
             const res = await api.post("/shipments/vnpay/payment-url", {
@@ -373,8 +398,9 @@ function SupportTicketStaff({ stationId }) {
               returnUrl: window.location.origin + "/dashboard/staff/support-tickets",
               cancelUrl: window.location.origin + "/dashboard/staff/support-tickets",
             });
+
             if (res.data?.statusCode === 200 && res.data.data) {
-              window.location.href = res.data.data; // Redirect to VNPay
+              window.location.href = res.data.data;
               setBankModalVisible(false);
               setCompensated(true);
             } else {
@@ -384,50 +410,20 @@ function SupportTicketStaff({ stationId }) {
             toast.error(err.response?.data?.message || "Lỗi tạo giao dịch bồi thường");
           }
         }}
-        okText="Tạo giao dịch"
+        okText="Xác nhận chuyển tiền"
         cancelText="Hủy"
-        title="Nhập thông tin ngân hàng bồi thường"
-        okButtonProps={{
-          disabled: !bankInfo.bankCode || !bankInfo.accountNumber || !bankInfo.accountName
-        }}
+        title="Xác nhận bồi thường"
       >
-        <div style={{ marginBottom: '1em' }}>
-          <label>Ngân hàng</label>
-          <Select
-            showSearch
-            style={{ width: '100%' }}
-            placeholder="Chọn ngân hàng"
-            optionFilterProp="label"
-            value={bankInfo.bankCode}
-            onChange={(value) => setBankInfo({ ...bankInfo, bankCode: value })}
-            options={bankList.map(bank => ({
-              value: bank.code,
-              label: (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <img src={bank.logo} alt="logo" style={{ width: 24, height: 24 }} />
-                  <span>{bank.shortName}</span>
-                </div>
-              )
-            }))}
-          />
-        </div>
-        <div style={{ marginBottom: '1em' }}>
-          <label>Số tài khoản</label>
-          <Input
-            value={bankInfo.accountNumber}
-            onChange={e => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
-            placeholder="Nhập số tài khoản"
-          />
-        </div>
-        <div>
-          <label>Tên chủ tài khoản (IN HOA)</label>
-          <Input
-            value={bankInfo.accountName}
-            onChange={e => setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })}
-            placeholder="Tên chủ tài khoản"
-          />
+        <div style={{ fontSize: 16 }}>
+          <p><strong>Ngân hàng:</strong> {bankInfo.bankCode}</p>
+          <p><strong>Số tài khoản:</strong> {bankInfo.accountNumber}</p>
+          <p><strong>Tên chủ tài khoản:</strong> {bankInfo.accountName}</p>
+          <p style={{fontWeight: "bold", marginTop: 12 }}>
+            Xác nhận chuyển tiền vào tài khoản này?
+          </p>
         </div>
       </Modal>
+
     </div>
   );
 }
