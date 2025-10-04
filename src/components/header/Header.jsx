@@ -231,7 +231,7 @@ function Header() {
           location.pathname === PATH_NAME.SERVICE ? "active" : ""
         }`}
       >
-        <Link to={PATH_NAME.SERVICE}>Dịch vụ</Link>
+        <Link to={PATH_NAME.SERVICE}>Chính sách</Link>
       </li>
       <li
         className={`header-nav-item ${

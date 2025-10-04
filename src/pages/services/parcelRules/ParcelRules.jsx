@@ -7,12 +7,11 @@ const { Title, Paragraph } = Typography;
 
 function ParcelRules() {
   return (
-    <div className="parcel-rule-container">
-    <Banner/>
+    
     <div className="parcel-rules-container" style={{ padding: '20px' }}>
-      <Title level={3} className="main-title">Chính Sách Gửi Hàng – MetroShip</Title>
+      {/* <Title level={3} className="main-title">Chính Sách Gửi Hàng – MetroShip</Title> */}
 
-      <Divider />
+      {/* <Divider /> */}
 
       <Title level={4}>📱 Đăng ký sử dụng dịch vụ</Title>
       <Paragraph>
@@ -118,7 +117,6 @@ function ParcelRules() {
         <br />
         Trường hợp này, đơn hàng <span style={{ color: 'red' }}>không được hoàn tiền</span>.
       </Paragraph>
-    </div>
     </div>
   );
 }
