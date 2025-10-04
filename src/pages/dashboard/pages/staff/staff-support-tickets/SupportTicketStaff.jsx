@@ -219,9 +219,7 @@ function SupportTicketStaff({ stationId }) {
         <Space>
           {record.supportType === 1 && record.status === 1 && (() => {
             const shipment = shipments.find(s => s.id === record.shipmentId);
-
-            // Check shipment chưa bồi thường và đang ở trạng thái cần bồi thường
-            const isCompensated = shipment && [24, 27].includes(shipment.shipmentStatus);
+            const isCompensated = shipment && [25, 27].includes(shipment.shipmentStatus);
 
             return isCompensated && (
               <Button
