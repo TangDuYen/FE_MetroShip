@@ -94,8 +94,6 @@ function OrderInformationStaff() {
 
   if (!shipment) return <p>Đang tải dữ liệu đơn hàng...</p>;
 
-  const trainId = shipment.shipmentItineraries?.[0]?.trainId;
-  const train = trains.find((t) => t.id === trainId);
 
   const handleDownloadQRAsPDF = () => {
     if (!qrRef.current) return;
@@ -112,12 +110,17 @@ function OrderInformationStaff() {
   };
 
 
-  let trainStatusText = null;
-  if (shipment.shipmentStatus === 9) {
-    trainStatusText = "Đang ở trên tàu:";
-  } else if ([7, 8, 14].includes(shipment.shipmentStatus)) {
-    trainStatusText = "Đang chờ tàu:";
-  }
+let trainStatusText = null;
+let trainCode = null;
+
+if (shipment.shipmentStatus === 9) {
+  trainStatusText = "Đang ở trên tàu:";
+  trainCode = shipment.currentTrainCode;
+} else if ([7, 8, 14].includes(shipment.shipmentStatus)) {
+  trainStatusText = "Đang chờ tàu:";
+  trainCode = shipment.waitingForTrainCode;
+}
+
 
 
   return (
@@ -163,8 +166,7 @@ function OrderInformationStaff() {
             nav(PATH_NAME.DASHBOARD_STAFF_TRAIN_MAP.replace(":trainId", trainId))
           }
         >
-          {trainStatusText}{" "}
-          <span style={{ color: "#0066CC" }}>{shipment.waitingForTrainCode}</span>
+          {trainStatusText}{" "}<span style={{ color: "#0066CC" }}>{trainCode}</span>
         </Typography.Link>
       )}
 

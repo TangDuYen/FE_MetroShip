@@ -1,30 +1,41 @@
-import React, { useEffect, useState } from "react";
 import "./Profile.scss";
-import Sidebar from "../../components/sidebar_profile/Sidebar";
-import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/features/counterSlice";
-import api from "../../config/axios";
-import { toast } from "react-toastify";
+
 import {
+  Avatar,
+  Button,
   Card,
   DatePicker,
   Form,
   Input,
-  Button,
-  Upload,
-  Avatar,
+  Modal,
+  Select,
   Spin,
+  Upload,
 } from "antd";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-dayjs.extend(customParseFormat);
+import React, { useEffect, useState } from "react";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
+
+import Sidebar from "../../components/sidebar_profile/Sidebar";
+import api from "../../config/axios";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import dayjs from "dayjs";
+import { selectUser } from "../../redux/features/counterSlice";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+
+dayjs.extend(customParseFormat);
+
 
 function Profile() {
   const user = useSelector(selectUser);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bankModalVisible, setBankModalVisible] = useState(false);
+  const [banksList, setBanksList] = useState([]); // danh sách ngân hàng từ API
+  const [bankForm] = Form.useForm();
+  const [bankSubmitting, setBankSubmitting] = useState(false);
+
 
   const [form] = Form.useForm();
 
@@ -69,6 +80,13 @@ function Profile() {
         });
 
         setAvatarPreview(data.avatar || null);
+        if (data.bankId || data.accountNo || data.accountName) {
+          bankForm.setFieldsValue({
+            bankId: data.bankId,
+            accountNo: data.accountNo,
+            accountName: data.accountName,
+          });
+        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
       } finally {
@@ -78,6 +96,24 @@ function Profile() {
 
     fetchUserData();
   }, [user, form]);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const res = await api.get("/transactions/vietqr/banks", {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+        const list = res.data?.data || [];
+        setBanksList(list);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách ngân hàng:", error);
+      }
+    };
+    fetchBanks();
+  }, [user]);
 
   const handleAvatarChange = async ({ file }) => {
     if (!file) return;
@@ -143,6 +179,43 @@ function Profile() {
       toast.error(error.response?.data?.message || "Cập nhật thất bại!");
     }
   };
+
+  const handleBankSubmit = async (values) => {
+    setBankSubmitting(true);
+    try {
+      const res = await api.put(
+        "/users/bank-info",
+        {
+          bankId: values.bankId,
+          accountNo: values.accountNo,
+          accountName: values.accountName,
+        },
+        {
+          headers: {
+            accept: "*/*",
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      toast.success(res.data?.message || "Cập nhật thông tin ngân hàng thành công!");
+      closeBankModal();
+    } catch (error) {
+      console.error("Lỗi cập nhật bank info:", error);
+      toast.error(error.response?.data?.message || "Cập nhật bank info thất bại!");
+    } finally {
+      setBankSubmitting(false);
+    }
+  };
+
+  const openBankModal = () => {
+    setBankModalVisible(true);
+  };
+
+  const closeBankModal = () => {
+    setBankModalVisible(false);
+  };
+
 
   return (
     <div className="profile">
@@ -215,12 +288,23 @@ function Profile() {
                     <Input placeholder="Nhập địa chỉ" />
                   </Form.Item>
 
+                  <Form.Item label="Ngân hàng" shouldUpdate>
+                    {() => {
+                      const bankId = form.getFieldValue("bankId");
+                      const bankName =
+                        banksList.find((b) => b.id === bankId)?.shortName ||
+                        banksList.find((b) => b.code === bankId)?.shortName ||
+                        "-";
+                      return <Input value={bankName} disabled />;
+                    }}
+                  </Form.Item>
+
                   <Form.Item name="accountNo" label="Số tài khoản">
-                    <Input placeholder="Nhập số tài khoản" />
+                    <Input disabled />
                   </Form.Item>
 
                   <Form.Item name="accountName" label="Tên chủ tài khoản">
-                    <Input placeholder="Nhập tên chủ tài khoản" />
+                    <Input disabled />
                   </Form.Item>
 
                   <Form.Item>
@@ -228,9 +312,86 @@ function Profile() {
                       Lưu thay đổi
                     </Button>
                   </Form.Item>
+                  <Form.Item>
+                    <Button type="dashed" onClick={openBankModal}>
+                      Thêm / Cập nhật thông tin ngân hàng
+                    </Button>
+                  </Form.Item>
                 </Form>
               </Spin>
             </Card>
+
+            <Modal
+              title="Cập nhật thông tin ngân hàng"
+              visible={bankModalVisible}
+              onCancel={closeBankModal}
+              footer={null}
+            >
+              <Form
+                form={bankForm}
+                layout="vertical"
+                onFinish={handleBankSubmit}
+              >
+                <Form.Item
+                  name="bankId"
+                  label="Ngân hàng"
+                  rules={[{ required: true, message: "Chọn ngân hàng" }]}
+                >
+                  <Select
+                    placeholder="Chọn ngân hàng"
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
+                  >
+                    {banksList.map((bank) => (
+                      <Option key={bank.id} value={bank.id}>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          {bank.logo && (
+                            <img
+                              src={bank.logo}
+                              alt={bank.shortName}
+                              style={{
+                                width: 24,
+                                height: 24,
+                                marginRight: 8,
+                              }}
+                            />
+                          )}
+                          <span>{bank.shortName}</span>
+                        </div>
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  name="accountNo"
+                  label="Số tài khoản"
+                  rules={[{ required: true, message: "Nhập số tài khoản" }]}
+                >
+                  <Input placeholder="Nhập số tài khoản" />
+                </Form.Item>
+                <Form.Item
+                  name="accountName"
+                  label="Tên chủ tài khoản"
+                  rules={[{ required: true, message: "Nhập tên chủ tài khoản" }]}
+                >
+                  <Input placeholder="Nhập tên chủ tài khoản" />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={bankSubmitting}
+                    style={{ width: "100%" }}
+                  >
+                    Lưu thông tin ngân hàng
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Modal>
           </div>
         </div>
       </section>
