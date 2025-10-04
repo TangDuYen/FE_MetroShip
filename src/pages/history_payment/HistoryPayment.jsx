@@ -136,10 +136,10 @@ function HistoryPayment() {
       render: (val) => `${val.toLocaleString("vi-VN")}đ`,
     },
     { title: "Ngày giao dịch", dataIndex: "date" },
-    {
-      title: "Chi tiết",
-      render: () => <Button type="link">Chi tiết</Button>,
-    },
+    // {
+    //   title: "Chi tiết",
+    //   render: () => <Button type="link">Chi tiết</Button>,
+    // },
     {
       title: "Trạng thái",
       dataIndex: "status",

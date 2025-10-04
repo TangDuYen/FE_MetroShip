@@ -35,37 +35,28 @@ function Homepage() {
   ];
 
   const faqs = [
-    {
-      question: "Làm thế nào để thay đổi địa chỉ giao hàng?",
-      answer:
-        "Bạn có thể thay đổi địa chỉ giao hàng trước khi đơn hàng được xác nhận bằng cách vào mục 'Đơn hàng của tôi' và chọn 'Chỉnh sửa địa chỉ'.",
-    },
-    {
-      question: "Tôi có thể theo dõi đơn hàng của mình không?",
-      answer:
-        "Có. MetroShip cung cấp tính năng theo dõi đơn hàng theo thời gian thực. Truy cập mục 'Theo dõi đơn hàng' trên website hoặc ứng dụng.",
-    },
-    {
-      question: "Tài xế có thể quay lại giao nếu tôi vắng nhà không?",
-      answer:
-        "Trong trường hợp bạn không có mặt, tài xế sẽ liên hệ lại để sắp xếp thời gian giao lại. Bạn cũng có thể chọn nhận hàng tại điểm lấy gần nhất.",
-    },
-    {
-      question: "Số vận đơn của tôi là gì?",
-      answer:
-        "Số vận đơn là dãy số gồm 10 chữ số được gửi qua SMS/email sau khi đơn hàng được xác nhận.",
-    },
-    {
-      question: "Nếu tôi không ở nhà khi giao hàng thì sao?",
-      answer:
-        "Tài xế sẽ gọi điện cho bạn. Nếu không liên lạc được, đơn hàng sẽ được giữ tại kho trong 3 ngày để bạn đến nhận hoặc yêu cầu giao lại.",
-    },
-    {
-      question: "Tôi có thể chuyển hướng đơn hàng của mình không?",
-      answer:
-        "Có. Bạn có thể chuyển hướng đơn hàng sang địa chỉ khác nếu đơn chưa được giao. Vào mục 'Chi tiết đơn hàng' để chỉnh sửa.",
-    },
-  ];
+  {
+    question: "Tôi có thể theo dõi đơn hàng của mình không?",
+    answer:
+      "Có. MetroShip cho phép bạn theo dõi đơn hàng theo thời gian thực. Truy cập mục 'Theo dõi đơn hàng' trên website hoặc ứng dụng để kiểm tra trạng thái.",
+  },
+  {
+    question: "Nếu tôi vắng mặt, đơn hàng sẽ được xử lý thế nào?",
+    answer:
+      "MetroShip không giao tận nhà. Bạn có thể nhận hàng tại các điểm lấy gần nhất. Nếu cần hỗ trợ, nhân viên sẽ liên hệ bạn để hướng dẫn.",
+  },
+  {
+    question: "Số vận đơn của tôi là gì?",
+    answer:
+      "Số vận đơn là dãy 10 chữ số được gửi qua SMS hoặc email sau khi đơn hàng được xác nhận. Dùng số này để tra cứu đơn hàng tại điểm nhận.",
+  },
+  {
+    question: "Tôi có thể chuyển hướng đơn hàng của mình không?",
+    answer:
+      "Có. Nếu đơn hàng chưa được lấy, bạn có thể thay đổi điểm nhận. Vào mục 'Chi tiết đơn hàng' trên ứng dụng hoặc website để chỉnh sửa.",
+  },
+];
+
   return (
     <div className="home">
       <div className="home-container">
@@ -189,7 +180,7 @@ function Homepage() {
           </div>
         </section>
 
-        <section className="home-section-5">
+        {/* <section className="home-section-5">
           <div className="home-feedback-container">
             <h2>Phản hồi của người dùng</h2>
             <Carousel autoplay>
@@ -212,7 +203,7 @@ function Homepage() {
               ))}
             </Carousel>
           </div>
-        </section>
+        </section> */}
 
         <section className="home-section-6">
           <h2>Câu Hỏi Thường Gặp</h2>
