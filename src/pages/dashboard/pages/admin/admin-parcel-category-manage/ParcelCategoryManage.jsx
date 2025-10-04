@@ -207,6 +207,17 @@ function ParcelCategoryManage() {
       dataIndex: "heightLimitCm",
     },
     {
+      title: "Khối lượng tối đa (kg)",
+      dataIndex: "weightLimitKg",
+      render: (val) => (val ? val : "-"),
+    },
+    {
+      title: "Thể tích tối đa (cm³)",
+      dataIndex: "volumeLimitCm3",
+      render: (val) => (val ? val : "-"),
+    },
+
+    {
       title: "Kích thước tổng (cm)",
       dataIndex: "totalSizeLimitCm",
     },
@@ -361,8 +372,8 @@ function ParcelCategoryManage() {
           </Form.Item>
 
           <Form.Item
-            name="isBulk"
-            label="Hàng cồng kềnh"
+            name="isInsuranceRequired"
+            label="Bắt buộc bảo hiểm"
             valuePropName="checked"
           >
             <Switch />

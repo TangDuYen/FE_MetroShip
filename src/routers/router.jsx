@@ -147,6 +147,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATH_NAME.HISTORY_TICKET,
+        element: (
+          <ProtectedRouteCustomer>
+            {lazyLoad(() => import("../pages/history_ticket/HistoryTicket"))}
+          </ProtectedRouteCustomer>
+        ),
+      },
+      {
         path: PATH_NAME.PAYMENT_SUCCESS,
         element: (
           <ProtectedRouteCustomer>

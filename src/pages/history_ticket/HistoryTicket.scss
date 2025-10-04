@@ -1,0 +1,42 @@
+@use "../../styles/variables.scss" as *;
+
+.history-ticket {
+  margin-top: 7.4%;
+  width: 100%;
+  font-family: $font-primary;
+
+  .history-ticket-wrapper {
+    padding: 20px 150px 20px 60px;
+  }
+
+  .ant-table-thead>tr>th {
+    background-color: $primary-color !important;
+    color: #fff !important;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .history-ticket-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    flex: 1;
+
+    .history-ticket-left {
+      flex: 0 0 20%;
+      max-width: 20%;
+      // flex: 0.1;
+    }
+
+    .history-ticket-right {
+      flex: 0 0 80%;
+      max-width: 80%;
+      // flex: 0.9;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+
+    }
+  }
+}

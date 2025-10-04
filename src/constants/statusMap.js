@@ -184,3 +184,24 @@ export const formatCurrency1 = (v) => {
   return `${Math.floor(n).toLocaleString('vi-VN')}`;
 };
 
+export const supportTypeMap = {
+  1: "Yêu cầu bồi thường",
+  2: "Hỗ trợ kỹ thuật",
+  3: "Thanh toán & Hóa đơn",
+  4: "Giao hàng & Vận chuyển",
+  5: "Quản lý tài khoản",
+  6: "Góp ý & Đề xuất",
+  7: "Khác",
+};
+
+export const supportTypeColorMap = {
+  1: "red",        // CompensationRequired
+  2: "geekblue",   // TechnicalSupport
+  3: "purple",     // BillingAndPayments
+  4: "cyan",       // ShippingAndDelivery
+  5: "orange",     // AccountManagement
+  6: "green",      // FeedbackAndSuggestions
+  7: "gray",       // Other
+};
+
+
