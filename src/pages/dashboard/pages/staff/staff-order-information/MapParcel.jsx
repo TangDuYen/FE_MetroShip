@@ -15,6 +15,7 @@ import {
   useMap,
 } from "react-leaflet";
 import { Card, Spin } from "antd";
+import { useParams } from "react-router-dom";
 
 const locationIcon = new L.Icon({
   iconUrl: locationIconImg,
@@ -63,6 +64,7 @@ function MapParcel({ shipmentId, visible }) {
   const [fullPathSegments, setFullPathSegments] = useState([]);
   const [intervalTime, setIntervalTime] = useState(5000);
   const [loading, setLoading] = useState(true);
+  const { trackingCode } = useParams();
 
   const lastDataRef = useRef(null);
   const intervalRef = useRef(null);
@@ -82,7 +84,7 @@ function MapParcel({ shipmentId, visible }) {
 
   const fetchLivePosition = async () => {
     try {
-      const res = await api.get(`/${shipmentId}/position`);
+      const res = await api.get(`/${trackingCode}/position`);
       const { latitude, longitude, path, additionalData } = res.data;
 
       const newData = { latitude, longitude, path, additionalData };
