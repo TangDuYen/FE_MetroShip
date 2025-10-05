@@ -38,7 +38,6 @@ function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
   const [editingLine, setEditingLine] = useState(null);
   const [form] = Form.useForm();
-  const [stations, setStations] = useState([]);
   const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
@@ -49,6 +48,22 @@ function MetroLineManagement() {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailData, setDetailData] = useState(null);
+  const [lineInfo, setLineInfo] = useState({
+    lineNameVi: "",
+    lineNameEn: "",
+    regionId: "",
+    lineNumber: "",
+    lineCode: "",
+    lineType: "",
+    lineOwner: "",
+    colorHex: "",
+    routeTimeMin: "",
+    dwellTimeMin: "",
+  });
+
+  const [stations, setStations] = useState([]); // trạm theo region
+  const [selectedStations, setSelectedStations] = useState([]);
+
 
   //API ONE TIME
   useEffect(() => {
@@ -101,10 +116,10 @@ function MetroLineManagement() {
 
   const openAddModal = () => {
     setEditingLine(null);
-    form.resetFields();
-    form.setFieldsValue({ stations: [] });
-    setStations([]);
     setIsAddModalOpen(true);
+    form.resetFields(); // Reset toàn bộ trường trong Form
+    setStations([]); // Reset danh sách trạm theo khu vực
+    setSelectedStations([]); // Reset danh sách trạm đã chọn
   };
 
   const openEditModal = (line) => {
@@ -148,29 +163,6 @@ function MetroLineManagement() {
     );
   };
 
-  //ADD METRO ROUTE
-  const handleAddSubmit = () => {
-    form.validateFields().then(async (values) => {
-      try {
-        setLoading(true);
-        const payload = buildPayload(values);
-        await api.post("/api/metro-lines", payload);
-        toast.success("Đã thêm tuyến mới!");
-
-        const metroLineData = await getMetroLines();
-        setMetroLines(metroLineData);
-
-        setIsAddModalOpen(false);
-        form.resetFields();
-      } catch (error) {
-        console.error("Add failed:", error);
-        toast.error(error.response?.data?.message || "Có lỗi khi thêm tuyến!");
-      } finally {
-        setLoading(false);
-      }
-    });
-  };
-
   //UPDATE METRO ROUTE
   const handleEditSubmit = () => {
     form
@@ -185,7 +177,7 @@ function MetroLineManagement() {
 
         try {
           setLoading(true);
-          await api.put(`/api/metro-lines/${editingLine.id}`, payload);
+          await api.put(`/metro-lines/${editingLine.id}`, payload);
           toast.success("Cập nhật thành công!");
 
           const metroLineData = await getMetroLines();
@@ -210,14 +202,102 @@ function MetroLineManagement() {
   };
 
   const handleRegionChange = async (regionId) => {
-    form.setFieldValue("regionId", regionId);
+    setLineInfo((prev) => ({ ...prev, regionId }));
     try {
       const stationData = await getAllStationsByRegion(regionId);
-      setStations(stationData);
-      form.setFieldValue("stations", []);
+      // chuẩn hóa id về number hoặc string (phụ thuộc backend)
+      setStations(stationData.map(s => ({ ...s, id: s.stationId.toString() })));
+
+      setSelectedStations([]); // reset trạm cũ
     } catch (error) {
+      toast.error("Không thể tải danh sách ga!");
       setStations([]);
     }
+  };
+
+  const addStation = () => {
+    if (selectedStations.length >= 10) {
+      toast.error("Một tuyến chỉ có thể chứa tối đa 10 trạm!");
+      return;
+    }
+
+    setSelectedStations([
+      ...selectedStations,
+      {
+        id: "",
+        toNextStationKm: 0,
+      },
+    ]);
+  };
+
+  const handleAddMetroLine = async () => {
+    try {
+      const values = await form.validateFields();
+
+      const payload = {
+        ...values,
+        lineNumber: values.lineNumber ? Number(values.lineNumber) : undefined,
+        routeTimeMin: values.routeTimeMin ? Number(values.routeTimeMin) : undefined,
+        dwellTimeMin: values.dwellTimeMin ? Number(values.dwellTimeMin) : undefined,
+        stations: selectedStations
+          .filter((s) => s.id)
+          .map((s) => {
+            const station = stations.find((st) => st.id === s.id);
+            return {
+              id: station?.id,
+              toNextStationKm: s.toNextStationKm ? Number(s.toNextStationKm) : undefined,
+            };
+          }),
+      };
+
+      // Clean up
+      if (!payload.stations.length) delete payload.stations;
+      const cleanedPayload = Object.fromEntries(
+        Object.entries(payload).filter(
+          ([, v]) =>
+            v !== undefined &&
+            v !== "" &&
+            !(Array.isArray(v) && v.length === 0)
+        )
+      );
+
+      if (cleanedPayload.stations) {
+        cleanedPayload.stations = cleanedPayload.stations.map(st =>
+          Object.fromEntries(
+            Object.entries(st).filter(
+              ([, v]) =>
+                v !== undefined &&
+                v !== "" &&
+                !(Array.isArray(v) && v.length === 0)
+            )
+          )
+        );
+      }
+
+      const res = await api.post("/metro-lines", cleanedPayload);
+      if (res.data?.statusCode === 200) {
+        toast.success("Thêm tuyến metro thành công!");
+        setIsAddModalOpen(false);
+        form.resetFields();
+        setSelectedStations([]);
+      } else {
+        toast.error("Thêm tuyến metro thất bại!");
+      }
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Lỗi không xác định";
+
+      console.error("Add Metro Line Error:", err);
+      toast.error(errorMessage);
+
+    }
+  };
+
+  const removeStation = (index) => {
+    setSelectedStations(selectedStations.filter((_, i) => i !== index));
   };
 
   const columns = [
@@ -295,14 +375,6 @@ function MetroLineManagement() {
               Xem chi tiết
             </Button>
           </ConfigProvider>
-          {/* <Popconfirm
-            title="Xác nhận xoá tàu này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Xoá"
-            cancelText="Hủy"
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm> */}
         </Space>
       ),
     },
@@ -398,7 +470,7 @@ function MetroLineManagement() {
         title="Thêm tuyến Metro mới"
         open={isAddModalOpen}
         onCancel={() => setIsAddModalOpen(false)}
-        onOk={handleAddSubmit}
+        onOk={handleAddMetroLine}
         cancelText="Hủy"
         width={900}
         okText="Thêm"
@@ -447,69 +519,54 @@ function MetroLineManagement() {
             </Col>
 
             <Col span={12}>
-              <Form.List name="stations" rules={[{ required: true, message: "Vui lòng thêm ít nhất một trạm" }]}>
-                {(fields, { add, remove }) => (
-                  <>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <strong>Danh sách ga (stations)</strong>
-                      <Button type="dashed" onClick={() => add()}>
-                        Thêm trạm
+              <div>
+                <strong>Danh sách trạm (Stations)</strong>
+                {selectedStations.map((s, index) => (
+                  <Row key={index} gutter={12} style={{ marginBottom: 8 }}>
+                    <Col span={12}>
+                      <Select
+                        placeholder="Chọn trạm"
+                        style={{ width: "100%" }}
+                        value={s.id?.toString()}
+                        onChange={(val) => {
+                          const updated = [...selectedStations];
+                          updated[index].id = val.toString(); // Force string to match stationId
+                          setSelectedStations(updated);
+                        }}
+
+                        options={stations.map((station) => ({
+                          label: `${station.stationNameVi} (${station.stationNameEn})`,
+                          value: station.id,
+                        }))}
+                      />
+                    </Col>
+
+                    <Col span={8}>
+                      <Input
+                        type="number"
+                        placeholder="Khoảng cách đến trạm kế (km)"
+                        value={s.toNextStationKm}
+                        onChange={(e) => {
+                          const updated = [...selectedStations];
+                          updated[index].toNextStationKm = e.target.value;
+                          setSelectedStations(updated);
+                        }}
+                      />
+                    </Col>
+
+                    <Col span={4} style={{ display: "flex", justifyContent: "center" }}>
+                      <Button danger onClick={() => removeStation(index)}>
+                        Xóa
                       </Button>
-                    </div>
+                    </Col>
+                  </Row>
 
-                    {fields.map(({ key, name, ...restField }) => (
-                      <Row key={key} gutter={12} align="middle" style={{ marginBottom: 8 }}>
-                        <Col span={11}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "station"]}
-                            label={fields.length === 1 ? "Trạm" : ""}
-                            rules={[{ required: true, message: "Chọn trạm" }]}
-                          >
-                            <Select
-                              placeholder="Chọn ga"
-                              showSearch
-                              allowClear
-                              optionFilterProp="label"
-                              filterOption={(input, option) =>
-                                option.label.toLowerCase().includes(input.toLowerCase())
-                              }
-                              options={stations.map((station) => ({
-                                label: `${station.stationNameVi} (${station.stationNameEn})`,
-                                value: station.id, // 👈 gửi nguyên object station
-                              }))}
-                            />
-                          </Form.Item>
-                        </Col>
+                ))}
 
-                        <Col span={9}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "distanceKm"]}
-                            label={fields.length === 1 ? "Khoảng cách (km)" : ""}
-                            tooltip="Khoảng cách đến trạm kế tiếp (tùy chọn)"
-                          >
-                            <Input type="number" min={0} placeholder="Ví dụ: 2.5" />
-                          </Form.Item>
-                        </Col>
-
-                        <Col span={4} style={{ display: "flex", justifyContent: "center" }}>
-                          <Button danger onClick={() => remove(name)}>
-                            Xóa
-                          </Button>
-                        </Col>
-                      </Row>
-                    ))}
-
-                    {fields.length === 0 && (
-                      <Button type="dashed" onClick={() => add()} block>
-                        + Thêm trạm đầu tiên
-                      </Button>
-                    )}
-                  </>
-                )}
-              </Form.List>
-
+                <Button type="dashed" block onClick={addStation}>
+                  + Thêm trạm
+                </Button>
+              </div>
             </Col>
           </Row>
         </Form>
