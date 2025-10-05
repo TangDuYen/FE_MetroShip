@@ -296,6 +296,31 @@ function MetroLineManagement() {
     }
   };
 
+  const handleActivateLine = async (lineId) => {
+    try {
+      setLoading(true);
+      const res = await api.post(`/metro-lines/activation/${lineId}`);
+      if (res.data?.statusCode === 200) {
+        toast.success("Kích hoạt tuyến thành công!");
+        const updatedLines = await getMetroLinesAdmin();
+        setMetroLines(updatedLines);
+      } else {
+        toast.error("Kích hoạt tuyến thất bại!");
+      }
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Lỗi không xác định";
+      console.error("Activation error:", err);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const removeStation = (index) => {
     setSelectedStations(selectedStations.filter((_, i) => i !== index));
   };
@@ -343,6 +368,7 @@ function MetroLineManagement() {
       align: "center",
       render: (_, record) => (
         <Space>
+          {/* Cập nhật */}
           <ConfigProvider
             theme={{
               components: {
@@ -360,6 +386,8 @@ function MetroLineManagement() {
           >
             <Button onClick={() => openEditModal(record)}>Cập nhật</Button>
           </ConfigProvider>
+
+          {/* Xem chi tiết */}
           <ConfigProvider
             theme={{
               components: {
@@ -371,9 +399,31 @@ function MetroLineManagement() {
               },
             }}
           >
-            <Button onClick={() => fetchLineDetail(record.id)}>
-              Xem chi tiết
-            </Button>
+            <Button onClick={() => fetchLineDetail(record.id)}>Xem chi tiết</Button>
+          </ConfigProvider>
+
+          {/* Kích hoạt / Ngừng */}
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultColor: "white",
+                  defaultBg: record.isActive ? "#FF4D4F" : "#1890FF", // đỏ / xanh
+                  defaultBorderColor: record.isActive ? "#FF4D4F" : "#1890FF",
+                },
+              },
+            }}
+          >
+            <Popconfirm
+              title={`Bạn có chắc muốn ${record.isActive ? "ngừng" : "kích hoạt"} tuyến này?`}
+              onConfirm={() => handleActivateLine(record.id)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+            >
+              <Button>
+                {record.isActive ? "Ngừng hoạt động" : "Kích hoạt"}
+              </Button>
+            </Popconfirm>
           </ConfigProvider>
         </Space>
       ),
