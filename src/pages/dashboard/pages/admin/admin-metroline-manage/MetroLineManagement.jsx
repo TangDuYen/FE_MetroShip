@@ -3,6 +3,7 @@ import "./MetroLineManagement.scss";
 import {
   Button,
   Col,
+  Collapse,
   ConfigProvider,
   Descriptions,
   Divider,
@@ -34,6 +35,7 @@ import { useEffect, useState } from "react";
 import api from "../../../../../config/axios";
 import { toast } from "react-toastify";
 
+const { Panel } = Collapse;
 function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
   const [editingLine, setEditingLine] = useState(null);
@@ -85,7 +87,7 @@ function MetroLineManagement() {
     try {
       setLoading(true);
       const res = await api.get(`/metro-lines/${lineId}`);
-      setDetailData(res.data.data); // dữ liệu trả về như ảnh bạn gửi
+      setDetailData(res.data.data);
       setIsDetailModalOpen(true);
     } catch (error) {
       const errorMessage =
@@ -447,10 +449,22 @@ function MetroLineManagement() {
             </Col>
 
             <Col span={12}>
-              <Form.List name="stations" rules={[{ required: true, message: "Vui lòng thêm ít nhất một trạm" }]}>
+              <Form.List
+                name="stations"
+                rules={[
+                  { required: true, message: "Vui lòng thêm ít nhất một trạm" },
+                ]}
+              >
                 {(fields, { add, remove }) => (
                   <>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
                       <strong>Danh sách ga (stations)</strong>
                       <Button type="dashed" onClick={() => add()}>
                         Thêm trạm
@@ -458,7 +472,12 @@ function MetroLineManagement() {
                     </div>
 
                     {fields.map(({ key, name, ...restField }) => (
-                      <Row key={key} gutter={12} align="middle" style={{ marginBottom: 8 }}>
+                      <Row
+                        key={key}
+                        gutter={12}
+                        align="middle"
+                        style={{ marginBottom: 8 }}
+                      >
                         <Col span={11}>
                           <Form.Item
                             {...restField}
@@ -472,7 +491,9 @@ function MetroLineManagement() {
                               allowClear
                               optionFilterProp="label"
                               filterOption={(input, option) =>
-                                option.label.toLowerCase().includes(input.toLowerCase())
+                                option.label
+                                  .toLowerCase()
+                                  .includes(input.toLowerCase())
                               }
                               options={stations.map((station) => ({
                                 label: `${station.stationNameVi} (${station.stationNameEn})`,
@@ -486,14 +507,23 @@ function MetroLineManagement() {
                           <Form.Item
                             {...restField}
                             name={[name, "distanceKm"]}
-                            label={fields.length === 1 ? "Khoảng cách (km)" : ""}
+                            label={
+                              fields.length === 1 ? "Khoảng cách (km)" : ""
+                            }
                             tooltip="Khoảng cách đến trạm kế tiếp (tùy chọn)"
                           >
-                            <Input type="number" min={0} placeholder="Ví dụ: 2.5" />
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder="Ví dụ: 2.5"
+                            />
                           </Form.Item>
                         </Col>
 
-                        <Col span={4} style={{ display: "flex", justifyContent: "center" }}>
+                        <Col
+                          span={4}
+                          style={{ display: "flex", justifyContent: "center" }}
+                        >
                           <Button danger onClick={() => remove(name)}>
                             Xóa
                           </Button>
@@ -509,7 +539,6 @@ function MetroLineManagement() {
                   </>
                 )}
               </Form.List>
-
             </Col>
           </Row>
         </Form>
@@ -617,21 +646,81 @@ function MetroLineManagement() {
             </Descriptions>
 
             <Divider />
-            <h3 style={{ marginBottom: 16, textAlign: "center" }}>
-              Danh sách tàu
-            </h3>
-            <Table
-              dataSource={detailData.trains}
-              rowKey="id"
-              pagination={false}
-              columns={[
-                { title: "Mã tàu", dataIndex: "trainCode" },
-                { title: "Model", dataIndex: "modelName" },
-                // { title: "Trạng thái", dataIndex: "statusName" },
-                // { title: "Kinh độ", dataIndex: "longitude" },
-                // { title: "Vĩ độ", dataIndex: "latitude" },
-              ]}
-            />
+
+            <Collapse
+              defaultActiveKey={["1"]}
+              bordered={false}
+              style={{
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Panel
+                key="1"
+                header={
+                  <h3 style={{ margin: 0, textAlign: "center" }}>
+                    Danh sách tàu ({detailData.trains?.length || 0})
+                  </h3>
+                }
+              >
+                {detailData.trains && detailData.trains.length > 0 ? (
+                  <Table
+                    dataSource={detailData.trains}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                    columns={[
+                      { title: "Mã tàu", dataIndex: "trainCode" },
+                      { title: "Model", dataIndex: "modelName" },
+                      // { title: "Trạng thái", dataIndex: "statusName" },
+                      // { title: "Kinh độ", dataIndex: "longitude" },
+                      // { title: "Vĩ độ", dataIndex: "latitude" },
+                    ]}
+                  />
+                ) : (
+                  <Empty description="Không có dữ liệu tàu" />
+                )}
+              </Panel>
+            </Collapse>
+
+            <Collapse
+              defaultActiveKey={["1"]}
+              bordered={false}
+              style={{
+                marginTop: 5,
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Panel
+                key="1"
+                header={
+                  <h3 style={{ margin: 0, textAlign: "center" }}>
+                    Danh sách trạm ({detailData.stations?.length || 0})
+                  </h3>
+                }
+              >
+                {detailData.stations && detailData.stations.length > 0 ? (
+                  <Table
+                    dataSource={detailData.stations}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                    columns={[
+                      { title: "Mã trạm", dataIndex: "stationCode" },
+                      { title: "Tên trạm", dataIndex: "stationNameVi" },
+                      // { title: "Trạng thái", dataIndex: "statusName" },
+                      { title: "Kinh độ", dataIndex: "longitude" },
+                      { title: "Vĩ độ", dataIndex: "latitude" },
+                    ]}
+                  />
+                ) : (
+                  <Empty description="Không có dữ liệu trạm"/>
+                )}
+              </Panel>
+            </Collapse>
           </div>
         ) : (
           <Empty description="Không có dữ liệu chi tiết" />

@@ -287,7 +287,6 @@ function MetroTrainManagement() {
         isActive: values.isActive ?? true,
         lineId: values.lineId,
         trainNumber: values.trainNumber,
-        currentStationId: values.currentStationId,
         numberOfCarriages: values.numberOfCarriages,
         maxWeightPerCarriageKg: values.maxWeightPerCarriageKg,
         maxVolumePerCarriageM3: values.maxVolumePerCarriageM3,
