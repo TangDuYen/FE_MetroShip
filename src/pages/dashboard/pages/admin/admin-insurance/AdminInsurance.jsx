@@ -137,11 +137,13 @@ function AdminInsurance() {
       key: "name",
     },
     {
-      title: "Hiệu lực từ",
-      dataIndex: "validFrom",
-      key: "validFrom",
-      render: (date) => dayjs(date).format("DD/MM/YYYY"),
-    },
+  title: "Hiệu lực từ",
+  dataIndex: "validFrom",
+  key: "validFrom",
+  render: (date) =>
+    date ? dayjs(date).format("DD/MM/YYYY") : "Chưa có ngày hiệu lực",
+},
+
     // {
     //   title: "Đến ngày",
     //   dataIndex: "effectiveTo",

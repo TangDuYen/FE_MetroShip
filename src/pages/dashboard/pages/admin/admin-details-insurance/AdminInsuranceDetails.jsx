@@ -65,12 +65,12 @@ function AdminInsuranceDetails() {
     try {
       setLoading(true);
       const res = await api.put(`/insurance-policies/${action}/${record.id}`);
-      toast.success(res.data?.message || "Cập nhật trạng thái thành công");
+      toast.success(res.data?.data || "Cập nhật trạng thái thành công");
       fetchPolicy();
     } catch (error) {
       console.error("Lỗi cập nhật trạng thái:", error);
       const msg =
-        error.response?.data?.message || "Cập nhật trạng thái thất bại";
+        error.response?.data?.data || "Cập nhật trạng thái thất bại";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -118,7 +118,9 @@ function AdminInsuranceDetails() {
       <Card title={policy.name} style={{ marginBottom: 20 }}>
         <p>
           <strong>Hiệu lực từ:</strong>{" "}
-          {dayjs(policy.validFrom).format("DD/MM/YYYY")}
+          {policy.validForm
+            ? dayjs(policy.validForm).format("DD/MM/YYYY")
+            : "Chưa có ngày hiệu lực"}
         </p>
         <p>
           <strong>Đến ngày:</strong>{" "}
