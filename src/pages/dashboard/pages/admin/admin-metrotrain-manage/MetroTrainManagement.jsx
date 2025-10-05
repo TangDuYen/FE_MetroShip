@@ -9,12 +9,14 @@ import {
   Empty,
   Form,
   Input,
+  InputNumber,
   Modal,
   Popconfirm,
   Row,
   Select,
   Space,
   Spin,
+  Switch,
   Table,
   Tag,
   Typography,
@@ -62,13 +64,14 @@ function MetroTrainManagement() {
   const [searchTrainCode, setSearchTrainCode] = useState("");
   const [stations, setStations] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  const [modalMode, setModalMode] = useState("add");
+  const [isModalAssignOpen, setIsModalAssignOpen] = useState(false);
+  const [isModalAddOpen, setIsModalAddOpen] = useState(false);
   const [selectedDirection, setSelectedDirection] = useState(null);
   const [dateFilter, setDateFilter] = useState(null);
   const today = dayjs();
 
   const [trainDetails, setTrainDetails] = useState({});
-
+  const [lineOptions, setLineOptions] = useState([]);
 
   const fetchInitialData = async () => {
     const lines = await getMetroLinesAdmin();
@@ -190,6 +193,22 @@ function MetroTrainManagement() {
   //   setFilteredTrains(filtered);
   // };
 
+  useEffect(() => {
+    const fetchLines = async () => {
+      try {
+        const res = await api.get("/metro-lines");
+        // Dữ liệu nằm trong data.data.items
+        const lines = res.data?.data?.items || [];
+        setLineOptions(lines);
+      } catch (error) {
+        console.error("Error fetching metro lines:", error);
+        toast.error("Không thể tải danh sách tuyến metro!");
+      }
+    };
+
+    fetchLines();
+  }, []);
+
   const getCurrentShift = (slots) => {
     const now = moment();
     return slots.find((slot) => {
@@ -249,25 +268,53 @@ function MetroTrainManagement() {
   // };
   const openAddModal = () => {
     form.resetFields();
-    setEditingTrain(null);
-    setModalMode("add");
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (train) => {
-    setEditingTrain(train);
-    form.setFieldsValue(train);
-    setModalMode("edit");
-    setIsModalOpen(true);
+    setIsModalAddOpen(true);
   };
 
   const openAssignModal = (train) => {
     setEditingTrain(train);
     form.setFieldsValue(train);
-    setModalMode("assign");
-    setIsModalOpen(true);
+    setIsModalAssignOpen(true);
   };
 
+  const handleCreateTrain = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      const payload = {
+        modelName: values.modelName,
+        isActive: values.isActive ?? true,
+        lineId: values.lineId,
+        trainNumber: values.trainNumber,
+        currentStationId: values.currentStationId,
+        numberOfCarriages: values.numberOfCarriages,
+        maxWeightPerCarriageKg: values.maxWeightPerCarriageKg,
+        maxVolumePerCarriageM3: values.maxVolumePerCarriageM3,
+      };
+
+      // console.log("Payload", payload);
+
+      const res = await api.post(`/metro-trains`, payload);
+
+      const messageText = res?.data?.message || res?.data?.data || "Thêm tàu thành công!";
+
+      toast.success(messageText);
+      setIsModalAddOpen(false);
+      form.resetFields();
+
+      fetchInitialData();
+    } catch (error) {
+      console.error("Error creating train:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Gửi dữ liệu thất bại!";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -283,7 +330,7 @@ function MetroTrainManagement() {
       );
       toast.success("Đã phân tàu vào ca thành công!");
       await fetchInitialData();
-      setIsModalOpen(false);
+      setIsModalAssignOpen(false);
       form.resetFields();
     } catch (err) {
       console.error(err);
@@ -625,23 +672,11 @@ function MetroTrainManagement() {
       </Spin>
 
       <Modal
-        title={
-          modalMode === "add"
-            ? "Thêm tàu"
-            : modalMode === "edit"
-              ? "Cập nhật tàu"
-              : "Phân tàu"
-        }
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        title="Phân tàu"
+        open={isModalAssignOpen}
+        onCancel={() => setIsModalAssignOpen(false)}
         onOk={handleSubmit}
-        okText={
-          modalMode === "add"
-            ? "Thêm"
-            : modalMode === "edit"
-              ? "Cập nhật"
-              : "Phân tàu"
-        }
+        okText="Phân tàu"
         cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
@@ -650,52 +685,17 @@ function MetroTrainManagement() {
             label="Mã tàu"
             rules={[{ required: true, message: "Vui lòng nhập mã tàu" }]}
           >
-            <Input placeholder="Nhập mã tàu" disabled={modalMode !== "add"} />
+            <Input placeholder="Nhập mã tàu" disabled />
           </Form.Item>
 
           <Form.Item
-            placeholder="Nhập Model tàu"
             name="modelName"
             label="Model tàu"
             rules={[{ required: true, message: "Vui lòng nhập model tàu" }]}
           >
-            <Input
-              placeholder="Nhập model tàu"
-              disabled={modalMode !== "add"}
-            />
-          </Form.Item>
-          {/* <Form.Item
-            name="timeSlotId"
-            label="Ca hoạt động"
-            rules={[{ required: true, message: "Vui lòng chọn ca hoạt động" }]}
-          >
-            <Select placeholder="Chọn ca chạy">
-              {timeSlots.map((slot) => (
-                <Select.Option key={slot.id} value={slot.id}>
-                  {slot.openTime} - {slot.closeTime}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input placeholder="Nhập model tàu" disabled />
           </Form.Item>
 
-          <Form.Item
-            name="date"
-            label="Ngày"
-            rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
-          >
-            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
-          </Form.Item>
-
-          <Form.Item
-            name="direction"
-            label="Chiều chạy"
-            rules={[{ required: true, message: "Vui lòng chọn chiều chạy" }]}
-          >
-            <Select placeholder="Chiều chạy">
-              <Select.Option value={0}>Chiều đi</Select.Option>
-              <Select.Option value={1}>Chiều về</Select.Option>
-            </Select>
-          </Form.Item> */}
           <Form.Item
             name="startFromEnd"
             label="Định hướng chạy"
@@ -707,6 +707,131 @@ function MetroTrainManagement() {
                 Bắt đầu từ trạm cuối tuyến
               </Select.Option>
             </Select>
+          </Form.Item>
+
+          {/* Nếu sau này bạn cần chọn thêm ca hoạt động hoặc ngày chạy thì mở lại các form dưới */}
+          {/* 
+    <Form.Item
+      name="timeSlotId"
+      label="Ca hoạt động"
+      rules={[{ required: true, message: "Vui lòng chọn ca hoạt động" }]}
+    >
+      <Select placeholder="Chọn ca chạy">
+        {timeSlots.map((slot) => (
+          <Select.Option key={slot.id} value={slot.id}>
+            {slot.openTime} - {slot.closeTime}
+          </Select.Option>
+        ))}
+      </Select>
+    </Form.Item>
+
+    <Form.Item
+      name="date"
+      label="Ngày"
+      rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
+    >
+      <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+    </Form.Item>
+
+    <Form.Item
+      name="direction"
+      label="Chiều chạy"
+      rules={[{ required: true, message: "Vui lòng chọn chiều chạy" }]}
+    >
+      <Select placeholder="Chiều chạy">
+        <Select.Option value={0}>Chiều đi</Select.Option>
+        <Select.Option value={1}>Chiều về</Select.Option>
+      </Select>
+    </Form.Item>
+    */}
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Thêm tàu"
+        open={isModalAddOpen}
+        onCancel={() => setIsModalAddOpen(false)}
+        onOk={handleCreateTrain}
+        okText="Thêm"
+        cancelText="Hủy"
+        confirmLoading={loading}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="modelName"
+            label="Model tàu"
+            rules={[{ required: true, message: "Vui lòng nhập model tàu" }]}
+          >
+            <Input placeholder="Nhập model tàu" />
+          </Form.Item>
+
+          <Form.Item
+            name="lineId"
+            label="Tuyến Metro"
+            rules={[{ required: true, message: "Vui lòng chọn tuyến metro" }]}
+          >
+            <Select placeholder="Chọn tuyến metro">
+              {lineOptions?.map((line) => (
+                <Select.Option key={line.id} value={line.id}>
+                  {line.lineNameVi}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="trainNumber"
+            label="Số hiệu tàu"
+            rules={[{ required: true, message: "Vui lòng nhập số hiệu tàu" }]}
+          >
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập số hiệu toa"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="numberOfCarriages"
+            label="Số toa tàu"
+            rules={[{ required: true, message: "Vui lòng nhập số toa" }]}
+          >
+            <InputNumber
+              min={1}
+              style={{ width: "100%" }}
+              placeholder="Nhập số toa"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="maxWeightPerCarriageKg"
+            label="Tải trọng tối đa (Kg/toa)"
+          >
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập tải trọng tàu"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="maxVolumePerCarriageM3"
+            label="Dung tích tối đa (m³/toa)"
+          >
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder="Nhập dung tích tàu"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="isActive"
+            label="Trạng thái hoạt động"
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch />
           </Form.Item>
         </Form>
       </Modal>
