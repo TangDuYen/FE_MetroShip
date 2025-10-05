@@ -628,8 +628,8 @@ function MetroLineManagement() {
                 { title: "Mã tàu", dataIndex: "trainCode" },
                 { title: "Model", dataIndex: "modelName" },
                 // { title: "Trạng thái", dataIndex: "statusName" },
-                { title: "Kinh độ", dataIndex: "longitude" },
-                { title: "Vĩ độ", dataIndex: "latitude" },
+                // { title: "Kinh độ", dataIndex: "longitude" },
+                // { title: "Vĩ độ", dataIndex: "latitude" },
               ]}
             />
           </div>
