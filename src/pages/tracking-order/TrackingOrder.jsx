@@ -409,6 +409,49 @@ function TrackingOrder() {
                   </React.Fragment>
                 );
               })}
+              {(() => {
+                const allStations = [];
+                fullPathSegments.forEach((segment, index) => {
+                  if (index === 0) {
+                    allStations.push({
+                      name: segment.from.name,
+                      lat: segment.from.latitude,
+                      lng: segment.from.longitude,
+                      type: "start",
+                    });
+                  }
+                  if (index === fullPathSegments.length - 1) {
+                    allStations.push({
+                      name: segment.to.name,
+                      lat: segment.to.latitude,
+                      lng: segment.to.longitude,
+                      type: "end",
+                    });
+                  } else {
+                    allStations.push({
+                      name: segment.to.name,
+                      lat: segment.to.latitude,
+                      lng: segment.to.longitude,
+                      type: "middle",
+                    });
+                  }
+                });
+                return allStations.map((station, idx) => (
+                  <Marker
+                    key={idx}
+                    position={[station.lat, station.lng]}
+                    icon={
+                      station.type === "start"
+                        ? startMetro
+                        : station.type === "end"
+                          ? locationIcon
+                          : locationIcon
+                    }
+                  >
+                    <Popup>{station.name}</Popup>
+                  </Marker>
+                ));
+              })()}
               {position[0] !== 0 && (
                 <Marker position={position} icon={metroIcon}>
                   <Popup>Vị trí hiện tại</Popup>
