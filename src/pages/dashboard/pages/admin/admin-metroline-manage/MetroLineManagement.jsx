@@ -3,6 +3,7 @@ import "./MetroLineManagement.scss";
 import {
   Button,
   Col,
+  Collapse,
   ConfigProvider,
   Descriptions,
   Divider,
@@ -34,6 +35,7 @@ import { useEffect, useState } from "react";
 import api from "../../../../../config/axios";
 import { toast } from "react-toastify";
 
+const { Panel } = Collapse;
 function MetroLineManagement() {
   const [metroLines, setMetroLines] = useState([]);
   const [editingLine, setEditingLine] = useState(null);
@@ -100,7 +102,7 @@ function MetroLineManagement() {
     try {
       setLoading(true);
       const res = await api.get(`/metro-lines/${lineId}`);
-      setDetailData(res.data.data); // dữ liệu trả về như ảnh bạn gửi
+      setDetailData(res.data.data);
       setIsDetailModalOpen(true);
     } catch (error) {
       const errorMessage =
@@ -724,21 +726,81 @@ function MetroLineManagement() {
             </Descriptions>
 
             <Divider />
-            <h3 style={{ marginBottom: 16, textAlign: "center" }}>
-              Danh sách tàu
-            </h3>
-            <Table
-              dataSource={detailData.trains}
-              rowKey="id"
-              pagination={false}
-              columns={[
-                { title: "Mã tàu", dataIndex: "trainCode" },
-                { title: "Model", dataIndex: "modelName" },
-                // { title: "Trạng thái", dataIndex: "statusName" },
-                // { title: "Kinh độ", dataIndex: "longitude" },
-                // { title: "Vĩ độ", dataIndex: "latitude" },
-              ]}
-            />
+
+            <Collapse
+              defaultActiveKey={["1"]}
+              bordered={false}
+              style={{
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Panel
+                key="1"
+                header={
+                  <h3 style={{ margin: 0, textAlign: "center" }}>
+                    Danh sách tàu ({detailData.trains?.length || 0})
+                  </h3>
+                }
+              >
+                {detailData.trains && detailData.trains.length > 0 ? (
+                  <Table
+                    dataSource={detailData.trains}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                    columns={[
+                      { title: "Mã tàu", dataIndex: "trainCode" },
+                      { title: "Model", dataIndex: "modelName" },
+                      // { title: "Trạng thái", dataIndex: "statusName" },
+                      // { title: "Kinh độ", dataIndex: "longitude" },
+                      // { title: "Vĩ độ", dataIndex: "latitude" },
+                    ]}
+                  />
+                ) : (
+                  <Empty description="Không có dữ liệu tàu" />
+                )}
+              </Panel>
+            </Collapse>
+
+            <Collapse
+              defaultActiveKey={["1"]}
+              bordered={false}
+              style={{
+                marginTop: 5,
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Panel
+                key="1"
+                header={
+                  <h3 style={{ margin: 0, textAlign: "center" }}>
+                    Danh sách trạm ({detailData.stations?.length || 0})
+                  </h3>
+                }
+              >
+                {detailData.stations && detailData.stations.length > 0 ? (
+                  <Table
+                    dataSource={detailData.stations}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                    columns={[
+                      { title: "Mã trạm", dataIndex: "stationCode" },
+                      { title: "Tên trạm", dataIndex: "stationNameVi" },
+                      // { title: "Trạng thái", dataIndex: "statusName" },
+                      { title: "Kinh độ", dataIndex: "longitude" },
+                      { title: "Vĩ độ", dataIndex: "latitude" },
+                    ]}
+                  />
+                ) : (
+                  <Empty description="Không có dữ liệu trạm"/>
+                )}
+              </Panel>
+            </Collapse>
           </div>
         ) : (
           <Empty description="Không có dữ liệu chi tiết" />
