@@ -271,7 +271,6 @@ function OrderStaff() {
       title: 'Xác nhận',
       key: 'confirm',
       render: (_, record) => {
-        if (record.shipmentStatus !== 7) return null;
         return (
           <ConfigProvider
             theme={{
