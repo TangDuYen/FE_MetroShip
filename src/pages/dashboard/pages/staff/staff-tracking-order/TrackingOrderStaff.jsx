@@ -774,7 +774,7 @@ function TrackingOrderStaff() {
           <Modal
             open={openSurchargeModal}
             onOk={() => {
-              setOpenTxnModal(true);
+              createPaymentLink(selectedShipment, 2); 
               setOpenSurchargeModal(false);
             }}
             onCancel={() => setOpenSurchargeModal(false)}
@@ -783,7 +783,7 @@ function TrackingOrderStaff() {
           >
             {selectedShipment ? (
               <div>
-                <p>Mã đơn: {selectedShipment.trackingCode}</p>
+                <p>Thu phí tồn kho cho đơn hàng {selectedShipment.trackingCode}?</p>
               </div>
             ) : (
               <p>Đang tải...</p>
@@ -841,7 +841,7 @@ function TrackingOrderStaff() {
           </Modal>
 
           {/* BANK ACCOUNT MODAL */}
-          <Modal
+          {/* <Modal
             open={bankAccountModalOpen}
             onCancel={() => {
               setBankAccountModalOpen(false);
@@ -903,10 +903,10 @@ function TrackingOrderStaff() {
                 placeholder="Nhập tên chủ tài khoản"
               />
             </div>
-          </Modal>
+          </Modal> */}
 
           {/* SURCHARGE TRANSACTION INFO MODAL */}
-          <Modal
+          {/* <Modal
             open={openTxnModal}
             title="Tạo giao dịch thu phí tồn kho"
             onCancel={() => {
@@ -966,10 +966,10 @@ function TrackingOrderStaff() {
                 placeholder="Nhập số tiền"
               />
             </div>
-          </Modal>
+          </Modal> */}
 
           {/* SURCHARGE QR MODAL */}
-          <Modal
+          {/* <Modal
             open={openQrModal}
             title="Mã QR thanh toán"
             footer={[
@@ -995,7 +995,7 @@ function TrackingOrderStaff() {
             ) : (
               <p>Đang tạo mã QR...</p>
             )}
-          </Modal>
+          </Modal> */}
         </div>
       </div>
     </>
