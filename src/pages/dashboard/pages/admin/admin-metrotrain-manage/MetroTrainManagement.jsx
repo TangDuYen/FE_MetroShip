@@ -371,18 +371,18 @@ function MetroTrainManagement() {
           <Tag color="default">Chưa xác định</Tag>
         ),
     },
-    {
-      title: "Ga kế tiếp",
-      dataIndex: "nextStationName",
-      key: "nextStationName",
-      width: 120,
-      render: (value, record) => {
-        if (record.status === 3 && value) {
-          return <Tag color="blue">{value}</Tag>;
-        }
-        return <Tag color="default">Chưa xác định</Tag>;
-      },
-    },
+    // {
+    //   title: "Ga kế tiếp",
+    //   dataIndex: "nextStationName",
+    //   key: "nextStationName",
+    //   width: 120,
+    //   render: (value, record) => {
+    //     if (record.status === 3 && value) {
+    //       return <Tag color="blue">{value}</Tag>;
+    //     }
+    //     return <Tag color="default">Chưa xác định</Tag>;
+    //   },
+    // },
     {
       title: "Trạng thái",
       dataIndex: "status",
