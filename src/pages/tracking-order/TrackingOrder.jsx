@@ -35,6 +35,7 @@ import L from "leaflet";
 import { PATH_NAME } from "../../constants/pathname";
 import api from "../../config/axios";
 import dayjs from "dayjs";
+import { getParcelsByTrackingCode } from "../../config/metroApi";
 import locationIconImg from "../../assets/placeholder.webp";
 import metro from "../../assets/metro_station.png";
 import { selectUser } from "../../redux/features/counterSlice";
@@ -84,7 +85,7 @@ function TrackingOrder() {
   const [selectedShipment, setSelectedShipment] = useState(null);
   const { trackingCode } = useParams();
   const navigate = useNavigate();
-
+  const [parcels, setParcels] = useState([]);
   const [position, setPosition] = useState([0, 0]);
   const [fullPathSegments, setFullPathSegments] = useState([]);
 
@@ -145,6 +146,11 @@ function TrackingOrder() {
       });
       const shipment = shipmentRes.data.data;
       setSelectedShipment(shipment);
+      const parcelCodes = shipment?.parcels?.map((p) => p.parcelCode) || [];
+      const parcelDetails = await Promise.all(
+        parcelCodes.map((code) => getParcelsByTrackingCode(code))
+      );
+      setParcels(parcelDetails);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
       toast.error("Không thể lấy thông tin đơn hàng");
@@ -317,7 +323,6 @@ function TrackingOrder() {
       });
       if (res.status === 200 || res.status === 201) {
         toast.success("Yêu cầu bồi thường đã được gửi thành công!");
-        // fetch lại đơn nếu bạn muốn cập nhật trạng thái
         fetchData();
       } else {
         toast.error("Gửi yêu cầu bồi thường thất bại");
@@ -579,82 +584,85 @@ function TrackingOrder() {
                 </span>
               </div>
 
-              {shipmentParcels.map((p, i) => (
-                <React.Fragment key={p.id || i}>
-                  <Divider />
-                  <div className="detail-item">
-                    <span className="detail-label">Mã kiện #{i + 1}</span>
-                    <span className="detail-value">{p.parcelCode}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Khối lượng</span>
-                    <span className="detail-value">{p.weightKg} kg</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Kích thước</span>
-                    <span className="detail-value">
-                      {p.lengthCm} × {p.widthCm} × {p.heightCm} cm
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Phí vận chuyển</span>
-                    <span className="detail-value">
-                      {formatCurrency(p.shippingFeeVnd)}
-                    </span>
-                  </div>
-                  {p.priceVnd !== p.shippingFeeVnd && (
+              {parcels.map((p, i) => {
+                const parcel = p.data;
+                return (
+                  <React.Fragment key={parcel.id || i}>
+                    <Divider />
                     <div className="detail-item">
-                      <span className="detail-label">Phí bảo hiểm</span>
+                      <span className="detail-label">Mã kiện #{i + 1}</span>
+                      <span className="detail-value">{parcel.parcelCode}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Khối lượng</span>
+                      <span className="detail-value">{parcel.weightKg} kg</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Kích thước</span>
                       <span className="detail-value">
-                        {formatCurrency(p.insuranceFeeVnd)}
+                        {parcel.lengthCm} × {parcel.widthCm} × {parcel.heightCm} cm
                       </span>
                     </div>
-                  )}
-                  <div className="detail-item">
-                    <span className="detail-label">Tổng phí</span>
-                    <span className="detail-value">{formatCurrency(p.priceVnd)}</span>
-                  </div>
-                  {p.parcelCategory && (
-                    <>
+                    <div className="detail-item">
+                      <span className="detail-label">Phí vận chuyển</span>
+                      <span className="detail-value">
+                        {formatCurrency(parcel.shippingFeeVnd)}
+                      </span>
+                    </div>
+                    {parcel.priceVnd !== parcel.shippingFeeVnd && (
                       <div className="detail-item">
-                        <span className="detail-label">Loại hàng</span>
+                        <span className="detail-label">Phí bảo hiểm</span>
                         <span className="detail-value">
-                          {p.parcelCategory.categoryName}
+                          {formatCurrency(parcel.insuranceFeeVnd)}
                         </span>
                       </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Mô tả</span>
-                        <span className="detail-value">
-                          {p.parcelCategory.description}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                  <div className="detail-item">
-                    <span className="detail-label">Tình trạng</span>
-                    <span className="detail-value">
-                      <Tag color={parcelStatusColorMap[p.status]}>
-                        {parcelStatusMap[p.status]}
-                      </Tag>
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    {p.status === 4 &&
-                      !selectedShipment.isCompensationRequested &&
-                      [24, 25, 27].includes(selectedShipment.shipmentStatus) && (
-                        <Button
-                          type="primary"
-                          className="insurance-button"
-                          onClick={() =>
-                            handleInsuranceRequest(selectedShipment.id)
-                          }
-                        >
-                          Yêu cầu bồi thường
-                        </Button>
-                      )}
-                  </div>
-                </React.Fragment>
-              ))}
+                    )}
+                    <div className="detail-item">
+                      <span className="detail-label">Tổng phí</span>
+                      <span className="detail-value">{formatCurrency(parcel.priceVnd)}</span>
+                    </div>
+                    {parcel.parcelCategory && (
+                      <>
+                        <div className="detail-item">
+                          <span className="detail-label">Loại hàng</span>
+                          <span className="detail-value">
+                            {parcel.parcelCategory.categoryName}
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Mô tả</span>
+                          <span className="detail-value">
+                            {parcel.parcelCategory.description}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <div className="detail-item">
+                      <span className="detail-label">Tình trạng</span>
+                      <span className="detail-value">
+                        <Tag color={parcelStatusColorMap[parcel.status]}>
+                          {parcelStatusMap[parcel.status]}
+                        </Tag>
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      {parcel.status === 4 &&
+                        !selectedShipment.isCompensationRequested &&
+                        [24, 25, 27].includes(selectedShipment.shipmentStatus) && (
+                          <Button
+                            type="primary"
+                            className="insurance-button"
+                            onClick={() =>
+                              handleInsuranceRequest(selectedShipment.id)
+                            }
+                          >
+                            Yêu cầu bồi thường
+                          </Button>
+                        )}
+                    </div>
+                  </React.Fragment>
+                )
+              })}
             </div>
           </Card>
 
