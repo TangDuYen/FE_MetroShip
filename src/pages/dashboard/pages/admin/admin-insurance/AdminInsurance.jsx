@@ -219,6 +219,7 @@ function AdminInsurance() {
             Xem chi tiết
           </Button>
         </ConfigProvider>
+        
       ),
     },
   ];
@@ -327,7 +328,7 @@ function AdminInsurance() {
           </Form.Item>
 
           <Form.Item
-            label="Tỷ lệ phí bảo hiểm (%)"
+            label="Tỷ lệ phí bảo hiểm"
             name="insuranceFeeRateOnValue"
             initialValue={0}
           >
@@ -340,7 +341,7 @@ function AdminInsurance() {
           </Form.Item>
 
           <Form.Item
-            label="Tỷ lệ bồi thường tối thiểu theo giá trị (%)"
+            label="Tỷ lệ bồi thường tối thiểu theo giá trị"
             name="minCompensationRateOnValue"
             initialValue={0}
           >
@@ -353,7 +354,7 @@ function AdminInsurance() {
           </Form.Item>
 
           <Form.Item
-            label="Tỷ lệ bồi thường tối đa theo giá trị (%)"
+            label="Tỷ lệ bồi thường tối đa theo giá trị"
             name="maxCompensationRateOnValue"
             initialValue={0}
           >

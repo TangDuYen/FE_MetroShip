@@ -1,6 +1,6 @@
 import "./AdminInsuranceDetails.scss";
 
-import { Card, Spin, Table, Tag } from "antd";
+import { Button, Card, Spin, Table, Tag } from "antd";
 import React, { useEffect, useState } from "react";
 
 import api from "../../../../../config/axios";
@@ -36,29 +36,46 @@ function AdminInsuranceDetails() {
   const [policy, setPolicy] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchPolicy = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get(`/insurance-policies/${insuranceId}`);
-        setPolicy(res.data);
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          "Không thể lấy chi tiết chính sách";
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchPolicy = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/insurance-policies/${insuranceId}`);
+      setPolicy(res.data);
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Không thể lấy chi tiết chính sách";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (insuranceId) fetchPolicy();
   }, [insuranceId]);
 
   if (loading) return <Spin tip="Đang tải chi tiết chính sách..." />;
   if (!policy) return <div>Không tìm thấy chính sách bảo hiểm.</div>;
 
+  const handleToggleActive = async (record) => {
+    const action = record.isActive ? "deactivation" : "activation";
+
+    try {
+      setLoading(true);
+      const res = await api.put(`/insurance-policies/${action}/${record.id}`);
+      toast.success(res.data?.message || "Cập nhật trạng thái thành công");
+      fetchPolicy();
+    } catch (error) {
+      console.error("Lỗi cập nhật trạng thái:", error);
+      const msg =
+        error.response?.data?.message || "Cập nhật trạng thái thất bại";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
   const detailColumns = [
     { title: "Thông tin", dataIndex: "label", key: "label" },
     { title: "Giá trị", dataIndex: "value", key: "value" },
@@ -72,7 +89,7 @@ function AdminInsuranceDetails() {
     },
     {
       label: "Tỷ lệ phí bảo hiểm (%)",
-      value: (policy.insuranceFeeRateOnValue * 100).toFixed(2) + "%",
+      value: policy.insuranceFeeRateOnValue * 100 + "%",
     },
     {
       label: "Tỷ lệ bồi thường tối đa (%)",
@@ -109,6 +126,17 @@ function AdminInsuranceDetails() {
             ? dayjs(policy.validTo).format("DD/MM/YYYY")
             : "Không giới hạn"}
         </p>
+
+        {!policy.validTo && (
+          <Button
+            type={policy.isActive ? "default" : "primary"}
+            danger={policy.isActive}
+            onClick={() => handleToggleActive(policy)}
+            style={{ marginTop: 10 }}
+          >
+            {policy.isActive ? "Ngưng hiệu lực" : "Kích hoạt"}
+          </Button>
+        )}
       </Card>
 
       <Card title="Chi tiết chính sách">
