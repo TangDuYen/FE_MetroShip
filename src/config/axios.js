@@ -3,7 +3,8 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
 // const baseUrl = "https://localhost:7085/api/";
-const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
+// const baseUrl = "https://metroship-cosdy.ondigitalocean.app/api/";
+const baseUrl = "https://metroship-ghcr-latest.onrender.com/api/";
 const config = {
   baseURL: baseUrl,
   timeout: 3000000,
